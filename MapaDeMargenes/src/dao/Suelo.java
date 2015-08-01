@@ -14,67 +14,66 @@ import org.opengis.feature.simple.SimpleFeatureType;
 
 public class Suelo extends Dao {
 	public static final String KG_P_COLUMN = "Fosforo";
-	public static final String KG_NO3_0_COLUMN = "Nitrogeno_0";
-	public static final String KG_NO3_20_COLUMN = "Nitrogeno_20";
+//	public static final String KG_NO3_0_COLUMN = "Nitrogeno_0";
+//	public static final String KG_NO3_20_COLUMN = "Nitrogeno_20";
 	private static Map<String, String> columnsMap = new HashMap<String, String>();
 
-	private Double ppmNO3_0;
-	private Double ppmNO3_20;
-	private Double ppmP3_0;
+//	private Double ppmNO3_0;
+//	private Double ppmNO3_20;
+	private Double ppmP;
 
 	public Suelo(SimpleFeature harvestFeature) {
 		super(harvestFeature);
 		System.out.println(harvestFeature);
 
 		Object pObj = harvestFeature.getAttribute(getColumn(KG_P_COLUMN));
+		this.ppmP = super.getDoubleFromObj(pObj);
+		System.out.println("ppmP es " + ppmP);
 
-		this.ppmP3_0 = super.getDoubleFromObj(pObj);
-		System.out.println("ppmP es " + ppmP3_0);
-
-		Object n0Obj = harvestFeature.getAttribute(getColumn(KG_NO3_0_COLUMN));
-		this.ppmNO3_0 = super.getDoubleFromObj(n0Obj);
-		Object n20Obj = harvestFeature
-				.getAttribute(getColumn(KG_NO3_20_COLUMN));
-		this.ppmNO3_20 = super.getDoubleFromObj(n20Obj);
+//		Object n0Obj = harvestFeature.getAttribute(getColumn(KG_NO3_0_COLUMN));
+//		this.ppmNO3_0 = super.getDoubleFromObj(n0Obj);
+//		Object n20Obj = harvestFeature
+//				.getAttribute(getColumn(KG_NO3_20_COLUMN));
+//		this.ppmNO3_20 = super.getDoubleFromObj(n20Obj);
 	}
 
 	public Suelo() {
 	}
 
-	public Double getPpmNO3_0() {
-		return ppmNO3_0;
+//	public Double getPpmNO3_0() {
+//		return ppmNO3_0;
+//	}
+//
+//	public void setPpmNO3_0(Double ppmNO3_0) {
+//		this.ppmNO3_0 = ppmNO3_0;
+//	}
+//
+//	public Double getPpmNO3_20() {
+//		return ppmNO3_20;
+//	}
+//
+//	public void setPpmNO3_20(Double ppmNO3_20) {
+//		this.ppmNO3_20 = ppmNO3_20;
+//	}
+
+	public Double getPpmP() {
+		return ppmP;
 	}
 
-	public void setPpmNO3_0(Double ppmNO3_0) {
-		this.ppmNO3_0 = ppmNO3_0;
-	}
-
-	public Double getPpmNO3_20() {
-		return ppmNO3_20;
-	}
-
-	public void setPpmNO3_20(Double ppmNO3_20) {
-		this.ppmNO3_20 = ppmNO3_20;
-	}
-
-	public Double getPpmP3_0() {
-		return ppmP3_0;
-	}
-
-	public void setPpmP3_0(Double ppmP3_0) {
-		this.ppmP3_0 = ppmP3_0;
+	public void setPpmP(Double ppmP3_0) {
+		this.ppmP = ppmP3_0;
 	}
 
 	@Override
 	public Double getAmount() {
-		return getPpmNO3_0();
+		return getPpmP();
 	}
 
 	public static List<String> getRequiredColumns() {
 		List<String> requiredColumns = new ArrayList<String>();
 		requiredColumns.add(KG_P_COLUMN);
-		requiredColumns.add(KG_NO3_0_COLUMN);
-		requiredColumns.add(KG_NO3_20_COLUMN);
+//		requiredColumns.add(KG_NO3_0_COLUMN);
+//		requiredColumns.add(KG_NO3_20_COLUMN);
 		return requiredColumns;
 	}
 
@@ -118,7 +117,7 @@ public class Suelo extends Dao {
 	@Override
 	public SimpleFeature getFeature(SimpleFeatureBuilder featureBuilder) {
 		featureBuilder.add(super.getGeometry());
-		featureBuilder.add(getPpmP3_0());
+		featureBuilder.add(getPpmP());
 
 		SimpleFeature feature = featureBuilder.buildFeature(null);
 		return feature;

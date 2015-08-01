@@ -14,12 +14,13 @@ public class Fertilizante{
 	StringProperty nombre = new SimpleStringProperty();
 	DoubleProperty ppmP= new SimpleDoubleProperty();
 	
-	public static List<String> fertilizantes = new ArrayList<String>();
+	public static List<Fertilizante> fertilizantes = new ArrayList<Fertilizante>();
 	static{
-		fertilizantes.add("Fosfato Diamónico (DAP)");
-		fertilizantes.add("Fosfato Monoamónico (MAP)");
-		fertilizantes.add("Superfosfato simple");
-		fertilizantes.add("Superfosfato triple (SPT)");
+		fertilizantes.add(new Fertilizante("Fosfato Diamonico (DAP)",14.72));
+		fertilizantes.add(new Fertilizante("Fosfato Monoamonico (MAP)",16.64));
+		fertilizantes.add(new Fertilizante("Superfosfato simple",5.76));
+		fertilizantes.add(new Fertilizante("Superfosfato triple (SPT)",14.72));
+
 	}
 	
 	public Fertilizante(String nombre) {

@@ -22,6 +22,7 @@ import com.vividsolutions.jts.index.quadtree.Quadtree;
 
 import dao.CosechaItem;
 import dao.Fertilizacion;
+import dao.Fertilizante;
 import dao.Producto;
 import dao.Pulverizacion;
 import dao.Rentabilidad;
@@ -29,7 +30,7 @@ import dao.Siembra;
 import dao.Suelo;
 
 public class ProcessNewSoilMapTask extends ProcessMapTask {
-	public Group map = new Group();
+	//public Group map = new Group();
 
 	double distanciaAvanceMax = 0;
 	double anchoMax = 0;
@@ -44,6 +45,7 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 
 	private Quadtree harvestTree;
 	private Producto producto;
+	private Fertilizante fertilizante;
 
 	// private Quadtree pulvTree;
 
@@ -51,14 +53,15 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 	// ArrayList<ArrayList<Object>>();
 
 	public ProcessNewSoilMapTask(FileDataStore store, Group map, Quadtree soilTree,
-			Quadtree fertTree, Quadtree harvestTree, Producto objProducto,Fertilizante fert) {
+			Quadtree fertTree, Quadtree harvestTree, Producto objProducto,Fertilizante fertilizante) {
 		this.store = store;
-		this.map = map;
+		super.map = map;
 
 		this.soilTree = soilTree;
 		this.fertTree = fertTree;
 		this.harvestTree = harvestTree;
 		this.producto = objProducto;
+		this.fertilizante = fertilizante;
 	}
 
 	public void doProcess() throws IOException {
@@ -202,7 +205,7 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 
 		Suelo objSuelo = new Suelo();
 		objSuelo.setGeometry(harvestPolygon);
-		objSuelo.setPpmP3_0(margenPorHa);
+		objSuelo.setPpmP(margenPorHa);
 
 		return objSuelo;
 	}
@@ -220,7 +223,8 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 					CosechaItem cosecha = (CosechaItem) cosechaObject;
 					double costoHa = (Double) cosecha.getRindeTnHa();
 
-					Double ppmPabsorvida = costoHa * producto.getAbsP().getValue();
+					Double ppmPabsorvida = costoHa * 
+							producto.getReqP();
 					
 					Object cosechaGeomObject = cosecha.getGeometry();
 
@@ -307,7 +311,7 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 			for (Object fertObj : ferts) {
 				if (fertObj instanceof Fertilizacion) {
 					Fertilizacion fert = (Fertilizacion) fertObj;
-					Double ppmP = (Double) fert.getCantFertHa()*fert.getPpmP();
+					Double ppmP = (Double) fert.getCantFertHa()*fertilizante.getPpmP();
 
 					Object pulvGeomObject = fert.getGeometry();
 					if (pulvGeomObject instanceof Geometry) {
@@ -384,7 +388,7 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 		DecimalFormat df = new DecimalFormat("#.00");
 		String tooltipText = new String(
 
-		" PpmFosforo/Ha: " + df.format(objSuelo.getPpmP3_0()) + "\n"
+		" PpmFosforo/Ha: " + df.format(objSuelo.getPpmP()) + "\n"
 		// + "Sup: "
 		// + df.format(area * ProyectionConstants.METROS2_POR_HA)
 		// + " m2\n"

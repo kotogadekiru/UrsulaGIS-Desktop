@@ -435,6 +435,7 @@ pathClass = 0x9e0142ff
 	//				public void run() {
 			//	map.getChildren().add(canvas);
 				map.getChildren().addAll(pathsToAdd);//antes tenia setAll que es mas rapido pero me borraba los nodos que habia antes si los habia
+				
 			//	map.getChildren().setAll(pathsToAdd);//antes tenia setAll que es mas rapido pero me borraba los nodos que habia antes si los habia
 
 //				SnapshotParameters params = new SnapshotParameters();

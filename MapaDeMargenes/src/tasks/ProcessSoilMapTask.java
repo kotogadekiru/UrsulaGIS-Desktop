@@ -87,7 +87,7 @@ public class ProcessSoilMapTask extends ProcessMapTask {
 		DecimalFormat df = new DecimalFormat("#.00");
 		String tooltipText = new String(
 				
-				 " PpmFosforo/Ha: "+ df.format(fertFeature.getPpmP3_0()) +"\n"
+				 " PpmFosforo/Ha: "+ df.format(fertFeature.getPpmP()) +"\n"
 //						+ "Sup: "
 //						+ df.format(area * ProyectionConstants.METROS2_POR_HA)
 //						+ " m2\n"

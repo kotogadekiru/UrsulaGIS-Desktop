@@ -88,12 +88,14 @@ import tasks.ProcessPulvMapTask;
 import tasks.ProcessSiembraMapTask;
 import tasks.ProcessSoilMapTask;
 
+import com.sun.deploy.uitoolkit.impl.fx.ui.FXUIFactory;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
 import dao.Configuracion;
 import dao.CosechaItem;
 import dao.Costos;
 import dao.Fertilizacion;
+import dao.Fertilizante;
 import dao.Producto;
 import dao.Pulverizacion;
 import dao.Rentabilidad;
@@ -159,6 +161,7 @@ public class MarginMapGenerator extends Application {
 	ImageView iv2 = new ImageView();
 
 	private Producto producto;
+	private Fertilizante fertilizante;
 	//private StringProperty consoleText;
 
 
@@ -189,13 +192,13 @@ public class MarginMapGenerator extends Application {
 		map.setCacheHint(CacheHint.SCALE_AND_ROTATE);
 
 		resetMapScale();
-
+		map.getChildren().add(suelosMap);
 		map.getChildren().add(fertMap);
 		map.getChildren().add(siembraMap);
 		map.getChildren().add(pulvMap);
 		map.getChildren().add(harvestMap);
 		map.getChildren().add(marginMap);
-		map.getChildren().add(suelosMap);
+		
 		map.getChildren().add(newSoilMap);
 		
 		
@@ -505,7 +508,7 @@ public class MarginMapGenerator extends Application {
 			resetMapScale();
 			Group mGroup = new Group();
 			ProcessNewSoilMapTask uMmTask = new ProcessNewSoilMapTask(store, mGroup,sueloTree
-					, fertTree,harvestTree , producto,fertilizante);
+					, fertTree,harvestTree , producto, fertilizante);
 			ProgressBar progressBarTask = new ProgressBar();
 			progressBox.getChildren().add(progressBarTask);
 			progressBarTask.setProgress(0);
@@ -513,9 +516,10 @@ public class MarginMapGenerator extends Application {
 			Thread currentTaskThread = new Thread(uMmTask);
 			currentTaskThread.setDaemon(true);
 			currentTaskThread.start();
-
+			
+			
 			uMmTask.setOnSucceeded(handler -> {
-				//newSoilTree =	(Quadtree)	handler.getSource().getValue();
+				Quadtree newSoilTree = (Quadtree)	handler.getSource().getValue();
 				newSoilMap.getChildren().add(mGroup);
 				
 				Bounds bl = marginMap.getBoundsInLocal();
@@ -527,9 +531,107 @@ public class MarginMapGenerator extends Application {
 
 				System.out.println("ProcessMarginTask succeded");
 				progressBox.getChildren().remove(progressBarTask);
+				exportarAShp(newSoilTree);		
 			});
 		}
 		
+		
+		
+		
+	}
+
+	public void exportarAShp(Quadtree newSoilTree) {
+		@SuppressWarnings("unchecked")
+		List<Suelo> cosechas = newSoilTree.queryAll();
+		//	System.out.println("construyendo el shp para las rentas "+rentas.size());
+		SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(
+				Suelo.getType());
+		List<SimpleFeature> features = new ArrayList<SimpleFeature>();
+
+		for (Suelo cosecha : cosechas) {
+			SimpleFeature cosechaFeature = cosecha.getFeature(featureBuilder);
+			features.add(cosechaFeature);
+			//	System.out.println("agregando a features "+rentaFeature);
+
+		}
+
+		File shapeFile =  getNewShapeFile();
+
+		Map<String, Serializable> params = new HashMap<String, Serializable>();
+		try {
+			params.put("url", shapeFile.toURI().toURL());
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+		params.put("create spatial index", Boolean.TRUE);
+
+
+		ShapefileDataStore newDataStore=null;
+		try {
+			ShapefileDataStoreFactory dataStoreFactory = new ShapefileDataStoreFactory();
+			newDataStore = (ShapefileDataStore) dataStoreFactory.createNewDataStore(params);
+			newDataStore.createSchema(Suelo.getType());
+
+			//		System.out.println("antes de forzar wgs 84");
+
+			/*
+			 * You can comment out this line if you are using the createFeatureType
+			 * method (at end of class file) rather than DataUtilities.createType
+			 */
+			newDataStore.forceSchemaCRS(DefaultGeographicCRS.WGS84);
+			//		System.out.println("forzando dataStore WGS84");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		String typeName = newDataStore.getTypeNames()[0];
+		//	System.out.println("typeName 0 del newDataStore es "+typeName);
+		SimpleFeatureSource featureSource = null;
+		try {
+			featureSource = newDataStore.getFeatureSource(typeName);
+			//	System.out.println("cree new featureSource "+featureSource.getInfo());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		if (featureSource instanceof SimpleFeatureStore) {			
+
+			SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
+			Transaction transaction = new DefaultTransaction("create");
+			featureStore.setTransaction(transaction);
+
+			/*
+			 * SimpleFeatureStore has a method to add features from a
+			 * SimpleFeatureCollection object, so we use the
+			 * ListFeatureCollection class to wrap our list of features.
+			 */
+			SimpleFeatureCollection collection = new ListFeatureCollection(CosechaItem.getType(), features);
+			//	System.out.println("agregando features al store " +collection.size());
+			try {
+				featureStore.addFeatures(collection);
+				transaction.commit();
+				//	System.out.println("commiting transaction "+ featureStore.getCount(new Query()));
+			} catch (Exception problem) {
+				problem.printStackTrace();
+				try {
+					transaction.rollback();
+					//	System.out.println("transaction rolledback");
+				} catch (IOException e) {
+
+					e.printStackTrace();
+				}
+
+			} finally {
+				try {
+					transaction.close();
+					//System.out.println("closing transaction");
+				} catch (IOException e) {
+
+					e.printStackTrace();
+				}
+			}
+
+		}
 	}
 
 
@@ -841,14 +943,24 @@ public class MarginMapGenerator extends Application {
 		
 		ChoiceBox<Producto> productoCh=new ChoiceBox<Producto>();
 		productoCh.getItems().setAll(Producto.productos.values());
-		
-	
 		productoCh.getSelectionModel().selectedItemProperty().addListener(( ov, oldPeriodo,  newPeriodo) ->{
-				this.producto=newPeriodo;
-			});
+			this.producto=newPeriodo;
+		});
+		productoCh.getSelectionModel().select(0);
+	
+			
+		ChoiceBox<Fertilizante> fertilizanteCh=new ChoiceBox<Fertilizante>();
+		fertilizanteCh.getItems().setAll(Fertilizante.fertilizantes);
+		fertilizanteCh.getSelectionModel().selectedItemProperty().addListener(( ov, oldPeriodo,  newPeriodo) ->{
+			this.fertilizante=newPeriodo;
+		});
+		fertilizanteCh.getSelectionModel().select(0);
+	
+	
 			
 		
 		VBox gp = new VBox();
+		gp.getChildren().add(fertilizanteCh);
 		gp.getChildren().add(productoCh);
 		gp.getChildren().add(precioFertLbl);
 		gp.getChildren().add(precioFertTf);
