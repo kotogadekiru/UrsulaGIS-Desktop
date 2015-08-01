@@ -386,9 +386,9 @@ public class MarginMapGenerator extends Application {
 		newSoilMap.visibleProperty().bindBidirectional(showNewSoilMI.selectedProperty());		
 
 
-		menuVer.getItems().addAll(showFertMenuItem, 
+		menuVer.getItems().addAll(showSoilMI,showFertMenuItem, 
 				showSiembraMenuItem, showPulvMenuItem,
-				showHarvestMenuItem, showMarginMenuItem,showSoilMI);
+				showHarvestMenuItem, showMarginMenuItem,showNewSoilMI);
 
 		Configuracion config = Configuracion.getInstance();
 		HarvestFiltersConfig filtersConfig = HarvestFiltersConfig.getInstance();

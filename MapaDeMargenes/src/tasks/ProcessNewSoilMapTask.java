@@ -185,20 +185,20 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 
 	}
 
-	private Suelo createRentaForPoly(Polygon harvestPolygon) {
-		Double ppmCosecha;
-		Double ppmFert;
-		Double ppmSuelo;
-		
+	private Suelo createRentaForPoly(Polygon harvestPolygon) {	
 		Double areaMargen = harvestPolygon.getArea()
 				* ProyectionConstants.A_HAS;
+		Double ppmSuelo = getPpmSuelo(harvestPolygon);
+		System.out.println("cantFertilizante en el suelo= " + ppmSuelo);
+		
+		Double ppmFert = getPpmFertilizacion(harvestPolygon);
+		System.out.println("cantFertilizante agregada= " + ppmFert);
 
-		ppmCosecha = getPpmCosecha(harvestPolygon);
-		System.out.println("ingreso por cosecha=" + ppmCosecha);
+		
+		Double 	ppmCosecha = getPpmCosecha(harvestPolygon);
+		System.out.println("cantFertilizante absorvida= " + ppmCosecha);
 
-		// importePulv = getImportePulv(harvestPolygon);
-		ppmFert = getPpmFertilizacion(harvestPolygon);
-		ppmSuelo = getPpmSuelo(harvestPolygon);
+
 
 		Double margenPorHa = (ppmFert + ppmSuelo - ppmCosecha)
 				/ areaMargen;
@@ -265,14 +265,14 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 			@SuppressWarnings("rawtypes")
 			List siembras = soilTree.query(geometry.getEnvelopeInternal());
 			for (Object siembraObj : siembras) {
-				if (siembraObj instanceof Siembra) {
+				if (siembraObj instanceof Suelo) {
 
-					Siembra siembra = (Siembra) siembraObj;
-					Double costoHa = (Double) siembra.getImporteHa();
+					Suelo suelo = (Suelo) siembraObj;
+					Double costoHa = (Double) suelo.getPpmP();
 
-					Object pulvGeomObject = siembra.getGeometry();
-					if (pulvGeomObject instanceof Geometry) {
-						Geometry pulvGeom = (Geometry) pulvGeomObject;
+					Object sueloGeom = suelo.getGeometry();
+					if (sueloGeom instanceof Geometry) {
+						Geometry pulvGeom = (Geometry) sueloGeom;
 						try {
 							Geometry inteseccionGeom = geometry
 									.intersection(pulvGeom);// Computes a
@@ -287,10 +287,10 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 					} else {
 						System.err
 								.println("la geometria de fert no es de tipo Geometry es: "
-										+ pulvGeomObject.getClass());
+										+ sueloGeom.getClass());
 					}
 				} else {
-					System.err.println("me perdi en getImporteSiembra");
+					System.err.println("me perdi en getppmPSuelo");
 				}
 			}
 		}
@@ -311,7 +311,9 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 			for (Object fertObj : ferts) {
 				if (fertObj instanceof Fertilizacion) {
 					Fertilizacion fert = (Fertilizacion) fertObj;
-					Double ppmP = (Double) fert.getCantFertHa()*fertilizante.getPpmP();
+					Double ppmP = (Double) fert.getCantFertHa()
+							*
+							fertilizante.getPpmP();
 
 					Object pulvGeomObject = fert.getGeometry();
 					if (pulvGeomObject instanceof Geometry) {

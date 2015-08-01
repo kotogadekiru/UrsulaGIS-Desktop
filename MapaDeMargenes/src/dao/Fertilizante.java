@@ -16,10 +16,10 @@ public class Fertilizante{
 	
 	public static List<Fertilizante> fertilizantes = new ArrayList<Fertilizante>();
 	static{
-		fertilizantes.add(new Fertilizante("Fosfato Diamonico (DAP)",14.72));
-		fertilizantes.add(new Fertilizante("Fosfato Monoamonico (MAP)",16.64));
-		fertilizantes.add(new Fertilizante("Superfosfato simple",5.76));
-		fertilizantes.add(new Fertilizante("Superfosfato triple (SPT)",14.72));
+		fertilizantes.add(new Fertilizante("Fosfato Diamonico (DAP)",0.1472));
+		fertilizantes.add(new Fertilizante("Fosfato Monoamonico (MAP)",0.1664));
+		fertilizantes.add(new Fertilizante("Superfosfato simple",0.576));
+		fertilizantes.add(new Fertilizante("Superfosfato triple (SPT)",0.1472));
 
 	}
 	
