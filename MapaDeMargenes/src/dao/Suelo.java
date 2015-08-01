@@ -1,4 +1,4 @@
-/*
+
 package dao;
 
 import java.util.ArrayList;
@@ -105,11 +105,11 @@ public class Suelo extends Dao {
 	public static SimpleFeatureType getType(){
 		SimpleFeatureType type=null;
 		try {
-			*/
+			
 /*
 			 geom tiene que ser Point, Line o Polygon. no puede ser Geometry porque podria ser cualquiera y solo permite un tipo por archivo
 			 los nombre de las columnas no pueden ser de mas de 10 char
-			  *//*
+			  */
 
 			
 			type = DataUtilities.createType("Suelo",
@@ -145,4 +145,4 @@ public class Suelo extends Dao {
 	}
 	
 }
-*/
+
