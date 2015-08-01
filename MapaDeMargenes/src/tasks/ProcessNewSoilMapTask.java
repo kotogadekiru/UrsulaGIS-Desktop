@@ -51,7 +51,7 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 	// ArrayList<ArrayList<Object>>();
 
 	public ProcessNewSoilMapTask(FileDataStore store, Group map, Quadtree soilTree,
-			Quadtree fertTree, Quadtree harvestTree, Producto objProducto) {
+			Quadtree fertTree, Quadtree harvestTree, Producto objProducto,Fertilizante fert) {
 		this.store = store;
 		this.map = map;
 
@@ -257,9 +257,9 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 
 	private Double getPpmSuelo(Geometry geometry) {
 		Double importeSiembra = new Double(0);
-		if (!(geometry instanceof Point) && fertTree != null) {
+		if (!(geometry instanceof Point) && soilTree != null) {
 			@SuppressWarnings("rawtypes")
-			List siembras = fertTree.query(geometry.getEnvelopeInternal());
+			List siembras = soilTree.query(geometry.getEnvelopeInternal());
 			for (Object siembraObj : siembras) {
 				if (siembraObj instanceof Siembra) {
 
@@ -297,7 +297,7 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 	}
 
 	private Double getPpmFertilizacion(Geometry geometry) {
-		Double importeFert = new Double(0);
+		Double ppmPTotal = new Double(0);
 		if (!(geometry instanceof Point) && fertTree != null) {
 			@SuppressWarnings("rawtypes")
 			List ferts = fertTree.query(geometry.getEnvelopeInternal());
@@ -307,7 +307,7 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 			for (Object fertObj : ferts) {
 				if (fertObj instanceof Fertilizacion) {
 					Fertilizacion fert = (Fertilizacion) fertObj;
-					Double costoHa = (Double) fert.getCantFertHa();
+					Double ppmP = (Double) fert.getCantFertHa()*fert.getPpmP();
 
 					Object pulvGeomObject = fert.getGeometry();
 					if (pulvGeomObject instanceof Geometry) {
@@ -320,7 +320,7 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 
 							Double area = inteseccionGeom.getArea()
 									* ProyectionConstants.A_HAS;
-							importeFert += costoHa * area;
+							ppmPTotal += ppmP * area;
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
@@ -336,8 +336,8 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 		}
 		System.out
 				.println("el importe de la fertilizacion correspondiente a la cosecha es = "
-						+ importeFert);
-		return importeFert;
+						+ ppmPTotal);
+		return ppmPTotal;
 	}
 
 	/*
