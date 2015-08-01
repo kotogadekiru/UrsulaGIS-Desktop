@@ -26,7 +26,7 @@ public class Suelo extends Dao {
 	
 	
 	
-	public Suelo(SimpleFeature harvestFeature, Double precioFert,Double precioPasada) {
+	public Suelo(SimpleFeature harvestFeature) {
 		super(harvestFeature);
 		//System.out.println(harvestFeature);		
 				 

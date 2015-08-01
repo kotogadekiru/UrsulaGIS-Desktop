@@ -84,6 +84,7 @@ import tasks.ProcessHarvestMapTask;
 import tasks.ProcessMarginMapTask;
 import tasks.ProcessPulvMapTask;
 import tasks.ProcessSiembraMapTask;
+import tasks.ProcessSoilMapTask;
 
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
@@ -94,6 +95,7 @@ import dao.Fertilizacion;
 import dao.Pulverizacion;
 import dao.Rentabilidad;
 import dao.Siembra;
+import dao.Suelo;
 
 public class MarginMapGenerator extends Application {
 
@@ -141,6 +143,7 @@ public class MarginMapGenerator extends Application {
 	private Quadtree pulvTree;
 	private Quadtree harvestTree;
 	private Quadtree siembraTree;
+	private Quadtree suelo;
 	private Quadtree fertTree;
 	private Quadtree rentaTree;
 
@@ -410,9 +413,70 @@ public class MarginMapGenerator extends Application {
 
 	}
 
-	private Object doOpenSoil() {
-		// TODO Auto-generated method stub
-		return null;
+	private void doOpenSoil() {
+		FileDataStore store = chooseShapeFileAndGetStore();
+		if (store != null) {
+			/*
+			 * miro el archivo y pregunto cuales son las columnas
+			 * correspondientes
+			 */
+			List<String> availableColumns = getAvailableColumns(store);
+
+			ColumnSelectDialog csd = new ColumnSelectDialog(
+					Suelo.getRequiredColumns(), availableColumns);
+
+			Optional<Map<String, String>> result = csd.showAndWait();
+
+			Map<String, String> columns = null;
+			if (result.isPresent()) {
+				columns = result.get();
+
+				Suelo.setColumnsMap(columns);
+				System.out.println("columns map: " + columns);
+			} else {
+				System.out.println("columns names not set");
+			}
+
+			// // The Java 8 way to get the response value (with lambda
+			// expression).
+			// result.ifPresent(letter -> System.out.println("Your choice: " +
+			// letter));
+
+			/**/
+			//map.getChildren().remove(fertMap);
+			this.suelosMap.getChildren().clear();
+			resetMapScale();
+
+	
+
+	
+			Group fgroup = new Group();
+			ProcessSoilMapTask pfMapTask = new ProcessSoilMapTask(
+					fgroup,store);
+			ProgressBar progressBarTask = new ProgressBar();
+			progressBox.getChildren().add(progressBarTask);
+			progressBarTask.setProgress(0);
+			progressBarTask.progressProperty().bind(
+					pfMapTask.progressProperty());
+			Thread currentTaskThread = new Thread(pfMapTask);
+			currentTaskThread.setDaemon(true);
+			currentTaskThread.start();
+
+			pfMapTask.setOnSucceeded(handler -> {
+				this.suelo = (Quadtree) handler.getSource().getValue();
+				suelosMap.getChildren().add(fgroup);
+				Bounds bl = suelosMap.getBoundsInLocal();
+				System.out.println("bounds de siembraMap es: " + bl);
+				//				fertMap.setLayoutX(-bl.getMinX());
+				//				fertMap.setLayoutY(-bl.getMinY());
+
+				//		map.getChildren().add(fertMap);
+				suelosMap.visibleProperty().set(true);
+				// Group taskMap = (Group) handler.getSource().getValue();
+				System.out.println("OpenSoilMapTask succeded");
+				progressBox.getChildren().remove(progressBarTask);
+			});
+		}
 	}
 	/**
 	 * generar un shp a partir del mapa de suelos anterior, la fertilizacion y la extraccion de nutrientes estimada por el cultivo
