@@ -156,7 +156,7 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 	                classes);
 		  
 		if(collection.size()>0){
-		    
+		    System.out.println("evaliando la colleccion para poder hacer jenkins");
 		     clasifier = (Classifier) func.evaluate(collection);//XXX esto demora unos segundos!
 		} else{
 			System.out.println("no se pudo evaluar jenkins porque la coleccion de datos es de tamaño cero");

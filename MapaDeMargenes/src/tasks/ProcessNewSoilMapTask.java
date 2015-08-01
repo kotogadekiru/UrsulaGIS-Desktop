@@ -39,8 +39,9 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 	private int featureCount;
 	private int featureNumber;
 
+	private Quadtree soilTree;
 	private Quadtree fertTree;
-	private Quadtree siembraTree;
+
 	private Quadtree harvestTree;
 	private Producto producto;
 
@@ -49,12 +50,13 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 	// ArrayList<ArrayList<Object>> pathTooltips = new
 	// ArrayList<ArrayList<Object>>();
 
-	public ProcessNewSoilMapTask(FileDataStore store, Group map, Quadtree pulvTree,
-			Quadtree siembraTree, Quadtree harvestTree, Producto objProducto) {
+	public ProcessNewSoilMapTask(FileDataStore store, Group map, Quadtree soilTree,
+			Quadtree fertTree, Quadtree harvestTree, Producto objProducto) {
 		this.store = store;
 		this.map = map;
-		// this.pulvTree = pulvTree;
-		this.siembraTree = siembraTree;
+
+		this.soilTree = soilTree;
+		this.fertTree = fertTree;
 		this.harvestTree = harvestTree;
 		this.producto = objProducto;
 	}
@@ -181,21 +183,21 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 	}
 
 	private Suelo createRentaForPoly(Polygon harvestPolygon) {
-		Double importeCosecha;
-		Double importePulv;
-		Double importeFert;
-		Double importeSiembra;
+		Double ppmCosecha;
+		Double ppmFert;
+		Double ppmSuelo;
+		
 		Double areaMargen = harvestPolygon.getArea()
 				* ProyectionConstants.A_HAS;
 
-		importeCosecha = getImporteCosecha(harvestPolygon);
-		System.out.println("ingreso por cosecha=" + importeCosecha);
+		ppmCosecha = getPpmCosecha(harvestPolygon);
+		System.out.println("ingreso por cosecha=" + ppmCosecha);
 
 		// importePulv = getImportePulv(harvestPolygon);
-		importeFert = getImporteFert(harvestPolygon);
-		importeSiembra = getImporteSiembra(harvestPolygon);
+		ppmFert = getPpmFertilizacion(harvestPolygon);
+		ppmSuelo = getPpmSuelo(harvestPolygon);
 
-		Double margenPorHa = (importeFert + importeSiembra - importeCosecha)
+		Double margenPorHa = (ppmFert + ppmSuelo - ppmCosecha)
 				/ areaMargen;
 
 		Suelo objSuelo = new Suelo();
@@ -205,7 +207,7 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 		return objSuelo;
 	}
 
-	private double getImporteCosecha(Geometry geometry) {
+	private double getPpmCosecha(Geometry geometry) {
 		// cosehaItem.getImporteHa();
 
 		double importeCosecha = 0.0;
@@ -218,7 +220,7 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 					CosechaItem cosecha = (CosechaItem) cosechaObject;
 					double costoHa = (Double) cosecha.getRindeTnHa();
 
-					Object a = costoHa * producto.getAbsP().getValue();
+					Double ppmPabsorvida = costoHa * producto.getAbsP().getValue();
 					
 					Object cosechaGeomObject = cosecha.getGeometry();
 
@@ -231,7 +233,7 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 
 							Double area = inteseccionGeom.getArea()
 									* ProyectionConstants.A_HAS;
-							importeCosecha += costoHa * area;
+							importeCosecha += ppmPabsorvida * area;
 						} catch (Exception e) {
 							System.out
 									.println("Error al instersectar la geometria query con la geometria de la cosecha");
@@ -253,11 +255,11 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 		return importeCosecha;
 	}
 
-	private Double getImporteSiembra(Geometry geometry) {
+	private Double getPpmSuelo(Geometry geometry) {
 		Double importeSiembra = new Double(0);
-		if (!(geometry instanceof Point) && siembraTree != null) {
+		if (!(geometry instanceof Point) && fertTree != null) {
 			@SuppressWarnings("rawtypes")
-			List siembras = siembraTree.query(geometry.getEnvelopeInternal());
+			List siembras = fertTree.query(geometry.getEnvelopeInternal());
 			for (Object siembraObj : siembras) {
 				if (siembraObj instanceof Siembra) {
 
@@ -294,7 +296,7 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 		return importeSiembra;
 	}
 
-	private Double getImporteFert(Geometry geometry) {
+	private Double getPpmFertilizacion(Geometry geometry) {
 		Double importeFert = new Double(0);
 		if (!(geometry instanceof Point) && fertTree != null) {
 			@SuppressWarnings("rawtypes")
@@ -305,7 +307,7 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 			for (Object fertObj : ferts) {
 				if (fertObj instanceof Fertilizacion) {
 					Fertilizacion fert = (Fertilizacion) fertObj;
-					Double costoHa = (Double) fert.getImporteHa();
+					Double costoHa = (Double) fert.getCantFertHa();
 
 					Object pulvGeomObject = fert.getGeometry();
 					if (pulvGeomObject instanceof Geometry) {

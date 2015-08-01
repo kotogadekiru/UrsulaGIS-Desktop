@@ -102,6 +102,11 @@ public class Producto{
 	public void setNombre(StringProperty nombre) {
 		this.nombre = nombre;
 	}
+
+	@Override
+	public String toString() {
+		return nombre.getValue();
+	}
 	
 	
 }

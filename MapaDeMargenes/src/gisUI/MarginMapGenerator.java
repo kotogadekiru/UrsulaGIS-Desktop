@@ -35,6 +35,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.CustomMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -82,6 +83,7 @@ import tasks.LSDetector;
 import tasks.ProcessFertMapTask;
 import tasks.ProcessHarvestMapTask;
 import tasks.ProcessMarginMapTask;
+import tasks.ProcessNewSoilMapTask;
 import tasks.ProcessPulvMapTask;
 import tasks.ProcessSiembraMapTask;
 import tasks.ProcessSoilMapTask;
@@ -92,6 +94,7 @@ import dao.Configuracion;
 import dao.CosechaItem;
 import dao.Costos;
 import dao.Fertilizacion;
+import dao.Producto;
 import dao.Pulverizacion;
 import dao.Rentabilidad;
 import dao.Siembra;
@@ -122,6 +125,7 @@ public class MarginMapGenerator extends Application {
 	Group harvestMap = new Group();
 	Group marginMap = new Group();
 	Group suelosMap = new Group();
+	Group newSoilMap = new Group();
 
 	private VBox progressBox = new VBox();
 
@@ -153,6 +157,8 @@ public class MarginMapGenerator extends Application {
 	SplitPane horizontalSplit = new SplitPane();
 	ImageView iv1 = new ImageView();
 	ImageView iv2 = new ImageView();
+
+	private Producto producto;
 	//private StringProperty consoleText;
 
 
@@ -190,6 +196,7 @@ public class MarginMapGenerator extends Application {
 		map.getChildren().add(harvestMap);
 		map.getChildren().add(marginMap);
 		map.getChildren().add(suelosMap);
+		map.getChildren().add(newSoilMap);
 		
 		
 		iv1.setScaleY(-1);
@@ -370,7 +377,10 @@ public class MarginMapGenerator extends Application {
 		marginMap.visibleProperty().bindBidirectional(showMarginMenuItem.selectedProperty());		
 
 		CheckMenuItem showSoilMI = new CheckMenuItem("Suelo");
-		suelosMap.visibleProperty().bindBidirectional(showSoilMI.selectedProperty());		
+		suelosMap.visibleProperty().bindBidirectional(showSoilMI.selectedProperty());	
+		
+		CheckMenuItem showNewSoilMI = new CheckMenuItem("Nuevo Suelo");
+		newSoilMap.visibleProperty().bindBidirectional(showNewSoilMI.selectedProperty());		
 
 
 		menuVer.getItems().addAll(showFertMenuItem, 
@@ -485,7 +495,40 @@ public class MarginMapGenerator extends Application {
 	 * generar un shp a partir del mapa de suelos anterior, la fertilizacion y la extraccion de nutrientes estimada por el cultivo
 	 */
 	private void doExportSuelo() {
-		// TODO Auto-generated method stub
+		FileDataStore store = chooseShapeFileAndGetStore();
+		if (store != null) {
+
+			System.out.println("exportNewSoilMap");
+			
+			//map.getChildren().remove(marginMap);
+			newSoilMap.getChildren().clear();
+			resetMapScale();
+			Group mGroup = new Group();
+			ProcessNewSoilMapTask uMmTask = new ProcessNewSoilMapTask(store, mGroup,sueloTree
+					, fertTree,harvestTree , producto);
+			ProgressBar progressBarTask = new ProgressBar();
+			progressBox.getChildren().add(progressBarTask);
+			progressBarTask.setProgress(0);
+			progressBarTask.progressProperty().bind(uMmTask.progressProperty());
+			Thread currentTaskThread = new Thread(uMmTask);
+			currentTaskThread.setDaemon(true);
+			currentTaskThread.start();
+
+			uMmTask.setOnSucceeded(handler -> {
+				//newSoilTree =	(Quadtree)	handler.getSource().getValue();
+				newSoilMap.getChildren().add(mGroup);
+				
+				Bounds bl = marginMap.getBoundsInLocal();
+				System.out.println("bounds de marginMap es: " + bl);
+				//			marginMap.setLayoutX(-bl.getMinX());
+				//			marginMap.setLayoutY(-bl.getMinY());
+				//	map.getChildren().add( marginMap);
+				newSoilMap.visibleProperty().set(true);
+
+				System.out.println("ProcessMarginTask succeded");
+				progressBox.getChildren().remove(progressBarTask);
+			});
+		}
 		
 	}
 
@@ -795,7 +838,18 @@ public class MarginMapGenerator extends Application {
 			}
 		});
 
+		
+		ChoiceBox<Producto> productoCh=new ChoiceBox<Producto>();
+		productoCh.getItems().setAll(Producto.productos.values());
+		
+	
+		productoCh.getSelectionModel().selectedItemProperty().addListener(( ov, oldPeriodo,  newPeriodo) ->{
+				this.producto=newPeriodo;
+			});
+			
+		
 		VBox gp = new VBox();
+		gp.getChildren().add(productoCh);
 		gp.getChildren().add(precioFertLbl);
 		gp.getChildren().add(precioFertTf);
 		gp.getChildren().add(precioLaborFertLbl);

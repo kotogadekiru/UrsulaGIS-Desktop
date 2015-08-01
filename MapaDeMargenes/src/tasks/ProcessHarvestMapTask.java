@@ -198,7 +198,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 	//	System.out.println("agregando a features "+rentaFeature);
 	}
 	
-	constructJenksClasifier(collection,CosechaItem.COLUMNA_RENDIMIENTO);
+	//constructJenksClasifier(collection,CosechaItem.COLUMNA_RENDIMIENTO);
 	if(clasifier == null ){
 		System.out.println("no hay jenks Classifier falling back to histograma");
 		constructHistogram(cosechaItemIndex);
