@@ -2,6 +2,7 @@
 .metadata/
 out/
 hs_err*
+.recommenders/
 
 *.class
 

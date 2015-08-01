@@ -67,8 +67,9 @@ public abstract class Dao implements Comparable<Dao>{
 	
 	protected Double getDoubleFromObj(Object o){
 		Double d = new Double(0); 
-		
-		 if(o instanceof Double){
+		if(o == null){
+			// Do nothing.
+		} else if(o instanceof Double){
 			 d = (Double) o;
 		 } else  if(o instanceof Integer){
 			 d = new Double((Integer) o);
