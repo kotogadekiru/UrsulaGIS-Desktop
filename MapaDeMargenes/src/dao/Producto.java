@@ -12,14 +12,17 @@ public class Producto{
 	StringProperty nombre =new SimpleStringProperty();
 	DoubleProperty absN03=new SimpleDoubleProperty();
 	DoubleProperty extN03=new SimpleDoubleProperty();
+	
+	//es lo que pierde el lote despues de la cosecha
 	DoubleProperty absP=new SimpleDoubleProperty();
+	//es lo que se lleva el grano
 	DoubleProperty extP=new SimpleDoubleProperty();
 	
 	public static Map<String,Producto> productos = new HashMap<String,Producto>();
 	static{
-		Double _absP = new Double(0.0);
-		Double _extP = new Double(0.0);
-		productos.put("Maiz",new Producto("Maiz",_absP,_extP));
+		productos.put("Maiz",new Producto("Maiz", new Double(1.4), new Double(0.0)));
+		productos.put("Trigo",new Producto("Trigo", new Double(1.76), new Double(0.0)));
+		productos.put("Soja",new Producto("Soja", new Double(1.76), new Double(0.0)));
 	}
 	
 	public Producto(String nombre) {
