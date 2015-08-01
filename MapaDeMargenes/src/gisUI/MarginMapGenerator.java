@@ -505,7 +505,7 @@ public class MarginMapGenerator extends Application {
 			resetMapScale();
 			Group mGroup = new Group();
 			ProcessNewSoilMapTask uMmTask = new ProcessNewSoilMapTask(store, mGroup,sueloTree
-					, fertTree,harvestTree , producto);
+					, fertTree,harvestTree , producto,fertilizante);
 			ProgressBar progressBarTask = new ProgressBar();
 			progressBox.getChildren().add(progressBarTask);
 			progressBarTask.setProgress(0);
