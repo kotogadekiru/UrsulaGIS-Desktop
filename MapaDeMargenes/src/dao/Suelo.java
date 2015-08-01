@@ -1,4 +1,3 @@
-
 package dao;
 
 import java.util.ArrayList;
@@ -17,28 +16,30 @@ public class Suelo extends Dao {
 	public static final String KG_P_COLUMN = "Fosforo";
 	public static final String KG_NO3_0_COLUMN = "Nitrogeno_0";
 	public static final String KG_NO3_20_COLUMN = "Nitrogeno_20";
-	private static Map<String, String> columnsMap= new HashMap<String, String>();
-	
-	private Double ppmNO3_0;	
-	private Double ppmNO3_20;	
-	private Double ppmP3_0;	
-	
-	
-	
-	
+	private static Map<String, String> columnsMap = new HashMap<String, String>();
+
+	private Double ppmNO3_0;
+	private Double ppmNO3_20;
+	private Double ppmP3_0;
+
 	public Suelo(SimpleFeature harvestFeature) {
 		super(harvestFeature);
-		//System.out.println(harvestFeature);		
-				 
+		System.out.println(harvestFeature);
+
 		Object pObj = harvestFeature.getAttribute(getColumn(KG_P_COLUMN));
-		
-		this.ppmP3_0 = super.getDoubleFromObj(pObj);	
-		Object n0Obj= harvestFeature.getAttribute(getColumn(KG_NO3_0_COLUMN));
-		this.ppmNO3_0 = super.getDoubleFromObj(n0Obj);	
-		Object n20Obj= harvestFeature.getAttribute(getColumn(KG_NO3_20_COLUMN));
-		this.ppmNO3_20 = super.getDoubleFromObj(n20Obj);			
+
+		this.ppmP3_0 = super.getDoubleFromObj(pObj);
+		System.out.println("ppmP es " + ppmP3_0);
+
+		Object n0Obj = harvestFeature.getAttribute(getColumn(KG_NO3_0_COLUMN));
+		this.ppmNO3_0 = super.getDoubleFromObj(n0Obj);
+		Object n20Obj = harvestFeature
+				.getAttribute(getColumn(KG_NO3_20_COLUMN));
+		this.ppmNO3_20 = super.getDoubleFromObj(n20Obj);
 	}
-	
+
+	public Suelo() {
+	}
 
 	public Double getPpmNO3_0() {
 		return ppmNO3_0;
@@ -65,68 +66,62 @@ public class Suelo extends Dao {
 	}
 
 	@Override
-	public Double getAmount() {		
+	public Double getAmount() {
 		return getPpmNO3_0();
 	}
 
-
-	public static  List<String> getRequiredColumns() {
+	public static List<String> getRequiredColumns() {
 		List<String> requiredColumns = new ArrayList<String>();
 		requiredColumns.add(KG_P_COLUMN);
 		requiredColumns.add(KG_NO3_0_COLUMN);
 		requiredColumns.add(KG_NO3_20_COLUMN);
-		return requiredColumns;		
+		return requiredColumns;
 	}
-
 
 	@Override
 	protected Map<String, String> getColumnsMap() {
 		return Suelo.columnsMap;
 	}
-	
 
 	public static void setColumnsMap(Map<String, String> columns) {
 		Suelo.columnsMap.clear();
 		Suelo.columnsMap.putAll(columns);
-		
-		columns.forEach(new BiConsumer<String, String>(){
+
+		columns.forEach(new BiConsumer<String, String>() {
 			@Override
 			public void accept(String key, String value) {
-				Configuracion.getInstance().setProperty(key, value);				
+				Configuracion.getInstance().setProperty(key, value);
 			}
-			
+
 		});
 	}
-	
-	public static SimpleFeatureType getType(){
-		SimpleFeatureType type=null;
-		try {
-			
-/*
-			 geom tiene que ser Point, Line o Polygon. no puede ser Geometry porque podria ser cualquiera y solo permite un tipo por archivo
-			 los nombre de las columnas no pueden ser de mas de 10 char
-			  */
 
-			
-			type = DataUtilities.createType("Suelo",
-					"*geom:Polygon,"
-					+ Suelo.KG_P_COLUMN+":Double,"
-			);
+	public static SimpleFeatureType getType() {
+		SimpleFeatureType type = null;
+		try {
+
+			/*
+			 * geom tiene que ser Point, Line o Polygon. no puede ser Geometry
+			 * porque podria ser cualquiera y solo permite un tipo por archivo
+			 * los nombre de las columnas no pueden ser de mas de 10 char
+			 */
+
+			type = DataUtilities.createType("Suelo", "*geom:Polygon,"
+					+ Suelo.KG_P_COLUMN + ":Double,");
 		} catch (SchemaException e) {
-			
+
 			e.printStackTrace();
 		}
 		return type;
 	}
 
-@Override
+	@Override
 	public SimpleFeature getFeature(SimpleFeatureBuilder featureBuilder) {
-	featureBuilder.add(super.getGeometry());
-	featureBuilder.add(getPpmP3_0());
-	
-	SimpleFeature feature = featureBuilder.buildFeature(null);
-	return feature;
-	}
-	
-}
+		featureBuilder.add(super.getGeometry());
+		featureBuilder.add(getPpmP3_0());
 
+		SimpleFeature feature = featureBuilder.buildFeature(null);
+		return feature;
+	}
+
+}

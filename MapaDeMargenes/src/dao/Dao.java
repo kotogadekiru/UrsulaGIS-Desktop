@@ -69,6 +69,7 @@ public abstract class Dao implements Comparable<Dao>{
 		Double d = new Double(0); 
 		if(o == null){
 			// Do nothing.
+			System.out.println("devolviendo 0");
 		} else if(o instanceof Double){
 			 d = (Double) o;
 		 } else  if(o instanceof Integer){

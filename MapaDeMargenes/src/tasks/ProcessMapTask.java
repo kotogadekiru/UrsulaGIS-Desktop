@@ -316,9 +316,11 @@ pathClass = 0x9e0142ff
 	}
 	
 	protected List<Polygon> getPolygons(Dao dao){
+	
 		List<Polygon> polygons = new ArrayList<Polygon>();
 		Object geometry = dao.getGeometry();
-
+		System.out.println("obteniendo los poligonos de "+geometry);
+		
 		if (geometry instanceof MultiPolygon) {		
 			MultiPolygon mp = (MultiPolygon) geometry;
 			for (int i = 0; i < mp.getNumGeometries(); i++) {

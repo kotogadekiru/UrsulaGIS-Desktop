@@ -143,7 +143,7 @@ public class MarginMapGenerator extends Application {
 	private Quadtree pulvTree;
 	private Quadtree harvestTree;
 	private Quadtree siembraTree;
-	private Quadtree suelo;
+	private Quadtree sueloTree;
 	private Quadtree fertTree;
 	private Quadtree rentaTree;
 
@@ -292,7 +292,7 @@ public class MarginMapGenerator extends Application {
 		menuConfiguracion.getItems().add(new CustomMenuItem(constructDatosPane()));
 	
 		MenuItem menuItemSuelo = new MenuItem("Suelo");
-		menuItemSuelo.setOnAction(a->doOpenSoil());
+		menuItemSuelo.setOnAction(a->doOpenSoilMap());
 		menuImportar.getItems().add(menuItemSuelo);
 		
 		MenuItem menuItemFertilizacion = new MenuItem("Fertilizacion");
@@ -369,10 +369,13 @@ public class MarginMapGenerator extends Application {
 		CheckMenuItem showMarginMenuItem = new CheckMenuItem("Retabilidades");
 		marginMap.visibleProperty().bindBidirectional(showMarginMenuItem.selectedProperty());		
 
+		CheckMenuItem showSoilMI = new CheckMenuItem("Suelo");
+		suelosMap.visibleProperty().bindBidirectional(showSoilMI.selectedProperty());		
+
 
 		menuVer.getItems().addAll(showFertMenuItem, 
 				showSiembraMenuItem, showPulvMenuItem,
-				showHarvestMenuItem, showMarginMenuItem);
+				showHarvestMenuItem, showMarginMenuItem,showSoilMI);
 
 		Configuracion config = Configuracion.getInstance();
 		HarvestFiltersConfig filtersConfig = HarvestFiltersConfig.getInstance();
@@ -413,7 +416,7 @@ public class MarginMapGenerator extends Application {
 
 	}
 
-	private void doOpenSoil() {
+	private void doOpenSoilMap() {
 		FileDataStore store = chooseShapeFileAndGetStore();
 		if (store != null) {
 			/*
@@ -463,7 +466,7 @@ public class MarginMapGenerator extends Application {
 			currentTaskThread.start();
 
 			pfMapTask.setOnSucceeded(handler -> {
-				this.suelo = (Quadtree) handler.getSource().getValue();
+				this.sueloTree = (Quadtree) handler.getSource().getValue();
 				suelosMap.getChildren().add(fgroup);
 				Bounds bl = suelosMap.getBoundsInLocal();
 				System.out.println("bounds de siembraMap es: " + bl);
@@ -1601,7 +1604,7 @@ public class MarginMapGenerator extends Application {
 				files.add(file);
 			}
 			
-			if(files.size()>0){
+			if(files!=null && files.size()>0){
 				File f = files.get(0);
 				Configuracion.getInstance().setProperty(Configuracion.LAST_FILE,f.getAbsolutePath());		
 			}

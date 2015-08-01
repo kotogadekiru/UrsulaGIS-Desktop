@@ -1,4 +1,4 @@
-package gisUI;
+package gisUI;/*
 import com.lynden.gmapsfx.GoogleMapView;
 import com.lynden.gmapsfx.MapComponentInitializedListener;
 import com.lynden.gmapsfx.javascript.object.GoogleMap;
@@ -16,7 +16,7 @@ import javafx.stage.Stage;
  * http://rterp.wordpress.com/2014/04/25/gmapsfx-add-google-maps-to-your-javafx-application/
  * @author twitter: @RobTerp
  *
- */
+ *//*
 public class gMapsTest extends Application implements MapComponentInitializedListener {
 
 GoogleMapView mapView;
@@ -72,4 +72,4 @@ public void mapInitialized() {
 public static void main(String[] args) {
     launch(args);
 }
-}
+}*/
