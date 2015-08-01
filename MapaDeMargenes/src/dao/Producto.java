@@ -8,21 +8,31 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-
-
 public class Producto{
 	StringProperty nombre =new SimpleStringProperty();
-	DoubleProperty reqN03=new SimpleDoubleProperty();
-	DoubleProperty reqP=new SimpleDoubleProperty();
+	DoubleProperty absN03=new SimpleDoubleProperty();
+	DoubleProperty extN03=new SimpleDoubleProperty();
+	DoubleProperty absP=new SimpleDoubleProperty();
+	DoubleProperty extP=new SimpleDoubleProperty();
 	
 	public static Map<String,Producto> productos = new HashMap<String,Producto>();
-	public Producto(String nombre, Double reqN03, Double reqP) {
-		super();
-		this.nombre.set(nombre);
-		this.reqN03.set(reqN03);
-		this.reqP.set(reqP);
+	static{
+		Double _absP = new Double(0.0);
+		Double _extP = new Double(0.0);
+		productos.put("Maiz",new Producto("Maiz",_absP,_extP));
 	}
 	
+	public Producto(String nombre) {
+		super();
+		this.nombre.set(nombre);
+	}
+	
+	public Producto(String string, Double _absP, Double _extP) {
+		this.nombre.set(string);
+		this.absP.set(_absP);
+		this.extP.set(_extP);
+	}
+
 	public String getNombre() {
 		return nombre.getValue();
 	}
@@ -30,28 +40,66 @@ public class Producto{
 		this.nombre.set(nombre);
 	}
 	public Double getReqN03() {
-		return reqN03.getValue();
+		return extN03.getValue();
 	}
 	public void setReqN03(Double reqN03) {
-		this.reqN03.set(reqN03); 
+		this.extN03.set(reqN03); 
 	}
 	public Double getReqP() {
-		return reqP.getValue();
+		return absP.getValue();
 	}
 	public void setReqP(Double reqP) {
-		this.reqP.setValue(reqP);
+		this.absP.setValue(reqP);
 	}	
 	
 	public DoubleProperty getReqN03Property(){
-		return this.reqN03;
+		return this.extN03;
 	}
 	
 	public DoubleProperty getReqPProperty(){
-		return this.reqP;
+		return this.absP;
 	}
 	
 	public StringProperty getNombreProperty(){
 		return this.nombre;
 	}
+
+	public DoubleProperty getAbsN03() {
+		return absN03;
+	}
+
+	public void setAbsN03(DoubleProperty absN03) {
+		this.absN03 = absN03;
+	}
+
+	public DoubleProperty getExtN03() {
+		return extN03;
+	}
+
+	public void setExtN03(DoubleProperty extN03) {
+		this.extN03 = extN03;
+	}
+
+	public DoubleProperty getAbsP() {
+		return absP;
+	}
+
+	public void setAbsP(DoubleProperty absP) {
+		this.absP = absP;
+	}
+
+	public DoubleProperty getExtP() {
+		return extP;
+	}
+
+	public void setExtP(DoubleProperty extP) {
+		this.extP = extP;
+	}
+
+	public void setNombre(StringProperty nombre) {
+		this.nombre = nombre;
+	}
+	
+	
 }
 
