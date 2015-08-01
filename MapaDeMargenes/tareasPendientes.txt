@@ -1,0 +1,26 @@
+todo Mapas de Margenes
+-1) incorporar un costo fijo por ha (hay que incorporar un costo de cosecha?)
+0) Volver a superponer las imagenes sobre las imagenes del google Earth
+1)(HECHO) levantar archivo de configuracion: nombres de columnas, precios de articulos
+2)permitir configurar la escala de colores, y los diferentes filtros aplicados
+3) (Hecho) Mostrar el nombre del archivo levantado en cada capa
+4) permitir levantar mas de un archivo para cada tipo de capa
+5) permitir ver el margen o la rentabilidad segun la configuracion
+
+
+Agregar labor:
+seleccione Tipo de labor (fertilizacion, siembra, pulverizacion, cosecha)
+seleccione archivo shape o cree uno nuevo. Asigne un nombre o un alias a la labor
+seleccione insumos aplicados y edite los precios si fuera necesario. (el sistema busca de la base de datos los precios de los insumos)
+
+Crear shape nuevo: (seleccionar el tipo de shape deseado)
+Permite seleccionar un shape base (mapear columnas correspondientes con el tipo de shape seleccionado si es posible)
+permite editar las features del shape (geometrias y datos)
+permite agregar features al shape (geometrias y datos)
+
+(hecho)comprobar si se arregla el tema del refresco en nueva cosecha si saco el cache 
+pensar si en vez de usar quadtree no es mejor usar store para usar menos ram
+
+-Djavafx.pulseLogger=true
+
+generar rentabilidades a partir de una grilla raster
