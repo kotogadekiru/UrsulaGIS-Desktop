@@ -13,8 +13,6 @@ import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
-import com.vividsolutions.jts.geom.Geometry;
-
 public class Suelo extends Dao {
 	public static final String KG_P_COLUMN = "Fosforo";
 	public static final String KG_NO3_0_COLUMN = "Nitrogeno_0";
@@ -99,8 +97,6 @@ public class Suelo extends Dao {
 			
 		});
 	}
-
-	
 	
 	public static SimpleFeatureType getType(){
 		SimpleFeatureType type=null;
@@ -114,13 +110,7 @@ public class Suelo extends Dao {
 			
 			type = DataUtilities.createType("Suelo",
 					"*geom:Polygon,"
-					+ Cosecha.COLUMNA_DISTANCIA+":Double,"
-					+ Cosecha.COLUMNA_CURSO+":Double,"
-					+ Cosecha.COLUMNA_ANCHO+":Double,"
-					+ Cosecha.COLUMNA_RENDIMIENTO+":Double,"
-					+ Cosecha.COLUMNA_VELOCIDAD+":Double,"
-					+ Cosecha.COLUMNA_PRECIO+":Double,"
-					+Cosecha.COLUMNA_IMPORTE_HA+":Double"
+					+ Suelo.KG_P_COLUMN+":Double,"
 			);
 		} catch (SchemaException e) {
 			
@@ -132,14 +122,8 @@ public class Suelo extends Dao {
 @Override
 	public SimpleFeature getFeature(SimpleFeatureBuilder featureBuilder) {
 	featureBuilder.add(super.getGeometry());
-	featureBuilder.add(getDistancia());
-	featureBuilder.add(getRumbo());
-	featureBuilder.add(getAncho());
-	featureBuilder.add(getRindeTnHa());
-	featureBuilder.add(getVelocidad());		
-	featureBuilder.add(getPrecioTnGrano());
-	featureBuilder.add(getImporteHa());		
-			
+	featureBuilder.add(getPpmP3_0());
+	
 	SimpleFeature feature = featureBuilder.buildFeature(null);
 	return feature;
 	}
