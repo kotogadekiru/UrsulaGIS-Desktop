@@ -21,6 +21,7 @@ import dao.CosechaItem;
 import dao.Dao;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
@@ -37,14 +38,21 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
 
-public class CosechaHistoChart extends Stage {
-	 VBox root = new VBox();
+public class CosechaHistoChart extends VBox {
+	// VBox root = new VBox();
 	private static final String ICON = "gisUI/1-512.png";
 	private String[] colors = {
-	"rgb(158,1,66)", "rgb(213,62,79)", " rgb(244,109,67)", " rgb(253,174,97)",
-			" rgb(254,224,139)", " rgb(255,255,191)", " rgb(230,245,152)",
-			" rgb(171,221,164)", "rgb(102,194,165)", "rgb(50,136,189)",// "BLUE"};
-			"DARKBLUE" };
+			"rgb(158,1,66)",
+			"rgb(213,62,79)",
+			" rgb(244,109,67)", 
+			" rgb(253,174,97)",
+			" rgb(254,224,139)",
+			" rgb(255,255,191)",
+			" rgb(230,245,152)",
+			" rgb(171,221,164)",
+			"rgb(102,194,165)",
+			"rgb(50,136,189)",// "BLUE"};
+	"DARKBLUE" };
 
 	// Color.rgb(94,79,162)};
 
@@ -54,8 +62,7 @@ public class CosechaHistoChart extends Stage {
 
 	public CosechaHistoChart(Quadtree harvestTree) {
 		super();
-		this.setTitle("Histograma Cosecha");
-		this.getIcons().add(new Image(ICON));
+		
 
 		final CategoryAxis xAxis = new CategoryAxis();
 		xAxis.setLabel("Rinde");
@@ -77,17 +84,17 @@ public class CosechaHistoChart extends Stage {
 
 		chart.getData().add(series);
 		VBox.getVgrow(chart);
-		root.getChildren().add(chart);
+		this.getChildren().add(chart);
 		DecimalFormat df = new DecimalFormat("#.00");
-		root.getChildren().addAll(new Label("Superficie Total: "+df.format(superficieTotal)),new Label("Produccion: "+df.format(produccionTotal)),new Label("Rinde Promedio: "+df.format(produccionTotal/superficieTotal)));
+		this.getChildren().addAll(new Label("Superficie Total: "+df.format(superficieTotal)),new Label("Produccion: "+df.format(produccionTotal)),new Label("Rinde Promedio: "+df.format(produccionTotal/superficieTotal)));
 		//TODO agregar total cosechado y rinde promedio y superficie total
-		Scene scene = new Scene(root, 800, 600);
-		this.setScene(scene);
+
 
 	}
 
 	private XYChart.Series<String, Number> createSeries(List<? extends Dao> data) {		
 		//creo el histograma
+		//TODO pasar a un thread diferente
 		Double [] histograma = ProcessMapTask.constructHistogram(data);
 		
 		
@@ -98,7 +105,7 @@ public class CosechaHistoChart extends Stage {
 		data.forEach(d -> {
 			Double rinde = d.getAmount();
 			Double area = d.getGeometry().getArea() * ProyectionConstants.A_HAS;
-			int categoria = ProcessMapTask.getColorByHistogram(rinde, histograma);
+			int categoria = ProcessMapTask.getCategoryFor(rinde);
 			
 			Double sup = superficies[categoria];
 			if (sup == null) sup = new Double(0);
@@ -139,6 +146,7 @@ public class CosechaHistoChart extends Stage {
 
 	}
 	
+		
 	private XYChart.Series<String, Number> createSeriesByJenkins(List<? extends Dao> data) {	
 		
 		SimpleFeatureCollection collection = new ListFeatureCollection(CosechaItem.getType());
@@ -150,8 +158,11 @@ public class CosechaHistoChart extends Stage {
 		//	System.out.println("agregando a features "+rentaFeature);
 		}
 		//creo el histograma
-		Classifier classifier = ProcessMapTask.constructJenksClasifier(collection,CosechaItem.COLUMNA_RENDIMIENTO);
 		
+		//Classifier classifier = ProcessMapTask.clasifier;
+//		if(classifier==null){
+//			classifier = ProcessMapTask.constructJenksClasifier(collection,CosechaItem.COLUMNA_RENDIMIENTO);
+//		}
 
 
 		// construir la data dividiendo rangos de rinde y sumando su superficie
@@ -159,7 +170,7 @@ public class CosechaHistoChart extends Stage {
 		data.forEach(d -> {
 			Double rinde = d.getAmount();
 			Double area = d.getGeometry().getArea() * ProyectionConstants.A_HAS;
-			int categoria = ProcessMapTask.getColorByJenks(rinde, classifier);
+			int categoria = ProcessMapTask.getCategoryFor(rinde);
 			
 			Double sup = superficies[categoria];
 			if (sup == null) sup = new Double(0);
@@ -172,19 +183,19 @@ public class CosechaHistoChart extends Stage {
 		XYChart.Series<String, Number> series = new XYChart.Series<>();
 
 		// Create a XYChart.Data object for each month. Add it to the series.
-		DecimalFormat df = new DecimalFormat("#.00");
+	
 		for (int j = 0; j < colors.length; j++) {
 			
-			String rangoIni = classifier.getTitle(j);
+			String label = ProcessMapTask.getCategoryNameFor(j);//classifier.getTitle(j);
 			//String rangoFin = classifier.getTitle(j+1);
-			System.out.println("rangoIni: "+rangoIni);//rangoIni: 1.0146282563539477..1.208709021558479		
+			//System.out.println("rangoIni: "+rangoIni);//rangoIni: 1.0146282563539477..1.208709021558479		
 			//System.out.println("rangoFin: "+rangoFin);//rangoFin: 1.208709021558479..1.2725564427424458
 			
-			String [] partesIni = rangoIni.split("\\.\\.");
+		
 		//	String [] partesFin = rangoFin.split("\\.");
 			
 		
-			String label = df.format(new Double(partesIni[0]))+"~"+df.format(new Double(partesIni[1]));// +"-"+histograma[j+1];
+//			String label = df.format(new Double(partesIni[0]))+"~"+df.format(new Double(partesIni[1]));// +"-"+histograma[j+1];
 			
 			Number number = superficies[j];
 			if (number == null)

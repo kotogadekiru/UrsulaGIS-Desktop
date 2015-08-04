@@ -9,10 +9,13 @@ import javafx.scene.Group;
 import javafx.scene.shape.Path;
 
 import org.geotools.data.FileDataStore;
+import org.geotools.data.Query;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
+import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.filter.Filter;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
@@ -71,12 +74,15 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 
 		SimpleFeatureCollection featureCollection = featureSource.getFeatures();
 		SimpleFeatureIterator featuresIterator = featureCollection.features();
-
-		// TODO si harvestTree es null crear grilla adecuada y calcular los
-		// costos
-		// @SuppressWarnings("unchecked")
-		// List<Cosecha> features = this.harvestTree.queryAll();
-		// Iterator<SimpleFeature> featuresIterator = features.iterator();
+		
+		ReferencedEnvelope bounds2 = featureSource.getBounds();
+//		
+//		Filter filter = Filter.INCLUDE;
+//		
+//		featureSource.getFeatures(filter );
+//		Query query= new Query();
+//		query.
+//		featureSource.getFeatures(query );
 
 		featureCount = featureCollection.size();
 		featureNumber = 0;
@@ -88,11 +94,6 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 		while (featuresIterator.hasNext()) {
 			SimpleFeature simpleFeature = featuresIterator.next();
 			Object geometry = simpleFeature.getDefaultGeometry();// cosehaItem.getGeometry();
-
-			// Double importeCosecha = new Double(0);
-			// Double importePulv = new Double(0);
-			// Double importeFert = new Double(0);
-			// Double importeSiembra = new Double(0);
 
 			if (geometry instanceof Polygon) {
 

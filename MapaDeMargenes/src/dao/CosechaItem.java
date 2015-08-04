@@ -72,7 +72,7 @@ public class CosechaItem extends Dao{
 		
 	//	id =super.getDoubleFromObj(harvestFeature.getAttribute(getColumn(COLUMNA_ID)));
 
-		ancho = super.getDoubleFromObj(harvestFeature.getAttribute(getColumn(COLUMNA_ANCHO)))+1;
+		ancho = super.getDoubleFromObj(harvestFeature.getAttribute(getColumn(COLUMNA_ANCHO)));
 		ancho=ancho*toMetros;
 			
 		Double rindeDouble =  super.getDoubleFromObj(harvestFeature.getAttribute(getColumn( COLUMNA_RENDIMIENTO)));

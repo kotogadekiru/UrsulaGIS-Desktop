@@ -21,6 +21,7 @@ import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Task;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
@@ -82,6 +83,7 @@ import tasks.HarvestFiltersConfig;
 import tasks.LSDetector;
 import tasks.ProcessFertMapTask;
 import tasks.ProcessHarvestMapTask;
+import tasks.ProcessMapTask;
 import tasks.ProcessMarginMapTask;
 import tasks.ProcessNewSoilMapTask;
 import tasks.ProcessPulvMapTask;
@@ -107,7 +109,7 @@ public class MarginMapGenerator extends Application {
 
 	private static final double DIVIDER_POSITION = 0.9;
 
-	private static final String TITLE_VERSION = "Economia de Precision (Margin Map Viewer Ver: 0.1.16)";
+	private static final String TITLE_VERSION = "Economia de Precision (Margin Map Viewer Ver: 0.1.18)";
 
 	//private static final String ICON = "gisUI/octopus_1.png";
 	//private static final String ICON = "gisUI/images (2).jpg";
@@ -829,10 +831,43 @@ public class MarginMapGenerator extends Application {
 
 	}
 
-	private void showHistoCosecha() {
-		CosechaHistoChart histoChart = new CosechaHistoChart(this.harvestTree);
-		histoChart.initOwner(this.stage);
-		histoChart.show();
+	private void showHistoCosecha() {	
+	
+		Task<CosechaHistoChart> pfMapTask = new Task<CosechaHistoChart>(){
+			@Override
+			protected CosechaHistoChart call() throws Exception {
+				try{
+				CosechaHistoChart histoChart = new CosechaHistoChart(harvestTree);		
+				
+				
+				return histoChart;
+				}catch(Throwable t){
+					t.printStackTrace();
+				}
+				return null;
+			}			
+		};
+		
+		
+		pfMapTask.setOnSucceeded(handler -> {
+			CosechaHistoChart	histoChart = (CosechaHistoChart) handler.getSource().getValue();	
+			Stage histoStage = new Stage();
+			histoStage.setTitle("Histograma Cosecha");
+			histoStage.getIcons().add(new Image(ICON));
+			Scene scene = new Scene(histoChart, 800, 600);
+			histoStage.setScene(scene);
+			System.out.println("termine de crear el histo chart");
+			histoStage.initOwner(this.stage);
+			histoStage.show();
+			System.out.println("histoChart.show();");
+		
+		});
+		
+		Thread currentTaskThread = new Thread(pfMapTask);
+		currentTaskThread.setDaemon(true);
+		currentTaskThread.start();
+		
+
 	}
 
 	private Node constructDatosPane() {
@@ -943,8 +978,9 @@ public class MarginMapGenerator extends Application {
 		
 		ChoiceBox<Producto> productoCh=new ChoiceBox<Producto>();
 		productoCh.getItems().setAll(Producto.productos.values());
-		productoCh.getSelectionModel().selectedItemProperty().addListener(( ov, oldPeriodo,  newPeriodo) ->{
-			this.producto=newPeriodo;
+		productoCh.getSelectionModel().selectedItemProperty().addListener(( ov, oldPeriodo,  newProducto) ->{
+			this.producto=newProducto;
+			ProcessMapTask.producto=newProducto;
 		});
 		productoCh.getSelectionModel().select(0);
 	
@@ -1673,42 +1709,6 @@ public class MarginMapGenerator extends Application {
 
 	private FileDataStore chooseShapeFileAndGetStore() {
 		FileDataStore store = null;
-//
-//		FileChooser fileChooser = new FileChooser();
-//		fileChooser.getExtensionFilters().add(
-//				new FileChooser.ExtensionFilter("SHP", "*.shp"));
-//
-//		String lastFile =  Configuracion.getInstance().getPropertyOrDefault(Configuracion.LAST_FILE,null);;
-//		if(lastFile != null){
-//			file = new File(lastFile);
-//		}
-//		if(file != null ){
-//			fileChooser.setInitialDirectory(file.getParentFile());
-//			fileChooser.setInitialFileName(file.getName());
-//		}
-//		try{
-//			//file = fileChooser.showOpenDialog(new Stage());
-//			List<File> files = fileChooser.showOpenMultipleDialog(new Stage());
-//			file = files.get(0);
-//		}catch(IllegalArgumentException e){
-//			fileChooser.setInitialDirectory(null);
-//			file = fileChooser.showOpenDialog(new Stage());
-//
-//		}
-//		if (file != null) {
-//			stage.setTitle(TITLE_VERSION+" "+file.getName());
-//			Configuracion.getInstance().setProperty(Configuracion.LAST_FILE,file.getAbsolutePath());
-//			/*
-//			 * miro el archivo y pregunto cuales son las columnas
-//			 * correspondientes
-//			 */
-//
-//			try {
-//				store = FileDataStoreFinder.getDataStore(file);
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
-//		}
 		try{
 			store = chooseShapeFileAndGetMultipleStores().get(0);
 		}catch(Exception e ){

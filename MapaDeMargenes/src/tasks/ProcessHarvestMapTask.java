@@ -197,8 +197,11 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 		collection.add(cosechaFeature);
 	//	System.out.println("agregando a features "+rentaFeature);
 	}
-	
-	//constructJenksClasifier(collection,CosechaItem.COLUMNA_RENDIMIENTO);
+	clasifier = null;
+	//XXX aca construyo el clasificador
+	if("JENKINS".equalsIgnoreCase(Configuracion.getInstance().getPropertyOrDefault("CLASIFICADOR", "JENKINS"))){
+		constructJenksClasifier(collection,CosechaItem.COLUMNA_RENDIMIENTO);
+	}
 	if(clasifier == null ){
 		System.out.println("no hay jenks Classifier falling back to histograma");
 		constructHistogram(cosechaItemIndex);
@@ -577,7 +580,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 			Envelope queryEnvelope = query.getEnvelopeInternal();		
 			for (CosechaItem o : objects) {				
 					Geometry g = o.getGeometry();
-					
+					try{
 					if (g.intersects(query)) {//acelera mucho el proceso //g.getEnvelopeInternal().intersects(query) 
 					
 						boolean contains = g.touches(zero);
@@ -589,6 +592,9 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 //						else{
 //							System.out.println("contains zero o hay mas de 100 geometrias en superposicion");
 //						}
+					}
+					}catch(java.lang.IllegalArgumentException e){
+						e.printStackTrace();
 					}
 			
 			}

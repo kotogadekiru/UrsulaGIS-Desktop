@@ -18,11 +18,13 @@ public class Producto{
 	//es lo que se lleva el grano
 	DoubleProperty extP=new SimpleDoubleProperty();
 	
+	DoubleProperty rindeEsperado=new SimpleDoubleProperty();
+	
 	public static Map<String,Producto> productos = new HashMap<String,Producto>();
 	static{
-		productos.put("Maiz",new Producto("Maiz", new Double(1.4), new Double(0.0)));
-		productos.put("Trigo",new Producto("Trigo", new Double(1.76), new Double(0.0)));
-		productos.put("Soja",new Producto("Soja", new Double(1.76), new Double(0.0)));
+		productos.put("Maiz",new Producto("Maiz", new Double(1.4), new Double(0.0),new Double(10.0)));
+		productos.put("Trigo",new Producto("Trigo", new Double(1.76), new Double(0.0),new Double(4.0)));
+		productos.put("Soja",new Producto("Soja", new Double(1.76), new Double(0.0),new Double(4.0)));
 	}
 	
 	public Producto(String nombre) {
@@ -30,10 +32,11 @@ public class Producto{
 		this.nombre.set(nombre);
 	}
 	
-	public Producto(String string, Double _absP, Double _extP) {
+	public Producto(String string, Double _absP, Double _extP,Double rinde) {
 		this.nombre.set(string);
 		this.absP.set(_absP);
 		this.extP.set(_extP);
+		this.rindeEsperado.set(rinde);
 	}
 
 	public String getNombre() {
@@ -101,6 +104,14 @@ public class Producto{
 
 	public void setNombre(StringProperty nombre) {
 		this.nombre = nombre;
+	}
+
+	public DoubleProperty getRindeEsperado() {
+		return rindeEsperado;
+	}
+
+	public void setRindeEsperado(DoubleProperty rindeEsperado) {
+		this.rindeEsperado = rindeEsperado;
 	}
 
 	@Override
