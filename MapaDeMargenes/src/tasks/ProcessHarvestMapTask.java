@@ -37,11 +37,11 @@ import dao.CosechaItem;
 
 public class ProcessHarvestMapTask extends ProcessMapTask {
 
-	private static final double MINIMA_SUP_HAS = 10/ProyectionConstants.METROS2_POR_HA;//0.001
-	private static final int CANTIDAD_DISTANCIAS_ENTRADA_REGIMEN_PASADA = new Integer(Configuracion.getInstance().getProperty("CANTIDAD_DISTANCIAS_ENTRADA_REGIMEN_PASADA"));//5
-	private static final int CANTIDAD_DISTANCIAS_TOLERANCIA =new Integer(Configuracion.getInstance().getProperty("CANTIDAD_DISTANCIAS_TOLERANCIA"));//10
+	private static final double MINIMA_SUP_HAS =  new Integer(Configuracion.getInstance().getPropertyOrDefault("SUP_MINIMA_M2", "10"))/ProyectionConstants.METROS2_POR_HA;//0.001
+	private static final int CANTIDAD_DISTANCIAS_ENTRADA_REGIMEN_PASADA = new Integer(Configuracion.getInstance().getPropertyOrDefault("CANTIDAD_DISTANCIAS_ENTRADA_REGIMEN_PASADA","1"));//5
+	private static final int CANTIDAD_DISTANCIAS_TOLERANCIA =new Integer(Configuracion.getInstance().getPropertyOrDefault("CANTIDAD_DISTANCIAS_TOLERANCIA","5"));//10
 	
-	private static final int N_VARIANZAS_TOLERA =new Integer(Configuracion.getInstance().getProperty("N_VARIANZAS_TOLERA")); //3;//9;
+	private static final int N_VARIANZAS_TOLERA =new Integer(Configuracion.getInstance().getPropertyOrDefault("N_VARIANZAS_TOLERA","1")); //3;//9;
 	Coordinate lastD = null, lastC = null;
 	double maxX = 0, maxY = 0, minX = 0, minY = 0;// variables para llevar la
 	// cuenta de donde estan los

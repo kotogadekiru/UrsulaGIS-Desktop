@@ -13,23 +13,40 @@ import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
 public class Suelo extends Dao {
-	public static final String KG_P_COLUMN = "Fosforo";
-//	public static final String KG_NO3_0_COLUMN = "Nitrogeno_0";
-//	public static final String KG_NO3_20_COLUMN = "Nitrogeno_20";
+	public static final String AGUA_PERFIL= "Agua Perfil";
+	public static final String PROF_NAPA= "Napa";
+	public static final String PPM_FOSFORO = "Fosforo";
+	public static final String PPM_NITROGENO = "Nitrogeno";
+	public static final String PPM_ASUFRE = "Asufre";
+	public static final String PPM_MO = "Materia Organica";
+	
 	private static Map<String, String> columnsMap = new HashMap<String, String>();
 
-//	private Double ppmNO3_0;
-//	private Double ppmNO3_20;
+	private Double ppmNO3_0;
+	private Double ppmNO3_20;
+	
 	private Double ppmP;
+	/*La profundidad en cm hasta la napa*/
+	private Double napa;
+	
+	private Double aguaPerfil;
 
 	public Suelo(SimpleFeature harvestFeature) {
 		super(harvestFeature);
 		System.out.println(harvestFeature);
 
-		Object pObj = harvestFeature.getAttribute(getColumn(KG_P_COLUMN));
+		Object pObj = harvestFeature.getAttribute(getColumn(PPM_FOSFORO));
 		this.ppmP = super.getDoubleFromObj(pObj);
-		System.out.println("ppmP es " + ppmP);
+		
 
+		Object napaObj = harvestFeature.getAttribute(getColumn(PROF_NAPA));
+		this.napa = super.getDoubleFromObj(napaObj);
+		
+		
+		Object aguaOBJ = harvestFeature.getAttribute(getColumn(AGUA_PERFIL));
+		this.aguaPerfil = super.getDoubleFromObj(aguaOBJ);
+		
+		
 //		Object n0Obj = harvestFeature.getAttribute(getColumn(KG_NO3_0_COLUMN));
 //		this.ppmNO3_0 = super.getDoubleFromObj(n0Obj);
 //		Object n20Obj = harvestFeature
@@ -71,7 +88,7 @@ public class Suelo extends Dao {
 
 	public static List<String> getRequiredColumns() {
 		List<String> requiredColumns = new ArrayList<String>();
-		requiredColumns.add(KG_P_COLUMN);
+		requiredColumns.add(PPM_FOSFORO);
 //		requiredColumns.add(KG_NO3_0_COLUMN);
 //		requiredColumns.add(KG_NO3_20_COLUMN);
 		return requiredColumns;
@@ -106,7 +123,7 @@ public class Suelo extends Dao {
 			 */
 
 			type = DataUtilities.createType("Suelo", "*geom:Polygon,"
-					+ Suelo.KG_P_COLUMN + ":Double,");
+					+ Suelo.PPM_FOSFORO + ":Double,");
 		} catch (SchemaException e) {
 
 			e.printStackTrace();

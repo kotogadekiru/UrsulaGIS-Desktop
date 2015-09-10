@@ -21,7 +21,7 @@ import com.vividsolutions.jts.geom.Geometry;
 public class CosechaItem extends Dao{	
 	private static final int KG_POR_TN = 1000;
 	
-	private static final String COLUMNA_VELOCIDAD = "Velocidad";
+	private static final String COLUMNA_VELOCIDAD = "Elevacion";
 	public static final String COLUMNA_RENDIMIENTO = "Rendimiento";
 	private static final String COLUMNA_ANCHO = "Ancho";
 	private static final String COLUMNA_CURSO = "Curso(deg)";
@@ -42,7 +42,7 @@ public class CosechaItem extends Dao{
 	Double rumbo;
 	Double ancho;
 	Double rindeTnHa;
-	Double velocidad;
+	Double elevacion;
 	Double precioTnGrano;
 	Double importeHa;
 	Double pasada;
@@ -87,7 +87,7 @@ public class CosechaItem extends Dao{
 		}
 	
 
-		velocidad = super.getDoubleFromObj(harvestFeature.getAttribute(getColumn(COLUMNA_VELOCIDAD)))*toMetros;
+		elevacion = super.getDoubleFromObj(harvestFeature.getAttribute(getColumn(COLUMNA_VELOCIDAD)))*toMetros;
 		this.precioTnGrano = precioGrano;
 		this.importeHa = rindeTnHa * this.precioTnGrano;
 	}
@@ -134,12 +134,12 @@ public class CosechaItem extends Dao{
 		this.rindeTnHa = rindeTnHa;
 	}
 
-	public Double getVelocidad() {
-		return velocidad;
+	public Double getElevacion() {
+		return elevacion;
 	}
 
-	public void setVelocidad(Double velocidad) {
-		this.velocidad = velocidad;
+	public void setElevacion(Double elev) {
+		this.elevacion = elev;
 	}
 
 	public Double getPrecioTnGrano() {
@@ -241,7 +241,7 @@ public class CosechaItem extends Dao{
 	featureBuilder.add(getRumbo());
 	featureBuilder.add(getAncho());
 	featureBuilder.add(getRindeTnHa());
-	featureBuilder.add(getVelocidad());		
+	featureBuilder.add(getElevacion());		
 	featureBuilder.add(getPrecioTnGrano());
 	featureBuilder.add(getImporteHa());		
 			
@@ -256,7 +256,7 @@ public String toString(){
 	ret += "rumbo="+ rumbo+"\n";
 	ret += "ancho="+ ancho+"\n";
 	ret += "rindeTnHa="+ rindeTnHa+"\n";
-	ret += "velocidad="+ velocidad+"\n";	
+	ret += "velocidad="+ elevacion+"\n";	
 	ret += "pasada="+ pasada+"\n";
 	return ret;
 }

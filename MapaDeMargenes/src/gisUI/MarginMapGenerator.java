@@ -82,6 +82,7 @@ import tasks.CannyEdgeDetector;
 import tasks.HarvestFiltersConfig;
 import tasks.LSDetector;
 import tasks.ProcessFertMapTask;
+import tasks.ProcessHarvest3DMapTask;
 import tasks.ProcessHarvestMapTask;
 import tasks.ProcessMapTask;
 import tasks.ProcessMarginMapTask;
@@ -120,7 +121,8 @@ public class MarginMapGenerator extends Application {
 //	private static final long SCROLL_LIMIT_TIME = 1000;
 	Group root = new Group();
 	Group map = new Group();
-
+	Scene scene;
+	private Stage stage;
 	//private GoogleMapView mapView;
 
 	Group fertMap = new Group();
@@ -133,7 +135,7 @@ public class MarginMapGenerator extends Application {
 
 	private VBox progressBox = new VBox();
 
-	Scene scene;
+
 
 //	private double dragBaseX, dragBaseY;
 //	private double dragBase2X, dragBase2Y;
@@ -157,7 +159,7 @@ public class MarginMapGenerator extends Application {
 
 //	private File file;
 
-	private Stage stage;
+
 	SplitPane horizontalSplit = new SplitPane();
 	ImageView iv1 = new ImageView();
 	ImageView iv2 = new ImageView();
@@ -328,6 +330,10 @@ public class MarginMapGenerator extends Application {
 		MenuItem menuItemRentabilidad = new MenuItem("Retabilidades");
 		menuItemRentabilidad.setOnAction(a->doProcessMargin());
 		menuImportar.getItems().add(menuItemRentabilidad);
+		
+		MenuItem menuCosecha3D = new MenuItem("Cosecha3D");
+		menuCosecha3D.setOnAction(a->doCosecha3D());
+		menuImportar.getItems().add(menuCosecha3D);
 
 
 		MenuItem menuItemExportarCosecha = new MenuItem("Cosecha");
@@ -424,6 +430,7 @@ public class MarginMapGenerator extends Application {
 		menuBar.setPrefWidth(scene.getWidth());
 		return menuBar;
 	}
+
 
 
 	private void doShowABMProductos() {
@@ -1161,13 +1168,49 @@ public class MarginMapGenerator extends Application {
 					timeline.setMax(size);
 					timeline.setValue(size);
 					timeline.setVisible(true);
-
-				});//fin de la transicion
+					
+				//	harvestMap.visibleProperty().set(true);
+		
+				});//fin del OnSucceeded
 			}//fin del for stores
-			harvestMap.visibleProperty().set(true);
+		
 		}//if stores != null
 
 	}
+	
+	private void doCosecha3D() {
+	
+		if (this.harvestTree != null) {
+			harvestMap.getChildren().clear();
+			resetMapScale();
+			
+				Group group = new Group();//harvestMap
+				
+				ProcessHarvest3DMapTask umTask = new ProcessHarvest3DMapTask(group,
+						harvestTree);
+				
+				ProgressBar progressBarTask = new ProgressBar();			
+				progressBarTask.setProgress(0);
+				progressBarTask.progressProperty().bind(umTask.progressProperty());
+				progressBox.getChildren().add(progressBarTask);
+				Thread currentTaskThread = new Thread(umTask);
+				currentTaskThread.setDaemon(true);
+				currentTaskThread.start();
+
+				umTask.setOnSucceeded(handler -> {
+				//	group = handler.getSource().getValue();//TODO en vez de pizarlo agregar las nuevas features
+					harvestMap.getChildren().add(group);
+					
+					progressBox.getChildren().remove(progressBarTask);
+
+					System.out.println("termine de crear la vista3d");
+				});//fin de la transicion
+			
+			harvestMap.visibleProperty().set(true);
+		}//if harvestTree != null
+		
+	}
+
 
 	private void resetMapScale() {
 		map.setScaleX(1);

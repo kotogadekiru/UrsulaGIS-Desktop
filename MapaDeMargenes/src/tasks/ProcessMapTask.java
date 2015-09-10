@@ -172,7 +172,7 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 	private static int getColorByHistogram(Double rinde, Double[] histo) {
 		int colorIndex = histo.length-1;
 		try {
-			BigDecimal bd = new BigDecimal(rinde);
+			BigDecimal bd = new BigDecimal(rinde);//java.lang.NumberFormatException: Infinite or NaN
 			bd = bd.setScale(2, RoundingMode.HALF_UP);
 			rinde = bd.doubleValue();
 			for (int i = histo.length-1; i > -1 ; i--) {
@@ -338,7 +338,12 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 		}
 
 		Paint currentColor = null;
+		try{
 		currentColor = getColorFor(dao.getAmount());
+		}catch(NumberFormatException e){
+			e.printStackTrace();
+			currentColor = Color.WHITE;
+		}
 
 
 		//		if(Color.BLACK.equals(currentColor)){
@@ -487,11 +492,11 @@ pathClass = 0x9e0142ff
 		//	                       new double[]{210, 210, 240, 240}, 4);
 		//				
 		//				gc.fillRoundRect(100, 100, 30, 30, 0, 0);
-		//			Platform.runLater(new Runnable() {
+					Platform.runLater(new Runnable() {
 
 
 		//				@Override
-		//				public void run() {
+						public void run() {
 		//	map.getChildren().add(canvas);
 		map.getChildren().addAll(pathsToAdd);//antes tenia setAll que es mas rapido pero me borraba los nodos que habia antes si los habia
 
@@ -506,8 +511,8 @@ pathClass = 0x9e0142ff
 		//	map.getChildren().add(canvas);
 
 
-		//		}
-		//	});
+				}
+			});
 
 	}
 

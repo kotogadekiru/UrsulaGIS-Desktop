@@ -13,6 +13,10 @@ import org.geotools.data.Query;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
+import org.geotools.factory.CommonFactoryFinder;
+import org.geotools.filter.FilterFactory;
+import org.geotools.filter.text.cql2.CQL;
+import org.geotools.filter.text.cql2.CQLException;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.filter.Filter;
@@ -83,6 +87,18 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 //		Query query= new Query();
 //		query.
 //		featureSource.getFeatures(query );
+		
+
+		try {
+			Filter pointInPolygon = CQL.toFilter("CONTAINS(THE_GEOM, POINT(1 2))");
+			Filter clickedOn = CQL.toFilter("BBOX(ATTR1, 151.12, 151.14, -33.5, -33.51)");
+			FilterFactory ff = CommonFactoryFinder.getFilterFactory( null );
+			Filter filter = ff.propertyGreaterThan( ff.property( "POPULATION"), ff.literal( 12 ) );
+
+		} catch (CQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		featureCount = featureCollection.size();
 		featureNumber = 0;
