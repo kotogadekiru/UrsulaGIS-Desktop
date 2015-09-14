@@ -1,6 +1,7 @@
 package dao;
 
 public class Costos {
+	private static final String COSTO_FIJO_POR_HA = "COSTO_FIJO_POR_HA";
 	private static final String COSTO_LABOR_PULVERIZACION = "costoLaborPulverizacion";
 	private static final String COSTO_LABOR_SIEMBRA = "costoLaborSiembra";
 	private static final String PRECIO_SEMILLA = "precioSemilla";
@@ -68,5 +69,14 @@ public class Costos {
 		Configuracion conf = Configuracion.getInstance();
 		conf.setProperty(PRECIO_GRANO, newVal);
 		conf.save();
+	}
+
+	public static void setCostoFijoHa(String newVal) {
+		Configuracion conf = Configuracion.getInstance();
+		conf.setProperty(COSTO_FIJO_POR_HA, newVal);
+		conf.save();		
+	}
+	public static String getCostoFijoHa(){
+		return Configuracion.getInstance().getPropertyOrDefault(COSTO_FIJO_POR_HA,"0");
 	}
 }

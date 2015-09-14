@@ -71,17 +71,19 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 	private Quadtree harvestTree;
 	private Quadtree pulvTree;
 	//ArrayList<ArrayList<Object>> pathTooltips = new ArrayList<ArrayList<Object>>();
-
+	Double costoFijoHa;
 
 
 	public ProcessMarginMapTask(FileDataStore store, Group map, Quadtree pulvTree, Quadtree fertTree,
-			Quadtree siembraTree, Quadtree harvestTree) {
+			Quadtree siembraTree, Quadtree harvestTree, Double costoFijoHa) {
 		this.store = store;
 		this.map = map;
 		this.fertTree = fertTree;
 		this.pulvTree = pulvTree;
 		this.siembraTree = siembraTree;
 		this.harvestTree = harvestTree;
+		this.costoFijoHa = costoFijoHa;
+		System.out.println("inicializando ProcessMarginMapTask con costo Fijo = "+ costoFijoHa);
 	}
 
 
@@ -215,7 +217,7 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 		Double importeFert;
 		Double importeSiembra;
 		Double areaMargen = harvestPolygon.getArea() * ProyectionConstants.A_HAS;
-		
+		Double importeFijo = costoFijoHa*areaMargen;
 		
 		importeCosecha = getImporteCosecha(harvestPolygon);
 		System.out.println("ingreso por cosecha=" + importeCosecha);
@@ -225,9 +227,10 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 		importePulv = getImportePulv(harvestPolygon);
 		importeFert = getImporteFert(harvestPolygon);
 		importeSiembra = getImporteSiembra(harvestPolygon);
+		
 
 		Double margenPorHa = (importeCosecha
-				- importePulv - importeFert - importeSiembra)
+				- importePulv - importeFert - importeSiembra-importeFijo)
 				/ areaMargen;
 
 		Rentabilidad renta = new Rentabilidad();
@@ -235,6 +238,7 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 		renta.setImportePulvHa(importePulv/ areaMargen);
 		renta.setImporteFertHa(importeFert/ areaMargen);
 		renta.setImporteSiembraHa(importeSiembra/ areaMargen);
+		renta.setCostoFijoPorHa(costoFijoHa);
 		renta.setImporteCosechaHa(importeCosecha/ areaMargen);
 		renta.setMargenPorHa(margenPorHa);
 		return renta;
@@ -431,14 +435,15 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 
 		DecimalFormat df = new DecimalFormat("#.00");
 
-		String tooltipText = new String("Rentabilidad: "
-				+ df.format(renta.getRentabilidadHa()) + "%\n\n" + "Margen: "
-				+ df.format(renta.getMargenPorHa()) + "U$S/Ha\n" + "Costo: "
-				+ df.format(renta.getCostoPorHa()) + "U$S/Ha\n" + "Fertilizacion: "
-				+ df.format(renta.getImporteFertHa()) + "U$S/Ha\n" + "Pulverizacion: "
-				+ df.format(renta.getImportePulvHa()) + "U$S/Ha\n" + "Siembra: "
-				+ df.format(renta.getImporteSiembraHa()) + "U$S/Ha\n" + "Cosecha: "
-				+ df.format(renta.getImporteCosechaHa()) + "U$S/Ha\n" 
+		String tooltipText = new String(
+				"Rentabilidad: "+ df.format(renta.getRentabilidadHa())+ "%\n\n" 
+				+"Margen: "+ df.format(renta.getMargenPorHa())	+ "U$S/Ha\n" 
+				+ "Costo: "	+ df.format(renta.getCostoPorHa())		+ "U$S/Ha\n\n"
+				+ "Fertilizacion: "	+ df.format(renta.getImporteFertHa())+ "U$S/Ha\n" 
+				+ "Pulverizacion: "	+ df.format(renta.getImportePulvHa())	+ "U$S/Ha\n"
+				+ "Siembra: "	+ df.format(renta.getImporteSiembraHa())+ "U$S/Ha\n"
+				+ "Fijo: "	+ df.format(renta.getCostoFijoPorHa())+ "U$S/Ha\n"
+				+ "Cosecha: "	+ df.format(renta.getImporteCosechaHa()) + "U$S/Ha\n" 
 		//		+ df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n"
 		// +"feature: " + featureNumber
 		);

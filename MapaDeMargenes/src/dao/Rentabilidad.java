@@ -22,7 +22,7 @@ public class Rentabilidad extends Dao{
 	private Double area ;
 
 	private Double margenPorHa ;//= (importeCosechaPorHa * areaCosecha  - importePulv - importeFert - importeSiembra) / areaCosecha;
-	//private Double costoPorHa;
+	private Double costoFijoPorHa;
 	private Double ingresoHa;
 //	private Double rentabilidadHa;
 	private Double importeCosechaHa;
@@ -78,7 +78,7 @@ public class Rentabilidad extends Dao{
 	}
 
 	public Double getCostoPorHa() {
-		return getImporteFertHa()+getImporteSiembraHa()+getImportePulvHa();
+		return getImporteFertHa()+getImporteSiembraHa()+getImportePulvHa()+getCostoFijoPorHa();
 		
 	}
 
@@ -127,6 +127,15 @@ public class Rentabilidad extends Dao{
 	}
 	
 	
+	
+	public Double getCostoFijoPorHa() {
+		return costoFijoPorHa;
+	}
+
+	public void setCostoFijoPorHa(Double costoFijoPorHa) {
+		this.costoFijoPorHa = costoFijoPorHa;
+	}
+
 	public static SimpleFeatureType getType(){
 		SimpleFeatureType type=null;
 		try {

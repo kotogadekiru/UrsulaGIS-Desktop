@@ -5,58 +5,42 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
-
-import org.geotools.data.FileDataStore;
-import org.geotools.data.simple.SimpleFeatureCollection;
-import org.geotools.factory.CommonFactoryFinder;
-import org.geotools.factory.GeoTools;
-import org.geotools.feature.FeatureCollection;
-import org.geotools.feature.simple.SimpleFeatureBuilder;
-import org.geotools.filter.function.Classifier;
-import org.geotools.filter.function.JenksNaturalBreaksFunction;
-import org.opengis.feature.Feature;
-import org.opengis.filter.FilterFactory2;
-//import org.opengis.filter.FilterFactory2;
-import org.opengis.filter.expression.Function;
-import org.opengis.filter.expression.Literal;
-import org.opengis.filter.expression.PropertyName;
-import org.geotools.filter.function.RangedClassifier;
+import java.util.TreeSet;
 
 import javafx.application.Platform;
-import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
-import javafx.geometry.Bounds;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
-import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Tooltip;
-import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
-import javafx.scene.shape.PathElement;
 import javafx.scene.text.Font;
 import javafx.stage.Screen;
+
+import org.geotools.data.FileDataStore;
+import org.geotools.data.simple.SimpleFeatureCollection;
+import org.geotools.factory.CommonFactoryFinder;
+import org.geotools.filter.function.Classifier;
+import org.geotools.filter.function.JenksNaturalBreaksFunction;
+import org.opengis.filter.FilterFactory2;
+import org.opengis.filter.expression.Literal;
+import org.opengis.filter.expression.PropertyName;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.index.quadtree.Quadtree;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.index.quadtree.Quadtree;
 
-import dao.CosechaItem;
 import dao.Dao;
 import dao.Producto;
+//import org.opengis.filter.FilterFactory2;
 
 public abstract class ProcessMapTask extends Task<Quadtree>{
 	protected Group map = null;//new Group();
@@ -164,9 +148,9 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 		String [] partesIni = rangoIni.split("\\.\\.");
 		DecimalFormat df = new DecimalFormat("0.00");
 		return df.format(new Double(partesIni[0]))+"~"+df.format(new Double(partesIni[1]));// +"-"+histograma[j+1];
-		
-//		System.err.println("Error no hay un clasificador seleccionado");
-//		return label;
+
+		//		System.err.println("Error no hay un clasificador seleccionado");
+		//		return label;
 	}
 
 	private static int getColorByHistogram(Double rinde, Double[] histo) {
@@ -194,7 +178,7 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 
 	public static Classifier constructJenksClasifier(SimpleFeatureCollection collection,String amountColumn){
 		//JenksFunctionTest test = new JenksFunctionTest("jenksTest");
-
+		histograma = null;
 		FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2(null);
 
 		Literal classes = ff.literal(colors.length);
@@ -203,7 +187,7 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 				classes);
 
 		if(collection.size()>0){
-			System.out.println("evaliando la colleccion para poder hacer jenkins");
+			System.out.println("evaluando la colleccion para poder hacer jenkins");
 			clasifier = (Classifier) func.evaluate(collection);//XXX esto demora unos segundos!
 		} else{
 			System.out.println("no se pudo evaluar jenkins porque la coleccion de datos es de tamaño cero");
@@ -217,11 +201,13 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 	}
 
 	private static int getColorByJenks(Double double1) {
-
-
 		try{
 			int colorIndex = clasifier.classify(double1);
-			//	System.out.println("el color de jenks es: "+colorIndex);
+		
+			if(colorIndex<0||colorIndex>colors.length){
+					System.out.println("el color de jenks es: "+colorIndex+" para el rinde "+double1);
+				colorIndex=0;
+			}
 			return colorIndex;
 		}catch(Exception e){
 			e.printStackTrace();
@@ -238,33 +224,43 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 		//1 ordeno los elementos de menor a mayor
 		//2 bsuco el i*size/12 elemento y anoto si amount en la posicion i del vector de rangos
 
-		//elementos.sort((e1, e2) -> e1.getAmount().compareTo(e2.getAmount()));//sorg ascending
+		
 
-		List<Dao> elementos = new LinkedList<Dao>(elementosItem);
-
-		//Collections.sort(elementos);	
+//		List<Dao> elementos = new LinkedList<Dao>(elementosItem);
+//		elementos.sort((e1, e2) -> e1.getAmount().compareTo(e2.getAmount()));//sorg ascending
+	
 		System.out.println("termine de ordenar los elementos en constructHistogram");
 		histograma=new Double[colors.length];
-		if(elementos.size()>colors.length){
-			//			Double rindeMin=elementos.get(0).getAmount();
-			//			Double maxAmount = elementos.get(elementos.size()-1).getAmount();				
+		
+		
+		
+		TreeSet<? extends Dao> diferent = new TreeSet<>(elementosItem);
+		//Set.add() returns false if the item was already in the set.
 
-			Double rindeMin=0.0;
-			Double maxAmount = 20.0;	
-			if(producto!=null){
-				maxAmount = producto.getRindeEsperado().getValue()*1.5;
-			}
+		
+		
 
-			Double deltaForColour =(maxAmount-rindeMin)/colors.length;
+		if(diferent.size()>colors.length){//FIXME lo importante no son los elementos sino los diferentes valores
+			System.out.println("hay mas elementos que colores");
+						Double rindeMin=diferent.first().getAmount();
+						Double rindeMax = diferent.last().getAmount();				
+
+//			Double rindeMin=0.0;
+//			Double maxAmount = 20.0;	
+//			if(producto!=null){
+//				maxAmount = producto.getRindeEsperado().getValue()*1.5;
+//			}
+
+			Double deltaForColour =(rindeMax-rindeMin)/colors.length;
 
 			for(int i = 0;i<colors.length;i++){	
 				histograma[i]=rindeMin+deltaForColour*(i+1);
 			}
 
 
-		} else if(elementos.size()>0){
-			Double rindeMin=elementos.get(0).getAmount();
-			Double rindeMax=elementos.get(elementos.size()-1).getAmount();
+		} else if(diferent.size()>0){
+			Double rindeMin=diferent.first().getAmount();
+			Double rindeMax = diferent.last().getAmount();			
 			double rango= rindeMax-rindeMin;
 
 			double delta = rango/colors.length;// si rango es cero delta es cero
@@ -339,8 +335,8 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 
 		Paint currentColor = null;
 		try{
-		currentColor = getColorFor(dao.getAmount());
-		}catch(NumberFormatException e){
+			currentColor = getColorFor(dao.getAmount());
+		}catch(Exception e){
 			e.printStackTrace();
 			currentColor = Color.WHITE;
 		}
@@ -492,77 +488,97 @@ pathClass = 0x9e0142ff
 		//	                       new double[]{210, 210, 240, 240}, 4);
 		//				
 		//				gc.fillRoundRect(100, 100, 30, 30, 0, 0);
-					Platform.runLater(new Runnable() {
+		Platform.runLater(new Runnable() {
 
 
-		//				@Override
-						public void run() {
-		//	map.getChildren().add(canvas);
-		map.getChildren().addAll(pathsToAdd);//antes tenia setAll que es mas rapido pero me borraba los nodos que habia antes si los habia
+			//				@Override
+			public void run() {
+				//	map.getChildren().add(canvas);
+				map.getChildren().addAll(pathsToAdd);//antes tenia setAll que es mas rapido pero me borraba los nodos que habia antes si los habia
 
-		//	map.getChildren().setAll(pathsToAdd);//antes tenia setAll que es mas rapido pero me borraba los nodos que habia antes si los habia
+				//	map.getChildren().setAll(pathsToAdd);//antes tenia setAll que es mas rapido pero me borraba los nodos que habia antes si los habia
 
-		//				SnapshotParameters params = new SnapshotParameters();
-		//				params.setFill(Color.TRANSPARENT);
-		//				
-		//				  WritableImage image = map.snapshot(params, null);
-		//				  gc.drawImage(image, 0, 0);
-		//	  map.getChildren().clear();
-		//	map.getChildren().add(canvas);
+				//				SnapshotParameters params = new SnapshotParameters();
+				//				params.setFill(Color.TRANSPARENT);
+				//				
+				//				  WritableImage image = map.snapshot(params, null);
+				//				  gc.drawImage(image, 0, 0);
+				//	  map.getChildren().clear();
+				//	map.getChildren().add(canvas);
 
 
-				}
-			});
+			}
+		});
 
 	}
 
-	//	protected void canvasRunLater() {		
-	//		Screen screen = Screen.getPrimary();
-	//		Rectangle2D bounds = screen.getVisualBounds();
-	//		
-	//		Canvas canvas = new Canvas(bounds.getWidth()*2,bounds.getHeight()*2);
-	//		GraphicsContext gc = canvas.getGraphicsContext2D();		
-	//		                           //6898688,-6898688
-	//		MoveTo mo = (MoveTo) ((Path) pathTooltips.get(0).get(0)).getElements()
-	//				.get(0);
-	//		MoveTo mt0 = new MoveTo(mo.getX() - 500, mo.getY() - 300);// (MoveTo)((Path)
-	//																	// pathTooltips.get(0).get(0)).getElements().get(0);
-	//
-	//		int i = 0;
-	//		for (ArrayList<Object> pathTooltip : pathTooltips) {
-	//			updateProgress(i, pathTooltips.size());
-	//			i++;
-	//			Path path = (Path) pathTooltip.get(0);
-	//
-	//			gc.setFill(path.getFill());
-	//			gc.setStroke(path.getStroke());
-	//
-	//			ObservableList<PathElement> elements = path.getElements();
-	//
-	//			gc.beginPath();
-	//			for (int j =0; j<elements.size();j++ ) {
-	//				PathElement pe = elements.get(j);
-	//				if (j==0) {
-	//					MoveTo mt = (MoveTo) pe;
-	//					gc.moveTo(mt.getX() - mt0.getX(), mt.getY() - mt0.getY());
-	//
-	//				} else  {
-	//					LineTo lt = (LineTo) pe;
-	//					gc.lineTo(lt.getX() - mt0.getX(), lt.getY() - mt0.getY());
-	//				}
-	//			}
-	//			gc.closePath();
-	//			gc.fill();
-	//
-	//		}
-	//
-	//		Platform.runLater(new Runnable() {
-	//			@Override
-	//			public void run() {
-	//				map.getChildren().add(canvas);
-	//			}
-	//		});
-	//	}
+	protected void canvasRunLater() {		
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+		Screen screen = Screen.getPrimary();
+		Rectangle2D bounds = screen.getVisualBounds();
+		double size = Math.sqrt(pathTooltips.size());
+		int lado = 5;
+		Canvas canvas = new Canvas(size*lado+10,size*lado+10);
+		GraphicsContext gc = canvas.getGraphicsContext2D();		
+		//6898688,-6898688
+	
 
+//		int i = 0;
+//		for (ArrayList<Object> pathTooltip : pathTooltips) {
+//			updateProgress(i, pathTooltips.size());
+//			i++;
+//			Object obj =pathTooltip.get(0);
+//			if (obj instanceof Path ) {
+//				Path path = (Path) obj;
+//
+//				gc.setFill(path.getFill());
+//				gc.setStroke(path.getStroke());
+//
+//				ObservableList<PathElement> elements = path.getElements();
+//
+//				double[] xCoords = new double[elements.size()-1];
+//				double[] yCoords = new double[elements.size()-1];
+//
+//
+//				for (int j =0; j<elements.size()-1;j++ ) {
+//					PathElement pe = elements.get(j);
+//
+//					if (pe instanceof MoveTo ) {
+//						MoveTo mt = (MoveTo) pe;
+//					
+//						xCoords[j]=mt.getX()+7000000;
+//						yCoords[j]=mt.getY()+4000000;
+//		
+//					} else if (pe instanceof LineTo ) {
+//						LineTo lt = (LineTo) pe;
+//						
+//						xCoords[j]=lt.getX()+7000000;
+//						yCoords[j]=lt.getY()+4000000;
+//					}
+//				}
+//				System.out.println("fillPolygon "+Arrays.toString(xCoords) + " "+ Arrays.toString(yCoords) );
+//				
+//				gc.fillPolygon(xCoords,yCoords,xCoords.length);
+//			}//no se que hacer si no es un Path
+//
+//		}//fin del for
+//		double size = Math.sqrt(pathTooltips.size());
+	//	lado = 100;
+		for(int x =1;x<size;x++){
+			for(int y =1;y<size;y++){
+				
+				double[] xCoords = new double[]{x*lado,(x+1)*lado,(x+1)*lado,x*lado};
+				double[] yCoords =new double[]{y*lado,y*lado,(y+1)*lado,(y+1)*lado};
+				gc.setFill(Color. rgb(255,(int) (Math.random()*255),191));
+				gc.fillPolygon(xCoords,yCoords,xCoords.length);
+			}
+		}
+			//	map.getChildren().add(new Label("HolaGroup"));
+				map.getChildren().add(canvas);
+			}
+		});
+	}
 }
 

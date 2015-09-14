@@ -67,10 +67,11 @@ public abstract class Dao implements Comparable<Dao>{
 	
 	protected Double getDoubleFromObj(Object o){
 		Double d = new Double(0); 
-		if(o == null){
-			// Do nothing.
-			System.out.println("devolviendo 0");
-		} else if(o instanceof Double){
+//		if(o == null){
+//			// Do nothing.
+//			System.out.println("devolviendo 0");
+//		} else
+			if(o instanceof Double){
 			 d = (Double) o;
 		 } else  if(o instanceof Integer){
 			 d = new Double((Integer) o);
@@ -89,7 +90,21 @@ public abstract class Dao implements Comparable<Dao>{
 		 }
 		 return d;
 	}
+	@Override
+	public boolean equals(Object o){
+		if(o instanceof Dao){
+		return compareTo((Dao)o) == 0;
+		} else{
+			return false;
+		}
+	}
 	
+	   @Override public int hashCode() {
+		     int result = this.getAmount().intValue();
+		   
+		     return result;
+		   }
+
 	
 	
 	public Double getAreaSinSup() {

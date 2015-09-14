@@ -14,6 +14,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
@@ -47,8 +48,17 @@ public class ColumnSelectDialog extends Dialog<Map<String, String>> {
 		for (String req : requiredColumns) {
 		//	HBox hb = new HBox();
 			Label lbl = new Label(req);
-			ChoiceBox<String> cb = new ChoiceBox<String>();
+			ComboBox<String> cb = new ComboBox<String>();
 			cb.setItems(FXCollections.observableArrayList(availableColums));
+			
+			  cb.setPromptText("Seleccionar");
+		        cb.setEditable(true);        
+//		        cb.valueProperty().addListener(new ChangeListener<String>() {
+//		            @Override 
+//		            public void changed(ObservableValue ov, String t, String t1) {                
+//		                address = t1;                
+//		            }    
+//		        });
 			
 			cb.getSelectionModel().selectedItemProperty()
 			.addListener(new ChangeListener<String>() {
@@ -81,10 +91,11 @@ public class ColumnSelectDialog extends Dialog<Map<String, String>> {
 			
 			// availableColums.stream().filter(s -> s.contains(query)).findFirst();
 			
-			if(found.isPresent())defaultSelected=found.get(); 
+			if(found.isPresent()){
+				defaultSelected=found.get(); 
 		//			System.out.println("default selected is "+defaultSelected+" from query "+query);					
 			cb.getSelectionModel().select(defaultSelected);
-			
+			}
 			
 		
 

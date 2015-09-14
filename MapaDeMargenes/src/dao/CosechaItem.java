@@ -1,5 +1,7 @@
 package dao;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -54,12 +56,17 @@ public class CosechaItem extends Dao{
 		//this.geometry = (Geometry) harvestFeature.getDefaultGeometry();
 		
 		double toMetros=HarvestFiltersConfig.getInstance().getMetrosPorUnidadDistancia();
+		
+		String distColumn = getColumn(COLUMNA_DISTANCIA);
+		try{
+			distancia = new Double(distColumn);
+		}catch(Exception e){
+			Object distAttribute = harvestFeature.getAttribute(distColumn);
+		
 		distancia =
-				super.getDoubleFromObj(harvestFeature.getAttribute(getColumn(COLUMNA_DISTANCIA)))
-				*toMetros;
-		
-		
-	//	rumbo = (Double) harvestFeature.getAttribute(getColumn( COLUMNA_CURSO));
+				super.getDoubleFromObj(distAttribute)
+				*toMetros;		
+		}
 		
 		rumbo =super.getDoubleFromObj(harvestFeature.getAttribute(getColumn(COLUMNA_CURSO)));
 		
@@ -70,9 +77,19 @@ public class CosechaItem extends Dao{
 	
 		id =super.getDoubleFromObj(split[split.length-1]);
 		
-	//	id =super.getDoubleFromObj(harvestFeature.getAttribute(getColumn(COLUMNA_ID)));
 
-		ancho = super.getDoubleFromObj(harvestFeature.getAttribute(getColumn(COLUMNA_ANCHO)));
+		String anchoColumn = getColumn(COLUMNA_ANCHO);
+//		try{
+//			ancho = new Double(anchoColumn);
+//		}catch(Exception e){
+//			Object distAttribute = harvestFeature.getAttribute(distColumn);
+//		
+//			ancho =
+//				super.getDoubleFromObj(distAttribute)
+//				*toMetros;		
+//		}
+		
+		ancho = super.getDoubleFromObj(harvestFeature.getAttribute(anchoColumn));
 		ancho=ancho*toMetros;
 			
 		Double rindeDouble =  super.getDoubleFromObj(harvestFeature.getAttribute(getColumn( COLUMNA_RENDIMIENTO)));
@@ -237,17 +254,33 @@ public class CosechaItem extends Dao{
 @Override
 	public SimpleFeature getFeature(SimpleFeatureBuilder featureBuilder) {
 	featureBuilder.add(super.getGeometry());
-	featureBuilder.add(getDistancia());
+	featureBuilder.add(round(getDistancia()));
 	featureBuilder.add(getRumbo());
-	featureBuilder.add(getAncho());
-	featureBuilder.add(getRindeTnHa());
-	featureBuilder.add(getElevacion());		
-	featureBuilder.add(getPrecioTnGrano());
-	featureBuilder.add(getImporteHa());		
+	featureBuilder.add(round(getAncho()));
+	featureBuilder.add(round(getRindeTnHa()));
+	featureBuilder.add(round(getElevacion()));	
+	featureBuilder.add(round(getPrecioTnGrano()));
+	featureBuilder.add(round(getImporteHa()));		
 			
 	SimpleFeature feature = featureBuilder.buildFeature(null);
 	return feature;
 	}
+
+private double round(double d){
+	//return d;
+	//return Math.round(d*100)/100;
+//	
+	try {
+		BigDecimal bd = new BigDecimal(d);//java.lang.NumberFormatException: Infinite or NaN
+		bd = bd.setScale(3, RoundingMode.HALF_UP);
+		return bd.doubleValue();
+	} catch (Exception e) {
+		System.err.println("CosechaItem::round");
+		e.printStackTrace();
+		return 0;
+	}
+
+}
 
 @Override
 public String toString(){

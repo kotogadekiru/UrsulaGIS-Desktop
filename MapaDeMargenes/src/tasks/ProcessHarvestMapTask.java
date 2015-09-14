@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.shape.Path;
 
 import org.geotools.data.FileDataStore;
@@ -37,6 +38,9 @@ import dao.CosechaItem;
 
 public class ProcessHarvestMapTask extends ProcessMapTask {
 
+	private static final String CLASIFICADOR_JENKINS = "JENKINS";
+	private static final String TIPO_CLASIFICADOR = "CLASIFICADOR";
+	private static final String CORRIMIENTO_PESADA = "CORRIMIENTO_PESADA";
 	private static final double MINIMA_SUP_HAS =  new Integer(Configuracion.getInstance().getPropertyOrDefault("SUP_MINIMA_M2", "10"))/ProyectionConstants.METROS2_POR_HA;//0.001
 	private static final int CANTIDAD_DISTANCIAS_ENTRADA_REGIMEN_PASADA = new Integer(Configuracion.getInstance().getPropertyOrDefault("CANTIDAD_DISTANCIAS_ENTRADA_REGIMEN_PASADA","1"));//5
 	private static final int CANTIDAD_DISTANCIAS_TOLERANCIA =new Integer(Configuracion.getInstance().getPropertyOrDefault("CANTIDAD_DISTANCIAS_TOLERANCIA","5"));//10
@@ -87,7 +91,10 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 		//convierto los features en cosechas
 		while (featuresIterator.hasNext()) {
 			SimpleFeature simpleFeature = featuresIterator.next();
-			cosechaItemIndex.add( new CosechaItem(simpleFeature, precioGrano));
+			CosechaItem ci =  new CosechaItem(simpleFeature, precioGrano);
+			cosechaItemIndex.add(ci);
+			distanciaAvanceMax = Math.max(ci.getDistancia(), distanciaAvanceMax);//TODO pasar al while
+			anchoMax = Math.max(ci.getAncho(), anchoMax);//TODO pasar al while
 		}	
 
 		featureCount = cosechaItemIndex.size();
@@ -106,14 +113,11 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 			Double alfa = rumbo * Math.PI / 180 + Math.PI / 2;
 
 			if(HarvestFiltersConfig.getInstance().correccionAnchoEnabled()){			
-			if (ancho > anchoMax) {//TODO pasar al while
-				anchoMax = ancho;
-			} else {
+			if (ancho < anchoMax) {			
 				ancho = anchoMax;
 			}
-		//	cosechaFeature.setAncho(ancho);
 		}
-			distanciaAvanceMax = Math.max(distancia, distanciaAvanceMax);//TODO pasar al while
+			
 			//distanciaAvanceMax = (distancia+ distanciaAvanceMax)/2;
 			
 			Object geometry = cosechaFeature.getGeometry();
@@ -137,10 +141,20 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 						ProyectionConstants.metersToLongLat * distancia / 2
 								* Math.cos(alfa + Math.PI / 2));
 				
+				String corrimiento= 	Configuracion.getInstance().getPropertyOrDefault(CORRIMIENTO_PESADA, "4");
+				double corrimientoPesada = new Integer(corrimiento);//Funciona bien en el maiz 1011 de ep7B			
+				
+				Coordinate corrimientoLongLat = new Coordinate(
+						ProyectionConstants.metersToLongLat * corrimientoPesada / 2
+								* Math.sin(alfa + Math.PI / 2),
+						ProyectionConstants.metersToLongLat * corrimientoPesada / 2
+								* Math.cos(alfa + Math.PI / 2));
+				
 				if(HarvestFiltersConfig.getInstance().correccionDemoraPesadaEnabled()){
 				// mover el punto 3.5 distancias hacia atras para compenzar el retraso de la pesada
-				double corrimientoPesada = 4;//Funciona bien en el maiz 1011 de ep7B				
-				point = point.getFactory().createPoint(new Coordinate(point.getX()+corrimientoPesada*distanciaLongLat.x,point.getY()+corrimientoPesada*distanciaLongLat.y));
+					
+			//	point = point.getFactory().createPoint(new Coordinate(point.getX()+corrimientoPesada*distanciaLongLat.x,point.getY()+corrimientoPesada*distanciaLongLat.y));
+					point = point.getFactory().createPoint(new Coordinate(point.getX()-corrimientoLongLat.x,point.getY()-corrimientoLongLat.y));
 				}
 				
 				/**
@@ -173,6 +187,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 		
 	//vuelvo a crearCosechaItemIndex respetando el indice
 		cosechaItemIndex= featureTree.queryAll();
+		//XXX esto lo puedo hacer despues de corregir outlayers solo una vex
 		cosechaItemIndex.sort((CosechaItem a, CosechaItem b) -> (int) (a.getId() - b.getId()));
 		
 		
@@ -186,9 +201,8 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 		System.out.println("no corrijo outlayers");
 	}
 		
-	//List<Cosecha> cosechasFiltradas = featureTree.queryAll();
 	
-	
+	//Vuelvo a regenerar las features para usar el clasificador Jenkins
 	SimpleFeatureCollection collection = new ListFeatureCollection(CosechaItem.getType());
 	SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(
 			CosechaItem.getType());
@@ -198,19 +212,24 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 	//	System.out.println("agregando a features "+rentaFeature);
 	}
 	clasifier = null;
+
 	//XXX aca construyo el clasificador
-	if("JENKINS".equalsIgnoreCase(Configuracion.getInstance().getPropertyOrDefault("CLASIFICADOR", "JENKINS"))){
+	if(CLASIFICADOR_JENKINS.equalsIgnoreCase(Configuracion.getInstance().getPropertyOrDefault(TIPO_CLASIFICADOR, CLASIFICADOR_JENKINS))){
 		constructJenksClasifier(collection,CosechaItem.COLUMNA_RENDIMIENTO);
 	}
 	if(clasifier == null ){
 		System.out.println("no hay jenks Classifier falling back to histograma");
 		constructHistogram(cosechaItemIndex);
 	}
+	
 	this.pathTooltips.clear();
 	cosechaItemIndex.forEach(c->{
 		Geometry g = c.getGeometry();
 		if(g instanceof Polygon){
+			
 			pathTooltips.add(getPathTooltip((Polygon)g,c));	
+			
+			
 		} else if(g instanceof MultiPolygon){
 			MultiPolygon mp = (MultiPolygon)g;			
 			for(int i=0;i<mp.getNumGeometries();i++){
@@ -223,7 +242,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 
 		
 		runLater();
-		
+	//	canvasRunLater();
 		// saveFeaturesToNewShp(destinationFeatures);
 		updateProgress(0, featureCount);
 		System.out.println("min: (" + minX + "," + minY + ") max: (" + maxX
@@ -255,11 +274,13 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 	 * @param cosechaItemIndex
 	 */
 	private void corregirOutlayers(List<CosechaItem> cosechaItemIndex) {
-		//System.out.println("corregirOutlayers(); "+System.currentTimeMillis());
+		long init = System.currentTimeMillis();
+	//	System.out.println("corregirOutlayers(); "+System.currentTimeMillis());
 			
 		Quadtree featureTree2 = new Quadtree();
-		
-		cosechaItemIndex.forEach(new Consumer<CosechaItem>(){
+		cosechaItemIndex.parallelStream().forEach
+		//cosechaItemIndex.forEach
+		(new Consumer<CosechaItem>(){
 //			private GeometricShapeFactory gsf = new GeometricShapeFactory();
 		//	private int outlayers=0;
 			@SuppressWarnings("unchecked")
@@ -310,11 +331,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 				LinearRing shell = fact.createLinearRing(coordinates);
 				LinearRing[] holes = null;
 				Polygon poly = new Polygon(shell, holes, fact);
-
-				
-				
-	
-				  
+			  
 				  double cantidadCosechaFeature = cosechaFeature.getAmount();
 				  
 				//2) obtener todas las cosechas dentro det circulo
@@ -366,6 +383,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 				} else {
 					System.out.println("zero features");
 				}
+			
 			//	System.out.println("la cantidad de outlayers es= "+outlayers);		
 			}
 
@@ -375,7 +393,9 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 			}
 			
 		});//fin del for each	
-		
+		//en linean 3189, 2746, 2866
+		//en paralelo 2152, 770, 1480, 1270, 709, 591, 1901
+		System.out.println("corregirOutlayers(); "+(System.currentTimeMillis()-init));//
 		this.featureTree = featureTree2;
 		
 	}
@@ -384,7 +404,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 	private ArrayList<Object> getPathTooltip(Geometry poly,
 			CosechaItem cosechaFeature) {
 	//	System.out.println("getPathTooltip(); "+System.currentTimeMillis());
-		Path path = getPathFromGeom(poly, cosechaFeature);
+		Node path = super.getPathFromGeom(poly, cosechaFeature);
 
 		double area = poly.getArea() * ProyectionConstants.A_HAS;// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
@@ -484,7 +504,10 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 				// extendiendola
 				// hacia atras 1 o 2 distancias
 
-				int escAvIni = CANTIDAD_DISTANCIAS_ENTRADA_REGIMEN_PASADA;// 5
+				int escAvIni = 0;
+				if(HarvestFiltersConfig.getInstance().correccionDemoraPesadaEnabled()){
+					 escAvIni = CANTIDAD_DISTANCIAS_ENTRADA_REGIMEN_PASADA;// 5
+				}
 				B = new Coordinate(x + l.x + escAvIni * d.x, y + l.y + escAvIni
 						* d.y);// X+l+d
 				A = new Coordinate(x - l.x + escAvIni * d.x, y - l.y + escAvIni

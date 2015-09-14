@@ -110,7 +110,7 @@ public class MarginMapGenerator extends Application {
 
 	private static final double DIVIDER_POSITION = 0.9;
 
-	private static final String TITLE_VERSION = "Economia de Precision (Margin Map Viewer Ver: 0.1.18)";
+	private static final String TITLE_VERSION = "Economia de Precision (Margin Map Viewer Ver: 0.1.19)";
 
 	//private static final String ICON = "gisUI/octopus_1.png";
 	//private static final String ICON = "gisUI/images (2).jpg";
@@ -148,6 +148,7 @@ public class MarginMapGenerator extends Application {
 	private Property<String> precioPulvProperty;
 	private Property<String> precioSiembraProperty;
 	private Property<String> precioSemmillaProperty;
+	private Property<String> costoFijoHaProperty;
 	private Property<String> correccionCosecha;
 
 	private Quadtree pulvTree;
@@ -882,7 +883,7 @@ public class MarginMapGenerator extends Application {
 		TextField precioGranoTf = new TextField(Costos.getPrecioGrano());//11
 		precioGranoTf.setPromptText("Precio grano");
 		Label precioGranoLbl = new Label("Precio Grano");
-		//precioGranoLbl.setTextFill(Color.BLACK);
+		precioGranoLbl.setTextFill(Color.BLACK);
 
 		TextField precioFertTf = new TextField(Costos.getPrecioFertilizante());//"0.6"
 		precioFertTf.setPromptText("El precio del fertilizante en $/kg");
@@ -907,12 +908,17 @@ public class MarginMapGenerator extends Application {
 		TextField precioSemillavTf = new TextField(Costos.getPrecioSemilla());//"170"
 		precioSemillavTf.setPromptText("Precio bolsa semilla");
 		Label precioSemillaLbl = new Label("Precio Bolsa Semilla");
-		//precioSemillaLbl.setTextFill(Color.BLACK);
+		precioSemillaLbl.setTextFill(Color.BLACK);
 
 		TextField correccionCosechaTf = new TextField("100");
-		correccionCosechaTf.setPromptText("correccion rinde");
+		correccionCosechaTf.setPromptText("Correccion rinde");
 		Label correccionCosechaLbl = new Label("Correccion Rinde");
-		//correccionCosechaLbl.setTextFill(Color.BLACK);
+		correccionCosechaLbl.setTextFill(Color.BLACK);
+		
+		TextField costoFijoHaTf = new TextField(Costos.getCostoFijoHa());//"170"
+		costoFijoHaTf.setPromptText("Costo fijo por Hectarea");
+		Label costoFijoHaLbl = new Label("Costo Fijo Ha");
+		costoFijoHaLbl.setTextFill(Color.BLACK);
 
 		precioGranoProperty = precioGranoTf.textProperty();
 		precioFertProperty = precioFertTf.textProperty();
@@ -920,6 +926,7 @@ public class MarginMapGenerator extends Application {
 		precioPulvProperty = precioLaborPulvTf.textProperty();
 		precioSiembraProperty = precioLaborSiembraTf.textProperty();
 		precioSemmillaProperty = precioSemillavTf.textProperty();
+		costoFijoHaProperty = costoFijoHaTf.textProperty();
 		correccionCosecha = correccionCosechaTf.textProperty();
 
 
@@ -970,6 +977,14 @@ public class MarginMapGenerator extends Application {
 			}
 		});
 
+		costoFijoHaProperty.addListener(new ChangeListener<String>(){
+			@Override
+			public void changed(ObservableValue<? extends String> arg0,
+					String arg1, String newVal) {
+				Costos.setCostoFijoHa(newVal);
+			}
+		});
+		
 
 		timeline.setOrientation(Orientation.HORIZONTAL);
 		timeline.setMin(0.0);
@@ -1017,28 +1032,33 @@ public class MarginMapGenerator extends Application {
 		gp.getChildren().add(precioLaborPulvTf);
 		gp.getChildren().add(precioGranoLbl);
 		gp.getChildren().add(precioGranoTf);
+		gp.getChildren().add(costoFijoHaLbl);
+		gp.getChildren().add(costoFijoHaTf);
 		gp.getChildren().add(correccionCosechaLbl);
 		gp.getChildren().add(correccionCosechaTf);
 		gp.getChildren().add(progressBox);// progressBarTask
 		gp.getChildren().add(timeline);
 		
-		Menu precios = new Menu("Precios");
-		precios.getItems().addAll(new CustomMenuItem(precioFertLbl),
-				new CustomMenuItem(precioFertTf),
-				new CustomMenuItem(precioLaborFertLbl),
-				new CustomMenuItem(precioLbFertTf),
-				new CustomMenuItem(precioSemillaLbl),
-				new CustomMenuItem(precioSemillavTf),
-				new CustomMenuItem(precioLaborSiembraLbl),
-				new CustomMenuItem(precioLaborSiembraTf),
-				new CustomMenuItem(precioLaborPulvLbl),
-				new CustomMenuItem(precioLaborPulvTf),
-				new CustomMenuItem(precioGranoLbl),
-				new CustomMenuItem(precioGranoTf),
-				new CustomMenuItem(correccionCosechaLbl),
-				new CustomMenuItem(correccionCosechaTf),
-				new CustomMenuItem(progressBox),
-				new CustomMenuItem(timeline));
+//		Menu precios = new Menu("Precios");
+//		precios.getItems().addAll(new CustomMenuItem(precioFertLbl),
+//				new CustomMenuItem(precioFertTf),
+//				new CustomMenuItem(precioLaborFertLbl),
+//				new CustomMenuItem(precioLbFertTf),
+//				new CustomMenuItem(precioSemillaLbl),
+//				new CustomMenuItem(precioSemillavTf),
+//				new CustomMenuItem(precioLaborSiembraLbl),
+//				new CustomMenuItem(precioLaborSiembraTf),
+//				new CustomMenuItem(precioLaborPulvLbl),
+//				new CustomMenuItem(precioLaborPulvTf),
+//				new CustomMenuItem(precioGranoLbl),
+//				new CustomMenuItem(precioGranoTf),
+//				new CustomMenuItem(costoFijoHaLbl),
+//				new CustomMenuItem(costoFijoHaTf),
+//				new CustomMenuItem(correccionCosechaLbl),
+//				new CustomMenuItem(correccionCosechaTf),
+//				new CustomMenuItem(progressBox),
+//				new CustomMenuItem(timeline));
+		
 		return gp;
 	}
 
@@ -1169,7 +1189,7 @@ public class MarginMapGenerator extends Application {
 					timeline.setValue(size);
 					timeline.setVisible(true);
 					
-				//	harvestMap.visibleProperty().set(true);
+					harvestMap.visibleProperty().set(true);
 		
 				});//fin del OnSucceeded
 			}//fin del for stores
@@ -1479,8 +1499,10 @@ public class MarginMapGenerator extends Application {
 			marginMap.getChildren().clear();
 			resetMapScale();
 			Group mGroup = new Group();
+			
+			Double costoFijoHa = new Double(costoFijoHaProperty.getValue());
 			ProcessMarginMapTask uMmTask = new ProcessMarginMapTask(store, mGroup,
-					pulvTree, fertTree, siembraTree, harvestTree);
+					pulvTree, fertTree, siembraTree, harvestTree,costoFijoHa);
 			ProgressBar progressBarTask = new ProgressBar();
 			progressBox.getChildren().add(progressBarTask);
 			progressBarTask.setProgress(0);
