@@ -79,7 +79,7 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 		SimpleFeatureCollection featureCollection = featureSource.getFeatures();
 		SimpleFeatureIterator featuresIterator = featureCollection.features();
 		
-		ReferencedEnvelope bounds2 = featureSource.getBounds();
+//		ReferencedEnvelope bounds2 = featureSource.getBounds();
 //		
 //		Filter filter = Filter.INCLUDE;
 //		
@@ -89,16 +89,16 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 //		featureSource.getFeatures(query );
 		
 
-		try {
-			Filter pointInPolygon = CQL.toFilter("CONTAINS(THE_GEOM, POINT(1 2))");
-			Filter clickedOn = CQL.toFilter("BBOX(ATTR1, 151.12, 151.14, -33.5, -33.51)");
-			FilterFactory ff = CommonFactoryFinder.getFilterFactory( null );
-			Filter filter = ff.propertyGreaterThan( ff.property( "POPULATION"), ff.literal( 12 ) );
-
-		} catch (CQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		try {
+//			Filter pointInPolygon = CQL.toFilter("CONTAINS(THE_GEOM, POINT(1 2))");
+//			Filter clickedOn = CQL.toFilter("BBOX(ATTR1, 151.12, 151.14, -33.5, -33.51)");
+//			FilterFactory ff = CommonFactoryFinder.getFilterFactory( null );
+//			Filter filter = ff.propertyGreaterThan( ff.property( "POPULATION"), ff.literal( 12 ) );
+//
+//		} catch (CQLException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 
 		featureCount = featureCollection.size();
 		featureNumber = 0;

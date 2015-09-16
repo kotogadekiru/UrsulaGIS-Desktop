@@ -11,7 +11,7 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-public class Pulverizacion extends Dao{
+public class Pulverizacion extends FeatureContainer{
 	private static final String COLUMNA_PASADAS = "Pasadas";
 	private static final String COLUMNA_COSTO = "Costo";
 	private static Map<String, String> columnsMap= new HashMap<String, String>();

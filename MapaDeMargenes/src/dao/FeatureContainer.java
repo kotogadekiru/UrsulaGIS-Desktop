@@ -13,13 +13,13 @@ import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 
-public abstract class Dao implements Comparable<Dao>{
+public abstract class FeatureContainer implements Comparable<FeatureContainer>{
 	
 	private Geometry geometry;
 	private Double areaSinSup= new Double(0);
 	
 	
-	public Dao(SimpleFeature feature) {
+	public FeatureContainer(SimpleFeature feature) {
 		this.geometry = (Geometry) feature.getDefaultGeometry();
 		
 		//todo esto para evitar que sea multipoligons esta de mas. tiene que haber una mejor solucion.
@@ -31,7 +31,7 @@ public abstract class Dao implements Comparable<Dao>{
 //		}
 	}
 	
-	public Dao() {
+	public FeatureContainer() {
 		
 	}
 	
@@ -56,7 +56,7 @@ public abstract class Dao implements Comparable<Dao>{
 		return column;
 	}
 	
-	public int compareTo(Dao dao){
+	public int compareTo(FeatureContainer dao){
 		return getAmount().compareTo(dao.getAmount());
 		
 	}
@@ -92,8 +92,8 @@ public abstract class Dao implements Comparable<Dao>{
 	}
 	@Override
 	public boolean equals(Object o){
-		if(o instanceof Dao){
-		return compareTo((Dao)o) == 0;
+		if(o instanceof FeatureContainer){
+		return compareTo((FeatureContainer)o) == 0;
 		} else{
 			return false;
 		}

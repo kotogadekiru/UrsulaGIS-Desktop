@@ -5,10 +5,14 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.stream.DoubleStream;
 
 import javafx.application.Platform;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
@@ -20,17 +24,23 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
+import javafx.scene.shape.PathElement;
 import javafx.scene.text.Font;
 import javafx.stage.Screen;
 
 import org.geotools.data.FileDataStore;
+import org.geotools.data.Query;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.factory.CommonFactoryFinder;
+import org.geotools.filter.Filter;
 import org.geotools.filter.function.Classifier;
 import org.geotools.filter.function.JenksNaturalBreaksFunction;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.expression.Literal;
 import org.opengis.filter.expression.PropertyName;
+import org.opengis.geometry.BoundingBox;
+
+import sun.java2d.DestSurfaceProvider;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
@@ -38,11 +48,14 @@ import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
-import dao.Dao;
+import dao.Configuracion;
+import dao.CosechaItem;
+import dao.FeatureContainer;
 import dao.Producto;
 //import org.opengis.filter.FilterFactory2;
 
 public abstract class ProcessMapTask extends Task<Quadtree>{
+	protected static  Double  MINIMA_SUP_HAS =  new Double(Configuracion.getInstance().getPropertyOrDefault("SUP_MINIMA_M2", "10"))/ProyectionConstants.METROS2_POR_HA;//0.001
 	protected Group map = null;//new Group();
 	protected Quadtree featureTree;
 	protected FileDataStore store = null;
@@ -61,6 +74,8 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 		Color.DARKBLUE};
 	//	Color.rgb(94,79,162)};
 	private static Double[] histograma=null;// es static para poder hacer constructHistograma static para usarlo en el grafico de Histograma
+	private static Double[] heightstogram=null;//es una lista de las alturas asociadas a
+	
 	public static Classifier clasifier=null;
 
 	public static Producto producto;
@@ -71,6 +86,7 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 
 	@Override
 	protected Quadtree call() throws Exception {
+		MINIMA_SUP_HAS =  new Double(Configuracion.getInstance().getPropertyOrDefault("SUP_MINIMA_M2", "10"))/ProyectionConstants.METROS2_POR_HA;//0.001
 		try {
 			doProcess();
 		} catch (Exception e1) {
@@ -203,9 +219,9 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 	private static int getColorByJenks(Double double1) {
 		try{
 			int colorIndex = clasifier.classify(double1);
-		
+
 			if(colorIndex<0||colorIndex>colors.length){
-					System.out.println("el color de jenks es: "+colorIndex+" para el rinde "+double1);
+				System.out.println("el color de jenks es: "+colorIndex+" para el rinde "+double1);
 				colorIndex=0;
 			}
 			return colorIndex;
@@ -215,60 +231,94 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 		}
 	}
 
+	
+	/**
+	 * Metodo que busca los limites de las alturas despues hay que buscar los elementos que estan dentro de un entorno y agregarlos a una lista para dibujarlos
+	 * @param elementos Lista de Dao ordenados por Elevacion de menor a mayor
+	 * @return 
+	 */
+	public static Double[] constructHeightstogram(List<? extends CosechaItem> elementosItem){
+		double average = elementosItem
+				.stream().mapToDouble( CosechaItem::getElevacion)
+				.average().getAsDouble();
+		double desvios = new Double(0);
+		for(CosechaItem dao: elementosItem){
+			desvios += Math.abs(dao.getElevacion()-average);
+		}
+		double desvioEstandar= desvios/elementosItem.size();
+		heightstogram=new Double[colors.length];
+
+		int desviosEstandar = 8;
+		Double deltaForColour =(desviosEstandar*desvioEstandar)/colors.length;
+
+		for(int i = 0;i<colors.length;i++){	
+			heightstogram[i]=(average-(desviosEstandar/2)*desvioEstandar)+deltaForColour*(i+1);
+		}
+		return heightstogram;
+	}
+	
+	
 	/**
 	 * 
 	 * @param elementos Lista de Dao ordenados por getAmount() de menor a mayor
 	 * @return 
 	 */
-	public static Double[] constructHistogram(List<? extends Dao> elementosItem){
+	public static Double[] constructHistogram(List<? extends FeatureContainer> elementosItem){
 		//1 ordeno los elementos de menor a mayor
 		//2 bsuco el i*size/12 elemento y anoto si amount en la posicion i del vector de rangos
 
-		
+		//		List<Dao> elementos = new LinkedList<Dao>(elementosItem);
+		//		elementos.sort((e1, e2) -> e1.getAmount().compareTo(e2.getAmount()));//sorg ascending
 
-//		List<Dao> elementos = new LinkedList<Dao>(elementosItem);
-//		elementos.sort((e1, e2) -> e1.getAmount().compareTo(e2.getAmount()));//sorg ascending
-	
+		double average = elementosItem
+				.stream().mapToDouble( FeatureContainer::getAmount)
+				.average().getAsDouble();
+		double desvios = new Double(0);
+		for(FeatureContainer dao: elementosItem){
+			desvios += Math.abs(dao.getAmount()-average);
+		}
+
+		double desvioEstandar= desvios/elementosItem.size();
+
+
 		System.out.println("termine de ordenar los elementos en constructHistogram");
 		histograma=new Double[colors.length];
-		
-		
-		
-		TreeSet<? extends Dao> diferent = new TreeSet<>(elementosItem);
+
+
 		//Set.add() returns false if the item was already in the set.
 
-		
-		
+		//	if(elementosItem.size()>colors.length){//FIXME lo importante no son los elementos sino los diferentes valores
+		System.out.println("hay mas elementos que colores");
+		//Double rindeMin=elementosItem.get(0).getAmount();
+		//Double rindeMax = elementosItem.last().getAmount();				//el problema es que el max es 90 y no es representativo
 
-		if(diferent.size()>colors.length){//FIXME lo importante no son los elementos sino los diferentes valores
-			System.out.println("hay mas elementos que colores");
-						Double rindeMin=diferent.first().getAmount();
-						Double rindeMax = diferent.last().getAmount();				
+		//			System.out.println("rindeMin ="+rindeMin);
+		//			System.out.println("rindeMax ="+rindeMax);
+		//			Double rindeMin=0.0;
+		//			Double maxAmount = 20.0;	
+		//			if(producto!=null){
+		//				maxAmount = producto.getRindeEsperado().getValue()*1.5;
+		//			}
 
-//			Double rindeMin=0.0;
-//			Double maxAmount = 20.0;	
-//			if(producto!=null){
-//				maxAmount = producto.getRindeEsperado().getValue()*1.5;
-//			}
+		int desviosEstandar = 8;
+		Double deltaForColour =(desviosEstandar*desvioEstandar)/colors.length;
 
-			Double deltaForColour =(rindeMax-rindeMin)/colors.length;
-
-			for(int i = 0;i<colors.length;i++){	
-				histograma[i]=rindeMin+deltaForColour*(i+1);
-			}
+		for(int i = 0;i<colors.length;i++){	
+			histograma[i]=(average-(desviosEstandar/2)*desvioEstandar)+deltaForColour*(i+1);
+		}
 
 
-		} else if(diferent.size()>0){
-			Double rindeMin=diferent.first().getAmount();
-			Double rindeMax = diferent.last().getAmount();			
-			double rango= rindeMax-rindeMin;
-
-			double delta = rango/colors.length;// si rango es cero delta es cero
-
-			for(int i = 0;i<colors.length;i++){		
-				histograma[i]=rindeMin+delta*i;
-			}	
-		}	
+		//		} else if(diferent.size()>0){
+		//			Double rindeMin=diferent.first().getAmount();
+		//			Double rindeMax = diferent.last().getAmount();			
+		//			double rango= rindeMax-rindeMin;
+		//
+		//			double delta = rango/colors.length;// si rango es cero delta es cero
+		//
+		//			for(int i = 0;i<colors.length;i++){		
+		//				histograma[i]=rindeMin+delta*i;
+		//			}	
+		//		}	
 		//		System.out.print("histograma [");
 		//		for(Double histo:histograma){
 		//			System.out.print(histo+",");
@@ -309,9 +359,16 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 
 		return 	Color.hsb(colorHue, Color.RED.getSaturation(), brightness);
 	}
+	
+	  public Paint getColorRGB (double i, double j) {
+		  double alpha = 50;//frecuencia x
+		  double beta = 50;//frecuencia y
+		    return Color.rgb(255*((int)(0.5 + 0.5 * Math.sin (i * alpha))),
+		                    255*((int)(.5 - .5 * Math.cos (j * beta))), 0);
+		  }
 
 
-	protected Path getPathFromGeom(Geometry poly, Dao dao) {			
+	protected Path getPathFromGeom(Geometry poly, FeatureContainer dao) {			
 		Path path = new Path();		
 		/**
 		 * recorro el vector de puntos que contiene el poligono gis y creo un
@@ -375,7 +432,7 @@ pathClass = 0x9e0142ff
 		return path;
 	}
 
-	protected List<Polygon> getPolygons(Dao dao){
+	protected List<Polygon> getPolygons(FeatureContainer dao){
 
 		List<Polygon> polygons = new ArrayList<Polygon>();
 		Object geometry = dao.getGeometry();
@@ -516,69 +573,79 @@ pathClass = 0x9e0142ff
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-		Screen screen = Screen.getPrimary();
-		Rectangle2D bounds = screen.getVisualBounds();
-		double size = Math.sqrt(pathTooltips.size());
-		int lado = 5;
-		Canvas canvas = new Canvas(size*lado+10,size*lado+10);
-		GraphicsContext gc = canvas.getGraphicsContext2D();		
-		//6898688,-6898688
-	
+				Screen screen = Screen.getPrimary();
+				Rectangle2D bounds = screen.getVisualBounds();
+				double size = Math.sqrt(pathTooltips.size());
+				int lado = 5;
+				Canvas canvas = new Canvas(bounds.getWidth(),bounds.getHeight());//size*lado+10,size*lado+10);
+				GraphicsContext gc = canvas.getGraphicsContext2D();		
+				//6898688,-6898688
 
-//		int i = 0;
-//		for (ArrayList<Object> pathTooltip : pathTooltips) {
-//			updateProgress(i, pathTooltips.size());
-//			i++;
-//			Object obj =pathTooltip.get(0);
-//			if (obj instanceof Path ) {
-//				Path path = (Path) obj;
-//
-//				gc.setFill(path.getFill());
-//				gc.setStroke(path.getStroke());
-//
-//				ObservableList<PathElement> elements = path.getElements();
-//
-//				double[] xCoords = new double[elements.size()-1];
-//				double[] yCoords = new double[elements.size()-1];
-//
-//
-//				for (int j =0; j<elements.size()-1;j++ ) {
-//					PathElement pe = elements.get(j);
-//
-//					if (pe instanceof MoveTo ) {
-//						MoveTo mt = (MoveTo) pe;
-//					
-//						xCoords[j]=mt.getX()+7000000;
-//						yCoords[j]=mt.getY()+4000000;
-//		
-//					} else if (pe instanceof LineTo ) {
-//						LineTo lt = (LineTo) pe;
-//						
-//						xCoords[j]=lt.getX()+7000000;
-//						yCoords[j]=lt.getY()+4000000;
-//					}
-//				}
-//				System.out.println("fillPolygon "+Arrays.toString(xCoords) + " "+ Arrays.toString(yCoords) );
-//				
-//				gc.fillPolygon(xCoords,yCoords,xCoords.length);
-//			}//no se que hacer si no es un Path
-//
-//		}//fin del for
-//		double size = Math.sqrt(pathTooltips.size());
-	//	lado = 100;
-		for(int x =1;x<size;x++){
-			for(int y =1;y<size;y++){
-				
-				double[] xCoords = new double[]{x*lado,(x+1)*lado,(x+1)*lado,x*lado};
-				double[] yCoords =new double[]{y*lado,y*lado,(y+1)*lado,(y+1)*lado};
-				gc.setFill(Color. rgb(255,(int) (Math.random()*255),191));
-				gc.fillPolygon(xCoords,yCoords,xCoords.length);
-			}
-		}
-			//	map.getChildren().add(new Label("HolaGroup"));
+
+				BoundingBox bounds2 = getBounds();
+
+				System.out.println("bounds2 "+bounds2);
+
+				int i = 0;
+				for (ArrayList<Object> pathTooltip : pathTooltips) {
+					updateProgress(i, pathTooltips.size());
+					i++;
+					Object obj =pathTooltip.get(0);
+					if (obj instanceof Path ) {
+						Path path = (Path) obj;
+
+						gc.setFill(path.getFill());
+						gc.setStroke(path.getStroke());
+
+						ObservableList<PathElement> elements = path.getElements();
+
+						double[] xCoords = new double[elements.size()-1];
+						double[] yCoords = new double[elements.size()-1];
+
+
+						for (int j =0; j<elements.size()-1;j++ ) {
+							PathElement pe = elements.get(j);
+
+							if (pe instanceof MoveTo ) {
+								MoveTo mt = (MoveTo) pe;
+
+								xCoords[j]=mt.getX()-bounds2.getMinX()/ProyectionConstants.metersToLongLat;//+7074000;
+								yCoords[j]=mt.getY()-bounds2.getMinY()/ProyectionConstants.metersToLongLat;//3967057;
+
+							} else if (pe instanceof LineTo ) {
+								LineTo lt = (LineTo) pe;
+
+								xCoords[j]=lt.getX()-bounds2.getMinX()/ProyectionConstants.metersToLongLat;//7074000;
+								yCoords[j]=lt.getY()-bounds2.getMinY()/ProyectionConstants.metersToLongLat;//3967057;
+							}
+						}
+						//System.out.println("fillPolygon "+Arrays.toString(xCoords) + " "+ Arrays.toString(yCoords) );
+
+						gc.fillPolygon(xCoords,yCoords,xCoords.length);
+					}//no se que hacer si no es un Path
+
+				}//fin del for
+				//double size = Math.sqrt(pathTooltips.size());
+
+
+				//	map.getChildren().add(new Label("HolaGroup"));
 				map.getChildren().add(canvas);
 			}
+
+
 		});
+	}
+	public BoundingBox getBounds() {
+		BoundingBox bounds2=null;
+		try {
+			//Query query = new Query( store.getSchema().getTypeName(), Filter.INCLUDE );
+			bounds2 = store.getFeatureSource().getBounds(  );
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return bounds2;
 	}
 }
 

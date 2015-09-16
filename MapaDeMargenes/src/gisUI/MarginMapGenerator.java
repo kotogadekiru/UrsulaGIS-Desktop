@@ -16,6 +16,7 @@ import java.util.Optional;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
@@ -59,6 +60,8 @@ import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
+import javafx.util.converter.NumberStringConverter;
 
 import javax.imageio.ImageIO;
 
@@ -91,7 +94,6 @@ import tasks.ProcessPulvMapTask;
 import tasks.ProcessSiembraMapTask;
 import tasks.ProcessSoilMapTask;
 
-import com.sun.deploy.uitoolkit.impl.fx.ui.FXUIFactory;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
 import dao.Configuracion;
@@ -142,14 +144,7 @@ public class MarginMapGenerator extends Application {
 	// private GoogleMapView mapView;
 	private ScrollBar timeline = new ScrollBar();;
 
-	private Property<String> precioGranoProperty;
-	private Property<String> precioFertProperty;
-	private Property<String> precioFertLbProperty;
-	private Property<String> precioPulvProperty;
-	private Property<String> precioSiembraProperty;
-	private Property<String> precioSemmillaProperty;
-	private Property<String> costoFijoHaProperty;
-	private Property<String> correccionCosecha;
+
 
 	private Quadtree pulvTree;
 	private Quadtree harvestTree;
@@ -868,123 +863,63 @@ public class MarginMapGenerator extends Application {
 			histoStage.initOwner(this.stage);
 			histoStage.show();
 			System.out.println("histoChart.show();");
-		
 		});
 		
 		Thread currentTaskThread = new Thread(pfMapTask);
 		currentTaskThread.setDaemon(true);
 		currentTaskThread.start();
-		
-
 	}
 
 	private Node constructDatosPane() {
-
-		TextField precioGranoTf = new TextField(Costos.getPrecioGrano());//11
+		StringConverter<Number> converter = new NumberStringConverter();
+	
+		TextField precioGranoTf = new TextField();//11
 		precioGranoTf.setPromptText("Precio grano");
+		Bindings.bindBidirectional(precioGranoTf.textProperty(), Costos.getInstance().precioGranoProperty, converter);
 		Label precioGranoLbl = new Label("Precio Grano");
 		precioGranoLbl.setTextFill(Color.BLACK);
 
-		TextField precioFertTf = new TextField(Costos.getPrecioFertilizante());//"0.6"
+		TextField precioFertTf = new TextField();//"0.6"
 		precioFertTf.setPromptText("El precio del fertilizante en $/kg");
+		Bindings.bindBidirectional(precioFertTf.textProperty(), Costos.getInstance().precioFertProperty, converter);
 		Label precioFertLbl = new Label("Precio Fertilizante");
 		precioFertLbl.setTextFill(Color.BLACK);
 
-		TextField precioLbFertTf = new TextField(Costos.getCostoLaborFert());//"12"
-		precioLbFertTf.setPromptText("El precio de la labor de fertilizacion por Hectarea");
+		TextField precioLabFertTf = new TextField();//"12"
+		precioLabFertTf.setPromptText("El precio de la labor de fertilizacion por Hectarea");
+		Bindings.bindBidirectional(precioLabFertTf.textProperty(), Costos.getInstance().precioLabFertProperty, converter);
 		Label precioLaborFertLbl = new Label("Costo Labor Fertilizacion");
 		precioLaborFertLbl.setTextFill(Color.BLACK);
 
-		TextField precioLaborPulvTf = new TextField(Costos.getCostoLaborPulverizacion());//"5.3"
+		TextField precioLaborPulvTf = new TextField();//"5.3"
 		precioLaborPulvTf.setPromptText("El precio de la labor de pulverizacion por Hectarea");
+		Bindings.bindBidirectional(precioLaborPulvTf.textProperty(), Costos.getInstance().precioPulvProperty, converter);
 		Label precioLaborPulvLbl = new Label("Costo Labor Pulverizacion");
 		precioLaborPulvLbl.setTextFill(Color.BLACK);
 
-		TextField precioLaborSiembraTf = new TextField(Costos.getCostoLaborSiembra());//"50"
+		TextField precioLaborSiembraTf = new TextField();//"50"
 		precioLaborSiembraTf.setPromptText("El precio de la labor de siembra por Hectarea");
+		Bindings.bindBidirectional(precioLaborSiembraTf.textProperty(), Costos.getInstance().precioSiembraProperty, converter);
 		Label precioLaborSiembraLbl = new Label("Precio labor Siembra");
 		precioLaborSiembraLbl.setTextFill(Color.BLACK);
 
-		TextField precioSemillavTf = new TextField(Costos.getPrecioSemilla());//"170"
+		TextField precioSemillavTf = new TextField();//"170"
 		precioSemillavTf.setPromptText("Precio bolsa semilla");
+		Bindings.bindBidirectional(precioSemillavTf.textProperty(), Costos.getInstance().precioSemillaProperty, converter);
 		Label precioSemillaLbl = new Label("Precio Bolsa Semilla");
 		precioSemillaLbl.setTextFill(Color.BLACK);
 
 		TextField correccionCosechaTf = new TextField("100");
 		correccionCosechaTf.setPromptText("Correccion rinde");
+		Bindings.bindBidirectional(correccionCosechaTf.textProperty(), Costos.getInstance().correccionCosechaProperty, converter);
 		Label correccionCosechaLbl = new Label("Correccion Rinde");
 		correccionCosechaLbl.setTextFill(Color.BLACK);
 		
-		TextField costoFijoHaTf = new TextField(Costos.getCostoFijoHa());//"170"
+		TextField costoFijoHaTf = new TextField();//"170"
 		costoFijoHaTf.setPromptText("Costo fijo por Hectarea");
+		Bindings.bindBidirectional(costoFijoHaTf.textProperty(), Costos.getInstance().costoFijoHaProperty, converter);
 		Label costoFijoHaLbl = new Label("Costo Fijo Ha");
 		costoFijoHaLbl.setTextFill(Color.BLACK);
-
-		precioGranoProperty = precioGranoTf.textProperty();
-		precioFertProperty = precioFertTf.textProperty();
-		precioFertLbProperty = precioLbFertTf.textProperty();
-		precioPulvProperty = precioLaborPulvTf.textProperty();
-		precioSiembraProperty = precioLaborSiembraTf.textProperty();
-		precioSemmillaProperty = precioSemillavTf.textProperty();
-		costoFijoHaProperty = costoFijoHaTf.textProperty();
-		correccionCosecha = correccionCosechaTf.textProperty();
-
-
-		precioGranoProperty.addListener(new ChangeListener<String>(){
-			@Override
-			public void changed(ObservableValue<? extends String> arg0,
-					String arg1, String newVal) {
-				Costos.setPrecioGrano(newVal);
-			}
-		});
-
-		precioFertProperty.addListener(new ChangeListener<String>(){
-			@Override
-			public void changed(ObservableValue<? extends String> arg0,
-					String arg1, String newVal) {
-				Costos.setPrecioFertilizante(newVal);
-			}
-		});
-		precioFertLbProperty.addListener(new ChangeListener<String>(){
-			@Override
-			public void changed(ObservableValue<? extends String> arg0,
-					String arg1, String newVal) {
-				Costos.setCostoLaborFert(newVal);
-			}
-		});
-
-		precioPulvProperty.addListener(new ChangeListener<String>(){
-			@Override
-			public void changed(ObservableValue<? extends String> arg0,
-					String arg1, String newVal) {
-				Costos.setCostoLaborPulverizacion(newVal);
-			}
-		});
-
-		precioSiembraProperty.addListener(new ChangeListener<String>(){
-			@Override
-			public void changed(ObservableValue<? extends String> arg0,
-					String arg1, String newVal) {
-				Costos.setCostoLaborSiembra(newVal);
-			}
-		});
-
-		precioSemmillaProperty.addListener(new ChangeListener<String>(){
-			@Override
-			public void changed(ObservableValue<? extends String> arg0,
-					String arg1, String newVal) {
-				Costos.setPrecioSemilla(newVal);
-			}
-		});
-
-		costoFijoHaProperty.addListener(new ChangeListener<String>(){
-			@Override
-			public void changed(ObservableValue<? extends String> arg0,
-					String arg1, String newVal) {
-				Costos.setCostoFijoHa(newVal);
-			}
-		});
-		
 
 		timeline.setOrientation(Orientation.HORIZONTAL);
 		timeline.setMin(0.0);
@@ -1023,7 +958,7 @@ public class MarginMapGenerator extends Application {
 		gp.getChildren().add(precioFertLbl);
 		gp.getChildren().add(precioFertTf);
 		gp.getChildren().add(precioLaborFertLbl);
-		gp.getChildren().add(precioLbFertTf);
+		gp.getChildren().add(precioLabFertTf);
 		gp.getChildren().add(precioSemillaLbl);
 		gp.getChildren().add(precioSemillavTf);
 		gp.getChildren().add(precioLaborSiembraLbl);
@@ -1097,27 +1032,9 @@ public class MarginMapGenerator extends Application {
 			//	map.setCacheHint(CacheHint.QUALITY);
 
 
-			Double precioGrano = new Double(0);
-
-			Double correccionRinde = new Double(100);
-
-			try {
-				precioGrano = Double
-						.parseDouble(precioGranoProperty.getValue());
-			} catch (Exception e) {
-				System.out
-				.println("error al parcear el precio del grano");
-				e.printStackTrace();
-			}
-
-			try {
-				correccionRinde = Double
-						.parseDouble(correccionCosecha.getValue());
-			} catch (Exception e) {
-				System.out
-				.println("error al parcear la correccion de la cosecha");
-				e.printStackTrace();
-			}
+			Double precioGrano = Costos.getInstance().precioGranoProperty.getValue();
+			Double correccionRinde = Costos.getInstance().correccionCosechaProperty.getValue();
+			
 			for(FileDataStore store : stores){//abro cada store y lo dibujo en el harvestMap individualmente
 				Group group = new Group();//harvestMap
 				ProcessHarvestMapTask umTask = new ProcessHarvestMapTask(group,
@@ -1290,26 +1207,9 @@ public class MarginMapGenerator extends Application {
 			fertMap.getChildren().clear();
 			resetMapScale();
 
-			Double precioLabor = new Double(0);
-			Double precioInsumo = new Double(0);
+			Double precioLabor =Costos.getInstance().precioLabFertProperty.getValue(); 
+			Double precioInsumo = Costos.getInstance().precioFertProperty.getValue(); 
 
-			try {
-				precioLabor = Double.parseDouble(precioFertLbProperty
-						.getValue());
-			} catch (Exception e) {
-				System.out
-				.println("error al parcear el precio de la labor de fertilizacion");
-				e.printStackTrace();
-			}
-
-			try {
-				precioInsumo = Double
-						.parseDouble(precioFertProperty.getValue());
-			} catch (Exception e) {
-				System.out
-				.println("error al parcear el precio del insumo de fertilizacion");
-				e.printStackTrace();
-			}
 			Group fgroup = new Group();
 			ProcessFertMapTask pfMapTask = new ProcessFertMapTask(
 					fgroup, precioLabor, precioInsumo, store);
@@ -1365,30 +1265,12 @@ public class MarginMapGenerator extends Application {
 				System.out.println("columns names not set");
 			}
 
-
 			//map.getChildren().remove(siembraMap);
 			siembraMap.getChildren().clear();
 			resetMapScale();
-			Double precioLabor = new Double(0);
-			Double precioInsumo = new Double(0);
+			Double precioLabor = Costos.getInstance().precioSiembraProperty.getValue(); 
+			Double precioInsumo = Costos.getInstance().precioSemillaProperty.getValue();
 
-			try {
-				precioLabor = Double.parseDouble(precioSiembraProperty
-						.getValue());
-			} catch (Exception e) {
-				System.out
-				.println("error al parcear el precio de la labor de siembra");
-				e.printStackTrace();
-			}
-
-			try {
-				precioInsumo = Double.parseDouble(precioSemmillaProperty
-						.getValue());
-			} catch (Exception e) {
-				System.out
-				.println("error al parcear el precio del insumo de siembra");
-				e.printStackTrace();
-			}
 			Group sgroup = new Group();
 			ProcessSiembraMapTask psMapTask = new ProcessSiembraMapTask(
 					sgroup, precioLabor,  precioInsumo, store);
@@ -1452,15 +1334,8 @@ public class MarginMapGenerator extends Application {
 
 			pulvMap.getChildren().clear();
 			resetMapScale();
-			Double precioLabor = new Double(0);
+			Double precioLabor = Costos.getInstance().precioPulvProperty.getValue(); 
 
-			try {
-				precioLabor = Double.parseDouble(precioPulvProperty.getValue());
-			} catch (Exception e) {
-				System.out
-				.println("error al parcear el precio de la labor de pulverizacion");
-				e.printStackTrace();
-			}
 			Group pGroup = new Group();
 			ProcessPulvMapTask pulvmTask = new ProcessPulvMapTask(pGroup,
 					precioLabor, store);
@@ -1500,9 +1375,10 @@ public class MarginMapGenerator extends Application {
 			resetMapScale();
 			Group mGroup = new Group();
 			
-			Double costoFijoHa = new Double(costoFijoHaProperty.getValue());
+			
+			
 			ProcessMarginMapTask uMmTask = new ProcessMarginMapTask(store, mGroup,
-					pulvTree, fertTree, siembraTree, harvestTree,costoFijoHa);
+					pulvTree, fertTree, siembraTree, harvestTree);
 			ProgressBar progressBarTask = new ProgressBar();
 			progressBox.getChildren().add(progressBarTask);
 			progressBarTask.setProgress(0);

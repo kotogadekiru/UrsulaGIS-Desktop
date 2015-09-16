@@ -11,7 +11,7 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-public class Fertilizacion extends Dao {
+public class Fertilizacion extends FeatureContainer {
 	public static final String KG_HA_COLUMN = "DOSIS_T";
 	private static Map<String, String> columnsMap= new HashMap<String, String>();
 	

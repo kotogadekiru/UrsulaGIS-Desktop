@@ -14,7 +14,7 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 
 
-public class Rentabilidad extends Dao{
+public class Rentabilidad extends FeatureContainer{
 	//Polygon harvestPolygon = (Polygon) geometry;
 	private Double importePulvHa ;//= getImportePulv(harvestPolygon);
 	private Double importeFertHa ;//= getImporteFert(harvestPolygon);

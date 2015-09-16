@@ -11,7 +11,7 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-public class Siembra extends Dao {
+public class Siembra extends FeatureContainer {
 	private static final String COLUMNA_BOLSAS_POR_HA = "BolsasHa";
 	private static Map<String, String> columnsMap= new HashMap<String, String>();
 	//Geometry geometry;

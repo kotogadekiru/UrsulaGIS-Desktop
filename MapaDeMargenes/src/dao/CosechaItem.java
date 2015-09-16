@@ -20,7 +20,7 @@ import tasks.HarvestFiltersConfig;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-public class CosechaItem extends Dao{	
+public class CosechaItem extends FeatureContainer{	
 	private static final int KG_POR_TN = 1000;
 	
 	private static final String COLUMNA_VELOCIDAD = "Elevacion";
@@ -95,7 +95,7 @@ public class CosechaItem extends Dao{
 		Double rindeDouble =  super.getDoubleFromObj(harvestFeature.getAttribute(getColumn( COLUMNA_RENDIMIENTO)));
 		
 		if(rindeDouble>100){//esta en kilogramos
-			rindeTnHa = rindeDouble *(correccionRinde/100)/KG_POR_TN ;
+			rindeTnHa = rindeDouble *(correccionRinde/100);//KG_POR_TN ;
 		} else if(rindeDouble <1){ //esta en decenas de toneladas?
 		
 				rindeTnHa = rindeDouble *(correccionRinde/100);// *4.28;
@@ -208,7 +208,7 @@ public class CosechaItem extends Dao{
 	public static void setColumnsMap(Map<String, String> columns) {
 		CosechaItem.columnsMap.clear();
 		CosechaItem.columnsMap.putAll(columns);		
-		//TODO guardar las columnas en el archivo de configuracion
+		
 		columns.forEach(new BiConsumer<String, String>(){
 			@Override
 			public void accept(String key, String value) {
@@ -239,7 +239,7 @@ public class CosechaItem extends Dao{
 					+ CosechaItem.COLUMNA_DISTANCIA+":Double,"
 					+ CosechaItem.COLUMNA_CURSO+":Double,"
 					+ CosechaItem.COLUMNA_ANCHO+":Double,"
-					+ CosechaItem.COLUMNA_RENDIMIENTO+":Double,"
+					+ CosechaItem.COLUMNA_RENDIMIENTO+":Integer,"
 					+ CosechaItem.COLUMNA_VELOCIDAD+":Double,"
 					+ CosechaItem.COLUMNA_PRECIO+":Double,"
 					+CosechaItem.COLUMNA_IMPORTE_HA+":Double"
@@ -257,7 +257,7 @@ public class CosechaItem extends Dao{
 	featureBuilder.add(round(getDistancia()));
 	featureBuilder.add(getRumbo());
 	featureBuilder.add(round(getAncho()));
-	featureBuilder.add(round(getRindeTnHa()));
+	featureBuilder.add(getRindeTnHa().intValue());
 	featureBuilder.add(round(getElevacion()));	
 	featureBuilder.add(round(getPrecioTnGrano()));
 	featureBuilder.add(round(getImporteHa()));		

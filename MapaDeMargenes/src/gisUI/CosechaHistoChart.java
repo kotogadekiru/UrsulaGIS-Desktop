@@ -18,7 +18,7 @@ import tasks.ProyectionConstants;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
 import dao.CosechaItem;
-import dao.Dao;
+import dao.FeatureContainer;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.Group;
@@ -92,7 +92,7 @@ public class CosechaHistoChart extends VBox {
 
 	}
 
-	private XYChart.Series<String, Number> createSeries(List<? extends Dao> data) {		
+	private XYChart.Series<String, Number> createSeries(List<? extends FeatureContainer> data) {		
 		//creo el histograma
 		//TODO pasar a un thread diferente
 		Double [] histograma = ProcessMapTask.constructHistogram(data);
@@ -147,7 +147,7 @@ public class CosechaHistoChart extends VBox {
 	}
 	
 		
-	private XYChart.Series<String, Number> createSeriesByJenkins(List<? extends Dao> data) {	
+	private XYChart.Series<String, Number> createSeriesByJenkins(List<? extends FeatureContainer> data) {	
 		
 		SimpleFeatureCollection collection = new ListFeatureCollection(CosechaItem.getType());
 		SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(

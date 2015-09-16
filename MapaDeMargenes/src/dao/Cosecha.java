@@ -1,4 +1,4 @@
-/*
+
 package dao;
 
 import java.util.ArrayList;
@@ -19,7 +19,7 @@ import tasks.HarvestFiltersConfig;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-public class Cosecha extends Dao{	
+public class Cosecha extends Labor{	
 	private static final int KG_POR_TN = 1000;
 	
 	private static final String COLUMNA_VELOCIDAD = "Velocidad";
@@ -43,8 +43,8 @@ public class Cosecha extends Dao{
 	
 
 
-	public Cosecha(SimpleFeature harvestFeature, Double precioGrano) {
-		super(harvestFeature);
+	public Cosecha() {
+		
 	
 		//this.geometry = (Geometry) harvestFeature.getDefaultGeometry();
 		
@@ -229,4 +229,4 @@ public class Cosecha extends Dao{
 
 
 }
-*/
+

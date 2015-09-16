@@ -38,14 +38,17 @@ import dao.CosechaItem;
 
 public class ProcessHarvestMapTask extends ProcessMapTask {
 
+	private static final String CANTIDAD_DISTANCIAS_ENTRADA_REGIMEN_PASADA2 = "CANTIDAD_DISTANCIAS_ENTRADA_REGIMEN_PASADA";
+	private static final String CANTIDAD_DISTANCIAS_TOLERANCIA2 = "CANTIDAD_DISTANCIAS_TOLERANCIA";
 	private static final String CLASIFICADOR_JENKINS = "JENKINS";
 	private static final String TIPO_CLASIFICADOR = "CLASIFICADOR";
 	private static final String CORRIMIENTO_PESADA = "CORRIMIENTO_PESADA";
-	private static final double MINIMA_SUP_HAS =  new Integer(Configuracion.getInstance().getPropertyOrDefault("SUP_MINIMA_M2", "10"))/ProyectionConstants.METROS2_POR_HA;//0.001
-	private static final int CANTIDAD_DISTANCIAS_ENTRADA_REGIMEN_PASADA = new Integer(Configuracion.getInstance().getPropertyOrDefault("CANTIDAD_DISTANCIAS_ENTRADA_REGIMEN_PASADA","1"));//5
-	private static final int CANTIDAD_DISTANCIAS_TOLERANCIA =new Integer(Configuracion.getInstance().getPropertyOrDefault("CANTIDAD_DISTANCIAS_TOLERANCIA","5"));//10
 	
-	private static final int N_VARIANZAS_TOLERA =new Integer(Configuracion.getInstance().getPropertyOrDefault("N_VARIANZAS_TOLERA","1")); //3;//9;
+	private static  int CANTIDAD_DISTANCIAS_ENTRADA_REGIMEN_PASADA = new Integer(Configuracion.getInstance().getPropertyOrDefault(CANTIDAD_DISTANCIAS_ENTRADA_REGIMEN_PASADA2,"1"));//5
+	private static  int CANTIDAD_DISTANCIAS_TOLERANCIA =new Integer(Configuracion.getInstance().getPropertyOrDefault(CANTIDAD_DISTANCIAS_TOLERANCIA2,"5"));//10
+	
+	private static  int N_VARIANZAS_TOLERA =new Integer(Configuracion.getInstance().getPropertyOrDefault("N_VARIANZAS_TOLERA","1")); //3;//9;
+	private static  Double TOLERANCIA_CV =new Double(Configuracion.getInstance().getPropertyOrDefault("TOLERANCIA_CV_0-1","0.13")); //3;//9;
 	Coordinate lastD = null, lastC = null;
 	double maxX = 0, maxY = 0, minX = 0, minY = 0;// variables para llevar la
 	// cuenta de donde estan los
@@ -67,6 +70,10 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 		CosechaItem.setCorreccionRinde(correccionRinde);
 		super.map = map;
 		this.store = store;
+		
+		CANTIDAD_DISTANCIAS_ENTRADA_REGIMEN_PASADA = new Integer(Configuracion.getInstance().getPropertyOrDefault(CANTIDAD_DISTANCIAS_ENTRADA_REGIMEN_PASADA2,"1"));//5
+		CANTIDAD_DISTANCIAS_TOLERANCIA =new Integer(Configuracion.getInstance().getPropertyOrDefault(CANTIDAD_DISTANCIAS_TOLERANCIA2,"5"));//10
+		TOLERANCIA_CV =new Double(Configuracion.getInstance().getPropertyOrDefault("TOLERANCIA_CV_0-1","0.13")); //3;//9;
 	}
 
 	public void doProcess() throws IOException {
@@ -102,8 +109,8 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 
 			featureNumber++;
 			updateProgress(featureNumber, featureCount);
-			System.out.println("Feature " + featureNumber + " of "
-					+ featureCount);
+//			System.out.println("Feature " + featureNumber + " of "
+//					+ featureCount);
 
 			Double distancia = cosechaFeature.getDistancia();
 			Double rumbo = cosechaFeature.getRumbo();
@@ -192,7 +199,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 		
 		
 	if(HarvestFiltersConfig.getInstance().correccionOutlayersEnabled()){
-		System.out.println("corriegiendo outlayers");
+		System.out.println("corriegiendo outlayers con CV Max "+TOLERANCIA_CV);
 		corregirOutlayers(	cosechaItemIndex);
 		
 		cosechaItemIndex= featureTree.queryAll();
@@ -243,7 +250,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 		
 		runLater();
 	//	canvasRunLater();
-		// saveFeaturesToNewShp(destinationFeatures);
+		
 		updateProgress(0, featureCount);
 		System.out.println("min: (" + minX + "," + minY + ") max: (" + maxX
 				+ "," + maxY + ")");
@@ -273,16 +280,9 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 	 * recorrer featureTree buscando outlayers y reemplazandolos con el promedio		
 	 * @param cosechaItemIndex
 	 */
-	private void corregirOutlayers(List<CosechaItem> cosechaItemIndex) {
-		long init = System.currentTimeMillis();
-	//	System.out.println("corregirOutlayers(); "+System.currentTimeMillis());
-			
+	private void corregirOutlayers(List<CosechaItem> cosechaItemIndex) {			
 		Quadtree featureTree2 = new Quadtree();
-		cosechaItemIndex.parallelStream().forEach
-		//cosechaItemIndex.forEach
-		(new Consumer<CosechaItem>(){
-//			private GeometricShapeFactory gsf = new GeometricShapeFactory();
-		//	private int outlayers=0;
+		cosechaItemIndex.parallelStream().forEach(new Consumer<CosechaItem>(){
 			@SuppressWarnings("unchecked")
 			@Override
 			public void accept(CosechaItem cosechaFeature) {
@@ -325,79 +325,95 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 				// sentido antihorario
 
 				GeometryFactory fact = X.getFactory();
-				// PrecisionModel pm = new PrecisionModel(PrecisionModel.FLOATING);
-				// fact= new GeometryFactory(pm);
 
 				LinearRing shell = fact.createLinearRing(coordinates);
 				LinearRing[] holes = null;
 				Polygon poly = new Polygon(shell, holes, fact);
-			  
-				  double cantidadCosechaFeature = cosechaFeature.getAmount();
-				  
+			  		  
 				//2) obtener todas las cosechas dentro det circulo
 				List<CosechaItem> features = featureTree.query(poly.getEnvelopeInternal());
 				if(features.size()>0){
-			//	System.out.println("La cantidad de features en la query fue = "+features.size());//600~750
-				
+					//outlayerVarianza(cosechaFeature, poly,features);
+					outlayerCV(cosechaFeature, poly,features);
+					featureTree2.insert(cosechaFeature.getGeometry().getEnvelopeInternal(), cosechaFeature);
+				} else {
+					System.out.println("zero features");
+				}
+			}
+
+			public void outlayerVarianza(CosechaItem cosechaFeature, Polygon poly,	List<CosechaItem> features) {
 				//3) obtener el promedio 
+				double cantidadCosechaFeature = cosechaFeature.getAmount();
 				double sumatoria = 0;				
 				int divisor = 0;
 				for(CosechaItem cosecha : features){
-					if(poly.contains(cosecha.getGeometry())){
-					//double area = cosecha.getAreaSinSup();
-					double cantidadCosecha = cosecha.getAmount();					
+					if(poly.contains(cosecha.getGeometry())){						
+						double cantidadCosecha = cosecha.getAmount();					
 						sumatoria+=cantidadCosecha;
-						divisor++;//=area;			
+						divisor++;		
 					}
 				}
 				sumatoria -=cantidadCosechaFeature;
-				//divisor -=cosechaFeature.getAreaSinSup();
+				//divisor--;//n-1 para que sea insesgado.
 				divisor--;
 				double promedio = sumatoria/divisor;				
 				//4) obtener la varianza
-				
+
 				double sumatoriaDesvios2 = 0;				
 				for(CosechaItem cosecha : features){			
 					if(poly.contains(cosecha.getGeometry())){
-					double cantidadCosecha = cosecha.getAmount();				
-					sumatoriaDesvios2+= getDesvio2(promedio, cantidadCosecha);
+						double cantidadCosecha = cosecha.getAmount();				
+						sumatoriaDesvios2+= getDesvio2(promedio, cantidadCosecha);
 					}
 				}
 				sumatoriaDesvios2-=getDesvio2(promedio, cantidadCosechaFeature);	
-				//divisor--;//n-1 para que sea insesgado.
-				double varianza=sumatoriaDesvios2/divisor;		
 				
+				double varianza=sumatoriaDesvios2/divisor;		
+
 				//5) si el rinde de la cosecha menos el promedio es mayor a la varianza reemplazar el rinde por el promedio
 				double desvioCosechaFeature = getDesvio2(cantidadCosechaFeature,promedio);
 				if(desvioCosechaFeature > N_VARIANZAS_TOLERA*varianza ){//3 desvios(9 varianzas) 95% probabilidad de no cortar como error un dato verdadero.
 					//El valor esta fuera de los parametros y modifico el valor por el promedio
-				//	System.out.println("Cantidad= "+cantidadCosechaFeature+" es un outlayer respecto del promedio= "+promedio +" con desvio2= "+3*varianza);
 					cosechaFeature.setRindeTnHa(promedio);
-					
-					
-				//	outlayers++;
 				}
-				
-				featureTree2.insert(cosechaFeature.getGeometry().getEnvelopeInternal(), cosechaFeature);
-				
-				} else {
-					System.out.println("zero features");
-				}
+			}
 			
-			//	System.out.println("la cantidad de outlayers es= "+outlayers);		
+			public void outlayerCV(CosechaItem cosechaFeature, Polygon poly,	List<CosechaItem> features) {
+				//3) obtener el promedio 
+				double cantidadCosechaFeature = cosechaFeature.getAmount();
+				double sumatoria = 0;				
+				int divisor = 0;
+				for(CosechaItem cosecha : features){
+					if(poly.contains(cosecha.getGeometry())){						
+						double cantidadCosecha = cosecha.getAmount();					
+						sumatoria+=cantidadCosecha;
+						divisor++;		
+					}
+				}
+				sumatoria -=cantidadCosechaFeature;
+				//divisor--;//n-1 para que sea insesgado.
+				divisor--;
+				double promedio = sumatoria/divisor;
+
+				//4) obtener la varianza (LA DIF ABSOLUTA DEL DATO Y EL PROM DE LA MUESTRA) (EJ. ABS(10-9.3)/9.3 = 13%)
+				//SI 13% ES MAYOR A TOLERANCIA CV% REEMPLAZAR POR PROMEDIO SINO NO
+				
+				double coefVariacionCosechaFeature = Math.abs(cantidadCosechaFeature-promedio)/promedio;
+				
+				if(coefVariacionCosechaFeature > TOLERANCIA_CV ){//3 desvios(9 varianzas) 95% probabilidad de no cortar como error un dato verdadero.
+					//El valor esta fuera de los parametros y modifico el valor por el promedio
+					cosechaFeature.setRindeTnHa(promedio);
+				}
 			}
 
 			private double getDesvio2(double promedio, double cantidad) {
 				return Math.pow(cantidad-promedio,2);
-			
+
 			}
-			
-		});//fin del for each	
-		//en linean 3189, 2746, 2866
-		//en paralelo 2152, 770, 1480, 1270, 709, 591, 1901
-		System.out.println("corregirOutlayers(); "+(System.currentTimeMillis()-init));//
-		this.featureTree = featureTree2;
+
+		});//fin del Consumer
 		
+		this.featureTree = featureTree2;
 	}
 
 
