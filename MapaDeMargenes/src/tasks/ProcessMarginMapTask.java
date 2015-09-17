@@ -28,6 +28,7 @@ import org.opengis.geometry.DirectPosition;
 
 
 
+
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -37,6 +38,7 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
+import dao.Configuracion;
 import dao.CosechaItem;
 import dao.Costos;
 import dao.Fertilizacion;
@@ -96,41 +98,38 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 
 		List<Rentabilidad> itemsByIndex = new ArrayList<Rentabilidad>();
 		List<Rentabilidad> itemsByAmount = new ArrayList<Rentabilidad>();
+		List<Polygon> geometryList = null;
+		if(Configuracion.getInstance().getGenerarMapaRentabilidadFromShp()){
+			geometryList = new ArrayList<Polygon>();
 
-		List<Polygon> polygons = construirGrilla();
-		List<SimpleFeature> featureList = new ArrayList<SimpleFeature>();
-		
-		while (featuresIterator.hasNext()) {
-			SimpleFeature simpleFeature = featuresIterator.next();
-			featureList.add(simpleFeature);			
-		}	
-		
-		featureList.parallelStream().forEach(simpleFeature->{
-		
-	//	while (featuresIterator.hasNext()) {
+			while (featuresIterator.hasNext()) {
+				SimpleFeature simpleFeature = featuresIterator.next();
+				Object geometry = simpleFeature.getDefaultGeometry();//cosehaItem.getGeometry();
 
-			//SimpleFeature simpleFeature = featuresIterator.next();
-			Object geometry = simpleFeature.getDefaultGeometry();//cosehaItem.getGeometry();
-
-			if (geometry instanceof Polygon) {						
-				Polygon harvestPolygon = (Polygon) geometry;					
-				Rentabilidad renta = createRentaForPoly(harvestPolygon);				
-				itemsByIndex.add(renta);
-				featureTree.insert(harvestPolygon.getEnvelopeInternal(), renta);
-			} else if(geometry instanceof MultiPolygon){
-				MultiPolygon multipolygon = (MultiPolygon) geometry;
-				for(int indicePolygono=0; indicePolygono<multipolygon.getNumGeometries();indicePolygono++){
-
-					Polygon p = (Polygon) multipolygon.getGeometryN(indicePolygono);
-					Rentabilidad renta = createRentaForPoly(p);
-
-					itemsByIndex.add(renta);
-					featureTree.insert(p.getEnvelopeInternal(), renta);
-
+				if (geometry instanceof Polygon) {		
+					Polygon polygon = (Polygon) geometry;			
+					geometryList.add(polygon);	
+				} else if(geometry instanceof MultiPolygon){
+					MultiPolygon multipolygon = (MultiPolygon) geometry;
+					for(int indicePolygono=0; indicePolygono<multipolygon.getNumGeometries();indicePolygono++){
+						Polygon p = (Polygon) multipolygon.getGeometryN(indicePolygono);
+						geometryList.add(p);	
+					}
 				}
-				System.out.println("geometry es Multipolygon");
-			}
+			}	
+		}else{
+			geometryList = construirGrilla(getBounds());
+		}
+
+
+
+		geometryList.parallelStream().forEach(polygon->{			
+			Rentabilidad renta = createRentaForPoly(polygon);				
+			itemsByIndex.add(renta);
+			featureTree.insert(polygon.getEnvelopeInternal(), renta);
+
 		});
+
 		itemsByAmount.addAll(itemsByIndex);
 		constructHistogram(itemsByAmount);
 
@@ -172,22 +171,22 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 	}
 
 
-	public List<Polygon> construirGrilla() {
+	public List<Polygon> construirGrilla(BoundingBox bounds) {
 		List<Polygon> polygons = new ArrayList<Polygon>();
-		BoundingBox bounds = getBounds();
+		//	 = getBounds();
 		Double minX = bounds.getMinX()/ProyectionConstants.metersToLongLat;
-		Double minY = bounds.getMinX()/ProyectionConstants.metersToLongLat;
+		Double minY = bounds.getMinY()/ProyectionConstants.metersToLongLat;
 		Double maxX = bounds.getMaxX()/ProyectionConstants.metersToLongLat;
 		Double maxY = bounds.getMaxY()/ProyectionConstants.metersToLongLat;
-		Double ancho=HarvestFiltersConfig.getInstance().getAnchoFiltroOutlayers();
+		Double ancho=HarvestFiltersConfig.getInstance().getAnchoFiltroOutlayers()/4;
 		for(int x=0;(minX+x*ancho)<maxX;x++){
 			Double x0=minX+x*ancho;
 			Double x1=minX+(x+1)*ancho;
 			for(int y=0;(minY+y*ancho)<maxY;y++){
 				Double y0=minY+y*ancho;
 				Double y1=minY+(y+1)*ancho;
-				
-				
+
+
 				Coordinate D = new Coordinate(x0*ProyectionConstants.metersToLongLat, y0*ProyectionConstants.metersToLongLat); 
 				Coordinate C = new Coordinate(x1*ProyectionConstants.metersToLongLat, y0*ProyectionConstants.metersToLongLat);
 				Coordinate B = new Coordinate(x1*ProyectionConstants.metersToLongLat, y1*ProyectionConstants.metersToLongLat);
@@ -203,14 +202,14 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 				// el mismo punto.
 				// sentido antihorario
 
-	//			GeometryFactory fact = X.getFactory();
-				 GeometryFactory fact = new GeometryFactory();
-			
-				
-//				DirectPosition upper = positionFactory.createDirectPosition(new double[]{-180,-90});
-//				DirectPosition lower = positionFactory.createDirectPosition(new double[]{180,90});
-			//	Envelope envelope = geometryFactory.createEnvelope( upper, lower );
-				
+				//			GeometryFactory fact = X.getFactory();
+				GeometryFactory fact = new GeometryFactory();
+
+
+				//				DirectPosition upper = positionFactory.createDirectPosition(new double[]{-180,-90});
+				//				DirectPosition lower = positionFactory.createDirectPosition(new double[]{180,90});
+				//	Envelope envelope = geometryFactory.createEnvelope( upper, lower );
+
 				LinearRing shell = fact.createLinearRing(coordinates);
 				LinearRing[] holes = null;
 				Polygon poly = new Polygon(shell, holes, fact);			
