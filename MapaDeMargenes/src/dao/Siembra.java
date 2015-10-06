@@ -7,14 +7,19 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.filter.ConstantExpression;
 import org.opengis.feature.simple.SimpleFeature;
+
+import tasks.ProyectionConstants;
 
 import com.vividsolutions.jts.geom.Geometry;
 
 public class Siembra extends FeatureContainer {
-	private static final String COLUMNA_BOLSAS_POR_HA = "BolsasHa";
+	private static final String COLUMNA_BOLSAS_POR_HA = "Semillas/m";
 	private static Map<String, String> columnsMap= new HashMap<String, String>();
-	//Geometry geometry;
+	private static Double ENTRE_SURCO = new Double(Configuracion.getInstance().getPropertyOrDefault("ENTRE_SURCO", "0.525"));
+	private static Double SEMILLAS_POR_BOLSA= new Double(Configuracion.getInstance().getPropertyOrDefault("SEMILLAS_POR_BOLSA", "80000"));
+	
 	Double bolsasHa;
 	Double precioBolsa;
 	Double precioPasada;
@@ -23,12 +28,15 @@ public class Siembra extends FeatureContainer {
 	public Siembra(SimpleFeature harvestFeature, Double precioPasada ,Double precioGrano) {
 		super(harvestFeature);
 	//	System.out.println(harvestFeature);
-		
+	
 		Object cantObj = harvestFeature
 				.getAttribute(getColumn(COLUMNA_BOLSAS_POR_HA));
 		
 		bolsasHa = super.getDoubleFromObj(cantObj);
+		// BOLSAS/HA = SEM/MT x (MT2 HECTAREA / dist entre surcos) / semillas/bolsa
+		// SEM/MT x (10.000 / 0.525 ) / 80.0000
 		
+		bolsasHa = bolsasHa*(ProyectionConstants.METROS2_POR_HA/ENTRE_SURCO)/SEMILLAS_POR_BOLSA;
 		
 	//	this.bolsasHa = (Double) harvestFeature.getAttribute(getColumn(COLUMNA_BOLSAS_POR_HA));
 

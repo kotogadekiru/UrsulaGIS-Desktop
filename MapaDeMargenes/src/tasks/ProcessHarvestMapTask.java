@@ -13,13 +13,28 @@ import javafx.scene.Node;
 import javafx.scene.shape.Path;
 
 import org.geotools.data.FileDataStore;
+import org.geotools.data.Transaction;
 import org.geotools.data.collection.ListFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
+import org.geotools.factory.CommonFactoryFinder;
+import org.geotools.factory.GeoTools;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.filter.Filter;
+import org.geotools.filter.FilterFactory;
+import org.geotools.filter.FilterFactoryFinder;
+import org.geotools.filter.FilterFactoryImpl;
+import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.type.FeatureType;
+import org.opengis.filter.FilterFactory2;
+import org.opengis.filter.expression.Literal;
+import org.opengis.filter.spatial.BBOX;
+import org.opengis.filter.spatial.Contains;
+import org.opengis.filter.spatial.Intersects;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
@@ -173,15 +188,19 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 				/**
 				 * solo ingreso la cosecha al arbol si la geometria es valida
 				 */
-				if(!geom.isEmpty()
-						&&geom.isValid()
-						&&(geom.getArea()*ProyectionConstants.A_HAS>MINIMA_SUP_HAS)
+				boolean empty = geom.isEmpty();
+				boolean valid = geom.isValid();
+				boolean big = (geom.getArea()*ProyectionConstants.A_HAS>MINIMA_SUP_HAS);
+				if(!empty
+						&&valid
+				//		&&big//esta fallando por aca
 						){
 					cosechaFeature.setGeometry(geom);
 					corregirRinde(cosechaFeature);
+								
 					featureTree.insert(geom.getEnvelopeInternal(), cosechaFeature);
 				} else{
-					System.out.println("no inserto el feature "+featureNumber+" porque tiene una geometria invalida "+cosechaFeature);
+				//	System.out.println("no inserto el feature "+featureNumber+" porque tiene una geometria invalida empty="+empty+" valid ="+valid+" area="+big+" "+geom);
 				}
 
 			} else { // no es point. Estoy abriendo una cosecha de poligonos.
@@ -192,45 +211,41 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 
 		}// fin del for que recorre las cosechas por indice
 		
-	//vuelvo a crearCosechaItemIndex respetando el indice
-		cosechaItemIndex= featureTree.queryAll();
-		//XXX esto lo puedo hacer despues de corregir outlayers solo una vex
-		cosechaItemIndex.sort((CosechaItem a, CosechaItem b) -> (int) (a.getId() - b.getId()));
+
 		
 		
 	if(HarvestFiltersConfig.getInstance().correccionOutlayersEnabled()){
 		System.out.println("corriegiendo outlayers con CV Max "+TOLERANCIA_CV);
-		corregirOutlayers(	cosechaItemIndex);
-		
-		cosechaItemIndex= featureTree.queryAll();
-		cosechaItemIndex.sort((CosechaItem a, CosechaItem b) -> (int) (a.getId() - b.getId()));
+		this.featureTree=	corregirOutlayers(	featureTree);		
 	} else { 
 		System.out.println("no corrijo outlayers");
 	}
-		
 	
-	//Vuelvo a regenerar las features para usar el clasificador Jenkins
-	SimpleFeatureCollection collection = new ListFeatureCollection(CosechaItem.getType());
-	SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(
-			CosechaItem.getType());
-	for (CosechaItem cosecha : cosechaItemIndex) {
-		SimpleFeature cosechaFeature = cosecha.getFeature(featureBuilder);
-		collection.add(cosechaFeature);
-	//	System.out.println("agregando a features "+rentaFeature);
-	}
 	clasifier = null;
 
 	//XXX aca construyo el clasificador
 	if(CLASIFICADOR_JENKINS.equalsIgnoreCase(Configuracion.getInstance().getPropertyOrDefault(TIPO_CLASIFICADOR, CLASIFICADOR_JENKINS))){
+		//Vuelvo a regenerar las features para usar el clasificador Jenkins
+		SimpleFeatureCollection collection = new ListFeatureCollection(CosechaItem.getType());
+		SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(
+				CosechaItem.getType());
+		List<CosechaItem> cosechas =  featureTree.queryAll();
+		for (CosechaItem cosecha : cosechas) {
+			SimpleFeature cosechaFeature = cosecha.getFeature(featureBuilder);
+			collection.add(cosechaFeature);
+		//	System.out.println("agregando a features "+rentaFeature);
+		}
 		constructJenksClasifier(collection,CosechaItem.COLUMNA_RENDIMIENTO);
 	}
 	if(clasifier == null ){
 		System.out.println("no hay jenks Classifier falling back to histograma");
-		constructHistogram(cosechaItemIndex);
+		List<CosechaItem> cosechas =  featureTree.queryAll();
+		constructHistogram(cosechas);
 	}
 	
 	this.pathTooltips.clear();
-	cosechaItemIndex.forEach(c->{
+	List<CosechaItem> cosechas =  featureTree.queryAll();
+	cosechas.forEach(c->{
 		Geometry g = c.getGeometry();
 		if(g instanceof Polygon){
 			
@@ -280,8 +295,9 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 	 * recorrer featureTree buscando outlayers y reemplazandolos con el promedio		
 	 * @param cosechaItemIndex
 	 */
-	private void corregirOutlayers(List<CosechaItem> cosechaItemIndex) {			
+	private Quadtree corregirOutlayers(Quadtree featureTree1) {			
 		Quadtree featureTree2 = new Quadtree();
+		 List<CosechaItem> cosechaItemIndex = featureTree1.queryAll();
 		cosechaItemIndex.parallelStream().forEach(new Consumer<CosechaItem>(){
 			@SuppressWarnings("unchecked")
 			@Override
@@ -331,7 +347,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 				Polygon poly = new Polygon(shell, holes, fact);
 			  		  
 				//2) obtener todas las cosechas dentro det circulo
-				List<CosechaItem> features = featureTree.query(poly.getEnvelopeInternal());
+				List<CosechaItem> features = featureTree1.query(poly.getEnvelopeInternal());
 				if(features.size()>0){
 					//outlayerVarianza(cosechaFeature, poly,features);
 					outlayerCV(cosechaFeature, poly,features);
@@ -413,7 +429,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 
 		});//fin del Consumer
 		
-		this.featureTree = featureTree2;
+		return featureTree2;
 	}
 
 
@@ -509,10 +525,8 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 			// demaciado lejos
 			if (distAlD < tolerancia && distBlC < distAlC && distAlD < distBlD
 					&& mismaPasada) {
-				// .out.println("encolando con el poligono anterior");
 				A = lastD;
-				B = lastC;
-				// .out.println("me pego a los puntos anteriores");
+				B = lastC;				
 			} else {
 				// Cuando la cosechadora termina de dar una vuelta y empieza a
 				// cosechar un nuevo tramo tarda hasta entrar en regimen
@@ -528,10 +542,6 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 						* d.y);// X+l+d
 				A = new Coordinate(x - l.x + escAvIni * d.x, y - l.y + escAvIni
 						* d.y);// X-l+d
-
-				// .out
-				// .println("el punto anterior esta muy lejos como para pegarlo a este o hay un cruce de lineas");
-				// .out.println("avance es: " + d);
 			}
 			lastD = D;
 			lastC = C;
@@ -555,8 +565,6 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 		Polygon poly = new Polygon(shell, holes, fact);
 
 		
-		//cosechaFeature.setAreaSinSup(poly.getArea()*ProyectionConstants.A_HAS*ProyectionConstants.METROS2_POR_HA);
-		
 		/*
 		 * ahora que tengo el poligono lo filtro con los anteriores para
 		 * corregir
@@ -567,8 +575,34 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 		Envelope query = poly.getEnvelopeInternal();		
 	
 		@SuppressWarnings("unchecked")
-		List<CosechaItem> objects = featureTree.query(query);		
+		List<CosechaItem> objects = featureTree.query(query);		//TODO reemplazar esto por una query al store
 	
+	/*
+		try {  
+			FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2( GeoTools.getDefaultHints() );
+		    FeatureType schema = store.getSchema();
+		    
+		    // usually "THE_GEOM" for shapefiles
+		    String geometryPropertyName = schema.getGeometryDescriptor().getLocalName();
+		    CoordinateReferenceSystem targetCRS = schema.getGeometryDescriptor()
+		            .getCoordinateReferenceSystem();
+		    
+		    ReferencedEnvelope bbox = new ReferencedEnvelope(poly.getEnvelopeInternal(),targetCRS);		    
+		    BBOX filter = ff.bbox(ff.property(geometryPropertyName), bbox);
+		 
+		    //TODO cambiar store por store2 que va a hacer las veces del quadtree
+			 SimpleFeatureCollection features = store.getFeatureSource().getFeatures(filter);//OK!! esto funciona
+			 System.out.println("encontre "+features.size()+" que se intersectan con "+ bbox );
+			 //XXX no lo puedo usar asi porque el store todavia no contiene los features poligonizados
+			 SimpleFeatureIterator featuresIterator = features.features();
+			 while(featuresIterator.hasNext()){
+				 objects.add(new CosechaItem(featuresIterator.next(), precioGrano));
+			 }
+		  } catch (IOException e) {
+			  // TODO Auto-generated catch block
+			  e.printStackTrace();
+		  }
+*/
 		if(HarvestFiltersConfig.getInstance().correccionSuperposicionEnabled()){
 			geometryUnion = getUnion(fact, objects, poly);
 			try {			
@@ -584,7 +618,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 				// side location conflict [ (-1.3430180316476026E-4,
 				// -9.411259613045786E-5, NaN) ]
 			//	te.printStackTrace();
-				System.err.println("TopologyException en ProcessHarvestMapTask createGeometryForPoint()");
+				System.err.println("TopologyException en ProcessHarvestMapTask createGeometryForPoint(). insertando el poligono entero");
 				difGeom = poly;
 
 			}
@@ -595,7 +629,12 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 			System.out.println("difGeom es empty " );
 		}
 		
+		if(difGeom instanceof Point){
+			System.out.println("difGeom es POINT "+difGeom );
+		}
+		
 	//	cosechaFeature.setGeometry(difGeom);
+		//difGeom a veces devuelve un POINT y eso es una geometria invalida
 		return difGeom;
 	}
 
@@ -616,7 +655,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 			 *recorro todas las cosechas y si su geometria interna se cruza con la query la agrego a la lista de geometrias 
 			 */
 			int maxGeometries = HarvestFiltersConfig.getInstance().getMAXGeometries();
-			Envelope queryEnvelope = query.getEnvelopeInternal();		
+		//	Envelope queryEnvelope = query.getEnvelopeInternal();		
 			for (CosechaItem o : objects) {				
 					Geometry g = o.getGeometry();
 					try{

@@ -28,11 +28,11 @@ import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
 import dao.CosechaItem;
-import dao.Fertilizacion;
+import dao.FertilizacionItem;
 import dao.Fertilizante;
 import dao.Producto;
-import dao.Pulverizacion;
-import dao.Rentabilidad;
+import dao.PulverizacionItem;
+import dao.RentabilidadItem;
 import dao.Siembra;
 import dao.Suelo;
 
@@ -326,8 +326,8 @@ public class ProcessNewSoilMapTask extends ProcessMapTask {
 			// System.out.println("encontre " + ferts.size()
 			// + " fertilizaciones en contacto con " + geometry);
 			for (Object fertObj : ferts) {
-				if (fertObj instanceof Fertilizacion) {
-					Fertilizacion fert = (Fertilizacion) fertObj;
+				if (fertObj instanceof FertilizacionItem) {
+					FertilizacionItem fert = (FertilizacionItem) fertObj;
 					Double ppmP = (Double) fert.getCantFertHa()
 							*
 							fertilizante.getPpmP();

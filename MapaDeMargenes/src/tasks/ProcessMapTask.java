@@ -28,13 +28,19 @@ import javafx.scene.shape.PathElement;
 import javafx.scene.text.Font;
 import javafx.stage.Screen;
 
+import org.geotools.data.DefaultTransaction;
 import org.geotools.data.FileDataStore;
 import org.geotools.data.Query;
+import org.geotools.data.Transaction;
+import org.geotools.data.collection.ListFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureCollection;
+import org.geotools.data.simple.SimpleFeatureSource;
+import org.geotools.data.simple.SimpleFeatureStore;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.filter.Filter;
 import org.geotools.filter.function.Classifier;
 import org.geotools.filter.function.JenksNaturalBreaksFunction;
+import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.expression.Literal;
 import org.opengis.filter.expression.PropertyName;
@@ -44,7 +50,10 @@ import sun.java2d.DestSurfaceProvider;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
@@ -59,6 +68,9 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 	protected Group map = null;//new Group();
 	protected Quadtree featureTree;
 	protected FileDataStore store = null;
+	
+	//store donde se almacenan los features mientras se estan editando
+	protected FileDataStore output = null;
 	protected ArrayList<ArrayList<Object>> pathTooltips = new ArrayList<ArrayList<Object>>();
 	public static Color[] colors = {
 		Color.rgb(158,1,66),
@@ -185,7 +197,7 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 			//	 System.out.println("Histograma color Index for rinde "+rinde+" is "+colorIndex);
 			return colorIndex;
 		} catch (Exception e) {
-			System.err.println("getColorsByHistogram");
+			System.err.println("getColorsByHistogram "+rinde);
 			e.printStackTrace();
 			return 0;
 		}
@@ -198,6 +210,7 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 		FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2(null);
 
 		Literal classes = ff.literal(colors.length);
+		//Literal classes = ff.literal(3);
 		PropertyName expr = ff.property(amountColumn);
 		JenksNaturalBreaksFunction func = (JenksNaturalBreaksFunction) ff.function("Jenks", expr,
 				classes);
@@ -260,10 +273,11 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 	
 	/**
 	 * 
-	 * @param elementos Lista de Dao ordenados por getAmount() de menor a mayor
+	 * @param elementos Lista de FeatureContainer
 	 * @return 
 	 */
 	public static Double[] constructHistogram(List<? extends FeatureContainer> elementosItem){
+	
 		//1 ordeno los elementos de menor a mayor
 		//2 bsuco el i*size/12 elemento y anoto si amount en la posicion i del vector de rangos
 
@@ -273,11 +287,11 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 		double average = elementosItem
 				.stream().mapToDouble( FeatureContainer::getAmount)
 				.average().getAsDouble();
+		
 		double desvios = new Double(0);
 		for(FeatureContainer dao: elementosItem){
 			desvios += Math.abs(dao.getAmount()-average);
 		}
-
 		double desvioEstandar= desvios/elementosItem.size();
 
 
@@ -431,12 +445,48 @@ pathClass = 0x9e0142ff
 
 		return path;
 	}
+	
+	protected Path getPathFromGeom(Geometry poly, Integer colorIndex) {			
+		Path path = new Path();		
+		/**
+		 * recorro el vector de puntos que contiene el poligono gis y creo un
+		 * path para dibujarlo
+		 */
+		if(poly.getNumPoints()==0){
+			System.err.println("dibujando un path con cero puntos "+ poly);
+			return null;
+		}
+		for (int i = 0; i < poly.getNumPoints(); i++) {
+			Coordinate coord = poly.getCoordinates()[i];
+			// como las coordenadas estan en long/lat las convierto a metros
+			// para dibujarlas con menos error.
+			double x = coord.x / ProyectionConstants.metersToLongLat;
+			double y = coord.y /ProyectionConstants.metersToLongLat;
+			if (i == 0) {
+				path.getElements().add(new MoveTo(x, y)); // primero muevo el
+			}
+			path.getElements().add(new LineTo(x, y));// dibujo una linea desde
+		}
+
+		Paint currentColor = null;
+		try{
+			currentColor = colors[colorIndex];
+		}catch(Exception e){
+			e.printStackTrace();
+			currentColor = Color.WHITE;
+		}
+
+		path.setFill(currentColor);
+		path.setStrokeWidth(0.05);
+	
+		path.getStyleClass().add(currentColor.toString());//esto me permite luego asignar un estilo a todos los objetos con la clase "currentColor.toString()"
+		return path;
+	}
 
 	protected List<Polygon> getPolygons(FeatureContainer dao){
-
 		List<Polygon> polygons = new ArrayList<Polygon>();
 		Object geometry = dao.getGeometry();
-		System.out.println("obteniendo los poligonos de "+geometry);
+	//	System.out.println("obteniendo los poligonos de "+geometry);
 
 		if (geometry instanceof MultiPolygon) {		
 			MultiPolygon mp = (MultiPolygon) geometry;
@@ -449,30 +499,36 @@ pathClass = 0x9e0142ff
 
 		} else if (geometry instanceof Polygon) {
 			polygons.add((Polygon) geometry);
-		} else{
-			System.out.println("me perdi en getPolygons "+geometry);//Las geometrias son POINT. que hago?
+		} else if(geometry instanceof Point){
+			Point p = (Point) geometry;
+			GeometryFactory fact = p.getFactory();
+			Double r = 5*ProyectionConstants.metersToLongLat;
+			
+			Coordinate D = new Coordinate(p.getX() - r , p.getY() + r ); // x-l-d
+			Coordinate C = new Coordinate(p.getX() + r , p.getY()+ r);// X+l-d
+			Coordinate B = new Coordinate(p.getX() + r , p.getY() - r );// X+l+d
+			Coordinate A = new Coordinate(p.getX() - r , p.getY() -r );// X-l+d
+			
+				Coordinate[] coordinates = { A, B, C, D, A };// Tiene que ser cerrado.
+			
+				// PrecisionModel pm = new PrecisionModel(PrecisionModel.FLOATING);
+				// fact= new GeometryFactory(pm);
+
+				LinearRing shell = fact.createLinearRing(coordinates);
+				LinearRing[] holes = null;
+				Polygon poly = new Polygon(shell, holes, fact);
+
+				polygons.add(poly);
+			System.out.println("creando polygon default");//Las geometrias son POINT. que hago?
+			//TODO crear un poligono default
+			
 		}
 		//System.out.println("devolviendo los polygons "+polygons);
 		return polygons;
 	}
 
 	protected void runLater() {	
-
-
 		ArrayList<Path> pathsToAdd = new ArrayList<Path>();
-
-		//				Screen screen = Screen.getPrimary();
-		//				Rectangle2D bounds = screen.getVisualBounds();
-		//				
-		//				Canvas canvas = new Canvas(bounds.getWidth()*2,bounds.getHeight()*2);
-		//				GraphicsContext gc = canvas.getGraphicsContext2D();
-
-		//	gc.fillRoundRect(500, 60, 30, 30, 10, 10);
-
-
-		//6898688,-6898688
-		//				MoveTo mo = (MoveTo)((Path) pathTooltips.get(0).get(0)).getElements().get(0);
-		//				    MoveTo mt0 = new MoveTo(mo.getX()-500,mo.getY()-300);//(MoveTo)((Path) pathTooltips.get(0).get(0)).getElements().get(0);
 
 		int i =0;
 		for (ArrayList<Object> pathTooltip : pathTooltips) {
@@ -482,34 +538,6 @@ pathClass = 0x9e0142ff
 			String tooltipText = (String) pathTooltip.get(1);
 
 			pathsToAdd.add(path);
-
-			//					gc.setFill(path.getFill());
-			//					gc.setStroke(path.getStroke());
-			//					
-			//					ObservableList<PathElement> elements = path.getElements();
-			//					
-			//					gc.beginPath();
-			//					for(PathElement pe : elements){
-			//						if(pe instanceof MoveTo){
-			//						
-			//							MoveTo mt = (MoveTo) pe;
-			//							System.out.println("moveTo "+mt);
-			//							gc.moveTo(mt.getX()-mt0.getX(), mt.getY()-mt0.getY());
-			//						//	gc.fillRoundRect(mt.getX()-mt0.getX(), mt.getY()-mt0.getY(), 30, 30, 0, 0);
-			//						}else if(pe instanceof LineTo) {
-			//							LineTo lt = (LineTo) pe;
-			//							gc.lineTo(lt.getX()-mt0.getX(), lt.getY()-mt0.getY());
-			//							System.out.println("lineTo "+lt);	
-			//						}						
-			//					}
-			//					gc.closePath();
-			//					gc.fill();
-			//	gc.stroke();
-
-
-			//		path.setStyle("-fx-fill: white;");
-
-			//	path.setStyle(".white{-fx-fill: white;}");
 
 			path.setOnMouseEntered(e -> {
 
@@ -523,36 +551,11 @@ pathClass = 0x9e0142ff
 
 		}
 
-		//				 gc.setFill(Color.GREEN);
-		//			        gc.setStroke(Color.BLUE);
-		//			        gc.setLineWidth(5);
-		//				
-		//				gc.beginPath();							
-		//						gc.moveTo(20, 20);					
-		//						gc.lineTo(100,20);		
-		//						gc.lineTo(100,100);
-		//						gc.lineTo(20,100);
-		//						gc.lineTo(20,100);
-		//				gc.closePath();
-		//				gc.stroke();
-		//				
-		//				 gc.beginPath();
-		//				    gc.moveTo(50, 50);
-		//				    gc.bezierCurveTo(150, 20, 150, 150, 75, 150);
-		//				 gc.closePath();
-		//				 
-		//				 gc.fillPolygon(new double[]{10, 40, 10, 40},
-		//	                       new double[]{210, 210, 240, 240}, 4);
-		//				
-		//				gc.fillRoundRect(100, 100, 30, 30, 0, 0);
+		
 		Platform.runLater(new Runnable() {
-
-
-			//				@Override
-			public void run() {
-				//	map.getChildren().add(canvas);
+				@Override
+			public void run() {				
 				map.getChildren().addAll(pathsToAdd);//antes tenia setAll que es mas rapido pero me borraba los nodos que habia antes si los habia
-
 				//	map.getChildren().setAll(pathsToAdd);//antes tenia setAll que es mas rapido pero me borraba los nodos que habia antes si los habia
 
 				//				SnapshotParameters params = new SnapshotParameters();
@@ -562,8 +565,6 @@ pathClass = 0x9e0142ff
 				//				  gc.drawImage(image, 0, 0);
 				//	  map.getChildren().clear();
 				//	map.getChildren().add(canvas);
-
-
 			}
 		});
 
@@ -619,7 +620,7 @@ pathClass = 0x9e0142ff
 								yCoords[j]=lt.getY()-bounds2.getMinY()/ProyectionConstants.metersToLongLat;//3967057;
 							}
 						}
-						//System.out.println("fillPolygon "+Arrays.toString(xCoords) + " "+ Arrays.toString(yCoords) );
+						System.out.println("fillPolygon "+Arrays.toString(xCoords) + " "+ Arrays.toString(yCoords) );
 
 						gc.fillPolygon(xCoords,yCoords,xCoords.length);
 					}//no se que hacer si no es un Path
@@ -638,14 +639,56 @@ pathClass = 0x9e0142ff
 	public BoundingBox getBounds() {
 		BoundingBox bounds2=null;
 		try {
-			//Query query = new Query( store.getSchema().getTypeName(), Filter.INCLUDE );
-			bounds2 = store.getFeatureSource().getBounds(  );
+			bounds2 = store.getFeatureSource().getBounds();
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return bounds2;
+	}
+	
+	public void insertFeature(SimpleFeature f){
+		 SimpleFeatureStore store2;
+		try {
+			store2 = (SimpleFeatureStore) store.getFeatureSource( f.getType().getName() );
+			
+			  List<SimpleFeature> list = new ArrayList<SimpleFeature>();
+			    list.add(f);
+			  //  list.add( build.buildFeature("fid2", new Object[]{ geom.point(2,3), "martin" } ) );
+			    SimpleFeatureCollection collection = new ListFeatureCollection( f.getType(), list);
+
+			    Transaction transaction = new DefaultTransaction("insertFeatureTransaction");
+			    store2.setTransaction( transaction );
+			    try {
+			        store2.addFeatures( collection );
+			        transaction.commit(); // actually writes out the features in one go
+			    }
+			    catch( Exception problem){
+			    	problem.printStackTrace();
+					try {
+						transaction.rollback();
+						//	System.out.println("transaction rolledback");
+					} catch (IOException e) {
+
+						e.printStackTrace();
+					}
+
+				} finally {
+					try {
+						transaction.close();
+						//System.out.println("closing transaction");
+					} catch (IOException e) {
+
+						e.printStackTrace();
+					}
+				}
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	
+		 
+			
 	}
 }
 

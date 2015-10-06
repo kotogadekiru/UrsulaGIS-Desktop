@@ -14,7 +14,7 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 
 
-public class Rentabilidad extends FeatureContainer{
+public class RentabilidadItem extends FeatureContainer{
 	//Polygon harvestPolygon = (Polygon) geometry;
 	private Double importePulvHa ;//= getImportePulv(harvestPolygon);
 	private Double importeFertHa ;//= getImporteFert(harvestPolygon);
@@ -28,11 +28,11 @@ public class Rentabilidad extends FeatureContainer{
 	private Double importeCosechaHa;
 	
 	
-	public Rentabilidad(SimpleFeature feature) {
+	public RentabilidadItem(SimpleFeature feature) {
 		super(feature);
 	}	
 	
-	public Rentabilidad() {
+	public RentabilidadItem() {
 	}
 
 	public Double getImportePulvHa() {

@@ -11,7 +11,7 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-public class Fertilizacion extends FeatureContainer {
+public class FertilizacionItem extends FeatureContainer {
 	public static final String KG_HA_COLUMN = "DOSIS_T";
 	private static Map<String, String> columnsMap= new HashMap<String, String>();
 	
@@ -20,7 +20,7 @@ public class Fertilizacion extends FeatureContainer {
 	private Double precioFert;
 	private Double precioPasada;	
 	
-	public Fertilizacion(SimpleFeature harvestFeature, Double precioFert,Double precioPasada) {
+	public FertilizacionItem(SimpleFeature harvestFeature, Double precioFert,Double precioPasada) {
 		super(harvestFeature);
 		//System.out.println(harvestFeature);
 		
@@ -83,13 +83,13 @@ public class Fertilizacion extends FeatureContainer {
 
 	@Override
 	protected Map<String, String> getColumnsMap() {
-		return Fertilizacion.columnsMap;
+		return FertilizacionItem.columnsMap;
 	}
 	
 
 	public static void setColumnsMap(Map<String, String> columns) {
-		Fertilizacion.columnsMap.clear();
-		Fertilizacion.columnsMap.putAll(columns);
+		FertilizacionItem.columnsMap.clear();
+		FertilizacionItem.columnsMap.putAll(columns);
 		
 		columns.forEach(new BiConsumer<String, String>(){
 			@Override

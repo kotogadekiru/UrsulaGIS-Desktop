@@ -3,8 +3,6 @@ package tasks;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import javafx.scene.Group;
@@ -14,20 +12,8 @@ import org.geotools.data.FileDataStore;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
-import org.geotools.factory.Hints;
-import org.geotools.geometry.GeometryBuilder;
-import org.geotools.geometry.GeometryFactoryFinder;
-import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.geometry.BoundingBox;
-import org.opengis.geometry.DirectPosition;
-
-
-
-
-
-
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
@@ -41,9 +27,9 @@ import com.vividsolutions.jts.index.quadtree.Quadtree;
 import dao.Configuracion;
 import dao.CosechaItem;
 import dao.Costos;
-import dao.Fertilizacion;
-import dao.Pulverizacion;
-import dao.Rentabilidad;
+import dao.FertilizacionItem;
+import dao.PulverizacionItem;
+import dao.RentabilidadItem;
 import dao.Siembra;
 
 public class ProcessMarginMapTask extends ProcessMapTask {
@@ -83,9 +69,7 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 	public void doProcess() throws IOException {
 		this.featureTree = new Quadtree();
 
-		SimpleFeatureSource featureSource = store.getFeatureSource();
-		SimpleFeatureCollection featureCollection = featureSource.getFeatures();
-		SimpleFeatureIterator featuresIterator = featureCollection.features();
+	
 
 		// TODO si harvestTree es null crear grilla adecuada y calcular los
 		// costos
@@ -93,15 +77,18 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 		//		List<Cosecha> features = this.harvestTree.queryAll();
 		// Iterator<SimpleFeature> featuresIterator = features.iterator();
 
-		featureCount = featureCollection.size();
+	
 		featureNumber = 0;
 
-		List<Rentabilidad> itemsByIndex = new ArrayList<Rentabilidad>();
-		List<Rentabilidad> itemsByAmount = new ArrayList<Rentabilidad>();
+		List<RentabilidadItem> itemsByIndex = new ArrayList<RentabilidadItem>();
+		List<RentabilidadItem> itemsByAmount = new ArrayList<RentabilidadItem>();
 		List<Polygon> geometryList = null;
 		if(Configuracion.getInstance().getGenerarMapaRentabilidadFromShp()){
 			geometryList = new ArrayList<Polygon>();
 
+			SimpleFeatureSource featureSource = store.getFeatureSource();
+			SimpleFeatureCollection featureCollection = featureSource.getFeatures();
+			SimpleFeatureIterator featuresIterator = featureCollection.features();
 			while (featuresIterator.hasNext()) {
 				SimpleFeature simpleFeature = featuresIterator.next();
 				Object geometry = simpleFeature.getDefaultGeometry();//cosehaItem.getGeometry();
@@ -122,18 +109,21 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 		}
 
 
-
+		featureCount = geometryList.size();
+		
 		geometryList.parallelStream().forEach(polygon->{			
-			Rentabilidad renta = createRentaForPoly(polygon);				
+			RentabilidadItem renta = createRentaForPoly(polygon);			
+			if(renta.getCostoPorHa()>0||renta.getImporteCosechaHa()>0){
 			itemsByIndex.add(renta);
 			featureTree.insert(polygon.getEnvelopeInternal(), renta);
+			}
 
 		});
 
 		itemsByAmount.addAll(itemsByIndex);
 		constructHistogram(itemsByAmount);
 
-		for (Rentabilidad rentaItem : itemsByIndex) {
+		for (RentabilidadItem rentaItem : itemsByIndex) {
 			featureNumber++;
 			updateProgress(featureNumber, featureCount);
 
@@ -172,6 +162,7 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 
 
 	public List<Polygon> construirGrilla(BoundingBox bounds) {
+		System.out.println("construyendo grilla");
 		List<Polygon> polygons = new ArrayList<Polygon>();
 		//	 = getBounds();
 		Double minX = bounds.getMinX()/ProyectionConstants.metersToLongLat;
@@ -220,7 +211,7 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 	}
 
 
-	private Rentabilidad createRentaForPoly(Polygon harvestPolygon) {
+	private RentabilidadItem createRentaForPoly(Polygon harvestPolygon) {
 		Double importeCosecha;
 		Double importePulv;
 		Double importeFert;
@@ -229,9 +220,7 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 		Double importeFijo = costoFijoHa*areaMargen;
 
 		importeCosecha = getImporteCosecha(harvestPolygon);
-		System.out.println("ingreso por cosecha=" + importeCosecha);
-
-
+		//System.out.println("ingreso por cosecha=" + importeCosecha);
 
 		importePulv = getImportePulv(harvestPolygon);
 		importeFert = getImporteFert(harvestPolygon);
@@ -242,7 +231,7 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 				- importePulv - importeFert - importeSiembra-importeFijo)
 				/ areaMargen;
 
-		Rentabilidad renta = new Rentabilidad();
+		RentabilidadItem renta = new RentabilidadItem();
 		renta.setGeometry(harvestPolygon);
 		renta.setImportePulvHa(importePulv/ areaMargen);
 		renta.setImporteFertHa(importeFert/ areaMargen);
@@ -308,8 +297,7 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 
 					Siembra siembra = (Siembra) siembraObj;
 					Double costoHa = (Double) siembra.getImporteHa();
-
-
+					
 					Object pulvGeomObject = siembra.getGeometry();
 					if (pulvGeomObject instanceof Geometry) {
 						Geometry pulvGeom = (Geometry) pulvGeomObject;
@@ -348,8 +336,8 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 			// System.out.println("encontre " + ferts.size()
 			// + " fertilizaciones en contacto con " + geometry);
 			for (Object fertObj : ferts) {
-				if (fertObj instanceof Fertilizacion) {			
-					Fertilizacion fert = (Fertilizacion) fertObj;
+				if (fertObj instanceof FertilizacionItem) {			
+					FertilizacionItem fert = (FertilizacionItem) fertObj;
 					Double costoHa = (Double) fert.getImporteHa();		
 
 					Object pulvGeomObject = fert.getGeometry();
@@ -388,20 +376,20 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 			@SuppressWarnings("rawtypes")
 			List pulves = pulvTree.query(geometry.getEnvelopeInternal());
 
-			System.out.println("encontre " + pulves.size()
-					+ " pulverizaciones en contacto con " + geometry);
+//			System.out.println("encontre " + pulves.size()
+//					+ " pulverizaciones en contacto con " + geometry);
 			for (Object pulvObj : pulves) {
-				if (pulvObj instanceof Pulverizacion) {
+				if (pulvObj instanceof PulverizacionItem) {
 					// System.out
 					// .println("calculando el costo de la pulverizacion: "
 					// + pulvObj);
-					Pulverizacion pulv = (Pulverizacion) pulvObj;
+					PulverizacionItem pulv = (PulverizacionItem) pulvObj;
 					Double costoHa = pulv.getImporteHa();
 					//.getAttribute(COLUMNA_COSTO_HA_PULV);
 
-					System.out
-					.println("el costo por ha de la pulverizacion que se cruza con la geometria es="
-							+ costoHa);
+				//	System.out
+//					.println("el costo por ha de la pulverizacion que se cruza con la geometria es="
+//							+ costoHa);
 
 					Object pulvGeomObject = pulv.getGeometry();
 					if (pulvGeomObject instanceof Geometry) {
@@ -435,7 +423,7 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 
 	// getPathFromGeom(importeFert/areaCosecha,importePulv/areaCosecha,importeSiembra/areaCosecha,importeCosechaPorHa,margenPorHa,
 	// harvestPolygon);
-	private ArrayList<Object> getPathTooltip( Polygon poly,Rentabilidad renta) {
+	private ArrayList<Object> getPathTooltip( Polygon poly,RentabilidadItem renta) {
 
 		Path path = getPathFromGeom(poly, renta);
 

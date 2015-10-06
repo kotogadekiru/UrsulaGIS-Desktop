@@ -1,52 +1,22 @@
 package tasks;
 
-import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import javafx.application.Platform;
-import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
-import javafx.geometry.Point2D;
-import javafx.scene.CacheHint;
 import javafx.scene.Group;
-import javafx.scene.Node;
-import javafx.scene.control.Tooltip;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
-import javafx.scene.shape.LineTo;
-import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
-import javafx.scene.shape.Shape;
-import javafx.scene.transform.Translate;
 
 import org.geotools.data.FileDataStore;
-import org.geotools.data.FileDataStoreFinder;
-import org.geotools.data.collection.ListFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
-import org.geotools.index.quadtree.QuadTree;
 import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.type.AttributeDescriptor;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryCollection;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LinearRing;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.TopologyException;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
-import com.vividsolutions.jts.index.strtree.STRtree;
 
-import dao.CosechaItem;
-import dao.Pulverizacion;
 import dao.Siembra;
 
 public class ProcessSiembraMapTask extends ProcessMapTask {	
@@ -73,17 +43,6 @@ public class ProcessSiembraMapTask extends ProcessMapTask {
 		
 	}
 
-//	@Override
-//	protected Quadtree call() throws Exception {
-//		try {
-//			openFile();
-//		} catch (Exception e1) {
-//			System.err.println("Failed to open shape file");
-//			e1.printStackTrace();
-//		}
-//		return this.geometryTree;
-//
-//	}
 
 	public void doProcess() throws IOException {
 		SimpleFeatureSource featureSource = store.getFeatureSource();

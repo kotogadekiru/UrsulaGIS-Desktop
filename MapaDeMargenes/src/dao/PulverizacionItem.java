@@ -11,7 +11,7 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-public class Pulverizacion extends FeatureContainer{
+public class PulverizacionItem extends FeatureContainer{
 	private static final String COLUMNA_PASADAS = "Pasadas";
 	private static final String COLUMNA_COSTO = "Costo";
 	private static Map<String, String> columnsMap= new HashMap<String, String>();
@@ -24,7 +24,7 @@ public class Pulverizacion extends FeatureContainer{
 	Double importeHa;//es el (costo de lo agroquimicos de una pasada + el costo de labor de una pasada) por la cantidad de pasadas 
 	
 	
-	public Pulverizacion(SimpleFeature pulvFeature,Double costoLaborHa) {
+	public PulverizacionItem(SimpleFeature pulvFeature,Double costoLaborHa) {
 		super(pulvFeature);		
 	//	this.geometry = (Geometry) pulvFeature.getDefaultGeometry();	
 		
@@ -98,14 +98,14 @@ public class Pulverizacion extends FeatureContainer{
 
 	@Override
 	protected Map<String, String> getColumnsMap() {
-		return Pulverizacion.columnsMap;
+		return PulverizacionItem.columnsMap;
 	}
 
 
 
 	public static void setColumnsMap(Map<String, String> columns) {
-		Pulverizacion.columnsMap.clear();
-		Pulverizacion.columnsMap.putAll(columns);	
+		PulverizacionItem.columnsMap.clear();
+		PulverizacionItem.columnsMap.putAll(columns);	
 		
 		columns.forEach(new BiConsumer<String, String>(){
 			@Override

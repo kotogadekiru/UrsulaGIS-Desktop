@@ -35,6 +35,7 @@ public class CosechaItem extends FeatureContainer{
 
 	private static final String COLUMNA_IMPORTE_HA = "importe_ha";
 	
+	@Deprecated//(value ="usar CosechaLabor.columnsMap");
 	private static Map<String, String> columnsMap= new HashMap<String, String>();
 
 	
@@ -52,8 +53,6 @@ public class CosechaItem extends FeatureContainer{
 
 	public CosechaItem(SimpleFeature harvestFeature, Double precioGrano) {
 		super(harvestFeature);
-	
-		//this.geometry = (Geometry) harvestFeature.getDefaultGeometry();
 		
 		double toMetros=HarvestFiltersConfig.getInstance().getMetrosPorUnidadDistancia();
 		
@@ -176,6 +175,7 @@ public class CosechaItem extends FeatureContainer{
 		this.importeHa = importeHa;
 	}
 	
+	@Deprecated //use CosechaLabor.getRequieredcolumns
 	public static List<String> getRequieredColumns() {
 		List<String> requiredColumns = new ArrayList<String>();
 		requiredColumns.add(COLUMNA_VELOCIDAD);		

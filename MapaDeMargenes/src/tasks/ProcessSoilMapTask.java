@@ -3,7 +3,7 @@ package tasks;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
-import dao.Fertilizacion;
+import dao.FertilizacionItem;
 import dao.Suelo;
 import javafx.scene.Group;
 import javafx.scene.shape.Path;

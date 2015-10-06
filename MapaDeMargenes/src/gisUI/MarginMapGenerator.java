@@ -85,6 +85,7 @@ import tasks.CannyEdgeDetector;
 import tasks.HarvestFiltersConfig;
 import tasks.LSDetector;
 import tasks.ProcessFertMapTask;
+import tasks.ProcessGroupsMapTask;
 import tasks.ProcessHarvest3DMapTask;
 import tasks.ProcessHarvestMapTask;
 import tasks.ProcessMapTask;
@@ -99,11 +100,11 @@ import com.vividsolutions.jts.index.quadtree.Quadtree;
 import dao.Configuracion;
 import dao.CosechaItem;
 import dao.Costos;
-import dao.Fertilizacion;
+import dao.FertilizacionItem;
 import dao.Fertilizante;
 import dao.Producto;
-import dao.Pulverizacion;
-import dao.Rentabilidad;
+import dao.PulverizacionItem;
+import dao.RentabilidadItem;
 import dao.Siembra;
 import dao.Suelo;
 
@@ -112,7 +113,7 @@ public class MarginMapGenerator extends Application {
 
 	private static final double DIVIDER_POSITION = 0.9;
 
-	private static final String TITLE_VERSION = "Economia de Precision (Margin Map Viewer Ver: 0.1.20)";
+	private static final String TITLE_VERSION = "Economia de Precision (Margin Map Viewer Ver: 0.1.21)";
 
 	//private static final String ICON = "gisUI/octopus_1.png";
 	//private static final String ICON = "gisUI/images (2).jpg";
@@ -251,8 +252,9 @@ public class MarginMapGenerator extends Application {
 			
 			@Override
 			public void print(String s){
-				super.print(s);				
+					
 				Platform.runLater(()-> {
+					super.print(s);		
 					console.getItems().add(0, s);
 
 				});
@@ -276,8 +278,9 @@ public class MarginMapGenerator extends Application {
 			
 			@Override
 			public void print(String s){
-				super.print(s);				
+					
 				Platform.runLater(()-> {
+					super.print(s);			
 					console.getItems().add(0, s);
 
 				});
@@ -330,7 +333,12 @@ public class MarginMapGenerator extends Application {
 		MenuItem menuCosecha3D = new MenuItem("Cosecha3D");
 		menuCosecha3D.setOnAction(a->doCosecha3D());
 		menuImportar.getItems().add(menuCosecha3D);
+		
 
+		MenuItem menuItemGrupos = new MenuItem("Grupos");
+		menuItemGrupos.setOnAction(a->doOpenGroupsMap());
+		menuImportar.getItems().add(menuItemGrupos);
+		
 
 		MenuItem menuItemExportarCosecha = new MenuItem("Cosecha");
 		menuItemExportarCosecha.setOnAction(a->doExportHarvest());
@@ -1115,6 +1123,69 @@ public class MarginMapGenerator extends Application {
 
 	}
 	
+	/**
+	 * accion ejecutada al presionar el boton openFile Despliega un file
+	 * selector e invoca la tarea que muestra el file en pantalla
+	 */
+	private void doOpenGroupsMap() {
+		List<FileDataStore> stores = chooseShapeFileAndGetMultipleStores();
+		if (stores != null) {
+
+			List<String> availableColumns = getAvailableColumns(stores.get(0));
+
+			List<String> requieredColumns = new ArrayList<String>();
+			requieredColumns.add("GroupBy");
+			ColumnSelectDialog csd = new ColumnSelectDialog(
+					requieredColumns, availableColumns);
+
+			Optional<Map<String, String>> result = csd.showAndWait();
+
+			Map<String, String> columns = null;
+			if (result.isPresent()) {
+				columns = result.get();
+				CosechaItem.setColumnsMap(columns);
+				
+			} else {
+
+				return;
+			}
+			harvestMap.getChildren().clear();
+			resetMapScale();
+
+		
+			for(FileDataStore store : stores){//abro cada store y lo dibujo en el harvestMap individualmente
+				Group group = new Group();//harvestMap
+				ProcessGroupsMapTask umTask = new ProcessGroupsMapTask(store,
+						group, columns.getOrDefault("GroupBy", "elevacion"));
+				ProgressBar progressBarTask = new ProgressBar();			
+				progressBarTask.setProgress(0);
+				progressBarTask.progressProperty().bind(umTask.progressProperty());
+				progressBox.getChildren().add(progressBarTask);
+				Thread currentTaskThread = new Thread(umTask);
+				currentTaskThread.setDaemon(true);
+				currentTaskThread.start();
+
+				umTask.setOnSucceeded(handler -> {
+					harvestTree = (Quadtree) handler.getSource().getValue();//TODO en vez de pizarlo agregar las nuevas features
+					harvestMap.getChildren().add(group);
+					Bounds bl = harvestMap.getBoundsInLocal();
+					System.out.println("bounds de harvestMap es: " + bl);
+			
+					System.out.println("OpenHarvestMapTask succeded");
+
+					progressBox.getChildren().remove(progressBarTask);
+
+					int size = this.harvestMap.getChildren().size();
+
+					harvestMap.visibleProperty().set(true);
+		
+				});//fin del OnSucceeded
+			}//fin del for stores
+		
+		}//if stores != null
+
+	}
+	
 	private void doCosecha3D() {
 	
 		if (this.harvestTree != null) {
@@ -1183,7 +1254,7 @@ public class MarginMapGenerator extends Application {
 			List<String> availableColumns = getAvailableColumns(store);
 
 			ColumnSelectDialog csd = new ColumnSelectDialog(
-					Fertilizacion.getRequiredColumns(), availableColumns);
+					FertilizacionItem.getRequiredColumns(), availableColumns);
 
 			Optional<Map<String, String>> result = csd.showAndWait();
 
@@ -1191,7 +1262,7 @@ public class MarginMapGenerator extends Application {
 			if (result.isPresent()) {
 				columns = result.get();
 
-				Fertilizacion.setColumnsMap(columns);
+				FertilizacionItem.setColumnsMap(columns);
 				System.out.println("columns map: " + columns);
 			} else {
 				System.out.println("columns names not set");
@@ -1312,7 +1383,7 @@ public class MarginMapGenerator extends Application {
 			List<String> availableColumns = getAvailableColumns(store);
 
 			ColumnSelectDialog csd = new ColumnSelectDialog(
-					Pulverizacion.getRequieredColumns(), availableColumns);
+					PulverizacionItem.getRequieredColumns(), availableColumns);
 
 			Optional<Map<String, String>> result = csd.showAndWait();
 
@@ -1320,7 +1391,7 @@ public class MarginMapGenerator extends Application {
 			if (result.isPresent()) {
 				columns = result.get();
 
-				Pulverizacion.setColumnsMap(columns);
+				PulverizacionItem.setColumnsMap(columns);
 				System.out.println("columns map: " + columns);
 			} else {
 				System.out.println("columns names not set");
@@ -1365,8 +1436,9 @@ public class MarginMapGenerator extends Application {
 		}
 	}
 
-	private void doProcessMargin() {
+	private void doProcessMargin() {		
 		FileDataStore store = chooseShapeFileAndGetStore();
+
 		if (store != null) {
 
 			System.out.println("processingMargins");
@@ -1406,13 +1478,13 @@ public class MarginMapGenerator extends Application {
 
 	private void doExportMargins() {
 		@SuppressWarnings("unchecked")
-		List<Rentabilidad> rentas = this.rentaTree.queryAll();
+		List<RentabilidadItem> rentas = this.rentaTree.queryAll();
 		//	System.out.println("construyendo el shp para las rentas "+rentas.size());
 		SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(
-				Rentabilidad.getType());
+				RentabilidadItem.getType());
 		List<SimpleFeature> features = new ArrayList<SimpleFeature>();
 
-		for (Rentabilidad renta : rentas) {
+		for (RentabilidadItem renta : rentas) {
 			SimpleFeature rentaFeature = renta.getFeature(featureBuilder);
 			features.add(rentaFeature);
 			//	System.out.println("agregando a features "+rentaFeature);
@@ -1434,7 +1506,7 @@ public class MarginMapGenerator extends Application {
 		try {
 			ShapefileDataStoreFactory dataStoreFactory = new ShapefileDataStoreFactory();
 			newDataStore = (ShapefileDataStore) dataStoreFactory.createNewDataStore(params);
-			newDataStore.createSchema(Rentabilidad.getType());
+			newDataStore.createSchema(RentabilidadItem.getType());
 
 			//		System.out.println("antes de forzar wgs 84");
 
@@ -1469,7 +1541,7 @@ public class MarginMapGenerator extends Application {
 			 * SimpleFeatureCollection object, so we use the
 			 * ListFeatureCollection class to wrap our list of features.
 			 */
-			SimpleFeatureCollection collection = new ListFeatureCollection(Rentabilidad.getType(), features);
+			SimpleFeatureCollection collection = new ListFeatureCollection(RentabilidadItem.getType(), features);
 			//	System.out.println("agregando features al store " +collection.size());
 			try {
 				featureStore.addFeatures(collection);

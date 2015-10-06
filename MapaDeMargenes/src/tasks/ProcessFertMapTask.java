@@ -2,7 +2,7 @@ package tasks;
 
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
-import dao.Fertilizacion;
+import dao.FertilizacionItem;
 import javafx.scene.Group;
 import javafx.scene.shape.Path;
 import org.geotools.data.FileDataStore;
@@ -39,12 +39,12 @@ public class ProcessFertMapTask extends ProcessMapTask {
 		featureCount = featureCollection.size();
 	//	pathTooltips = new ArrayList<ArrayList<Object>>();
 		//
-		List<Fertilizacion> itemsByIndex = new ArrayList<Fertilizacion>();
-		List<Fertilizacion> itemsByAmount = new ArrayList<Fertilizacion>();
+		List<FertilizacionItem> itemsByIndex = new ArrayList<FertilizacionItem>();
+		List<FertilizacionItem> itemsByAmount = new ArrayList<FertilizacionItem>();
 
 		while (featuresIterator.hasNext()) {
 			SimpleFeature simpleFeature = featuresIterator.next();
-			itemsByIndex.add(new Fertilizacion(simpleFeature,
+			itemsByIndex.add(new FertilizacionItem(simpleFeature,
 					precioFertilizante, precioPasada));
 		}
 		itemsByAmount.addAll(itemsByIndex);
@@ -54,7 +54,7 @@ public class ProcessFertMapTask extends ProcessMapTask {
 		featureCount = itemsByIndex.size();
 		
 
-		for (Fertilizacion fertFeature : itemsByIndex) {		
+		for (FertilizacionItem fertFeature : itemsByIndex) {		
 
 			featureNumber++;
 			updateProgress(featureNumber, featureCount);
@@ -81,7 +81,7 @@ public class ProcessFertMapTask extends ProcessMapTask {
 	}
 
 	private ArrayList<Object> getPathTooltip(Polygon poly,
-			Fertilizacion fertFeature) {
+			FertilizacionItem fertFeature) {
 
 		Path path = getPathFromGeom(poly, fertFeature);
 

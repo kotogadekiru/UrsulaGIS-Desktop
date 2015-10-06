@@ -17,8 +17,8 @@ import org.opengis.feature.simple.SimpleFeature;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
-import dao.Fertilizacion;
-import dao.Pulverizacion;
+import dao.FertilizacionItem;
+import dao.PulverizacionItem;
 
 public class ProcessPulvMapTask extends ProcessMapTask {
 
@@ -71,12 +71,12 @@ public class ProcessPulvMapTask extends ProcessMapTask {
 		this.featureTree = new Quadtree();
 
 		
-		List<Pulverizacion> itemsByIndex = new ArrayList<Pulverizacion>();
-		List<Pulverizacion> itemsByAmount = new ArrayList<Pulverizacion>();
+		List<PulverizacionItem> itemsByIndex = new ArrayList<PulverizacionItem>();
+		List<PulverizacionItem> itemsByAmount = new ArrayList<PulverizacionItem>();
 
 		while (featuresIterator.hasNext()) {
 			SimpleFeature simpleFeature = featuresIterator.next();
-			itemsByIndex.add( new Pulverizacion(simpleFeature, precioPasada));
+			itemsByIndex.add( new PulverizacionItem(simpleFeature, precioPasada));
 		}
 		itemsByAmount.addAll(itemsByIndex);
 		constructHistogram(itemsByAmount);
@@ -85,7 +85,7 @@ public class ProcessPulvMapTask extends ProcessMapTask {
 		featureCount = itemsByIndex.size();
 		
 
-		for (Pulverizacion pulv : itemsByIndex) {	
+		for (PulverizacionItem pulv : itemsByIndex) {	
 			
 	
 	//		SimpleFeature simpleFeature = featuresIterator.next();
@@ -115,7 +115,7 @@ public class ProcessPulvMapTask extends ProcessMapTask {
 
 	}
 
-	private ArrayList<Object> getPathTooltip(Polygon poly, Pulverizacion pulv) {
+	private ArrayList<Object> getPathTooltip(Polygon poly, PulverizacionItem pulv) {
 		Path path = getPathFromGeom(poly, pulv);
 
 		double area = poly.getArea() * ProyectionConstants.A_HAS;
