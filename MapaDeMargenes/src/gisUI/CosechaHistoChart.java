@@ -212,7 +212,9 @@ public class CosechaHistoChart extends VBox {
 					}
 				}
 			});
-			series.getData().add(cData);
+		//	if(j>0 || superficies[j] != null){
+				series.getData().add(cData);
+		//	}
 
 			// series.getData().add(new XYChart.Data<>(label, 33));
 

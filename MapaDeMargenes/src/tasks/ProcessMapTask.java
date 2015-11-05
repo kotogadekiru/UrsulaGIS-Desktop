@@ -102,7 +102,7 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 		try {
 			doProcess();
 		} catch (Exception e1) {
-			System.err.println("Error al procesar el Shape de cosechas");
+			System.err.println("Error al procesar el Shape");
 			e1.printStackTrace();
 		}
 
@@ -162,12 +162,17 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 	public static String getCategoryNameFor(int index) {		
 		String rangoIni = null;
 		if(histograma != null){
-			Double delta = histograma[1]-histograma[0];
-
-			if(index<histograma.length){
-				rangoIni = (histograma[index]-delta)+".."+histograma[index];
-			}else {
-				rangoIni = histograma[index]+".."+(histograma[index]+delta);
+			//index++;
+		//	Double delta = histograma[1]-histograma[0];
+//			if(index==0){
+//				rangoIni = (Double.NEGATIVE_INFINITY)+".."+histograma[0+1];
+//			} else
+				if(index<histograma.length-1){
+				rangoIni = (histograma[index])+".."+histograma[index+1];
+			}else//if(index<histograma.length)
+			{
+				rangoIni = histograma[index]+".."+(Double.POSITIVE_INFINITY);
+				//rangoIni = histograma[index]+".."+(histograma[index]+delta);
 			}
 		} else if(clasifier != null){			
 			rangoIni = clasifier.getTitle(index);		
@@ -283,16 +288,17 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 
 		//		List<Dao> elementos = new LinkedList<Dao>(elementosItem);
 		//		elementos.sort((e1, e2) -> e1.getAmount().compareTo(e2.getAmount()));//sorg ascending
-
-		double average = elementosItem
+		double average =0.0;
+		if(elementosItem.size()>0){
+		 average = elementosItem
 				.stream().mapToDouble( FeatureContainer::getAmount)
 				.average().getAsDouble();
-		
-		double desvios = new Double(0);
-		for(FeatureContainer dao: elementosItem){
-			desvios += Math.abs(dao.getAmount()-average);
 		}
-		double desvioEstandar= desvios/elementosItem.size();
+//		double desvios = new Double(0);
+//		for(FeatureContainer dao: elementosItem){
+//			desvios += Math.abs(dao.getAmount()-average);
+//		}
+//		double desvioEstandar= desvios/elementosItem.size();
 
 
 		System.out.println("termine de ordenar los elementos en constructHistogram");
@@ -314,11 +320,17 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 		//				maxAmount = producto.getRindeEsperado().getValue()*1.5;
 		//			}
 
-		int desviosEstandar = 8;
-		Double deltaForColour =(desviosEstandar*desvioEstandar)/colors.length;
-
+//		int desviosEstandar = 8;
+		//Double deltaForColour =(desviosEstandar*desvioEstandar)/colors.length;
+System.out.println("average = "+average);
+double divisor = colors.length-2;
 		for(int i = 0;i<colors.length;i++){	
-			histograma[i]=(average-(desviosEstandar/2)*desvioEstandar)+deltaForColour*(i+1);
+		//	histograma[i]=(average-(desviosEstandar/2)*desvioEstandar)+deltaForColour*(i+1);
+			histograma[i]=(2.0/divisor)
+					*average*
+					(i);
+		//	System.out.println("histograma ["+i+"]="+histograma[i]);
+		
 		}
 
 
@@ -333,11 +345,11 @@ public abstract class ProcessMapTask extends Task<Quadtree>{
 		//				histograma[i]=rindeMin+delta*i;
 		//			}	
 		//		}	
-		//		System.out.print("histograma [");
-		//		for(Double histo:histograma){
-		//			System.out.print(histo+",");
-		//		}
-		//		System.out.println("]");
+//				System.out.print("\nhistograma [");
+//				for(Double histo:histograma){
+//					System.out.print(histo+",");
+//				}
+//				System.out.println("]");
 		//		
 		//		ArrayList<Double> doubles = new ArrayList<Double>();
 		//		for(Dao dao : elementos){

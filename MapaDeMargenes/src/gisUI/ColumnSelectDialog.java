@@ -76,7 +76,7 @@ public class ColumnSelectDialog extends Dialog<Map<String, String>> {
 			/*esto tiene que estar despues de agregar el ChangeListener al ChoiceBox*/
 			String defaultSelected = req;
 		//	String query = req.substring(0,Math.min(4, req.length()));
-			String query =  Configuracion.getInstance().getProperty(req);	
+			String query =  Configuracion.getInstance().getPropertyOrDefault(req,req);	
 			
 			Optional<String> found = null;
 					
@@ -95,6 +95,9 @@ public class ColumnSelectDialog extends Dialog<Map<String, String>> {
 				defaultSelected=found.get(); 
 		//			System.out.println("default selected is "+defaultSelected+" from query "+query);					
 			cb.getSelectionModel().select(defaultSelected);
+			//XXX confirmar que se dispare el evento de seleccion o agregar a result a mano
+			result.replace(req, defaultSelected);
+			result.putIfAbsent(req, defaultSelected);
 			}
 			
 		

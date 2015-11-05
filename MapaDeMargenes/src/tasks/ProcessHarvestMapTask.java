@@ -115,8 +115,8 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 			SimpleFeature simpleFeature = featuresIterator.next();
 			CosechaItem ci =  new CosechaItem(simpleFeature, precioGrano);
 			cosechaItemIndex.add(ci);
-			distanciaAvanceMax = Math.max(ci.getDistancia(), distanciaAvanceMax);//TODO pasar al while
-			anchoMax = Math.max(ci.getAncho(), anchoMax);//TODO pasar al while
+			distanciaAvanceMax = Math.max(ci.getDistancia(), distanciaAvanceMax);
+			anchoMax = Math.max(ci.getAncho(), anchoMax);
 		}	
 
 		featureCount = cosechaItemIndex.size();
@@ -280,12 +280,15 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 		double supNueva = p.getArea()*ProyectionConstants.A_HAS;
 		double rindeOriginal = cosechaFeature.getRindeTnHa();
 
-		double correccionRinde = supOriginal/supNueva;
-	
+		double correccionRinde = 1.0;
+	if(supNueva>0 && supOriginal > supNueva ){
+		
+			correccionRinde = supOriginal/supNueva;
+		}
 		
 		double rindeNuevo=rindeOriginal*correccionRinde;//supNueva/supOriginal; 
-		if(rindeNuevo > 20){
-			System.out.println(cosechaFeature.getId()+" rindeNuevo >20");
+		if(correccionRinde > 20){
+			System.out.println(cosechaFeature.getId()+" correccionRinde >20");
 		}
 		cosechaFeature.setRindeTnHa(rindeNuevo);
 		}
@@ -606,8 +609,12 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 		if(HarvestFiltersConfig.getInstance().correccionSuperposicionEnabled()){
 			geometryUnion = getUnion(fact, objects, poly);
 			try {			
-				if (geometryUnion != null)
+				if (geometryUnion != null){
 					difGeom = poly.difference(geometryUnion);// Computes a Geometry
+				}
+				else {
+					difGeom = poly;
+				}
 				// .out.println("tarde "+(fin-init)+" milisegundos en insertar");
 			} catch (Exception te) {
 				// cuando la topology exception es side location conflict, el
@@ -618,7 +625,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 				// side location conflict [ (-1.3430180316476026E-4,
 				// -9.411259613045786E-5, NaN) ]
 			//	te.printStackTrace();
-				System.err.println("TopologyException en ProcessHarvestMapTask createGeometryForPoint(). insertando el poligono entero");
+				//System.err.println("TopologyException en ProcessHarvestMapTask createGeometryForPoint(). insertando el poligono entero");
 				difGeom = poly;
 
 			}
@@ -714,6 +721,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask {
 				
 				
 			} catch (Exception e) {
+				System.err.println("Error al hacer la union de las geometrias "+ geomArray.toString());
 				e.printStackTrace();
 				/*java.lang.IllegalArgumentException: Ring has fewer than 3 points, so orientation cannot be determined*/
 			}
