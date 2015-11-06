@@ -113,7 +113,7 @@ public class MarginMapGenerator extends Application {
 
 	private static final double DIVIDER_POSITION = 0.9;
 
-	private static final String TITLE_VERSION = "Economia de Precision (Margin Map Viewer Ver: 0.1.22)";
+	private static final String TITLE_VERSION = "Economia de Precision (Margin Map Viewer Ver: 0.1.23)";
 
 	//private static final String ICON = "gisUI/octopus_1.png";
 	//private static final String ICON = "gisUI/images (2).jpg";
@@ -1578,6 +1578,7 @@ public class MarginMapGenerator extends Application {
 				CosechaItem.getType());
 		List<SimpleFeature> features = new ArrayList<SimpleFeature>();
 
+		//cosechas.sort((a,b)->a.compareTo(b));
 		for (CosechaItem cosecha : cosechas) {
 			SimpleFeature cosechaFeature = cosecha.getFeature(featureBuilder);
 			features.add(cosechaFeature);

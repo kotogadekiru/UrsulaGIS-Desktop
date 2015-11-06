@@ -2,6 +2,7 @@ package dao;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -236,6 +237,8 @@ public class CosechaItem extends FeatureContainer{
 			
 			type = DataUtilities.createType("Cosecha",
 					"*geom:Polygon,"
+					+ "Id"+":Integer,"
+					+ CosechaItem.COLUMNA_PASADA+":Integer,"
 					+ CosechaItem.COLUMNA_DISTANCIA+":Double,"
 					+ CosechaItem.COLUMNA_CURSO+":Double,"
 					+ CosechaItem.COLUMNA_ANCHO+":Double,"
@@ -253,7 +256,10 @@ public class CosechaItem extends FeatureContainer{
 
 @Override
 	public SimpleFeature getFeature(SimpleFeatureBuilder featureBuilder) {
+	DecimalFormat df = new DecimalFormat("#");
 	featureBuilder.add(super.getGeometry());
+	featureBuilder.add(df.format(getId()));
+	featureBuilder.add(df.format(getPasada()));
 	featureBuilder.add(round(getDistancia()));
 	featureBuilder.add(getRumbo());
 	featureBuilder.add(round(getAncho()));
@@ -261,8 +267,13 @@ public class CosechaItem extends FeatureContainer{
 	featureBuilder.add(round(getElevacion()));	
 	featureBuilder.add(round(getPrecioTnGrano()));
 	featureBuilder.add(round(getImporteHa()));		
-			
-	SimpleFeature feature = featureBuilder.buildFeature(null);
+	
+	
+	
+	SimpleFeature feature = featureBuilder.buildFeature("Id");
+	
+	
+	//System.out.println("convirtiendo la feature "+this.getId()+" a "+feature.getAttribute(feature.getID()));
 	return feature;
 	}
 
@@ -277,7 +288,7 @@ private double round(double d){
 	} catch (Exception e) {
 		System.err.println("CosechaItem::round");
 		e.printStackTrace();
-		return 0;
+		return d;
 	}
 
 }
