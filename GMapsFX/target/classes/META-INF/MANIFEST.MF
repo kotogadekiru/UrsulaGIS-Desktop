@@ -1,7 +1,0 @@
-Manifest-Version: 1.0
-Built-By: tomas
-Build-Jdk: 1.8.0_05
-Created-By: Apache Maven
-Archiver-Version: Plexus Archiver
-Main-Class: com.lynden.gmapsfx.MainApp
-
