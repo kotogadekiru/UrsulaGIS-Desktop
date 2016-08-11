@@ -843,36 +843,45 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 	 */
 	private boolean outlayerCV(CosechaItem cosechaFeature, Polygon poly,	List<CosechaItem> features) {
 		boolean ret = false;
+		Geometry geo = cosechaFeature.getGeometry().getCentroid();
 		double rindeCosechaFeature = cosechaFeature.getAmount();
 		double sumatoriaRinde = 0;			
 		double sumatoriaAltura = 0;				
-		int divisor = 0;
+		double divisor = 0;
+		// cambiar el promedio directo por el metodo de kriging de interpolacion. ponderando los rindes por su distancia al cuadrado de la muestra
+		double ancho = labor.config.getAnchoFiltroOutlayers();
+		//la distancia no deberia ser mayor que 2^1/2*ancho, me tomo un factor de 10 por seguridad e invierto la escala para tener mejor representatividad
+		//en vez de tomar de 0 a inf, va de ancho*(10-2^1/2) a 0
+		ancho = Math.sqrt(2)*ancho;
+		
 		for(CosechaItem cosecha : features){
-			//	if(poly.intersects(cosecha.getGeometry())){	
-
 			double cantidadCosecha = cosecha.getAmount();	
+			Geometry geo2 = cosecha.getGeometry().getCentroid();
+			double distancia =geo.distance(geo2)/ProyectionConstants.metersToLat;
+			
+			double distanciaInvert = (ancho-distancia);
+			if(distanciaInvert<0)System.out.println("distancia-1 es menor a cero "+distanciaInvert);
+			//los pesos van de ~ancho^2 para los mas cercanos a 0 para los mas lejanos
+			double weight =  Math.pow(distanciaInvert,2);
+			//System.out.println("distancia="+distancia+" distanciaInvert="+distanciaInvert+" weight="+weight);
+			
 			cantidadCosecha = Math.min(cantidadCosecha,labor.maxRindeProperty.doubleValue());
 			cantidadCosecha = Math.max(cantidadCosecha,labor.minRindeProperty.doubleValue());
-			if(isBetweenMaxMin(cantidadCosecha)){
-				sumatoriaAltura+=cosecha.getElevacion();
-				sumatoriaRinde+=cantidadCosecha;
-				divisor++;		
-			}
-			//	}
+			//if(isBetweenMaxMin(cantidadCosecha)){
+				
+				sumatoriaAltura+=cosecha.getElevacion()*weight;
+				sumatoriaRinde+=cantidadCosecha*weight;
+				divisor+=weight;		
+			//}			
 		}
 		boolean rindeEnRango = isBetweenMaxMin(rindeCosechaFeature);
-		//		if(rindeEnRango && divisor >1){
-		//		sumatoriaRinde -=rindeCosechaFeature;
-		//		sumatoriaAltura -=cosechaFeature.getElevacion();
-		//		divisor--;
-		//		
-		//		}
-
-		//divisor--;//n-1 para que sea insesgado.
-		double promedioRinde =0.0;
-		double promedioAltura =0.0;
+	
+		double promedioRinde = 0.0;
+		double promedioAltura = 0.0;
 		if(divisor>0){
 			promedioRinde = sumatoriaRinde/divisor;
+//			promedioRinde = Math.min(promedioRinde,labor.maxRindeProperty.doubleValue());
+//			promedioRinde = Math.max(promedioRinde,labor.minRindeProperty.doubleValue());
 			promedioAltura = sumatoriaAltura/divisor;
 		}else{
 			System.out.println("divisor es <0 "+ divisor);
@@ -881,6 +890,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		//4) obtener la varianza (LA DIF ABSOLUTA DEL DATO Y EL PROM DE LA MUESTRA) (EJ. ABS(10-9.3)/9.3 = 13%)
 		//SI 13% ES MAYOR A TOLERANCIA CV% REEMPLAZAR POR PROMEDIO SINO NO
 
+		if(!(promedioRinde==0)){
 		double coefVariacionCosechaFeature = Math.abs(rindeCosechaFeature-promedioRinde)/promedioRinde;
 
 		if(coefVariacionCosechaFeature > toleranciaCoeficienteVariacion ||!rindeEnRango){//si el coeficiente de variacion es mayor al 20% no es homogeneo
@@ -889,6 +899,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			cosechaFeature.setRindeTnHa(promedioRinde);
 			cosechaFeature.setElevacion(promedioAltura);
 			ret=true;
+		}
 		}
 		return ret;
 	}
