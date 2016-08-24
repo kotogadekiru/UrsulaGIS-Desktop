@@ -62,7 +62,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		labor.getConfiguracion().valorMetrosPorUnidadDistanciaProperty().set(1.0);
 		labor.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
 
-		labor.getNombreProperty().setValue("union de cosechas");//este es el nombre que se muestra en el progressbar
+		labor.getNombreProperty().setValue("grilla cosechas");//este es el nombre que se muestra en el progressbar
 	}
 
 	/**
@@ -79,7 +79,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		String nombre =null;
 		for(CosechaLabor c:cosechas){
 			if(nombre == null){
-				nombre="merge "+c.getNombreProperty().get();	
+				nombre="grilla "+c.getNombreProperty().get();	
 			}else {
 				nombre+=" - "+c.getNombreProperty().get();
 			}
@@ -231,6 +231,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		Map<CosechaItem,Double> intersecciones = new HashMap<CosechaItem,Double>();
 		for(CosechaItem cPoly : cosechasPoly){
 			Geometry g = cPoly.getGeometry();
+			//XXX si es una cosecha de ambientes el area es importante
 			//			try{
 			//g= poly.intersection(g);
 			Double areaPoly2 = g.getArea();

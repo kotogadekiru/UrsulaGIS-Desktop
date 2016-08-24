@@ -39,6 +39,11 @@ public class ProyectionConstants {
 		return meters*metersToLat;
 	}
 	
+	public static GeometryFactory getGeometryFactory(){
+		GeometryFactory factory = new GeometryFactory(new PrecisionModel(
+				PrecisionModel.FLOATING), SRID.WGS84_SRID.getSRID());
+		return factory;
+	}
 	public static double getDistancia(Point2D origen, Point2D destino){
 		GeodeticCalculator gc = new GeodeticCalculator();//Constructs a new geodetic calculator associated with the WGS84 ellipsoid.
 		gc.setStartingGeographicPoint(origen);

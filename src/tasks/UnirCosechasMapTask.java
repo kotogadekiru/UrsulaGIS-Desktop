@@ -81,7 +81,7 @@ public class UnirCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 		String nombre =null;
 		for(CosechaLabor c:cosechas){
 			if(nombre == null){
-				nombre="merge "+c.getNombreProperty().get();	
+				nombre="union "+c.getNombreProperty().get();	
 			}else {
 				nombre+=" - "+c.getNombreProperty().get();
 			}

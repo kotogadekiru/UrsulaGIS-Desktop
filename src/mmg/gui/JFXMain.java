@@ -165,7 +165,7 @@ import dao.SueloItem;
 //
 
 public class JFXMain extends Application {
-	private static final String TITLE_VERSION = "WorldWind MarginMapViewer 0.2.11";
+	private static final String TITLE_VERSION = "WorldWind MarginMapViewer 0.2.12";
 	static final String ICON = "mmg/gui/1-512.png";
 	//private static final String SOUND_FILENAME = "D:/Users/workspaceHackaton2015/WorldWindMarginMap/src/mmg/gui/Alarm08.wav";
 	private static final String SOUND_FILENAME = "Alarm08.wav";//TODO cortar este wav porque suena 2 veces
@@ -420,6 +420,22 @@ public class JFXMain extends Application {
 				} else{
 					doGrillarCosechas((CosechaLabor) layer.getValue("LABOR"));
 					return "cosecha editada" + layer.getName();
+				}
+			}
+
+			});
+		
+		/**
+		 * Accion que permite pasar una grilla sobre la cosecha
+		 */
+		predicates.add(new Function<Layer,String>(){			
+			@Override
+			public String apply(Layer layer) {
+				if(layer==null){
+					return "Clonar cosecha"; 
+				} else{
+					doUnirCosechas((CosechaLabor) layer.getValue("LABOR"));
+					return "cosecha clonada" + layer.getName();
 				}
 			}
 

@@ -277,7 +277,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		this.comboCultivo.valueProperty().bindBidirectional(labor.producto);
 		
 
-		StringConverter<Number> converter = new NumberStringConverter();
+		StringConverter<Number> converter = new NumberStringConverter();//FIXME corregir que el separador de miles
 
 		//textPrecioGrano
 		Bindings.bindBidirectional(this.textPrecioGrano.textProperty(), labor.precioGranoProperty, converter);

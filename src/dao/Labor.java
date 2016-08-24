@@ -52,7 +52,14 @@ import org.opengis.filter.expression.PropertyName;
 import org.opengis.filter.spatial.BBOX;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
+import utils.ProyectionConstants;
+
+import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 
 /**
@@ -154,17 +161,9 @@ public abstract class Labor<E extends FeatureContainer> {
 	}
 
 	public List<E> outStoreQuery(Envelope envelope){
-//		if(outStore ==null){
-//			createOutStore();
-//		}
+
 		List<E> objects = new ArrayList<E>();
-//		SimpleFeatureIterator it = outCollection.features();
-//		outCollection.
-//	while(it.hasNext()){
-//		obj = it.next();
-//		
-//	}
-//		try {  
+
 		if(this.outCollection.getBounds().intersects(envelope)){//solo hago la query si el bounds esta dentro del mapa
 			FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2( GeoTools.getDefaultHints() );
 		    FeatureType schema = this.outCollection.getSchema();
@@ -174,25 +173,62 @@ public abstract class Labor<E extends FeatureContainer> {
 		    CoordinateReferenceSystem targetCRS = schema.getGeometryDescriptor()
 		            .getCoordinateReferenceSystem();
 		
-		    ReferencedEnvelope bbox = new ReferencedEnvelope(envelope,targetCRS);		    
+		    ReferencedEnvelope bbox = new ReferencedEnvelope(envelope,targetCRS);		
+		   
 		    BBOX filter = ff.bbox(ff.property(geometryPropertyName), bbox);
-		 
-		 
+
 			 SimpleFeatureCollection features = this.outCollection.subCollection(filter);//OK!! esto funciona
 			// System.out.println("encontre "+features.size()+" que se intersectan con "+ bbox );
+			 
+			 Polygon boundsPolygon = constructPolygon(bbox);
 			
 			 SimpleFeatureIterator featuresIterator = features.features();
 			 while(featuresIterator.hasNext()){
-				 objects.add(constructFeatureContainerStandar(featuresIterator.next(),false));
+				 SimpleFeature next = featuresIterator.next();
+				 Object obj = next.getDefaultGeometry();
+				
+				 Geometry geomEnvelope = null;
+				 if(obj instanceof Geometry){					
+					 geomEnvelope =(Geometry)obj;					 
+				 } 
+				 
+				 boolean intersects = false;
+				 if(geomEnvelope!=null){
+					 intersects = geomEnvelope.intersects(boundsPolygon );
+				 }
+				 if(intersects){
+					 objects.add(constructFeatureContainerStandar(next,false));
+				 }
 			 }
 			 featuresIterator.close();
 		}
-//		  } catch (IOException e) {
-//			  // TODO Auto-generated catch block
-//			  e.printStackTrace();
-//		  }
-	//	System.out.println("devuelvo la query al outStore con "+objects.size()+" elementos");
+
 		return objects;
+	}
+	public Polygon constructPolygon(ReferencedEnvelope e) {
+		
+		Coordinate D = new Coordinate(e.getMaxX(), e.getMaxY()); // x-l-d
+		Coordinate C = new Coordinate(e.getMinX(), e.getMaxY());// X+l-d
+		Coordinate B = new Coordinate(e.getMaxX(), e.getMinY());// X+l+d
+		Coordinate A = new Coordinate(e.getMinX(), e.getMinY());// X-l+d
+
+		/**
+		 * D-- ancho de carro--C ^ ^ | | avance ^^^^^^^^ avance | | A-- ancho de
+		 * carro--B
+		 * 
+		 */
+		Coordinate[] coordinates = { A, C, D, B, A };// Tiene que ser cerrado.
+		// Empezar y terminar en
+		// el mismo punto.
+		// sentido antihorario
+
+		GeometryFactory fact = ProyectionConstants.getGeometryFactory();
+
+		//		LinearRing shell = fact.createLinearRing(coordinates);
+		//		LinearRing[] holes = null;
+		//		Polygon poly = new Polygon(shell, holes, fact);
+		Polygon poly = fact.createPolygon(coordinates);
+		return poly;
 	}
 	
 	public List<E> inStoreQuery(Envelope envelope) throws IOException{
