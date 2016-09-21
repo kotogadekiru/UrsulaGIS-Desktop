@@ -34,6 +34,7 @@ import gov.nasa.worldwindx.examples.util.ToolTipController;
 
 
 
+
 import java.awt.Dimension;
 import java.io.File;
 import java.io.FileInputStream;
@@ -54,6 +55,7 @@ import java.util.function.Function;
 
 
 
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -63,6 +65,7 @@ import javafx.embed.swing.SwingNode;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -87,6 +90,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
@@ -94,9 +98,11 @@ import javafx.util.converter.NumberStringConverter;
 
 
 
+
 import javax.imageio.ImageIO;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
 
 
 
@@ -124,6 +130,7 @@ import org.opengis.feature.type.AttributeType;
 
 
 
+
 import sun.audio.AudioPlayer;
 import sun.audio.AudioStream;
 import tasks.GrillarCosechasMapTask;
@@ -142,8 +149,10 @@ import tasks.old.ProcessHarvest3DMapTask;
 
 
 
+
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
+
 
 
 
@@ -165,7 +174,7 @@ import dao.SueloItem;
 //
 
 public class JFXMain extends Application {
-	private static final String TITLE_VERSION = "WorldWind MarginMapViewer 0.2.12";
+	private static final String TITLE_VERSION = "WorldWind MarginMapViewer 0.2.13";
 	static final String ICON = "mmg/gui/1-512.png";
 	//private static final String SOUND_FILENAME = "D:/Users/workspaceHackaton2015/WorldWindMarginMap/src/mmg/gui/Alarm08.wav";
 	private static final String SOUND_FILENAME = "Alarm08.wav";//TODO cortar este wav porque suena 2 veces
@@ -224,9 +233,19 @@ public class JFXMain extends Application {
 		//StackPane pane = new StackPane();
 		//pane.getChildren().add(swingNode);
 
+Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
+		
+		double ratio = primaryScreenBounds.getHeight()/primaryScreenBounds.getWidth();
 
-		scene = new Scene(pane,canvasSize.getWidth()*1,canvasSize.getHeight()*1);//, Color.White);
+		int canvasWidth = (int) (primaryScreenBounds.getWidth()*0.8);
+		int canvasHeight = (int) (canvasWidth/ratio);
+		
+		canvasSize=new Dimension(canvasWidth,canvasHeight);
+		
+
+		scene = new Scene(pane,canvasSize.getWidth()*1,canvasSize.getHeight()*0.3);//, Color.White);
 		primaryStage.setScene(scene);
+		//primaryStage.setResizable(false);
 
 		addDragAndDropSupport();
 		// scene.getStylesheets().add("gisUI/style.css");//esto funciona
@@ -291,7 +310,10 @@ public class JFXMain extends Application {
 	}
 
 	protected BorderPane initializeWorldWind() {
-		canvasSize=new Dimension(1920,1080);
+		
+		
+		
+		//canvasSize=new Dimension(1920,1080);
 		// Create the WorldWindow.
 		this.wwjPanel =	new WWPanel(canvasSize, true);
 
@@ -962,9 +984,9 @@ public class JFXMain extends Application {
 		//}
 	}
 
-	//TODO sleccionar cosechas, unificarlas con una grilla por arriba
+	// junta 2 o mas cosechas en una 
 	private void doUnirCosechas(CosechaLabor cosechaLabor) {
-		//CosechaItem.CosechaID=new Double(0);
+		
 		List<CosechaLabor> cosechasAUnir = new ArrayList<CosechaLabor>();
 		if(cosechaLabor == null){
 			cosechasAUnir.addAll( this.cosechas);//si no hago esto me da un concurrent modification exception al modificar layers en paralelo

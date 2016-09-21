@@ -117,7 +117,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 							List<CosechaItem>  cosechasPoly = cosechas.parallelStream().collect(
 									()->new  ArrayList<CosechaItem>(),
 									(list, cosecha) ->{			
-										list.addAll(cosecha.outStoreQuery(poly.getEnvelopeInternal()));	
+										list.addAll(cosecha.cachedOutStoreQuery(poly.getEnvelopeInternal()));	
 									},
 									(list1, list2) -> list1.addAll(list2));
 
@@ -145,6 +145,10 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 
 						},
 						(map1, map2) -> map1.putAll(map2));
+		//Limpio la cache de las labores despues de hacer las querys
+		for(CosechaLabor c:cosechas){
+			c.cachedEnvelopes.clear();
+		}
 
 		//		grilla.parallelStream().forEach(poly->{ //tarde 242762 milisegundos en unir las cosechas. es 2.6908974017912564 milisegundos por poligono (pierdo poligonos)
 		//		//grilla.stream().forEach(poly->{ //tarde 1137859 milisegundos en unir las cosechas. es 12.612607519730425 milisegundos por poligono

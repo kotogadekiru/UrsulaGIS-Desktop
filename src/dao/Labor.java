@@ -11,6 +11,7 @@ import java.math.RoundingMode;
 import java.net.MalformedURLException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -96,6 +97,9 @@ public abstract class Labor<E extends FeatureContainer> {
 	public DoubleProperty precioLaborProperty;
 	public DoubleProperty precioInsumoProperty;
 	
+	public Map<Envelope,List<E>> cachedEnvelopes=Collections.synchronizedMap(new HashMap<Envelope,List<E>>());
+	private CoordinateReferenceSystem targetCRS;
+	
 	public Labor(){
 		clasificador=new Clasificador();
 		outCollection = new DefaultFeatureCollection("internal",getType());
@@ -160,18 +164,61 @@ public abstract class Labor<E extends FeatureContainer> {
 		return nextID;
 	}
 
+	public List<E> cachedOutStoreQuery(Envelope envelope){
+		List<E> objects = new ArrayList<E>();
+		Envelope cachedEnvelope=null;
+		if(cachedEnvelopes.size()>0){
+			synchronized(cachedEnvelopes){
+		for(Envelope ce : cachedEnvelopes.keySet()){
+			if(ce.contains(envelope))cachedEnvelope=ce;
+		}}
+			}
+		if( cachedEnvelope==null ){
+			cachedEnvelope = updateCachedEnvelope(envelope);
+			FeatureType schema = this.outCollection.getSchema();			    
+			targetCRS = schema.getGeometryDescriptor().getCoordinateReferenceSystem();		
+		}
+		
+		ReferencedEnvelope bbox = new ReferencedEnvelope(envelope,targetCRS);		
+		Polygon boundsPolygon = constructPolygon(bbox);
+		List<E> cachedObjects = cachedEnvelopes.get(cachedEnvelope);
+		
+		for(E cachedObject : cachedObjects){
+			Geometry geomEnvelope = cachedObject.getGeometry();
+			boolean intersects = false;
+			if(geomEnvelope!=null){
+				intersects = geomEnvelope.intersects(boundsPolygon);
+			}
+			if(intersects){
+				objects.add(cachedObject);
+			}
+		}
+		
+		return objects;
+	}
+	
+	private Envelope updateCachedEnvelope(Envelope envelope){
+		
+		Envelope cachedEnvelope = new Envelope(envelope);
+		double height = cachedEnvelope.getHeight();
+		double width = cachedEnvelope.getHeight();
+		cachedEnvelope.expandBy(width*4, height*4);
+		
+		cachedEnvelopes.put(cachedEnvelope, outStoreQuery(cachedEnvelope));
+		return cachedEnvelope;
+	}
 	public List<E> outStoreQuery(Envelope envelope){
 
 		List<E> objects = new ArrayList<E>();
-
+//TODO tratar de cachear todo lo posible para evitar repetir trabajo en querys consecutivas.
+//una udea es cachear un sector del out collection y solo hacer la query si el envelope esta fuera de lo cacheado
 		if(this.outCollection.getBounds().intersects(envelope)){//solo hago la query si el bounds esta dentro del mapa
 			FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2( GeoTools.getDefaultHints() );
 		    FeatureType schema = this.outCollection.getSchema();
 		    
 		    // usually "THE_GEOM" for shapefiles
 		    String geometryPropertyName = schema.getGeometryDescriptor().getLocalName();
-		    CoordinateReferenceSystem targetCRS = schema.getGeometryDescriptor()
-		            .getCoordinateReferenceSystem();
+		    CoordinateReferenceSystem targetCRS = schema.getGeometryDescriptor().getCoordinateReferenceSystem();
 		
 		    ReferencedEnvelope bbox = new ReferencedEnvelope(envelope,targetCRS);		
 		   

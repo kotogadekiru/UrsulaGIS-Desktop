@@ -593,7 +593,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 					CosechaItem cosechaFeature = labor.constructFeatureContainerStandar(pf,false);
 					Point X = cosechaFeature.getGeometry().getCentroid();
 					Polygon poly = constructPolygon(anchoLongLatCoord, distanciaLongLat, X);
-					List<CosechaItem> features = labor.outStoreQuery(poly.getEnvelopeInternal());
+					List<CosechaItem> features = labor.cachedOutStoreQuery(poly.getEnvelopeInternal());
 					if(features.size()>0){						
 						outlayerCV(cosechaFeature, poly,features);						
 						SimpleFeatureBuilder fBuilder = new SimpleFeatureBuilder(labor.getType());
@@ -671,7 +671,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			Polygon poly = constructPolygon(anchoLongLatCoord, distanciaLongLat, X);
 
 			//2) obtener todas las cosechas dentro det circulo
-			List<CosechaItem> features = labor.outStoreQuery(poly.getEnvelopeInternal());
+			List<CosechaItem> features = labor.cachedOutStoreQuery(poly.getEnvelopeInternal());
 			if(features.size()>0){
 				//outlayerVarianza(cosechaFeature, poly,features);
 				if(outlayerCV(cosechaFeature, poly,features)){
@@ -686,7 +686,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			updateProgress((i+featureCount)/2, featureCount);
 		}//fin del while
 		reader.close();
-
+		labor.cachedEnvelopes.clear();
 		labor.setOutCollection(newOutcollection);
 
 	}

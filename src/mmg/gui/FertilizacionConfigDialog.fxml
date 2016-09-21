@@ -116,7 +116,7 @@
                            <children>
                               <CheckBox id="chkDistancia" fx:id="chkDistancia" mnemonicParsing="false" text="Distancia" wrapText="true" GridPane.rowIndex="2" />
                               <CheckBox id="chkAncho" fx:id="chkAncho" mnemonicParsing="false" text="Ancho" wrapText="true" GridPane.rowIndex="3" />
-                              <CheckBox id="chkOutlayers" fx:id="chkOutlayers" mnemonicParsing="false" text="Outlayers" wrapText="true" GridPane.rowIndex="4" />
+                              <CheckBox id="chkOutlayers" fx:id="chkOutlayers" mnemonicParsing="false" text="Outliers" wrapText="true" GridPane.rowIndex="4" />
                               <CheckBox id="chkDemora" fx:id="chkDemora" mnemonicParsing="false" text="Demora pesada" wrapText="true" GridPane.rowIndex="6" />
                               <Label text="Cant. distancias tolera" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                               <TextField id="textDistTolera" fx:id="textDistTolera" GridPane.columnIndex="2" GridPane.rowIndex="2">
