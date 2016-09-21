@@ -132,6 +132,10 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		if(labor.getConfiguracion().correccionOutlayersEnabled()){
 			divisor =2;
 		}
+		
+		double tolerancia = distanciaAvanceMax
+				* cantidadDistanciasTolerancia// 10
+				* ProyectionConstants.metersToLat;
 
 		while (reader.hasNext()) {
 
@@ -181,14 +185,16 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			if (geometry instanceof Point) {
 				Point longLatPoint = (Point) geometry;
 
+				//double distanciaXLast = lastX.distance(longLatPoint)*ProyectionConstants.metersToLat;
 
-				if(	lastX!=null && labor.getConfiguracion().correccionDistanciaEnabled()){
+				if(	lastX!=null && labor.getConfiguracion().correccionDistanciaEnabled() && 
+						(lastX.distance(longLatPoint)*ProyectionConstants.metersToLat <tolerancia)){
 
 					double aMetros=1;// 1/ProyectionConstants.metersToLongLat;
 					//	BigDecimal x = new BigDecimal();
 					double deltaY = longLatPoint.getY()*aMetros-lastX.getY()*aMetros;
 					double deltaX = longLatPoint.getX()*aMetros-lastX.getX()*aMetros;
-					if(deltaY==0.0 && deltaX ==0.0|| lastX.equals(longLatPoint)){
+					if((deltaY==0.0 && deltaX ==0.0)|| lastX.equals(longLatPoint)){
 						puntosEliminados++;
 						//	System.out.println("salteando el punto "+longLatPoint+" porque tiene la misma posicion que el punto anterior "+lastX);
 						continue;//ignorar este punto

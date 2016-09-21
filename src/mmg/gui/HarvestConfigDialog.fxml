@@ -128,7 +128,7 @@
                               <CheckBox id="chkSuperposicion" fx:id="chkSuperposicion" mnemonicParsing="false" text="Superposiciones" wrapText="true" GridPane.rowIndex="1" />
                               <CheckBox id="chkDistancia" fx:id="chkDistancia" mnemonicParsing="false" text="Distancia" wrapText="true" GridPane.rowIndex="2" />
                               <CheckBox id="chkAncho" fx:id="chkAncho" mnemonicParsing="false" text="Ancho" wrapText="true" GridPane.rowIndex="3" />
-                              <CheckBox id="chkOutlayers" fx:id="chkOutlayers" mnemonicParsing="false" text="Outlayers" wrapText="true" GridPane.rowIndex="4" />
+                              <CheckBox id="chkOutlayers" fx:id="chkOutlayers" mnemonicParsing="false" text="Outliers" wrapText="true" GridPane.rowIndex="4" />
                               <CheckBox id="chkRinde" fx:id="chkRinde" mnemonicParsing="false" text="Rinde sin superposiciones" wrapText="true" GridPane.rowIndex="5" />
                               <CheckBox id="chkDemora" fx:id="chkDemora" mnemonicParsing="false" text="Demora pesada" wrapText="true" GridPane.rowIndex="6" />
                               <Label text="Cant. distancias tolera" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="2" />
