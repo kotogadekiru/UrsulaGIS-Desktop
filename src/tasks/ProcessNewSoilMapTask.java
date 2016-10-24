@@ -40,7 +40,7 @@ import dao.Fertilizante;
 import dao.Producto;
 import dao.PulverizacionItem;
 import dao.RentabilidadItem;
-import dao.Siembra;
+import dao.SiembraItem;
 import dao.Suelo;
 import dao.SueloItem;
 

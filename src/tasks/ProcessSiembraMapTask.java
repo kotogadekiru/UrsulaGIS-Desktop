@@ -19,7 +19,7 @@ import utils.ProyectionConstants;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
-import dao.Siembra;
+import dao.SiembraItem;
 
 public class ProcessSiembraMapTask extends ProcessMapTask {	
 //	private int featureCount;
@@ -54,12 +54,12 @@ public class ProcessSiembraMapTask extends ProcessMapTask {
 
 		this.featureTree = new Quadtree();
 
-		List<Siembra> itemsByIndex = new ArrayList<Siembra>();
-		List<Siembra> itemsByAmount = new ArrayList<Siembra>();
+		List<SiembraItem> itemsByIndex = new ArrayList<SiembraItem>();
+		List<SiembraItem> itemsByAmount = new ArrayList<SiembraItem>();
 
 		while (featuresIterator.hasNext()) {
 			SimpleFeature simpleFeature = featuresIterator.next();
-			itemsByIndex.add( new Siembra(simpleFeature, precioPasada,precioBolsaSemilla));
+			itemsByIndex.add( new SiembraItem(simpleFeature, precioPasada,precioBolsaSemilla));
 		}
 		itemsByAmount.addAll(itemsByIndex);
 		constructHistogram(itemsByAmount);
@@ -68,7 +68,7 @@ public class ProcessSiembraMapTask extends ProcessMapTask {
 		featureCount = itemsByIndex.size();
 		
 
-		for (Siembra siembraFeature : itemsByIndex) {	
+		for (SiembraItem siembraFeature : itemsByIndex) {	
 			featureNumber++;
 			updateProgress(featureNumber, featureCount);
 			System.out.println("Feature " + featureNumber + " of "
@@ -93,7 +93,7 @@ public class ProcessSiembraMapTask extends ProcessMapTask {
 
 	}
 	
-	private  ArrayList<Object>  getPathTooltip( Polygon poly,Siembra siembraFeature) {
+	private  ArrayList<Object>  getPathTooltip( Polygon poly,SiembraItem siembraFeature) {
 		Path path = getPathFromGeom(poly,siembraFeature);		
 		
 		double area = poly.getArea() *ProyectionConstants.A_HAS;// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();

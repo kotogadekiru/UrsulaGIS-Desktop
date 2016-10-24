@@ -1,7 +1,5 @@
 package dao;
 
-import java.util.Map;
-
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
 
@@ -107,6 +105,7 @@ public abstract class FeatureContainer implements Comparable<FeatureContainer>{
 		}
 		return d;
 	}
+	
 	@Override
 	public boolean equals(Object o){
 		if(o instanceof FeatureContainer){

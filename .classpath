@@ -47,5 +47,6 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/WorldWindMarginMap/libs/MTJ/mtj-1.0.4-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry combineaccessrules="false" kind="src" path="/worldWind"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

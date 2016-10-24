@@ -71,6 +71,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
+import javafx.scene.control.Alert;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.CustomMenuItem;
 import javafx.scene.control.Label;
@@ -79,6 +80,8 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.DragEvent;
@@ -134,6 +137,7 @@ import org.opengis.feature.type.AttributeType;
 import sun.audio.AudioPlayer;
 import sun.audio.AudioStream;
 import tasks.GrillarCosechasMapTask;
+import tasks.JuntarShapefilesTask;
 import tasks.ProcessFertMapTask;
 import tasks.ProcessHarvestMapTask;
 import tasks.ProcessMapTask;
@@ -166,15 +170,18 @@ import dao.FertilizacionItem;
 import dao.FertilizacionLabor;
 import dao.Fertilizante;
 import dao.Labor;
+import dao.Margen;
 import dao.Producto;
 import dao.PulverizacionItem;
+import dao.PulverizacionLabor;
 import dao.RentabilidadItem;
-import dao.Siembra;
+import dao.SiembraItem;
+import dao.SiembraLabor;
 import dao.SueloItem;
 //
 
 public class JFXMain extends Application {
-	private static final String TITLE_VERSION = "WorldWind MarginMapViewer 0.2.13";
+	private static final String TITLE_VERSION = "WorldWind MarginMapViewer 0.2.14";
 	static final String ICON = "mmg/gui/1-512.png";
 	//private static final String SOUND_FILENAME = "D:/Users/workspaceHackaton2015/WorldWindMarginMap/src/mmg/gui/Alarm08.wav";
 	private static final String SOUND_FILENAME = "Alarm08.wav";//TODO cortar este wav porque suena 2 veces
@@ -182,35 +189,22 @@ public class JFXMain extends Application {
 	private Scene scene;
 
 
-	// private Group root=new Group();
+
 	StackPane pane = new StackPane();
-	//final SwingNode swingNode = new SwingNode();
+	
 	private Dimension canvasSize = new Dimension(1500, 800);
 
 	protected WWPanel wwjPanel;
 	protected LayerPanel layerPanel;
-	//protected StatisticsPanel statsPanel;
 
-
-	//	Group fertMap = new Group();
-	//	Group siembraMap = new Group();
-	//	Group pulvMap = new Group();
-	//	Group harvestMap = new Group();
-	//	Group marginMap = new Group();
-	//	Group suelosMap = new Group();
-	//	Group newSoilMap = new Group();
 
 	private VBox progressBox = new VBox();
 
-	private Quadtree pulvTree;
-	//private Quadtree harvestTree;
-	private Quadtree siembraTree;
-	private Quadtree sueloTree;
-	private Quadtree fertTree;
-	private Quadtree rentaTree;
 
 	private List<CosechaLabor> cosechas = new ArrayList<CosechaLabor>();
 	private List<FertilizacionLabor> fertilizaciones = new ArrayList<FertilizacionLabor>();
+	private List<SiembraLabor> siembras = new ArrayList<SiembraLabor>();
+	private List<PulverizacionLabor> pulverizaciones = new ArrayList<PulverizacionLabor>();
 	//	private Producto producto;
 	//	private Fertilizante fertilizante;
 
@@ -224,16 +218,7 @@ public class JFXMain extends Application {
 		primaryStage.setTitle(TITLE_VERSION);
 		primaryStage.getIcons().add(new Image(ICON));
 
-		// this.initialize(true, true, false);
-
-		// Screen screen = Screen.getPrimary();
-		// Rectangle2D bounds = screen.getVisualBounds();
-
-
-		//StackPane pane = new StackPane();
-		//pane.getChildren().add(swingNode);
-
-Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
+		Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 		
 		double ratio = primaryScreenBounds.getHeight()/primaryScreenBounds.getWidth();
 
@@ -245,30 +230,18 @@ Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 
 		scene = new Scene(pane,canvasSize.getWidth()*1,canvasSize.getHeight()*0.3);//, Color.White);
 		primaryStage.setScene(scene);
-		//primaryStage.setResizable(false);
+
 
 		addDragAndDropSupport();
 		// scene.getStylesheets().add("gisUI/style.css");//esto funciona
 
 		//
 		MenuBar menuBar = constructMenuBar();
-		// Parent zoomPane = createZoomPane(map);
-		//
-		// StackPane bp = new StackPane();
-		// bp.getChildren().add(zoomPane);
-		// StackPane.setAlignment(zoomPane, Pos.TOP_RIGHT);
-		//
+	
 		VBox vBox1 = new VBox();
 		vBox1.getChildren().add(menuBar);
 		createSwingNode(vBox1);
 		pane.getChildren().add(vBox1);
-		// horizontalSplit.setOrientation(Orientation.VERTICAL);
-		// horizontalSplit.setDividerPositions(DIVIDER_POSITION);
-		// ListView<String> console = new ListView<String>();
-		// installConsole(console);
-		//
-		// horizontalSplit.getItems().addAll(vBox1,console);
-		// root.getChildren().addAll(horizontalSplit);
 		primaryStage.setOnHiding((e)-> {
 			Platform.runLater(()->{
 				System.out.println("Application Closed by click to Close Button(X)");
@@ -310,16 +283,10 @@ Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 	}
 
 	protected BorderPane initializeWorldWind() {
-		
-		
-		
 		//canvasSize=new Dimension(1920,1080);
 		// Create the WorldWindow.
 		this.wwjPanel =	new WWPanel(canvasSize, true);
-
 		//una vez que se establecio el tamaño inicial ese es el tamaño maximo
-
-
 		//this.wwjPanel.setPreferredSize(canvasSize);
 		final SwingNode wwSwingNode = new SwingNode();
 		wwSwingNode.setContent(wwjPanel);
@@ -373,10 +340,13 @@ Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 							message += "This program will end when you press OK.";
 							System.err.println(message);
 							t.printStackTrace();
+							Alert alert = new Alert(AlertType.ERROR,message,ButtonType.OK);
+							alert.initOwner(stage);
+							alert.showAndWait();
 							// JOptionPane.showMessageDialog(JFXMain.this,
 							// message, "Unable to Start Program",
 							// JOptionPane.ERROR_MESSAGE);
-							//System.exit(-1);
+							System.exit(-1);
 						}
 					}
 				});
@@ -392,7 +362,6 @@ Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 		}
 
 		importElevations();
-		// this.pack();
 
 		// Center the application on the screen.
 		// WWUtil.alignComponent(null, this, AVKey.CENTER);
@@ -404,8 +373,6 @@ Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 
 	private void setAccionesCosechas() {
 		List<Function<Layer, String>> predicates = new ArrayList<Function<Layer,String>>();
-
-
 		predicates.add(new Function<Layer,String>(){			
 			@Override
 			public String apply(Layer layer) {
@@ -547,7 +514,7 @@ Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 					return "Quitar"; 
 				} else{
 					getWwd().getModel().getLayers().remove(layer);
-					Labor labor = (Labor) layer.getValue("LABOR");
+					Labor<?> labor = (Labor<?>) layer.getValue("LABOR");
 					if(labor.inStore!=null){
 						labor.inStore.dispose();
 					}
@@ -754,6 +721,12 @@ Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 		MenuItem menuItemExportarRentabilidades = new MenuItem("Rentabilidades");
 		menuItemExportarRentabilidades.setOnAction(a->doExportMargins());
 	//	menuExportar.getItems().add(menuItemExportarRentabilidades);
+		
+		MenuItem menuItemUnirShapefiles = new MenuItem("Unir Shapefiles");
+		menuItemUnirShapefiles.setOnAction(a->{
+			JuntarShapefilesTask.process();			
+			});
+		menuExportar.getItems().add(menuItemUnirShapefiles);
 
 		MenuItem menuItemExportarSuelo = new MenuItem("Suelo");
 		menuItemExportarSuelo.setOnAction(a->doExportSuelo());
@@ -906,7 +879,6 @@ Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 	private void doOpenHarvestMap(List<File> files) {
 		List<FileDataStore> stores = chooseShapeFileAndGetMultipleStores(files);
 		if (stores != null) {
-			//	harvestMap.getChildren().clear();
 			for(FileDataStore store : stores){//abro cada store y lo dibujo en el harvestMap individualmente
 				CosechaLabor labor = new CosechaLabor(store);
 
@@ -1192,7 +1164,7 @@ Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 			List<String> availableColumns = getAvailableColumns(store);
 
 			ColumnSelectDialog csd = new ColumnSelectDialog(
-					Siembra.getRequieredColumns(), availableColumns);
+					SiembraItem.getRequieredColumns(), availableColumns);
 
 			Optional<Map<String, String>> result = csd.showAndWait();
 
@@ -1200,7 +1172,7 @@ Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 			if (result.isPresent()) {
 				columns = result.get();
 
-				Siembra.setColumnsMap(columns);
+				SiembraItem.setColumnsMap(columns);
 				System.out.println("columns map: " + columns);
 			} else {
 				System.out.println("columns names not set");
@@ -1312,15 +1284,15 @@ Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 		if (store != null) {
 
 			System.out.println("processingMargins");
-			//map.getChildren().remove(marginMap);
-			marginMap.getChildren().clear();
+			
+			
+			Margen margen = new Margen();
 
-			Group mGroup = new Group();
-
-
-
-			ProcessMarginMapTask uMmTask = new ProcessMarginMapTask(store, mGroup,
-					pulvTree, fertTree, siembraTree, harvestTree);
+							
+			margen.setLayer(new RenderableLayer());
+			
+			ProcessMarginMapTask uMmTask = new ProcessMarginMapTask(margen,
+					pulverizaciones, fertilizaciones, siembras, cosechas);
 			ProgressBar progressBarTask = new ProgressBar();
 			progressBox.getChildren().add(progressBarTask);
 			progressBarTask.setProgress(0);
@@ -1330,16 +1302,8 @@ Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 			currentTaskThread.start();
 
 			uMmTask.setOnSucceeded(handler -> {
-				rentaTree = (Quadtree) handler.getSource().getValue();
-				marginMap.getChildren().add(mGroup);
-
-				Bounds bl = marginMap.getBoundsInLocal();
-				System.out.println("bounds de marginMap es: " + bl);
-				//			marginMap.setLayoutX(-bl.getMinX());
-				//			marginMap.setLayoutY(-bl.getMinY());
-				//	map.getChildren().add( marginMap);
-				marginMap.visibleProperty().set(true);
-
+				rentaTree = (Margen) handler.getSource().getValue();
+				
 				System.out.println("ProcessMarginTask succeded");
 				progressBox.getChildren().remove(progressBarTask);
 			});

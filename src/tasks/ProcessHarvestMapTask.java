@@ -96,6 +96,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 	public ProcessHarvestMapTask(CosechaLabor cosechaLabor){//RenderableLayer layer, FileDataStore store, double d, Double correccionRinde) {
 		super(cosechaLabor);
 
+		labor.cachedEnvelopes.clear();//Makesure you start clean
 		supMinimaHas = cosechaLabor.getConfiguracion().supMinimaProperty().get()/ProyectionConstants.METROS2_POR_HA;//5
 		cantidadDistanciasEntradaRegimen = cosechaLabor.getConfiguracion().cantDistanciasEntradaRegimenProperty().get();//5
 		cantidadDistanciasTolerancia =cosechaLabor.getConfiguracion().cantDistanciasToleraProperty().get();//10
@@ -289,6 +290,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			}
 
 		}// fin del for que recorre las cosechas por indice
+		labor.cachedEnvelopes.clear();//limpio la cache despues de hacer la limpieza principal
 		reader.close();
 
 		System.out.println(+puntosEliminados+" puntos eliminados por punto duplicado");
@@ -610,6 +612,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 					} 				
 				},	(list1, list2) -> list1.addAll(list2));
 		newOutcollection.addAll(filteredFeatures);
+		labor.cachedEnvelopes.clear();
 
 		//	List<SimpleFeature> filteredFeatures = new ArrayList<SimpleFeature>();
 		//		outFeatures.parallelStream().forEach(pf->{
@@ -1111,8 +1114,10 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			Geometry longlatPoly = poly;// crsAntiTransform(poly);
 			Envelope query = longlatPoly.getEnvelopeInternal();		//hago la query en coordenadas long/lat
 
-			List<CosechaItem> objects = labor.outStoreQuery(query);// new ArrayList<CosechaItem>();
-
+			//List<CosechaItem> objects = labor.outStoreQuery(query);// new ArrayList<CosechaItem>();
+			List<CosechaItem> objects = labor.cachedOutStoreQuery(query);
+			//si uso cached tengo que actualizarlo al hacer insert o no anda
+			//System.out.println("la cantidad de objects para construir la geometria es "+objects.size());
 			//si el rinde es menor asumo que fue cosechado despues y por lo tanto no corresponde quitarselo a la geometria
 			//			objects = objects.stream()
 			//					.filter(c ->  c.getAmount()> rindeCosecha).collect(Collectors.toList());

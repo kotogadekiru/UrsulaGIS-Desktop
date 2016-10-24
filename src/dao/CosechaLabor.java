@@ -376,7 +376,10 @@ public static SimpleFeatureType getPointsFeatureType() {
 
 		double correccionRinde = correccionCosechaProperty.doubleValue();// me
 																			// devuelve
-																			// cero
+//																			// cero
+//		int index =this.getAvailableColumns().indexOf(colRendimiento.get());
+//		Object rindeAttribute = harvestFeature.getAttribute(index-1);
+//		Double rindeDouble = FeatureContainer.getDoubleFromObj(rindeAttribute);
 		Double rindeDouble = FeatureContainer.getDoubleFromObj(harvestFeature
 				.getAttribute(colRendimiento.get()));
 

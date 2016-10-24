@@ -30,14 +30,19 @@ import com.vividsolutions.jts.index.quadtree.Quadtree;
 
 import dao.Configuracion;
 import dao.CosechaItem;
+import dao.CosechaLabor;
 import dao.Costos;
 import dao.FertilizacionItem;
+import dao.FertilizacionLabor;
+import dao.Margen;
 import dao.CosechaConfig;
 import dao.PulverizacionItem;
+import dao.PulverizacionLabor;
 import dao.RentabilidadItem;
-import dao.Siembra;
+import dao.SiembraItem;
+import dao.SiembraLabor;
 
-public class ProcessMarginMapTask extends ProcessMapTask {
+public class ProcessMarginMapTask extends ProcessMapTask<RentabilidadItem,Margen> {
 	//	public Group map = new Group();
 
 	double distanciaAvanceMax = 0;
@@ -49,22 +54,20 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 	private int featureCount;
 	private int featureNumber;
 
-	private Quadtree fertTree;
-	private Quadtree siembraTree;
-	private Quadtree harvestTree;
-	private Quadtree pulvTree;
+	private List<FertilizacionLabor> fertilizaciones;
+	private List<SiembraLabor> siembras;
+	private List<CosechaLabor> cosechas;
+	private List<PulverizacionLabor> pulverizaciones;
 	//ArrayList<ArrayList<Object>> pathTooltips = new ArrayList<ArrayList<Object>>();
 	Double costoFijoHa;
 
-
-	public ProcessMarginMapTask(FileDataStore store, Group map, Quadtree pulvTree, Quadtree fertTree,
-			Quadtree siembraTree, Quadtree harvestTree) {
+	public ProcessMarginMapTask(Margen margen, List<PulverizacionLabor> pulverizaciones, List<FertilizacionLabor> fertilizaciones, List<SiembraLabor> siembras,List<CosechaLabor> cosechas) {
 //		this.store = store;
 //		this.layer = map;
-		this.fertTree = fertTree;
-		this.pulvTree = pulvTree;
-		this.siembraTree = siembraTree;
-		this.harvestTree = harvestTree;
+		this.fertilizaciones = fertilizaciones;
+		this.pulverizaciones = pulverizaciones;
+		this.siembras = siembras;
+		this.cosechas = cosechas;
 		this.costoFijoHa = Costos.getInstance().costoFijoHaProperty.getValue();
 
 		System.out.println("inicializando ProcessMarginMapTask con costo Fijo = "+ costoFijoHa);
@@ -252,9 +255,9 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 		//	cosehaItem.getImporteHa();
 
 		Double importeCosecha = new Double(0);
-		if (!(geometry instanceof Point) && harvestTree != null) {
+		if (!(geometry instanceof Point) && cosechas != null) {
 			@SuppressWarnings("rawtypes")
-			List cosechas = harvestTree.query(geometry.getEnvelopeInternal());
+			List cosechas = cosechas.query(geometry.getEnvelopeInternal());
 			for (Object cosechaObject : cosechas) {
 				if (cosechaObject instanceof CosechaItem) {
 
@@ -294,13 +297,13 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 
 	private Double getImporteSiembra(Geometry geometry) {
 		Double importeSiembra = new Double(0);
-		if (!(geometry instanceof Point) && siembraTree != null) {
+		if (!(geometry instanceof Point) && siembras != null) {
 			@SuppressWarnings("rawtypes")
-			List siembras = siembraTree.query(geometry.getEnvelopeInternal());
+			List siembras = siembras.query(geometry.getEnvelopeInternal());
 			for (Object siembraObj : siembras) {
-				if (siembraObj instanceof Siembra) {
+				if (siembraObj instanceof SiembraItem) {
 
-					Siembra siembra = (Siembra) siembraObj;
+					SiembraItem siembra = (SiembraItem) siembraObj;
 					Double costoHa = (Double) siembra.getImporteHa();
 					
 					Object pulvGeomObject = siembra.getGeometry();
@@ -334,9 +337,9 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 
 	private Double getImporteFert(Geometry geometry) {
 		Double importeFert = new Double(0);
-		if (!(geometry instanceof Point) && fertTree != null) {
+		if (!(geometry instanceof Point) && fertilizaciones != null) {
 			@SuppressWarnings("rawtypes")
-			List ferts = fertTree.query(geometry.getEnvelopeInternal());
+			List ferts = fertilizaciones.query(geometry.getEnvelopeInternal());
 
 			// System.out.println("encontre " + ferts.size()
 			// + " fertilizaciones en contacto con " + geometry);
@@ -377,9 +380,9 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 
 	private Double getImportePulv(Geometry geometry) {
 		Double importePulv = new Double(0);
-		if (!(geometry instanceof Point) && pulvTree != null) {
+		if (!(geometry instanceof Point) && pulverizaciones != null) {
 			@SuppressWarnings("rawtypes")
-			List pulves = pulvTree.query(geometry.getEnvelopeInternal());
+			List pulves = pulverizaciones.query(geometry.getEnvelopeInternal());
 
 //			System.out.println("encontre " + pulves.size()
 //					+ " pulverizaciones en contacto con " + geometry);
@@ -467,5 +470,12 @@ public class ProcessMarginMapTask extends ProcessMapTask {
 
 	protected  int getAmountMin(){return 100;} 
 	protected  int gerAmountMax() {return 500;}
+
+
+	@Override
+	protected void getPathTooltip(Geometry p, RentabilidadItem fc) {
+		// TODO Auto-generated method stub
+		
+	}
 
 }

@@ -252,7 +252,8 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		//					labor.getType());
 		if(areaPoly>labor.config.supMinimaProperty().doubleValue()*(ProyectionConstants.metersToLong*ProyectionConstants.metersToLat)){
 			double rinde=0,ancho=0,distancia=0,elev=0,rumbo=0;// , pesos=0;
-
+			ancho=labor.getConfiguracion().getAnchoFiltroOutlayers();
+			distancia=ancho;
 			for(CosechaItem cPoly : cosechasPoly){
 				//				Geometry g = cPoly.getGeometry();				
 				//				g= poly.intersection(g);
@@ -266,10 +267,10 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 				//	System.out.println("peso = "+peso);
 				//	pesos+=peso;
 				rinde+=cPoly.getRindeTnHa()*peso;
-				ancho+=cPoly.getAncho()*peso;
-				distancia+=cPoly.getDistancia()*peso;
+				//ancho+=cPoly.getAncho()*peso;
+				//distancia+=cPoly.getDistancia()*peso;
 				elev+=cPoly.getElevacion()*peso;
-				rumbo+=cPoly.getRumbo()*peso;
+				//rumbo+=cPoly.getRumbo()*peso;
 			}
 
 			//	System.out.println("pesos = "+pesos);

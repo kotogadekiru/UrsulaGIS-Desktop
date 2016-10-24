@@ -14,7 +14,7 @@ import utils.ProyectionConstants;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-public class Siembra extends FeatureContainer {
+public class SiembraItem extends FeatureContainer {
 	private static final String COLUMNA_BOLSAS_POR_HA = "Semillas/m";
 	private static Map<String, String> columnsMap= new HashMap<String, String>();
 	private static Double ENTRE_SURCO = new Double(Configuracion.getInstance().getPropertyOrDefault("ENTRE_SURCO", "0.525"));
@@ -25,7 +25,7 @@ public class Siembra extends FeatureContainer {
 	Double precioPasada;
 	Double importeHa;
 
-	public Siembra(SimpleFeature harvestFeature, Double precioPasada ,Double precioGrano) {
+	public SiembraItem(SimpleFeature harvestFeature, Double precioPasada ,Double precioGrano) {
 		super(harvestFeature);
 	//	System.out.println(harvestFeature);
 	
@@ -72,7 +72,7 @@ public class Siembra extends FeatureContainer {
 	//Dao Methods
 	@Override
 	protected Map<String, String> getColumnsMap() {
-		return Siembra.columnsMap;
+		return SiembraItem.columnsMap;
 	}
 	
 	public static List<String> getRequieredColumns() {
@@ -88,8 +88,8 @@ public class Siembra extends FeatureContainer {
 
 
 	public static void setColumnsMap(Map<String, String> columns) {
-		Siembra.columnsMap.clear();
-		Siembra.columnsMap.putAll(columns);
+		SiembraItem.columnsMap.clear();
+		SiembraItem.columnsMap.putAll(columns);
 		
 		columns.forEach(new BiConsumer<String, String>(){
 			@Override
