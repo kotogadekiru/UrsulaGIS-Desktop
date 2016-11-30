@@ -1,38 +1,40 @@
-package dao;
+package dao.pulverizacion;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.beans.value.WritableDoubleValue;
 
 import org.geotools.data.DataUtilities;
 import org.geotools.data.FileDataStore;
-import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.feature.SchemaException;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
+import dao.Clasificador;
+import dao.FeatureContainer;
+import dao.Labor;
+import dao.LaborConfig;
+import dao.config.Configuracion;
+import dao.cosecha.CosechaConfig;
+import dao.cosecha.CosechaItem;
+import dao.cosecha.CosechaLabor;
+import dao.fertilizacion.FertilizacionLabor;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+
 public class PulverizacionLabor extends Labor<PulverizacionItem> {
-	public static final String COLUMNA_KG_HA = "Kg Fert/Ha";
-	
-	public static final String COLUMNA_PRECIO_FERT = "Precio Kg Fert";
-	public static final String COLUMNA_PRECIO_PASADA = "Precio labor/Ha";	
+	private static final String COLUMNA_COSTO_PAQ = "CostoPaq";
+	private static final String COLUMNA_PASADAS = "CantPasada";
+	public static final String COLUMNA_PRECIO_PASADA = "CostoLab";	
 	public static final String COLUMNA_IMPORTE_HA = "importe_ha";
 
-	private static final String FERTILIZANTE_DEFAULT = "FERTILIZANTE_DEFAULT";
+	private static final String COSTO_LABOR_PULVERIZACION = "costoLaborPulverizacion";
 	
-	public StringProperty colKgHaProperty;
+	public StringProperty colCostoPaqProperty;
+	public StringProperty colCantPasadasProperty;
 	
-	public FertilizacionConfig config=null;
-
-	public Property<Fertilizante> fertilizante=null;
-
+	public PulverizacionConfig config=null;
 
 	public PulverizacionLabor() {
 		initConfig();
@@ -49,22 +51,22 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 	private void initConfig() {
 		List<String> availableColums = this.getAvailableColumns();		
 		
-		config = new FertilizacionConfig();
+		//config = new PulverizacionConfig();
 		Configuracion properties = config.config;
 		
-		colKgHaProperty = new SimpleStringProperty(
+		colCostoPaqProperty = new SimpleStringProperty(
 				properties.getPropertyOrDefault(
-						PulverizacionLabor.COLUMNA_KG_HA,
-						PulverizacionLabor.COLUMNA_KG_HA));
-		if(!availableColums.contains(colKgHaProperty.get())&&availableColums.contains(PulverizacionLabor.COLUMNA_KG_HA)){
-			colKgHaProperty.setValue(CosechaLabor.COLUMNA_RENDIMIENTO);
+						PulverizacionLabor.COLUMNA_COSTO_PAQ,
+						PulverizacionLabor.COLUMNA_COSTO_PAQ));
+		if(!availableColums.contains(colCostoPaqProperty.get())&&availableColums.contains(PulverizacionLabor.COLUMNA_COSTO_PAQ)){
+			colCostoPaqProperty.setValue(PulverizacionLabor.COLUMNA_COSTO_PAQ);
 		}
-		colKgHaProperty.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(PulverizacionLabor.COLUMNA_KG_HA,
+		colCostoPaqProperty.addListener((obs, bool1, bool2) -> {
+			properties.setProperty(PulverizacionLabor.COLUMNA_COSTO_PAQ,
 					bool2.toString());
 		});
 		
-		colAmount= new SimpleStringProperty(PulverizacionLabor.COLUMNA_KG_HA);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
+		colAmount= new SimpleStringProperty(PulverizacionLabor.COLUMNA_COSTO_PAQ);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
 
 		/*columnas nuevas*/
 		colElevacion = new SimpleStringProperty(
@@ -129,9 +131,9 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 		
 		precioInsumoProperty = new SimpleDoubleProperty(
 				Double.parseDouble(properties.getPropertyOrDefault(
-						PulverizacionLabor.COLUMNA_PRECIO_FERT, "0")));
+						PulverizacionLabor.COLUMNA_COSTO_PAQ, "0")));
 		precioInsumoProperty.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(PulverizacionLabor.COLUMNA_PRECIO_FERT,
+			properties.setProperty(PulverizacionLabor.COLUMNA_COSTO_PAQ,
 					bool2.toString());
 		});
 		
@@ -150,77 +152,86 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 				}
 			);
 		
-		String fertKEY = properties.getPropertyOrDefault(
-				PulverizacionLabor.FERTILIZANTE_DEFAULT, "Fosfato Monoamonico (MAP)");
-		 fertilizante = new SimpleObjectProperty<Fertilizante>(Fertilizante.fertilizantes.get(fertKEY));//values().iterator().next());
 	}
 		
+//	@Override
+//	public SimpleFeatureType getType() {
+//		SimpleFeatureType type = null;
+//		try {
+//			/*
+//			 * geom tiene que ser Point, Line o Polygon. no puede ser Geometry
+//			 * porque podria ser cualquiera y solo permite un tipo por archivo
+//			 * los nombre de las columnas no pueden ser de mas de 10 char
+//			 */
+//			
+////			featureBuilder.addAll(new Object[]{super.getGeometry(),
+////			getCostoPaquete(),
+////			getCantPasadasHa(),
+////			getCostoLaborHa(),
+////			getImporteHa(),
+////			getCategoria()});
+//
+//			type = DataUtilities.createType("Pulverizacion", "the_geom:MultiPolygon:srid=4326,"//"*geom:Polygon,"the_geom
+//					+ PulverizacionLabor.COLUMNA_COSTO_PAQ + ":Double,"
+//					+ PulverizacionLabor.COLUMNA_PASADAS + ":Double,"
+//					+ PulverizacionLabor.COLUMNA_PRECIO_PASADA + ":Double,"
+//					+ PulverizacionLabor.COLUMNA_IMPORTE_HA + ":Double,"
+//					+ PulverizacionLabor.COLUMNA_CATEGORIA + ":Integer");
+//		} catch (SchemaException e) {
+//
+//			e.printStackTrace();
+//		}
+//		return type;
+//	}
+	
 	@Override
-	public SimpleFeatureType getType() {
-		SimpleFeatureType type = null;
-		try {
-			/*
-			 * geom tiene que ser Point, Line o Polygon. no puede ser Geometry
-			 * porque podria ser cualquiera y solo permite un tipo por archivo
-			 * los nombre de las columnas no pueden ser de mas de 10 char
-			 */
-			
-//			featureBuilder.addAll(new Object[]{super.getGeometry(),
-//					getCantFertHa(),
-//						getPrecioFert(),
-//						getPrecioPasada(),
-//						getImporteHa(),
-//						getCategoria()});
-
-			type = DataUtilities.createType("Fertilizacion", "the_geom:MultiPolygon:srid=4326,"//"*geom:Polygon,"the_geom
-					+ PulverizacionLabor.COLUMNA_KG_HA + ":Double,"
-					+ PulverizacionLabor.COLUMNA_PRECIO_FERT + ":Double,"
-					+ PulverizacionLabor.COLUMNA_PRECIO_PASADA + ":Double,"
-					+ PulverizacionLabor.COLUMNA_IMPORTE_HA + ":Double,"
-					+ PulverizacionLabor.COLUMNA_CATEGORIA + ":Integer");
-		} catch (SchemaException e) {
-
-			e.printStackTrace();
-		}
+	public String getTypeDescriptors() {
+		/*
+		 *getCostoPaquete(),
+				getCantPasadasHa(),
+				getCostoLaborHa(),
+				getImporteHa()
+		 */
+		String type = PulverizacionLabor.COLUMNA_COSTO_PAQ + ":Double,"
+				+ PulverizacionLabor.COLUMNA_PASADAS + ":Double,"
+				+ PulverizacionLabor.COLUMNA_PRECIO_PASADA + ":Double,"
+				+ PulverizacionLabor.COLUMNA_IMPORTE_HA + ":Double";
 		return type;
 	}
 
 	@Override
 	public PulverizacionItem constructFeatureContainerStandar(
 			SimpleFeature next, boolean newIDS) {
-		PulverizacionItem fi = new PulverizacionItem(next);
-		fi.id=getNextID();
+		PulverizacionItem pItem = new PulverizacionItem(next);
+		super.constructFeatureContainerStandar(pItem,next,newIDS);
+			
+	pItem.setCostoPaquete( FeatureContainer.getDoubleFromObj(next
+			.getAttribute(PulverizacionLabor.COLUMNA_COSTO_PAQ)));
 
-		 
+	pItem.setCantPasadasHa(FeatureContainer.getDoubleFromObj(next
+			.getAttribute(PulverizacionLabor.COLUMNA_PASADAS)));
 	
-	
-	fi.setCantFertHa( FeatureContainer.getDoubleFromObj(next
-			.getAttribute(COLUMNA_KG_HA)));
-//	Object cantObj = harvestFeature.getAttribute(getColumn(KG_HA_COLUMN));
-//	ci.cantFertHa = super.getDoubleFromObj(cantObj);
-
-
-	fi.setPrecioFert(this.precioInsumoProperty.get());
-	fi.setPrecioPasada(this.precioLaborProperty.get());	
+	pItem.setCostoLaborHa(FeatureContainer.getDoubleFromObj(next
+			.getAttribute(PulverizacionLabor.COLUMNA_PRECIO_PASADA)));	
 	//ci.setImporteHa(cantFertHa * precioFert + precioPasada);//no hace falta setearlo porque se actualiza en el get
 	
-		return fi;
+		return pItem;
 	}
 
 
 	@Override
 	public PulverizacionItem constructFeatureContainer(SimpleFeature next) {
+		
 		PulverizacionItem fi = new PulverizacionItem(next);
-		fi.id=getNextID();
+		super.constructFeatureContainer(fi,next);
+		
+	
 
-	fi.setCantFertHa( FeatureContainer.getDoubleFromObj(next
-			.getAttribute(colKgHaProperty.get())));
-//	Object cantObj = harvestFeature.getAttribute(getColumn(KG_HA_COLUMN));
-//	ci.cantFertHa = super.getDoubleFromObj(cantObj);
-
-
-	fi.setPrecioFert(this.precioInsumoProperty.get());
-	fi.setPrecioPasada(this.precioLaborProperty.get());	
+	fi.setCostoPaquete( FeatureContainer.getDoubleFromObj(next
+			.getAttribute(colCostoPaqProperty.get())));
+	fi.setCantPasadasHa(FeatureContainer.getDoubleFromObj(next
+			.getAttribute(colCantPasadasProperty.get())));
+	fi.setCostoLaborHa(this.precioLaborProperty.get());	
 	//ci.setImporteHa(cantFertHa * precioFert + precioPasada);//no hace falta setearlo porque se actualiza en el get
 	
 		return fi;
@@ -232,43 +243,20 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 				Clasificador.CLASIFICADOR_JENKINS));
 	}
 
-//	@Override
-//	public void constructClasificador() {
-//		if (Clasificador.CLASIFICADOR_JENKINS.equalsIgnoreCase(config.config
-//				.getPropertyOrDefault(Clasificador.TIPO_CLASIFICADOR,
-//						Clasificador.CLASIFICADOR_JENKINS))) {
-//			// try {
-//			// this.clasificador.constructJenksClasifier(this.outStore
-//			// .getFeatureSource().getFeatures(),
-//			// CosechaLabor.COLUMNA_RENDIMIENTO);
-//
-//			// } catch (IOException e) {
-//			// // TODO Auto-generated catch block
-//			// e.printStackTrace();
-//			// }
-//
-//			this.clasificador.constructJenksClasifier(this.outCollection,
-//					this.colAmount.get());
-//		} else {
-//			// if(clasifier == null ){
-//			System.out
-//					.println("no hay jenks Classifier falling back to histograma");
-//			List<FertilizacionItem> items = new ArrayList<FertilizacionItem>();
-//			
-//			SimpleFeatureIterator ocReader = this.outCollection.features();
-//			while (ocReader.hasNext()) {
-//				items.add(constructFeatureContainerStandar(ocReader.next(),false));
-//			}
-//			ocReader.close();
-//			this.clasificador.constructHistogram(items);
-//			
-//		}
-//	}
-
-	public FertilizacionConfig getConfiguracion() {
+	public PulverizacionConfig getConfiguracion() {
 		return config;
 	}
 
+	@Override
+	protected DoubleProperty initPrecioLaborHaProperty() {
+		return initDoubleProperty(PulverizacionLabor.COSTO_LABOR_PULVERIZACION,"0",config.config);
+	}
 
-
+	@Override
+	public LaborConfig getConfigLabor() {
+		if(config==null){
+			config = new PulverizacionConfig();
+		}
+		return config;
+	}
 }

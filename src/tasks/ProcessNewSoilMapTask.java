@@ -32,17 +32,17 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
-import dao.CosechaItem;
-import dao.CosechaLabor;
-import dao.FertilizacionItem;
-import dao.FertilizacionLabor;
-import dao.Fertilizante;
-import dao.Producto;
-import dao.PulverizacionItem;
 import dao.RentabilidadItem;
-import dao.SiembraItem;
 import dao.Suelo;
 import dao.SueloItem;
+import dao.config.Cultivo;
+import dao.config.Fertilizante;
+import dao.cosecha.CosechaItem;
+import dao.cosecha.CosechaLabor;
+import dao.fertilizacion.FertilizacionItem;
+import dao.fertilizacion.FertilizacionLabor;
+import dao.pulverizacion.PulverizacionItem;
+import dao.siembra.SiembraItem;
 
 public class ProcessNewSoilMapTask extends ProcessMapTask<Suelo>{
 	//public Group map = new Group();
@@ -142,7 +142,7 @@ public class ProcessNewSoilMapTask extends ProcessMapTask<Suelo>{
 			double ppmCosechasGeom = 0.0;
 		
 			for(CosechaLabor cosecha:this.cosechas){				
-				Producto producto = cosecha.producto.getValue();
+				Cultivo producto = cosecha.producto.getValue();
 			
 				DoubleStream ppmPStream=	cosecha.outStoreQuery(geometry.getEnvelopeInternal()).stream().flatMapToDouble(cItem->{
 					double costoHa = (Double) cItem.getRindeTnHa();

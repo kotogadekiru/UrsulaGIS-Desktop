@@ -1,24 +1,31 @@
-package dao;
+package dao.fertilizacion;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import org.geotools.data.DataUtilities;
+import org.geotools.data.FileDataStore;
+import org.geotools.feature.SchemaException;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
+
+import dao.Clasificador;
+import dao.FeatureContainer;
+import dao.Labor;
+import dao.LaborConfig;
+import dao.config.Configuracion;
+import dao.config.Fertilizante;
+import dao.cosecha.CosechaConfig;
+import dao.cosecha.CosechaLabor;
+import dao.siembra.SiembraItem;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.beans.value.WritableDoubleValue;
 
-import org.geotools.data.DataUtilities;
-import org.geotools.data.FileDataStore;
-import org.geotools.data.simple.SimpleFeatureIterator;
-import org.geotools.feature.SchemaException;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
-
-public class SiembraLabor extends Labor<SiembraItem> {
+public class FertilizacionLabor extends Labor<FertilizacionItem> {
 	public static final String COLUMNA_KG_HA = "Kg Fert/Ha";
 	
 	public static final String COLUMNA_PRECIO_FERT = "Precio Kg Fert";
@@ -27,6 +34,8 @@ public class SiembraLabor extends Labor<SiembraItem> {
 
 	private static final String FERTILIZANTE_DEFAULT = "FERTILIZANTE_DEFAULT";
 	
+	private static final String COSTO_LABOR_FERTILIZACION = "costoLaborFertilizacion";
+	
 	public StringProperty colKgHaProperty;
 	
 	public FertilizacionConfig config=null;
@@ -34,12 +43,13 @@ public class SiembraLabor extends Labor<SiembraItem> {
 	public Property<Fertilizante> fertilizante=null;
 
 
-	public SiembraLabor() {
+	public FertilizacionLabor() {
 		initConfig();
 	}
 	
-	public SiembraLabor(FileDataStore store) {
-		this.setInStore(store);// esto configura el nombre	
+	public FertilizacionLabor(FileDataStore store) {
+		super(store);
+		//this.setInStore(store);// esto configura el nombre	
 		initConfig();
 	}
 
@@ -49,22 +59,22 @@ public class SiembraLabor extends Labor<SiembraItem> {
 	private void initConfig() {
 		List<String> availableColums = this.getAvailableColumns();		
 		
-		config = new FertilizacionConfig();
+		//config = new FertilizacionConfig();
 		Configuracion properties = config.config;
 		
 		colKgHaProperty = new SimpleStringProperty(
 				properties.getPropertyOrDefault(
-						SiembraLabor.COLUMNA_KG_HA,
-						SiembraLabor.COLUMNA_KG_HA));
-		if(!availableColums.contains(colKgHaProperty.get())&&availableColums.contains(SiembraLabor.COLUMNA_KG_HA)){
-			colKgHaProperty.setValue(CosechaLabor.COLUMNA_RENDIMIENTO);
+						FertilizacionLabor.COLUMNA_KG_HA,
+						FertilizacionLabor.COLUMNA_KG_HA));
+		if(!availableColums.contains(colKgHaProperty.get())&&availableColums.contains(FertilizacionLabor.COLUMNA_KG_HA)){
+			colKgHaProperty.setValue(FertilizacionLabor.COLUMNA_KG_HA);
 		}
 		colKgHaProperty.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(SiembraLabor.COLUMNA_KG_HA,
+			properties.setProperty(FertilizacionLabor.COLUMNA_KG_HA,
 					bool2.toString());
 		});
 		
-		colAmount= new SimpleStringProperty(SiembraLabor.COLUMNA_KG_HA);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
+		colAmount= new SimpleStringProperty(FertilizacionLabor.COLUMNA_KG_HA);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
 
 		/*columnas nuevas*/
 		colElevacion = new SimpleStringProperty(
@@ -121,17 +131,17 @@ public class SiembraLabor extends Labor<SiembraItem> {
 		
 		precioLaborProperty = new SimpleDoubleProperty(
 				Double.parseDouble(properties.getPropertyOrDefault(
-						SiembraLabor.COLUMNA_PRECIO_PASADA, "0")));
+						FertilizacionLabor.COLUMNA_PRECIO_PASADA, "0")));
 		precioLaborProperty.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(SiembraLabor.COLUMNA_PRECIO_PASADA,
+			properties.setProperty(FertilizacionLabor.COLUMNA_PRECIO_PASADA,
 					bool2.toString());
 		});
 		
 		precioInsumoProperty = new SimpleDoubleProperty(
 				Double.parseDouble(properties.getPropertyOrDefault(
-						SiembraLabor.COLUMNA_PRECIO_FERT, "0")));
+						FertilizacionLabor.COLUMNA_PRECIO_FERT, "0")));
 		precioInsumoProperty.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(SiembraLabor.COLUMNA_PRECIO_FERT,
+			properties.setProperty(FertilizacionLabor.COLUMNA_PRECIO_FERT,
 					bool2.toString());
 		});
 		
@@ -151,45 +161,62 @@ public class SiembraLabor extends Labor<SiembraItem> {
 			);
 		
 		String fertKEY = properties.getPropertyOrDefault(
-				SiembraLabor.FERTILIZANTE_DEFAULT, "Fosfato Monoamonico (MAP)");
+				FertilizacionLabor.FERTILIZANTE_DEFAULT, Fertilizante.FOSFATO_DIAMONICO_DAP);
 		 fertilizante = new SimpleObjectProperty<Fertilizante>(Fertilizante.fertilizantes.get(fertKEY));//values().iterator().next());
 	}
 		
+//	@Override
+//	public SimpleFeatureType getType() {
+//		SimpleFeatureType type = null;
+//		try {
+//			/*
+//			 * geom tiene que ser Point, Line o Polygon. no puede ser Geometry
+//			 * porque podria ser cualquiera y solo permite un tipo por archivo
+//			 * los nombre de las columnas no pueden ser de mas de 10 char
+//			 */
+//			
+////			featureBuilder.addAll(new Object[]{super.getGeometry(),
+////					getCantFertHa(),
+////						getPrecioFert(),
+////						getPrecioPasada(),
+////						getImporteHa(),
+////						getCategoria()});
+//
+//			type = DataUtilities.createType("Fertilizacion", "the_geom:MultiPolygon:srid=4326,"//"*geom:Polygon,"the_geom
+//					+ FertilizacionLabor.COLUMNA_KG_HA + ":Double,"
+//					+ FertilizacionLabor.COLUMNA_PRECIO_FERT + ":Double,"
+//					+ FertilizacionLabor.COLUMNA_PRECIO_PASADA + ":Double,"
+//					+ FertilizacionLabor.COLUMNA_IMPORTE_HA + ":Double,"
+//					+ FertilizacionLabor.COLUMNA_CATEGORIA + ":Integer");
+//		} catch (SchemaException e) {
+//
+//			e.printStackTrace();
+//		}
+//		return type;
+//	}
+	
 	@Override
-	public SimpleFeatureType getType() {
-		SimpleFeatureType type = null;
-		try {
-			/*
-			 * geom tiene que ser Point, Line o Polygon. no puede ser Geometry
-			 * porque podria ser cualquiera y solo permite un tipo por archivo
-			 * los nombre de las columnas no pueden ser de mas de 10 char
-			 */
-			
-//			featureBuilder.addAll(new Object[]{super.getGeometry(),
-//					getCantFertHa(),
-//						getPrecioFert(),
-//						getPrecioPasada(),
-//						getImporteHa(),
-//						getCategoria()});
-
-			type = DataUtilities.createType("Fertilizacion", "the_geom:MultiPolygon:srid=4326,"//"*geom:Polygon,"the_geom
-					+ SiembraLabor.COLUMNA_KG_HA + ":Double,"
-					+ SiembraLabor.COLUMNA_PRECIO_FERT + ":Double,"
-					+ SiembraLabor.COLUMNA_PRECIO_PASADA + ":Double,"
-					+ SiembraLabor.COLUMNA_IMPORTE_HA + ":Double,"
-					+ SiembraLabor.COLUMNA_CATEGORIA + ":Integer");
-		} catch (SchemaException e) {
-
-			e.printStackTrace();
-		}
+	public String getTypeDescriptors() {
+		/*
+		 * 	getCantFertHa(),
+				getPrecioFert(),
+				getPrecioPasada(),
+				getImporteHa()
+		 */
+		String type = FertilizacionLabor.COLUMNA_KG_HA + ":Double,"
+				+ FertilizacionLabor.COLUMNA_PRECIO_FERT + ":Double,"
+				+ FertilizacionLabor.COLUMNA_PRECIO_PASADA + ":Double,"
+				+ FertilizacionLabor.COLUMNA_IMPORTE_HA + ":Double";
 		return type;
 	}
 
 	@Override
-	public SiembraItem constructFeatureContainerStandar(
+	public FertilizacionItem constructFeatureContainerStandar(
 			SimpleFeature next, boolean newIDS) {
-		SiembraItem fi = new SiembraItem(next);
-		fi.id=getNextID();
+//		FertilizacionItem fi = new FertilizacionItem(next);
+//		fi.id=getNextID();
+		FertilizacionItem fi = new FertilizacionItem(next);
+		super.constructFeatureContainerStandar(fi,next,newIDS);
 
 		 
 	
@@ -209,10 +236,14 @@ public class SiembraLabor extends Labor<SiembraItem> {
 
 
 	@Override
-	public SiembraItem constructFeatureContainer(SimpleFeature next) {
-		SiembraItem fi = new SiembraItem(next);
-		fi.id=getNextID();
+	public FertilizacionItem constructFeatureContainer(SimpleFeature next) {
+//		FertilizacionItem fi = new FertilizacionItem(next);
+//		fi.id=getNextID();
 
+		FertilizacionItem fi = new FertilizacionItem(next);
+		super.constructFeatureContainer(fi,next);
+
+		
 	fi.setCantFertHa( FeatureContainer.getDoubleFromObj(next
 			.getAttribute(colKgHaProperty.get())));
 //	Object cantObj = harvestFeature.getAttribute(getColumn(KG_HA_COLUMN));
@@ -265,7 +296,20 @@ public class SiembraLabor extends Labor<SiembraItem> {
 //		}
 //	}
 
-	public FertilizacionConfig getConfiguracion() {
+//	public FertilizacionConfig getConfiguracion() {
+//		return config;
+//	}
+
+	@Override
+	protected DoubleProperty initPrecioLaborHaProperty() {
+		return initDoubleProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,"0",config.config);
+	}
+
+	@Override
+	public LaborConfig getConfigLabor() {
+		if(config==null){
+			config = new FertilizacionConfig();
+		}
 		return config;
 	}
 

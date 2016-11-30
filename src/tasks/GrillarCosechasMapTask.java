@@ -30,8 +30,10 @@ import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 
-import dao.CosechaItem;
-import dao.CosechaLabor;
+import dao.config.Configuracion;
+import dao.cosecha.CosechaConfig;
+import dao.cosecha.CosechaItem;
+import dao.cosecha.CosechaLabor;
 
 public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor> {
 	/**
@@ -47,7 +49,9 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 				this.cosechas.add(l);
 			}
 		};
-
+		
+		//String anchoGrilla =Configuracion.getInstance().getPropertyOrDefault(CosechaConfig.ANCHO_GRILLA,"default");
+	//	System.out.println("creando una grilla con ancho default "+anchoGrilla);
 		super.labor = new CosechaLabor();
 		//TODO asignar las columnas a  los valores estanar
 		labor.colAmount.set(CosechaLabor.COLUMNA_RENDIMIENTO);
@@ -75,7 +79,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		long init = System.currentTimeMillis();
 		// TODO 1 obtener el bounds general que cubre a todas las cosechas
 		ReferencedEnvelope unionEnvelope = null;
-		double ancho = labor.getConfiguracion().getAnchoFiltroOutlayers();
+		double ancho = labor.getConfiguracion().getAnchoGrilla();
 		String nombre =null;
 		for(CosechaLabor c:cosechas){
 			if(nombre == null){
@@ -96,6 +100,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		labor.setLayer(new RenderableLayer());
 		//TODO 2 generar una grilla de ancho ="ancho" que cubra bounds
 		List<Polygon>  grilla = construirGrilla(unionEnvelope, ancho);
+		//List<Polygon>  grilla = construirGrillaTriangular(unionEnvelope, ancho);
 		double elementos = grilla.size();
 		System.out.println("creando una grilla con "+grilla.size()+" elementos");
 		//TODO 3 recorrer cada pixel de la grilla promediando los valores y generando los nuevos items de la cosecha
@@ -181,8 +186,9 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 
 		System.out.println("cree una union de "+byPolygon.size()+" elementos");
 
-
+//FIXME esto hace que la grilla no tenga memoria
 		boolean ret = labor.outCollection.addAll(features);
+		//boolean ret = labor.inCollection.addAll(features);
 		if(!ret){//XXX si esto falla es provablemente porque se estan creando mas de una feature con el mismo id
 			System.out.println("no se pudieron agregar las features al outCollection");
 		}
@@ -250,9 +256,9 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		CosechaItem c = null;
 		//		SimpleFeatureBuilder fBuilder = new SimpleFeatureBuilder(
 		//					labor.getType());
-		if(areaPoly>labor.config.supMinimaProperty().doubleValue()*(ProyectionConstants.metersToLong*ProyectionConstants.metersToLat)){
-			double rinde=0,ancho=0,distancia=0,elev=0,rumbo=0;// , pesos=0;
-			ancho=labor.getConfiguracion().getAnchoFiltroOutlayers();
+		if(areaPoly>getAreaMinima()){
+			double rindeProm=0,desvioPromedio=0,ancho=0,distancia=0,elev=0,rumbo=0;// , pesos=0;
+			ancho=labor.getConfiguracion().getAnchoGrilla();
 			distancia=ancho;
 			for(CosechaItem cPoly : cosechasPoly){
 				//				Geometry g = cPoly.getGeometry();				
@@ -266,12 +272,20 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 
 				//	System.out.println("peso = "+peso);
 				//	pesos+=peso;
-				rinde+=cPoly.getRindeTnHa()*peso;
+				rindeProm+=cPoly.getRindeTnHa()*peso;
 				//ancho+=cPoly.getAncho()*peso;
 				//distancia+=cPoly.getDistancia()*peso;
 				elev+=cPoly.getElevacion()*peso;
 				//rumbo+=cPoly.getRumbo()*peso;
 			}
+			
+			double sumaDesvio2 = 0.0;
+			for(CosechaItem cosecha : cosechasPoly){
+				double cantidadCosecha = cosecha.getAmount();				
+				sumaDesvio2+= Math.abs(rindeProm- cantidadCosecha);
+			}
+			desvioPromedio = Math.sqrt(sumaDesvio2)/cosechasPoly.size();
+			
 
 			//	System.out.println("pesos = "+pesos);
 			synchronized(this){
@@ -279,7 +293,8 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 				c.setId(labor.getNextID());
 			}
 			c.setGeometry(poly);
-			c.setRindeTnHa(rinde);
+			c.setRindeTnHa(rindeProm);
+			c.setDesvioRinde(desvioPromedio);
 			c.setAncho(ancho);
 			c.setDistancia(distancia);
 			c.setElevacion(elev);
@@ -287,6 +302,14 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 			//simpleFeature = c.getFeature(fBuilder);
 		}
 		return c;
+	}
+
+	private double getDesvio2(double promedio, double cantidad) {
+		return Math.pow(cantidad-promedio,2);
+
+	}
+	private double getAreaMinima() {
+		return labor.config.supMinimaProperty().doubleValue()*(ProyectionConstants.metersToLong*ProyectionConstants.metersToLat);
 	}
 
 	/**
@@ -344,6 +367,55 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		return polygons;
 	}
 	
+	/**
+	 * 
+	 * @param bounds en long/lat
+	 * @param ancho en metros
+	 * @return una lista de poligonos que representa una grilla con un 100% de superposiocion
+	 */
+	private List<Polygon> construirGrillaTriangular(BoundingBox bounds,double ancho) {
+		System.out.println("construyendo grilla de triangulos");
+		List<Polygon> polygons = new ArrayList<Polygon>();
+		Double sen60 = Math.sin(Math.toRadians(60));
+		Double h=ancho*sen60;
+		
+		System.out.println("creando una grilla triangular con ancho= "+ancho+" y alto= "+h);
+		//convierte los bounds de longlat a metros
+		Double minX = bounds.getMinX()/ProyectionConstants.metersToLong - ancho/2;
+		Double minY = bounds.getMinY()/ProyectionConstants.metersToLat - h/2;
+		Double maxX = bounds.getMaxX()/ProyectionConstants.metersToLong + ancho/2;
+		Double maxY = bounds.getMaxY()/ProyectionConstants.metersToLat + h/2;
+		Double x0=minX;
+		
+		GeometryFactory fact = new GeometryFactory();
+		for(int x=0;(x0)<maxX;x++){
+			x0=minX+x*ancho;
+			for(int y=0;(minY+y*h*2)<maxY;y++){
+				Double y0=minY+y*2*h;
+
+				Coordinate C1=new Coordinate(x0*ProyectionConstants.metersToLong, y0*ProyectionConstants.metersToLat); 
+				Coordinate C2=new Coordinate((x0+ancho)*ProyectionConstants.metersToLong, y0*ProyectionConstants.metersToLat);
+				Coordinate C3=new Coordinate((x0+3*ancho/2)*ProyectionConstants.metersToLong, (y0+h)*ProyectionConstants.metersToLat);
+				Coordinate C4=new Coordinate((x0+ancho)*ProyectionConstants.metersToLong, (y0+2*h)*ProyectionConstants.metersToLat); 
+				Coordinate C5=new Coordinate(x0*ProyectionConstants.metersToLong, (y0+2*h)*ProyectionConstants.metersToLat);
+				Coordinate C6=new Coordinate((x0+ancho/2)*ProyectionConstants.metersToLong, (y0+h)*ProyectionConstants.metersToLat); 
+		
+				polygons.add(constructTriangle(C1,C2,C6,fact));//UL
+				polygons.add(constructTriangle(C6,C2,C3,fact));//UR
+				polygons.add(constructTriangle(C6,C3,C4,fact));//DL
+				polygons.add(constructTriangle(C6,C4,C5,fact));//DR
+			}
+		}
+		return polygons;
+	}
+	
+	private Polygon constructTriangle(Coordinate A,Coordinate B, Coordinate C,GeometryFactory fact){
+		Coordinate[] coordinates = { A, B, C, A };// Tiene que ser cerrado.
+		LinearRing shell = fact.createLinearRing(coordinates);
+		LinearRing[] holes = null;
+		return new Polygon(shell, holes, fact);
+	}
+	
 	@Override
 	protected void getPathTooltip(Geometry poly,
 			CosechaItem cosechaFeature) {
@@ -368,7 +440,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
 		}
 
-		tooltipText=tooltipText.concat("Pasada: "+df.format(cosechaFeature.getPasada() ) + "\n");
+		//tooltipText=tooltipText.concat("Pasada: "+df.format(cosechaFeature.getPasada() ) + "\n");
 		tooltipText=tooltipText.concat("feature: "+cosechaFeature.getId() + "\n");
 
 		super.getPathFromGeom2D(poly, cosechaFeature,tooltipText);

@@ -45,6 +45,7 @@ public class Clasificador {
 	private  Classifier clasifier=null;
 	public StringProperty tipoClasificadorProperty;
 	public IntegerProperty clasesClasificadorProperty;
+	private boolean initialized=false;
 
 	public Clasificador(){
 		tipoClasificadorProperty = new SimpleStringProperty();		
@@ -86,8 +87,8 @@ public class Clasificador {
 			return absColor;
 		//	return absColor*(colors.length-1)/clasesClasificadorProperty.get();
 		}
-		System.err.println("Error no hay un clasificador seleccionado");
-		return null;
+		//System.err.println("Error no hay un clasificador seleccionado");
+		return 0;
 		//return getColorByHue(rinde, rindeMin, rindeMax, porcent);
 	}
 	
@@ -212,11 +213,12 @@ public class Clasificador {
 			histograma[i]=(average-(desviosEstandar/2)*desvioEstandar)+deltaForColour*(i+1);
 		}
 
+		this.initialized=true;
 		return histograma;
 	}
 	
-	public Color getColorFor(Double rinde) {	
-		int absCat = getCategoryFor(rinde);//entre 0 y numClases-1
+	public Color getColorFor(FeatureContainer dao) {	
+		int absCat = getCategoryFor(dao.getAmount());//entre 0 y numClases-1
 		int length =colors.length-1;
 		int clases =getNumClasses()-1;
 		int colorIndex = absCat*(length/clases);
@@ -236,6 +238,7 @@ public class Clasificador {
 		// TODO Auto-generated method stub
 		
 	}
+	public boolean isInitialized(){return initialized;}
 	
 //	/**
 //	 * Metodo que busca los limites de las alturas despues hay que buscar los elementos que estan dentro de un entorno y agregarlos a una lista para dibujarlos

@@ -24,8 +24,9 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
 import dao.Clasificador;
-import dao.CosechaLabor;
-import dao.Producto;
+import dao.Labor;
+import dao.config.Cultivo;
+import dao.cosecha.CosechaLabor;
 
 
 /**
@@ -34,6 +35,8 @@ import dao.Producto;
  *
  */
 public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
+	
+
 	private static final String HARVEST_CONFIG_DIALOG_FXML = "HarvestConfigDialog.fxml";
 
 	@FXML
@@ -134,7 +137,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 
 
 	@FXML
-	private ComboBox<Producto> comboCultivo;
+	private ComboBox<Cultivo> comboCultivo;
 
 	@FXML
 	private CheckBox chkDistancia;
@@ -206,12 +209,14 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		}
 
 		if(cols.indexOf(comboElev.getValue())==-1){
-			message.append("Debe seleccionar la columna Elevacion\n");
-			isValid=false;
+//			message.append("Debe seleccionar la columna Elevacion\n");
+//			isValid=false;
+			labor.colElevacion.set(Labor.NONE_SELECTED);
 		}
 		if(cols.indexOf(comboVelo.getValue())==-1){
-			message.append("Debe seleccionar la columna velocidad\n");
-			isValid=false;
+//			message.append("Debe seleccionar la columna velocidad\n");
+//			isValid=false;
+			labor.colVelocidad.set(Labor.NONE_SELECTED);
 		}
 		if(!isValid){
 			Alert alert = new Alert(AlertType.ERROR, message.toString(), ButtonType.OK);
@@ -234,6 +239,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		availableColums.sort((a,b)->{
 			return a.compareTo(b);
 		});
+		availableColums.add(Labor.NONE_SELECTED);
 
 		//TODO si avalilableColumns contiene las columnas estanddar seleccionarlas
 
@@ -306,7 +312,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		//		this.comboPasa.valueProperty().bindBidirectional(labor.colPasada);
 
 		//colPasada ;
-		this.comboCultivo.setItems(FXCollections.observableArrayList(Producto.productos.values()));
+		this.comboCultivo.setItems(FXCollections.observableArrayList(Cultivo.cultivos.values()));
 		this.comboCultivo.valueProperty().bindBidirectional(labor.producto);
 
 

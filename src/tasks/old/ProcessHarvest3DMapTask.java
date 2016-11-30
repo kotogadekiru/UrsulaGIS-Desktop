@@ -70,9 +70,9 @@ import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.TopologyException;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
-import dao.Configuracion;
-import dao.CosechaItem;
 import dao.FeatureContainer;
+import dao.config.Configuracion;
+import dao.cosecha.CosechaItem;
 
 public class ProcessHarvest3DMapTask extends Process3DMapTask {
 	MeshView meshView = new MeshView();

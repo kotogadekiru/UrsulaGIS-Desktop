@@ -8,117 +8,191 @@ import java.util.List;
 import javafx.scene.Group;
 import javafx.scene.shape.Path;
 
+import org.geotools.data.FeatureReader;
 import org.geotools.data.FileDataStore;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
 
 import utils.ProyectionConstants;
 
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
-import dao.FertilizacionItem;
-import dao.PulverizacionItem;
+import dao.pulverizacion.PulverizacionItem;
+import dao.pulverizacion.PulverizacionLabor;
+import dao.siembra.SiembraItem;
 
-public class ProcessPulvMapTask extends ProcessMapTask {
-
-	// private FileDataStore store = null;
-
-	// double maxX = 0, maxY = 0, minX = 0, minY = 0;// variables para llevar la
-	// // cuenta de donde estan los
-	// // puntos y hubicarlos en el
-	// // centro del panel map
+public class ProcessPulvMapTask extends ProcessMapTask<PulverizacionItem,PulverizacionLabor> {
 	double distanciaAvanceMax = 0;
 	double anchoMax = 0;
-
-	// Shape union = null;
-	// Geometry geometryUnion = null;
-//	Quadtree featureTree = null;
-	// private int featureCount;
-	// private int featureNumber;
-
 	private Double precioPasada;
 
-	// public Group map = new Group();
-
-//	ArrayList<ArrayList<Object>> pathTooltips = new ArrayList<ArrayList<Object>>();
-
-	public ProcessPulvMapTask(Group map1, Double precioPasada1,
-			FileDataStore store) {
-		this.layer = map1;
-		precioPasada = precioPasada1;
-		this.store = store;
+	public ProcessPulvMapTask(PulverizacionLabor pulverizacion) {
+		super(pulverizacion);
 	}
-
-	// @Override
-	// protected Quadtree call() throws Exception {
-	// try {
-	// openFile();
-	// } catch (Exception e1) {
-	// System.err.println("Failed to open shape file");
-	// e1.printStackTrace();
-	// }
-	// return this.geometryTree;
-	//
-	// }
 
 	public void doProcess() throws IOException {
-		SimpleFeatureSource featureSource = store.getFeatureSource();
-
-		SimpleFeatureCollection featureCollection = featureSource.getFeatures();
-		SimpleFeatureIterator featuresIterator = featureCollection.features();
-
-		this.featureTree = new Quadtree();
-
-		
-		List<PulverizacionItem> itemsByIndex = new ArrayList<PulverizacionItem>();
-		List<PulverizacionItem> itemsByAmount = new ArrayList<PulverizacionItem>();
-
-		while (featuresIterator.hasNext()) {
-			SimpleFeature simpleFeature = featuresIterator.next();
-			itemsByIndex.add( new PulverizacionItem(simpleFeature, precioPasada));
+		FeatureReader<SimpleFeatureType, SimpleFeature> reader =null;
+		//	CoordinateReferenceSystem storeCRS =null;
+		if(labor.getInStore()!=null){
+			if(labor.outCollection!=null)labor.outCollection.clear();
+			reader = labor.getInStore().getFeatureReader();
+			//		 storeCRS = labor.getInStore().getSchema().getCoordinateReferenceSystem();
+			//convierto los features en cosechas
+			featureCount=labor.getInStore().getFeatureSource().getFeatures().size();
+		} else{//XXX cuando es una grilla los datos estan en outstore y instore es null
+			reader = labor.outCollection.reader();
+			//	 storeCRS = labor.outCollection.getSchema().getCoordinateReferenceSystem();
+			//convierto los features en cosechas
+			featureCount=labor.outCollection.size();
 		}
-		itemsByAmount.addAll(itemsByIndex);
-		constructHistogram(itemsByAmount);
 
-	
-		featureCount = itemsByIndex.size();
-		
 
-		for (PulverizacionItem pulv : itemsByIndex) {	
+		//initCrsTransform(storeCRS);
+
+		int divisor = 1;
+
+		while (reader.hasNext()) {
+
+			SimpleFeature simpleFeature = reader.next();
+			PulverizacionItem ci = labor.constructFeatureContainer(simpleFeature);
 			
-	
-	//		SimpleFeature simpleFeature = featuresIterator.next();
 
 			featureNumber++;
-			updateProgress(featureNumber, featureCount);
-			System.out.println("Feature " + featureNumber + " of "
-					+ featureCount);
 
-			//Pulverizacion pulv = new Pulverizacion(simpleFeature, precioPasada);
+			updateProgress(featureNumber/divisor, featureCount);
+			Object geometry = ci.getGeometry();
 
-			featureTree.insert(pulv.getGeometry().getEnvelopeInternal(), pulv);
+			/**
+			 * si la geometria es un point procedo a poligonizarla
+			 */
+			if (geometry instanceof Point) {
+//				Point longLatPoint = (Point) geometry;
+//
+//			
+//				if(	lastX!=null && labor.getConfiguracion().correccionDistanciaEnabled()){
+//					
+//					double aMetros=1;// 1/ProyectionConstants.metersToLongLat;
+//				//	BigDecimal x = new BigDecimal();
+//					double deltaY = longLatPoint.getY()*aMetros-lastX.getY()*aMetros;
+//					double deltaX = longLatPoint.getX()*aMetros-lastX.getX()*aMetros;
+//					if(deltaY==0.0 && deltaX ==0.0|| lastX.equals(longLatPoint)){
+//						puntosEliminados++;
+//					//	System.out.println("salteando el punto "+longLatPoint+" porque tiene la misma posicion que el punto anterior "+lastX);
+//						continue;//ignorar este punto
+//					}
+//				
+//					double tan = deltaY/deltaX;//+Math.PI/2;
+//					rumbo = Math.atan(tan);
+//					rumbo = Math.toDegrees(rumbo);//como esto me da entre -90 y 90 le sumo 90 para que me de entre 0 180
+//					rumbo = 90-rumbo;
+//
+//					/**
+//					 * 
+//					 * deltaX=0.0 ;deltaY=0.0
+//					 *	rumbo1=NaN
+//					 *	rumbo0=310.0
+//					 */
+//				
+//					if(rumbo.isNaN()){//como el avance en x es cero quiere decir que esta yerndo al sur o al norte
+//						if(deltaY>0){
+//							rumbo = 0.0;
+//						}else{
+//							rumbo=180.0;
+//						}
+//					}
+//
+//					if(deltaX<0){//si el rumbo estaba en el cuadrante 3 o 4 sumo 180 para volverlo a ese cuadrante
+//						rumbo = rumbo+180;
+//					}
+//					ci.setRumbo(rumbo);
+//
+//				}
+//			
+//				lastX=longLatPoint;
+//				Double alfa  = Math.toRadians(rumbo) + Math.PI / 2;
+//
+//				// convierto el ancho y la distancia a verctores longLat poder
+//				// operar con la posicion del dato
+//				Coordinate anchoLongLat = constructCoordinate(alfa,ancho);
+//				Coordinate distanciaLongLat = constructCoordinate(alfa+ Math.PI / 2,distancia);
+//
+//
+//				if(labor.getConfiguracion().correccionDemoraPesadaEnabled()){
+//					Double corrimientoPesada =	labor.getConfiguracion().getCorrimientoPesada();
+//					Coordinate corrimientoLongLat =constructCoordinate(alfa + Math.PI / 2,corrimientoPesada);
+//					// mover el punto 3.5 distancias hacia atras para compenzar el retraso de la pesada
+//
+//					longLatPoint = longLatPoint.getFactory().createPoint(new Coordinate(longLatPoint.getX()+corrimientoPesada*distanciaLongLat.x,longLatPoint.getY()+corrimientoPesada*distanciaLongLat.y));
+//					//utmPoint = utmPoint.getFactory().createPoint(new Coordinate(utmPoint.getX()-corrimientoLongLat.x,utmPoint.getY()-corrimientoLongLat.y));
+//				}
+//
+//				/**
+//				 * creo la geometria que corresponde a la feature tomando en cuenta si esta activado el filtro de distancia y el de superposiciones
+//				 */				
+//				//				Geometry utmGeom = createGeometryForHarvest(anchoLongLat,
+//				//						distanciaLongLat, utmPoint,pasada,altura,ci.getRindeTnHa());		
+//				Geometry longLatGeom = createGeometryForHarvest(anchoLongLat,
+//						distanciaLongLat, longLatPoint,pasada,altura,ci.getRindeTnHa());
+//				if(longLatGeom == null 
+//						//			|| geom.getArea()*ProyectionConstants.A_HAS*10000<labor.config.supMinimaProperty().doubleValue()
+//						){//con esto descarto las geometrias muy chicas
+//					//System.out.println("geom es null, ignorando...");
+//					continue;
+//				}
+//
+//				/**
+//				 * solo ingreso la cosecha al arbol si la geometria es valida
+//				 */
+//				boolean empty = longLatGeom.isEmpty();
+//				boolean valid = longLatGeom.isValid();
+//				boolean big = (longLatGeom.getArea()*ProyectionConstants.A_HAS>supMinimaHas);
+//				if(!empty
+//						&&valid
+//						&&big//esta fallando por aca
+//						){
+//
+//					//Geometry longLatGeom =	crsAntiTransform(utmGeom);//hasta aca se entrega la geometria correctamente
+//
+//					ci.setGeometry(longLatGeom);//FIXME aca ya perdio la orientacion pero tiene la forma correcta
+//				//	corregirRinde(ci);
+//
+//					labor.insertFeature(ci);//featureTree.insert(geom.getEnvelopeInternal(), cosechaFeature);
+//				} else{
+//					//	System.out.println("no inserto el feature "+featureNumber+" porque tiene una geometria invalida empty="+empty+" valid ="+valid+" area="+big+" "+geom);
+//				}
 
-			List<Polygon> mp = getPolygons(pulv);
-			for (int i = 0; i < mp.size(); i++) {
-
-				Polygon p = mp.get(i);
-
-				pathTooltips.add(0, getPathTooltip(p, pulv));
+			} else { // no es point. Estoy abriendo una cosecha de poligonos.
+				labor.insertFeature(ci);
 			}
 
-		}// fin del while
+		}// fin del for que recorre las cosechas por indice
+		reader.close();
+	
+	List<PulverizacionItem> itemsToShow = new ArrayList<PulverizacionItem>();
+	SimpleFeatureIterator it = labor.outCollection.features();
+	while(it.hasNext()){
+		SimpleFeature f=it.next();
+		itemsToShow.add(labor.constructFeatureContainerStandar(f,false));
+	}
+	it.close();
+	labor.constructClasificador();
 
-		runLater();
 
-		updateProgress(0, featureCount);
+
+	runLater(itemsToShow);
+	updateProgress(0, featureCount);
 
 	}
-
-	private ArrayList<Object> getPathTooltip(Polygon poly, PulverizacionItem pulv) {
-		Path path = getPathFromGeom(poly, pulv);
+	
+	@Override
+	protected void getPathTooltip(Geometry poly, PulverizacionItem pulv) {
+	//	Path path = getPathFromGeom(poly, pulv);
 
 		double area = poly.getArea() * ProyectionConstants.A_HAS;
 
@@ -136,10 +210,7 @@ public class ProcessPulvMapTask extends ProcessMapTask {
 			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
 		}
 
-		ArrayList<Object> ret = new ArrayList<Object>();
-		ret.add(path);
-		ret.add(tooltipText);
-		return ret;
+		super.getPathFromGeom2D(poly, pulv,tooltipText);
 	}
 
 	protected int getAmountMin() {

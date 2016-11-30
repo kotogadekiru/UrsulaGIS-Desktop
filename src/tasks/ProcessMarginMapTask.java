@@ -28,19 +28,19 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
-import dao.Configuracion;
-import dao.CosechaItem;
-import dao.CosechaLabor;
 import dao.Costos;
-import dao.FertilizacionItem;
-import dao.FertilizacionLabor;
 import dao.Margen;
-import dao.CosechaConfig;
-import dao.PulverizacionItem;
-import dao.PulverizacionLabor;
 import dao.RentabilidadItem;
-import dao.SiembraItem;
-import dao.SiembraLabor;
+import dao.config.Configuracion;
+import dao.cosecha.CosechaConfig;
+import dao.cosecha.CosechaItem;
+import dao.cosecha.CosechaLabor;
+import dao.fertilizacion.FertilizacionItem;
+import dao.fertilizacion.FertilizacionLabor;
+import dao.pulverizacion.PulverizacionItem;
+import dao.pulverizacion.PulverizacionLabor;
+import dao.siembra.SiembraItem;
+import dao.siembra.SiembraLabor;
 
 public class ProcessMarginMapTask extends ProcessMapTask<RentabilidadItem,Margen> {
 	//	public Group map = new Group();

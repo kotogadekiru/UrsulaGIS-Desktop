@@ -60,12 +60,12 @@ import com.vividsolutions.jts.precision.GeometryPrecisionReducer;
 import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
 
 import dao.Clasificador;
-import dao.CosechaItem;
-import dao.CosechaLabor;
 import dao.FeatureContainer;
 //import org.geotools.filter.Filter;
 //import org.geotools.filter.FilterFactory;
 //import org.geotools.filter.FilterFactoryFinder;
+import dao.cosecha.CosechaItem;
+import dao.cosecha.CosechaLabor;
 
 public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLabor> {
 
@@ -116,18 +116,13 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		if(labor.getInStore()!=null){
 			if(labor.outCollection!=null)labor.outCollection.clear();
 			reader = labor.getInStore().getFeatureReader();
-			//		 storeCRS = labor.getInStore().getSchema().getCoordinateReferenceSystem();
-			//convierto los features en cosechas
 			featureCount=labor.getInStore().getFeatureSource().getFeatures().size();
-		} else{//XXX cuando es una grilla los datos estan en outstore y instore es null
+		} else{
+			//XXX cuando es una grilla los datos estan en outstore y instore es null
+			//FIXME si leo del outCollection y luego escribo en outCollection me quedo sin memoria
 			reader = labor.outCollection.reader();
-			//	 storeCRS = labor.outCollection.getSchema().getCoordinateReferenceSystem();
-			//convierto los features en cosechas
 			featureCount=labor.outCollection.size();
 		}
-
-
-		//initCrsTransform(storeCRS);
 
 		int divisor = 1;
 		if(labor.getConfiguracion().correccionOutlayersEnabled()){
@@ -138,6 +133,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 				* cantidadDistanciasTolerancia// 10
 				* ProyectionConstants.metersToLat;
 
+		
 		while (reader.hasNext()) {
 
 			SimpleFeature simpleFeature = reader.next();
@@ -156,7 +152,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			Double rumbo = ci.getRumbo();
 			Double ancho = ci.getAncho();
 			Double distancia = ci.getDistancia();
-			Double pasada = ci.getPasada();
+		//	Double pasada = ci.getPasada();
 			Double altura = ci.getElevacion();
 
 
@@ -252,7 +248,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 				//				Geometry utmGeom = createGeometryForHarvest(anchoLongLat,
 				//						distanciaLongLat, utmPoint,pasada,altura,ci.getRindeTnHa());		
 				Geometry longLatGeom = createGeometryForHarvest(anchoLongLat,
-						distanciaLongLat, longLatPoint,pasada,altura,ci.getRindeTnHa());
+						distanciaLongLat, longLatPoint,altura,ci.getRindeTnHa());
 				if(longLatGeom == null 
 						//			|| geom.getArea()*ProyectionConstants.A_HAS*10000<labor.config.supMinimaProperty().doubleValue()
 						){//con esto descarto las geometrias muy chicas
@@ -288,8 +284,8 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 				//TODO si el filtro de superposiciones esta activado tambien sirve para los poligonos
 				labor.insertFeature(ci);
 			}
-
-		}// fin del for que recorre las cosechas por indice
+			
+		}// fin del while que recorre las features
 		labor.cachedEnvelopes.clear();//limpio la cache despues de hacer la limpieza principal
 		reader.close();
 
@@ -420,7 +416,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		List<CosechaItem> itemsCategoria = new ArrayList<CosechaItem>();//es la lista de los items que representan a cada categoria y que devuelvo
 
 		DefaultFeatureCollection newOutcollection =  new DefaultFeatureCollection("internal",labor.getType());		
-
+//TODO pasar esto a parallel streams
 		//XXX por cada categoria 
 		for(int i=0;i<labor.clasificador.getNumClasses();i++){
 			List<Geometry> geometriesCat = new ArrayList<Geometry>();
@@ -429,13 +425,22 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			Double sumRinde=new Double(0);
 			Double sumatoriaAltura=new Double(0);
 			int n=0;
-			for(SimpleFeature f:colections.get(i)){//por cada item de la categoria i
+			for(SimpleFeature f : colections.get(i)){//por cada item de la categoria i
 				Object geomObj = f.getDefaultGeometry();
 				geometriesCat.add((Geometry)geomObj);
 				sumRinde+=FeatureContainer.getDoubleFromObj(f.getAttribute(labor.colRendimiento.get()));
 				sumatoriaAltura += FeatureContainer.getDoubleFromObj(f.getAttribute(labor.colElevacion.get()));
 				n++;
 			} 
+			double rindeProm =sumRinde/n;
+			
+			double sumaDesvio2 = 0.0;
+			for(SimpleFeature f:colections.get(i)){
+				double cantidadCosecha = FeatureContainer.getDoubleFromObj(f.getAttribute(labor.colRendimiento.get()));	
+				sumaDesvio2+= Math.abs(rindeProm- cantidadCosecha);
+		
+			}
+			double desvioPromedio = sumaDesvio2/n;
 
 
 			if(n>0){//si no hay ningun feature en esa categoria esto da out of bounds
@@ -451,12 +456,14 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 					buffered= EnhancedPrecisionOp.buffer(colectionCat, 0);
 				}
 
+				
 				SimpleFeature fIn = colections.get(i).get(0);
 
 				CosechaItem ci=labor.constructFeatureContainerStandar(fIn,true);
 				//	ci.setId(new Double(i));//creo solo un feature por categoria
 
-				ci.setRindeTnHa(sumRinde/n);
+				ci.setRindeTnHa(rindeProm);
+				ci.setDesvioRinde(desvioPromedio);
 				ci.setElevacion(sumatoriaAltura/n);
 
 				ci.setGeometry(buffered);
@@ -608,7 +615,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 						SimpleFeature f = cosechaFeature.getFeature(fBuilder);
 						list.add(f);	
 						//This method is safe to be called from any thread.	
-						updateProgress((list.size()+featureCount)/2, featureCount);
+						//updateProgress((list.size()+featureCount)/2, featureCount);
 					} 				
 				},	(list1, list2) -> list1.addAll(list2));
 		newOutcollection.addAll(filteredFeatures);
@@ -654,51 +661,52 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 	/**
 	 * recorrer featureTree buscando outlayers y reemplazandolos con el promedio		
 	 * @param cosechaItemIndex
+	 * @deprecated
 	 */
-	private void corregirOutlayers() {			
-
-		//1) crear un circulo de radio a definir y centro en el centroide de la cosecha
-		double ancho = labor.getConfiguracion().getAnchoFiltroOutlayers();
-		double alfa =0;
-		double distancia = ancho;
-		Coordinate anchoLongLatCoord = constructCoordinate(alfa, ancho);
-		Coordinate distanciaLongLat =constructCoordinate(alfa+ Math.PI / 2, distancia);
-
-
-		int i = 0;
-		SimpleFeatureIterator reader = labor.outCollection.features();
-
-		featureCount=labor.outCollection.size();
-		//TODO tratar de paralelizar este proceso que acelera mucho
-		DefaultFeatureCollection newOutcollection =  new DefaultFeatureCollection("internal",labor.getType());		
-
-		while( reader.hasNext()){
-			SimpleFeature sf = reader.next();
-			CosechaItem cosechaFeature = labor.constructFeatureContainerStandar(sf,false);
-			Point X = cosechaFeature.getGeometry().getCentroid();
-
-			Polygon poly = constructPolygon(anchoLongLatCoord, distanciaLongLat, X);
-
-			//2) obtener todas las cosechas dentro det circulo
-			List<CosechaItem> features = labor.cachedOutStoreQuery(poly.getEnvelopeInternal());
-			if(features.size()>0){
-				//outlayerVarianza(cosechaFeature, poly,features);
-				if(outlayerCV(cosechaFeature, poly,features)){
-				}
-			} else {
-				System.out.println("zero features");
-			}
-			SimpleFeature f = cosechaFeature.getFeature(labor.featureBuilder);
-			boolean res = newOutcollection.add(f);
-			i++;
-
-			updateProgress((i+featureCount)/2, featureCount);
-		}//fin del while
-		reader.close();
-		labor.cachedEnvelopes.clear();
-		labor.setOutCollection(newOutcollection);
-
-	}
+//	private void corregirOutlayers() {			
+//
+//		//1) crear un circulo de radio a definir y centro en el centroide de la cosecha
+//		double ancho = labor.getConfiguracion().getAnchoFiltroOutlayers();
+//		double alfa =0;
+//		double distancia = ancho;
+//		Coordinate anchoLongLatCoord = constructCoordinate(alfa, ancho);
+//		Coordinate distanciaLongLat =constructCoordinate(alfa+ Math.PI / 2, distancia);
+//
+//
+//		int i = 0;
+//		SimpleFeatureIterator reader = labor.outCollection.features();
+//
+//		featureCount=labor.outCollection.size();
+//		//TODO tratar de paralelizar este proceso que acelera mucho
+//		DefaultFeatureCollection newOutcollection =  new DefaultFeatureCollection("internal",labor.getType());		
+//
+//		while( reader.hasNext()){
+//			SimpleFeature sf = reader.next();
+//			CosechaItem cosechaFeature = labor.constructFeatureContainerStandar(sf,false);
+//			Point X = cosechaFeature.getGeometry().getCentroid();
+//
+//			Polygon poly = constructPolygon(anchoLongLatCoord, distanciaLongLat, X);
+//
+//			//2) obtener todas las cosechas dentro det circulo
+//			List<CosechaItem> features = labor.cachedOutStoreQuery(poly.getEnvelopeInternal());
+//			if(features.size()>0){
+//				//outlayerVarianza(cosechaFeature, poly,features);
+//				if(outlayerCV(cosechaFeature, poly,features)){
+//				}
+//			} else {
+//				System.out.println("zero features");
+//			}
+//			SimpleFeature f = cosechaFeature.getFeature(labor.featureBuilder);
+//			boolean res = newOutcollection.add(f);
+//			i++;
+//
+//			//updateProgress((i+featureCount)/2, featureCount);
+//		}//fin del while
+//		reader.close();
+//		labor.cachedEnvelopes.clear();
+//		labor.setOutCollection(newOutcollection);
+//
+//	}
 
 	/**
 	 * metodo que busca mejorar la eficiencia de corregirOutlayers 
@@ -901,11 +909,13 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 
 		if(!(promedioRinde==0)){
 		double coefVariacionCosechaFeature = Math.abs(rindeCosechaFeature-promedioRinde)/promedioRinde;
-
+		cosechaFeature.setDesvioRinde(coefVariacionCosechaFeature);
+		
 		if(coefVariacionCosechaFeature > toleranciaCoeficienteVariacion ||!rindeEnRango){//si el coeficiente de variacion es mayor al 20% no es homogeneo
 			//El valor esta fuera de los parametros y modifico el valor por el promedio
 			//	System.out.println("reemplazo "+cosechaFeature.getRindeTnHa()+" por "+promedio);
 			cosechaFeature.setRindeTnHa(promedioRinde);
+			
 			cosechaFeature.setElevacion(promedioAltura);
 			ret=true;
 		}
@@ -927,7 +937,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 	}
 
 	@Override
-	protected void getPathTooltip(Geometry poly,	CosechaItem cosechaFeature) {
+	protected void getPathTooltip(Geometry poly,	CosechaItem cosechaItem) {
 		//	System.out.println("getPathTooltip(); "+System.currentTimeMillis());
 		//List<SurfacePolygon>  paths = getSurfacePolygons(poly, cosechaFeature);//
 		//	List<gov.nasa.worldwind.render.Polygon>  paths = super.getPathFromGeom2D(poly, cosechaFeature);
@@ -938,23 +948,23 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		DecimalFormat df = new DecimalFormat("#.00");
 
 		String tooltipText = new String("Rinde: "
-				+ df.format(cosechaFeature.getAmount()) + " Tn/Ha\n"
+				+ df.format(cosechaItem.getAmount()) + " Tn/Ha\n"
 				//	+ "Area: "+ df.format(area * ProyectionConstants.METROS2_POR_HA)+ " m2\n" + 
 
 				);
 
-		tooltipText=tooltipText.concat("Elevacion: "+df.format(cosechaFeature.getElevacion() ) + "\n");
+		tooltipText=tooltipText.concat("Elevacion: "+df.format(cosechaItem.getElevacion() ) + "\n");
 
-		tooltipText=tooltipText.concat("Ancho: "+df.format(cosechaFeature.getAncho() ) + "\n");
-		tooltipText=tooltipText.concat("Rumbo: "+df.format(cosechaFeature.getRumbo() ) + "\n");
-		tooltipText=tooltipText.concat("feature: "+cosechaFeature.getId() + "\n");
+		tooltipText=tooltipText.concat("Ancho: "+df.format(cosechaItem.getAncho() ) + "\n");
+		tooltipText=tooltipText.concat("Rumbo: "+df.format(cosechaItem.getRumbo() ) + "\n");
+		tooltipText=tooltipText.concat("feature: "+cosechaItem.getId() + "\n");
 		if(area<1){
 			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
 			//	tooltipText=tooltipText.concat( "SupOrig: "+df.format(area2 ) + "m2\n");
 		} else {
 			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
 		}
-		super.getPathFromGeom2D(poly, cosechaFeature,tooltipText);
+		super.getPathFromGeom2D(poly, cosechaItem,tooltipText);
 
 	}
 
@@ -982,7 +992,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 	 * @param rindeCosecha servia para asegurar que no se corte esta geometria por cosechas con rinde menor. deprecated
 	 * @return la geometria cosechada en coordenadas longLat
 	 */
-	private Geometry createGeometryForHarvest( Coordinate l, Coordinate d, Point X, Double pasada,Double elevacion, Double rindeCosecha) {
+	private Geometry createGeometryForHarvest( Coordinate l, Coordinate d, Point X,Double elevacion, Double rindeCosecha) {
 		//System.out.println("createGeometryForPoint(); "+System.currentTimeMillis());
 		double x = X.getX();
 		double y = X.getY();

@@ -55,9 +55,9 @@ import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 
-import dao.CosechaItem;
 import dao.FeatureContainer;
-import dao.Producto;
+import dao.config.Cultivo;
+import dao.cosecha.CosechaItem;
 
 public abstract class Process3DMapTask extends Task<Group>{
 	protected Group map = null;//new Group();
@@ -80,7 +80,7 @@ public abstract class Process3DMapTask extends Task<Group>{
 	private static Double[] histograma=null;// es static para poder hacer constructHistograma static para usarlo en el grafico de Histograma
 	public static Classifier clasifier=null;
 
-	public static Producto producto;
+	public static Cultivo producto;
 
 	protected int featureCount;
 	protected int featureNumber;

@@ -35,8 +35,8 @@ import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 
-import dao.CosechaItem;
-import dao.CosechaLabor;
+import dao.cosecha.CosechaItem;
+import dao.cosecha.CosechaLabor;
 
 public class UnirCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor> {
 	/**
@@ -65,8 +65,11 @@ public class UnirCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 
 		labor.getConfiguracion().valorMetrosPorUnidadDistanciaProperty().set(1.0);
 		labor.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
-
-		labor.getNombreProperty().setValue("union de cosechas");//este es el nombre que se muestra en el progressbar
+		String nombreProgressBar = "clonar cosecha";
+		if(cosechas.size()>1){
+			nombreProgressBar = "unir cosechas";
+		}
+		labor.getNombreProperty().setValue(nombreProgressBar);//este es el nombre que se muestra en el progressbar
 	}
 
 	/**
@@ -79,9 +82,13 @@ public class UnirCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 		//	ReferencedEnvelope unionEnvelope = null;
 		double ancho = labor.getConfiguracion().getAnchoFiltroOutlayers();
 		String nombre =null;
+		String prefijo = "clon";
+		if(cosechas.size()>1){
+			prefijo = "union";
+		}
 		for(CosechaLabor c:cosechas){
 			if(nombre == null){
-				nombre="union "+c.getNombreProperty().get();	
+				nombre=prefijo+" "+c.getNombreProperty().get();	
 			}else {
 				nombre+=" - "+c.getNombreProperty().get();
 			}
@@ -90,6 +97,7 @@ public class UnirCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 				SimpleFeature f = reader.next();
 				CosechaItem ci = labor.constructFeatureContainerStandar(f,true);
 				SimpleFeature nf=ci.getFeature(labor.featureBuilder);
+				//FIXME outCollection no tiene memoria y entonces no puedo corregir rindes o reprocesar geometrias
 				boolean ret = labor.outCollection.add(nf);
 				if(!ret){
 					System.out.println("no se pudo agregar la feature "+f);
@@ -159,7 +167,7 @@ public class UnirCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
 		}
 
-		tooltipText=tooltipText.concat("Pasada: "+df.format(cosechaFeature.getPasada() ) + "\n");
+		//tooltipText=tooltipText.concat("Pasada: "+df.format(cosechaFeature.getPasada() ) + "\n");
 		tooltipText=tooltipText.concat("feature: "+cosechaFeature.getId() + "\n");
 
 		 super.getPathFromGeom2D(poly, cosechaFeature,tooltipText);

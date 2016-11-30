@@ -20,14 +20,14 @@ import javafx.scene.layout.VBox;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.opengis.feature.simple.SimpleFeature;
 
+import utils.ExcelHelper;
 import utils.ProyectionConstants;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-import dao.CosechaLabor;
-import dao.ExcelHelper;
 import dao.FeatureContainer;
 import dao.Labor;
+import dao.cosecha.CosechaLabor;
 
 public class CosechaHistoChart extends VBox {
 	// VBox root = new VBox();
@@ -178,7 +178,7 @@ public class CosechaHistoChart extends VBox {
 		SimpleFeatureIterator it = labor.outCollection.features();
 		while(it.hasNext()){
 			SimpleFeature f = it.next();
-			Double rinde =FeatureContainer.getDoubleFromObj(f.getAttribute(labor.colAmount.get()));//labor.colAmount.get()
+			Double rinde = FeatureContainer.getDoubleFromObj(f.getAttribute(labor.colAmount.get()));//labor.colAmount.get()
 			Geometry geometry = (Geometry) f.getDefaultGeometry();
 			Double area = geometry.getArea() * ProyectionConstants.A_HAS;
 			int categoria = labor.getClasificador().getCategoryFor(rinde);

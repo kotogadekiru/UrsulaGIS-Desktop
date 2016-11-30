@@ -7,10 +7,10 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
-import dao.CosechaItem;
 import dao.FeatureContainer;
-import dao.FertilizacionItem;
-import dao.FertilizacionLabor;
+import dao.cosecha.CosechaItem;
+import dao.fertilizacion.FertilizacionItem;
+import dao.fertilizacion.FertilizacionLabor;
 import javafx.scene.Group;
 import javafx.scene.shape.Path;
 
@@ -36,21 +36,8 @@ import java.util.List;
  */
 public class ProcessFertMapTask extends ProcessMapTask<FertilizacionItem,FertilizacionLabor> {
 
-
-//	public ProcessFertMapTask(Group map1, Double precioPasada1,
-//			Double precioFertilizante, FileDataStore store) {
-//		super.layer = map1;
-//		super.store = store;
-//		this.precioPasada = precioPasada1;
-//		this.precioFertilizante = precioFertilizante;
-//
-//	}
-
 	public ProcessFertMapTask(FertilizacionLabor labor) {
 		super(labor);
-//		precioPasada=labor.precioLaborProperty.get();
-//		precioFertilizante=labor.precioInsumoProperty.get();
-//		// TODO Auto-generated constructor stub
 	}
 
 	public void doProcess() throws IOException {
@@ -187,47 +174,14 @@ public class ProcessFertMapTask extends ProcessMapTask<FertilizacionItem,Fertili
 //				}
 
 			} else { // no es point. Estoy abriendo una cosecha de poligonos.
-				//				List<Polygon> mp = getPolygons(ci);
-				//				Polygon p = mp.get(0);
-				//	featureTree.insert(p.getEnvelopeInternal(), cosechaFeature);
-				//TODO si el filtro de superposiciones esta activado tambien sirve para los poligonos
 				labor.insertFeature(ci);
 			}
 
 		}// fin del for que recorre las cosechas por indice
 		reader.close();
 
-//		System.out.println(+puntosEliminados+" puntos eliminados por punto duplicado");
-//		//TODO antes de corregir outliers usar el criterio de los cuartiles para determinar el minimo y maximo de los outliers
-//		//
-//		/**
-//		 * Q1=X(N/4)
-//		 * Q3=X(3N/3)
-//		 * LímInf = Q1- 1.5(Q3-Q1)
-//		 * LímSup = Q3 + 1.5(Q3-Q1)
-//		 */
-//		if(labor.getConfiguracion().correccionOutlayersEnabled()){
-//			System.out.println("corriegiendo outlayers con CV Max "+toleranciaCoeficienteVariacion);
-//			corregirOutlayersParalell();		
-//		} else { 
-//			System.out.println("no corrijo outlayers");
-//		}
-//		if(labor.config.calibrarRindeProperty().get()){
-//			//TODO obtener el promedio ponderado por la superficie y calcular el 
-//			//indice de correccion necesario para llegar al rinde objetivo
-//			//		reader = labor.getOutStore().getFeatureReader();
-//			//		while(reader.hasNext()){
-//			//			f=reader.next();
-//			//		double correccionRinde = labor.correccionCosechaProperty.doubleValue();		
-//			//		ci.rindeTnHa = rindeDouble * (correccionRinde / 100);
-//			//		}
-//		}//fin de calibrar rinde
-	
-//
+
 		List<FertilizacionItem> itemsToShow = new ArrayList<FertilizacionItem>();
-//		if(labor.config.resumirGeometriasProperty().getValue()){
-//			itemsToShow = resumirGeometrias();
-//		} else{
 			SimpleFeatureIterator it = labor.outCollection.features();
 			while(it.hasNext()){
 				SimpleFeature f=it.next();
@@ -235,43 +189,17 @@ public class ProcessFertMapTask extends ProcessMapTask<FertilizacionItem,Fertili
 			}
 			it.close();
 			labor.constructClasificador();
-	//	}
 
-		//this.pathTooltips.clear();
-//		labor.getLayer().removeAllRenderables();
-//		for(FertilizacionItem c:itemsToShow){
-//			Geometry g = c.getGeometry();
-//			if(g instanceof Polygon){
-//				//	pathTooltips.add(
-//				getPathTooltip((Polygon)g,c);
-//				//		);	
-//			} else if(g instanceof MultiPolygon){
-//				MultiPolygon mp = (MultiPolygon)g;			
-//				for(int i=0;i<mp.getNumGeometries();i++){
-//					Polygon p = (Polygon) (mp).getGeometryN(i);
-//					getPathTooltip(p,c);
-//					//	pathTooltips.add(getPathTooltip(p,c));	
-//				}
-//
-//			}
-//		}
 
 
 		runLater(itemsToShow);
-		//	canvasRunLater();
 
-		updateProgress(0, featureCount);
-		//		System.out.println("min: (" + minX + "," + minY + ") max: (" + maxX
-		//		
+
+		updateProgress(0, featureCount);	
 	}
 
 	@Override
-	protected void getPathTooltip(Geometry poly,	FertilizacionItem fertFeature) {
-	//FertilizacionItem fertFeature = (FertilizacionItem) featureContainer;
-		//	System.out.println("getPathTooltip(); "+System.currentTimeMillis());
-		//List<SurfacePolygon>  paths = getSurfacePolygons(poly, cosechaFeature);//
-		//	List<gov.nasa.worldwind.render.Polygon>  paths = super.getPathFromGeom2D(poly, cosechaFeature);
-		//ExtrudedPolygon  path = super.getPathFromGeom2D(poly, cosechaFeature);
+	protected void getPathTooltip(Geometry poly, FertilizacionItem fertFeature) {
 
 		double area = poly.getArea() * ProyectionConstants.A_HAS;// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();

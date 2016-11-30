@@ -48,7 +48,8 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
 
-import dao.Configuracion;
+import dao.config.Configuracion;
+import dao.cosecha.CosechaConfig;
 //import gov.nasa.worldwind.layers.RenderableLayer;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -57,7 +58,7 @@ import javafx.util.converter.NumberStringConverter;
 import utils.ProyectionConstants;
 
 public class JuntarShapefilesTask {
-	private static final String ANCHO_GRILLA = "anchoGrilla";
+	
 
 	public static void process(){
 
@@ -119,7 +120,7 @@ public class JuntarShapefilesTask {
 			SimpleFeatureType type = DataUtilities.createType("JuntarShapes", typeDescriptor);
 
 			DefaultFeatureCollection outCollection=new DefaultFeatureCollection("internal",type);	
-			Double ancho=Double.parseDouble(Configuracion.getInstance().getPropertyOrDefault(ANCHO_GRILLA, "10"));
+			Double ancho=Double.parseDouble(Configuracion.getInstance().getPropertyOrDefault(CosechaConfig.ANCHO_GRILLA_KEY, "10"));
 			//TODO constriur una grilla que cubra todos los shapes
 			List<Polygon>  grilla = construirGrilla(unionEnvelope, ancho);
 

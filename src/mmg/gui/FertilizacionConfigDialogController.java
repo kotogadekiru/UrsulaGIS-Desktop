@@ -23,10 +23,10 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
 import dao.Clasificador;
-import dao.CosechaLabor;
-import dao.FertilizacionLabor;
-import dao.Fertilizante;
-import dao.Producto;
+import dao.config.Cultivo;
+import dao.config.Fertilizante;
+import dao.cosecha.CosechaLabor;
+import dao.fertilizacion.FertilizacionLabor;
 
 
 /**

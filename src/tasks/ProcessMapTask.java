@@ -1,89 +1,17 @@
 package tasks;
 
-import gov.nasa.worldwind.WorldWind;
-import gov.nasa.worldwind.avlist.AVKey;
-import gov.nasa.worldwind.formats.shapefile.ShapefileRecordPolygon;
-import gov.nasa.worldwind.geom.LatLon;
-import gov.nasa.worldwind.geom.Position;
-import gov.nasa.worldwind.geom.Sector;
-import gov.nasa.worldwind.layers.Layer;
-import gov.nasa.worldwind.layers.RenderableLayer;
-import gov.nasa.worldwind.render.BasicShapeAttributes;
-import gov.nasa.worldwind.render.DrawContext;
-import gov.nasa.worldwind.render.Material;
-import gov.nasa.worldwind.render.PointPlacemark;
-import gov.nasa.worldwind.render.PointPlacemarkAttributes;
-import gov.nasa.worldwind.render.Renderable;
-import gov.nasa.worldwind.render.ShapeAttributes;
-import gov.nasa.worldwind.render.SurfacePolygon;
-import gov.nasa.worldwind.render.SurfacePolygons;
-import gov.nasa.worldwind.util.BufferWrapper;
-import gov.nasa.worldwind.util.CompoundVecBuffer;
-import gov.nasa.worldwind.util.SurfaceTileDrawContext;
-import gov.nasa.worldwind.util.VecBuffer;
-import gov.nasa.worldwind.util.VecBufferSequence;
-
+import java.awt.Font;
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
 import java.text.DecimalFormat;
+import java.text.Format;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.TreeSet;
-import java.util.stream.DoubleStream;
 
 import javax.media.opengl.GL2;
 
-import javafx.application.Platform;
-import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
-import javafx.geometry.Rectangle2D;
-import javafx.scene.Cursor;
-import javafx.scene.Group;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.Tooltip;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
-import javafx.scene.shape.LineTo;
-import javafx.scene.shape.MoveTo;
-import javafx.scene.shape.Path;
-import javafx.scene.shape.PathElement;
-import javafx.scene.text.Font;
-import javafx.stage.Screen;
-
-import org.geotools.data.DefaultTransaction;
-import org.geotools.data.FileDataStore;
-import org.geotools.data.Query;
-import org.geotools.data.Transaction;
-import org.geotools.data.collection.ListFeatureCollection;
-import org.geotools.data.simple.SimpleFeatureCollection;
-import org.geotools.data.simple.SimpleFeatureSource;
-import org.geotools.data.simple.SimpleFeatureStore;
-import org.geotools.factory.CommonFactoryFinder;
-//import org.geotools.filter.Filter;
-import org.geotools.filter.function.Classifier;
-import org.geotools.filter.function.JenksNaturalBreaksFunction;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.filter.FilterFactory2;
-import org.opengis.filter.expression.Literal;
-import org.opengis.filter.expression.PropertyName;
-import org.opengis.geometry.BoundingBox;
-
-import sun.java2d.DestSurfaceProvider;
-import utils.ProyectionConstants;
+import org.geotools.geometry.jts.ReferencedEnvelope;
 
 import com.jogamp.common.nio.Buffers;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -94,22 +22,56 @@ import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.index.quadtree.Quadtree;
 
 import dao.Clasificador;
-import dao.Configuracion;
-import dao.CosechaItem;
 import dao.FeatureContainer;
-import dao.FertilizacionLabor;
 import dao.Labor;
-import dao.Producto;
+import gov.nasa.worldwind.WorldWind;
+import gov.nasa.worldwind.avlist.AVKey;
+import gov.nasa.worldwind.geom.Angle;
+import gov.nasa.worldwind.geom.Extent;
+import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.geom.Sector;
+import gov.nasa.worldwind.render.BasicBalloonAttributes;
+import gov.nasa.worldwind.render.BasicShapeAttributes;
+import gov.nasa.worldwind.render.DrawContext;
+import gov.nasa.worldwind.render.Material;
+import gov.nasa.worldwind.render.PointPlacemark;
+import gov.nasa.worldwind.render.PointPlacemarkAttributes;
+import gov.nasa.worldwind.render.Renderable;
+import gov.nasa.worldwind.render.ShapeAttributes;
+import gov.nasa.worldwind.render.SurfacePolygon;
+import gov.nasa.worldwind.render.SurfacePolygons;
+import gov.nasa.worldwind.util.BufferWrapper;
+import gov.nasa.worldwind.util.SurfaceTileDrawContext;
+import gov.nasa.worldwind.util.VecBuffer;
+import gov.nasa.worldwind.util.VecBufferSequence;
+import gov.nasa.worldwind.util.WWMath;
+import gov.nasa.worldwindx.examples.analytics.AnalyticSurfaceLegend;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.Path;
+import mmg.gui.nww.HiDPIHelper;
+import utils.ProyectionConstants;
 //import org.opengis.filter.FilterFactory2;
 
 public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor<FC>> extends Task<E>{
+	
+	
 	public static final String ZOOM_TO_KEY = "ZOOM_TO";
 	protected int featureCount=0;
 	protected int featureNumber=0;
-	//protected RenderableLayer layer = null;//new Group();
 	protected E labor;
 
 	protected ArrayList<ArrayList<Object>> pathTooltips = new ArrayList<ArrayList<Object>>();
@@ -145,7 +107,7 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
 	protected abstract int gerAmountMax() ;
 
 
-	protected gov.nasa.worldwind.render.ExtrudedPolygon  getPathFromGeom(Geometry poly, FeatureContainer dao) {	
+	protected gov.nasa.worldwind.render.ExtrudedPolygon  getPathFromGeom(Geometry poly, FC dao) {	
 		// Set the coordinates (in degrees) to draw your polygon
 		// To radians just change the method the class Position
 		// to fromRadians().
@@ -173,7 +135,7 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
 
 		Color currentColor = null;
 		try{
-			currentColor = labor.getClasificador().getColorFor(dao.getAmount());
+			currentColor = labor.getClasificador().getColorFor(dao);
 		}catch(Exception e){
 			e.printStackTrace();
 			currentColor = Color.WHITE;
@@ -214,7 +176,7 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
 	 * @param tooltipText 
 	 * @return devuelve el objeto rendereable que se agrega en la coleccion de pathaTooltips y se muestra en runlater()
 	 */
-	protected List<gov.nasa.worldwind.render.Polygon>  getPathFromGeom2D(Geometry inputGeom, FeatureContainer dao, String tooltipText) {
+	protected List<gov.nasa.worldwind.render.Polygon>  getPathFromGeom2D(Geometry inputGeom, FC dao, String tooltipText) {
 		if(inputGeom.getNumPoints()==0){
 			System.err.println("dibujando un path con cero puntos "+ inputGeom);
 			return null;
@@ -222,7 +184,7 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
 
 		Color currentColor = null;
 		try{
-			currentColor = labor.getClasificador().getColorFor(dao.getAmount());
+			currentColor = labor.getClasificador().getColorFor(dao);
 		}catch(Exception e){
 			//e.printStackTrace();
 			currentColor = Color.WHITE;
@@ -237,6 +199,12 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
 		outerAttributes.setDrawOutline(false);
 		outerAttributes.setInteriorOpacity(0.8);
 		outerAttributes.setInteriorMaterial(material);
+		
+//		outerAttributes.setFont(new Font("Serif",Font.PLAIN,24));
+//		
+//		BasicBalloonAttributes highlightAttrs = new BasicBalloonAttributes();
+//		highlightAttrs.setFont(new Font("Serif",Font.PLAIN,24));
+//		
 
 		List<gov.nasa.worldwind.render.Polygon> renderablePolygons = new ArrayList<>();
 
@@ -256,6 +224,11 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
 					renderablePolygon.addInnerBoundary(interiorPositions);
 				}
 				renderablePolygon.setValue(AVKey.DISPLAY_NAME, tooltipText);
+				//renderablePolygon.setValue(AVKey., value)
+			
+//				renderablePolygon.setHighlightAttributes(highlightAttrs);
+				
+				renderablePolygon.setEnableBatchRendering(true);
 				labor.getLayer().addRenderable(renderablePolygon);
 				//renderablePolygons.add(renderablePolygon);
 
@@ -265,8 +238,8 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
 		return renderablePolygons;
 	}
 	
-	
-	protected List<SurfacePolygon>  getSurfacePolygons(Geometry inputGeom, FeatureContainer dao) {
+	@Deprecated
+	protected List<SurfacePolygon>  getSurfacePolygons(Geometry inputGeom, FC dao) {
 		if(inputGeom.getNumPoints()==0){
 			System.err.println("dibujando un path con cero puntos "+ inputGeom);
 			return null;
@@ -274,7 +247,7 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
 
 		Color currentColor = null;
 		try{
-			currentColor = labor.getClasificador().getColorFor(dao.getAmount());
+			currentColor = labor.getClasificador().getColorFor(dao);
 		}catch(Exception e){
 			e.printStackTrace();
 			currentColor = Color.WHITE;
@@ -487,7 +460,7 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
 	 * @param dao
 	 * @return
 	 */
-	protected List<Polygon> getPolygons(FeatureContainer dao){
+	protected List<Polygon> getPolygons(FC dao){
 		List<Polygon> polygons = new ArrayList<Polygon>();
 		Object geometry = dao.getGeometry();
 		//	System.out.println("obteniendo los poligonos de "+geometry);
@@ -536,7 +509,27 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
 	protected void runLater(Collection<FC> itemsToShow) {	
 		//this.pathTooltips.clear();
 		labor.getLayer().removeAllRenderables();
+		
+		double min = Double.MAX_VALUE;
+	    double max = -Double.MAX_VALUE;
+	        
+//		double min=0;
+//		double max=10000;
+		
+		Color colorMin = null;
+		Color colorMax = null;
+		
 		for(FC c:itemsToShow){
+			double amount = c.getAmount();
+			if( min>amount){
+				min=amount;
+				colorMin = labor.getClasificador().getColorFor(c);
+			}
+			if( max<amount){
+				max=amount;
+				colorMax = labor.getClasificador().getColorFor(c);
+			}
+
 			Geometry g = c.getGeometry();
 			if(g instanceof Polygon){
 				//	pathTooltips.add(
@@ -553,48 +546,69 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
 			}
 		}
 		
-		//int i =0;
-	//	labor.getLayer().removeAllRenderables();
-
-//		for (ArrayList<Object> pathTooltip : pathTooltips) {
-//			updateProgress(i, pathTooltips.size());
-//			i++;
-//			gov.nasa.worldwind.render.Polygon path = (gov.nasa.worldwind.render.Polygon) pathTooltip.get(0);
-//			//	String tooltipText = (String) pathTooltip.get(1);				
-//			labor.getLayer().addRenderable(path);		
-//
-//		}
-
-		//gov.nasa.worldwind.render.Polygon path = (gov.nasa.worldwind.render.Polygon) pathTooltips.get(0).get(0);
-	//	SurfacePolygon path = (SurfacePolygon) pathTooltips.get(0).get(0);
-		Coordinate centre = labor.outCollection.getBounds().centre();
-	//	LatLon latlon = LatLon.fromDegrees(centre.y, centre.x);
-	//	LatLon latlon=	path.getReferencePosition();
+	
+		double HUE_MIN =colorMin.getHue()/ 360d; //0d / 360d;
+		double HUE_MAX = colorMax.getHue()/ 360d;//240d / 360d;
 		
-		Position pointPosition = //new Position(latlon.latitude,latlon.longitude);
-				Position.fromDegrees(centre.y, centre.x);
+	
+		Format legendLabelFormat = new DecimalFormat() ;
+		final AnalyticSurfaceLegend legend = AnalyticSurfaceLegend.fromColorGradient(min, max,
+				HUE_MIN, HUE_MAX,
+				AnalyticSurfaceLegend.createDefaultColorGradientLabels(min, max, legendLabelFormat),
+				AnalyticSurfaceLegend.createDefaultTitle(labor.getNombreProperty().get()));
+		legend.setOpacity(1);
+		legend.setScreenLocation(new java.awt.Point(100, 400));
+		
+		
+
+		Renderable renderable =  new Renderable(){
+            public void render(DrawContext dc){
+            	ReferencedEnvelope bounds = labor.outCollection.getBounds();
+            
+             Sector sector =  Sector.fromDegrees(bounds.getMinY(), bounds.getMaxY(),bounds.getMinX() ,bounds.getMaxX());
+              Extent extent =  Sector.computeBoundingBox(dc.getGlobe(), dc.getVerticalExaggeration(), sector );
+                if (!extent.intersects(dc.getView().getFrustumInModelCoordinates()))
+                    return;
+
+                if (WWMath.computeSizeInWindowCoordinates(dc, extent) < 300)
+                    return;
+
+                legend.render(dc);
+            }
+        };
+        
+		labor.getLayer().addRenderable(renderable);
+		Coordinate centre = labor.outCollection.getBounds().centre();
+
+		
+		Position pointPosition = Position.fromDegrees(centre.y, centre.x);
 		PointPlacemark pmStandard = new PointPlacemark(pointPosition);
 		PointPlacemarkAttributes pointAttribute = new PointPlacemarkAttributes();
 		pointAttribute.setImageColor(java.awt.Color.red);
-		//pointAttribute.setLabelFont(java.awt.Font.decode("Verdana-Bold-22"));
-		pointAttribute.setLabelMaterial(Material.CYAN);
+		if(HiDPIHelper.isHiDPI()){
+			pointAttribute.setLabelFont(java.awt.Font.decode("Verdana-Bold-50"));
+		}
+		pointAttribute.setLabelMaterial(Material.DARK_GRAY);
 		pmStandard.setLabelText(labor.nombreProperty.get());
 		pmStandard.setAttributes(pointAttribute);
 		labor.getLayer().addRenderable(pmStandard);
+		
 		labor.getLayer().setValue(ZOOM_TO_KEY, pointPosition);
-
-
 	}
 
 	public void uninstallProgressBar() {		
+		
 		progressPane.getChildren().remove(progressContainer);
+		
 		//progressPane.getChildren().remove(progressBarTask);
 	}
 
 	public void start() {
-		Thread currentTaskThread = new Thread(this);
-		currentTaskThread.setDaemon(true);
-		currentTaskThread.start();
+		Platform.runLater(this);
+
+//		Thread currentTaskThread = new Thread(this);
+//		currentTaskThread.setDaemon(true);//true para que se cierre al final de la aplicacion
+//		currentTaskThread.start();
 	}
 
 	public void installProgressBar(Pane progressBox) {
@@ -605,9 +619,6 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
 		progressBarTask.progressProperty().bind(this.progressProperty());
 		progressBarLabel = new Label(labor.nombreProperty.get());
 		progressBarLabel.setTextFill(Color.BLACK);
-
-
-
 
 
 		Button cancel = new Button();
@@ -621,7 +632,7 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
 
 		//progressBarLabel.setStyle("-fx-color: black");
 		progressContainer = new HBox();
-		progressContainer.getChildren().addAll(progressBarLabel,progressBarTask,cancel);
+		progressContainer.getChildren().addAll(cancel,progressBarLabel,progressBarTask);
 		progressBox.getChildren().add(progressContainer);
 
 
