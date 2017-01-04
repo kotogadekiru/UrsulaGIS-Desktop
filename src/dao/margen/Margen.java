@@ -134,7 +134,7 @@ public class Margen extends Labor<MargenItem> {
 	@Override
 	public LaborConfig getConfigLabor() {
 		if(config==null){
-			config = new LaborConfig();
+			config = new LaborConfig(Configuracion.getInstance());
 		}
 		return config;
 	}

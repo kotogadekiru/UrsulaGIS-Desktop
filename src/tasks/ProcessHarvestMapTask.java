@@ -1,71 +1,38 @@
 package tasks;
 
-import gov.nasa.worldwind.avlist.AVKey;
-import gov.nasa.worldwind.render.Renderable;
-import gov.nasa.worldwind.render.SurfacePolygon;
-import gov.nasa.worldwind.render.SurfacePolygons;
-
 import java.io.IOException;
-import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-import javafx.geometry.Point2D;
 
 import org.geotools.data.FeatureReader;
 import org.geotools.data.shapefile.shp.JTSUtilities;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
-import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.geotools.referencing.CRS;
-import org.geotools.util.DefaultProgressListener;
-import org.geotools.util.ProgressListener;
-import org.opengis.feature.Feature;
-import org.opengis.feature.FeatureVisitor;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.geometry.BoundingBox;
-import org.opengis.geometry.MismatchedDimensionException;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.operation.MathTransform;
-import org.opengis.referencing.operation.TransformException;
-import org.opengis.util.InternationalString;
-
-import utils.ProyectionConstants;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.IntersectionMatrix;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.PrecisionModel;
-import com.vividsolutions.jts.geom.TopologyException;
-import com.vividsolutions.jts.operation.buffer.BufferParameters;
-import com.vividsolutions.jts.operation.valid.IsValidOp;
-import com.vividsolutions.jts.operation.valid.TopologyValidationError;
 import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
-import com.vividsolutions.jts.precision.GeometryPrecisionReducer;
-import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
 
-import dao.Clasificador;
 import dao.FeatureContainer;
-//import org.geotools.filter.Filter;
-//import org.geotools.filter.FilterFactory;
-//import org.geotools.filter.FilterFactoryFinder;
+import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
+import javafx.geometry.Point2D;
+import utils.ProyectionConstants;
 
 public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLabor> {
 
@@ -304,7 +271,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		} else { 
 			System.out.println("no corrijo outlayers");
 		}
-		if(labor.config.calibrarRindeProperty().get()){
+		if(((CosechaConfig)labor.config).calibrarRindeProperty().get()){
 			//TODO obtener el promedio ponderado por la superficie y calcular el 
 			//indice de correccion necesario para llegar al rinde objetivo
 			//		reader = labor.getOutStore().getFeatureReader();

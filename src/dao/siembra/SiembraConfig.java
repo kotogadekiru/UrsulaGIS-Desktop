@@ -10,16 +10,16 @@ public class SiembraConfig extends CosechaConfig {
 	/**
 	 * hace referencia al archivo donde se guardan las configuraciones
 	 */
-	Configuracion config;
+//	Configuracion config;
 	public SiembraConfig(){
 	super();
-	config = Configuracion.getInstance();//levanto el archivo de propiedades default pero puedo guardarlo en otro archivo seteando el fileURL
+	//config = Configuracion.getInstance();//levanto el archivo de propiedades default pero puedo guardarlo en otro archivo seteando el fileURL
 	}
 	
 	
-	public void save(){
-		config.save();
-	}
+//	public void save(){
+//		config.save();
+//	}
 
 
 	

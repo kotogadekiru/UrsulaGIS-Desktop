@@ -26,6 +26,7 @@ import javafx.util.converter.NumberStringConverter;
 import dao.Clasificador;
 import dao.Labor;
 import dao.config.Cultivo;
+import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaLabor;
 
 
@@ -374,15 +375,16 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 
 		textNombre.textProperty().bindBidirectional(labor.nombreProperty);
 
+		CosechaConfig cosechaConfig = (CosechaConfig) labor.config;
 		chkOutlayers.selectedProperty().bindBidirectional(labor.config.correccionOutlayersProperty());
 		chkAncho.selectedProperty().bindBidirectional(labor.config.correccionAnchoProperty());
 		chkDemora.selectedProperty().bindBidirectional(labor.config.correccionDemoraPesadaProperty());
 		chkDemora.setTooltip(new Tooltip("Permite adelantar o atrazar cada pesada y estirar la pesada de entrada en regimen"));
-		chkRinde.selectedProperty().bindBidirectional(labor.config.correccionRindeProperty());
+		chkRinde.selectedProperty().bindBidirectional(cosechaConfig.correccionRindeProperty());
 		chkSuperposicion.selectedProperty().bindBidirectional(labor.config.correccionSuperposicionProperty());
-		chkDistancia.selectedProperty().bindBidirectional(labor.config.correccionDistanciaProperty());
+		chkDistancia.selectedProperty().bindBidirectional(cosechaConfig.correccionDistanciaProperty());
 
-		chkFlow.selectedProperty().bindBidirectional(labor.config.correccionFlowToRindeProperty());
+		chkFlow.selectedProperty().bindBidirectional(cosechaConfig.correccionFlowToRindeProperty());
 
 		chkResumirGeometrias.selectedProperty().bindBidirectional(labor.config.resumirGeometriasProperty());
 	}

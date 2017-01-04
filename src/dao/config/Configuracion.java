@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.Set;
 
+import dao.Labor;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 
@@ -118,12 +119,17 @@ public class Configuracion{
 
 	public void setProperty(String key, String value) {
 		//loadProperties();
+//		if(Labor.COLUMNA_CURSO.equals(key)){
+//			System.out.println("seteando columna "+Labor.COLUMNA_CURSO+" con "+value);
+//		}
 		configProp.setProperty(key, value);
 	///	save();
 	}
 
 
 	public void save() {
+		//String curso = this.getPropertyOrDefault(Labor.COLUMNA_CURSO, "");
+	//	System.out.println("antes de hacer save "+Labor.COLUMNA_CURSO+" es "+curso);
 		try {
 			FileWriter writer = new FileWriter(propertiesFileUrl);
 			configProp.store(writer,"MarginMapGenerator");//Calendar.getInstance().getTime().toString());

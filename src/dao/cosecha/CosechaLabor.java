@@ -50,7 +50,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 
 	private static final String PRODUCTO_DEFAULT = "CultivoDefault";
 
-	public CosechaConfig config = null;
+	//public CosechaConfig config = null;
 
 	public StringProperty colVelocidad= null;
 	public StringProperty colRendimiento= null;
@@ -128,7 +128,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 	
 	@Override
 	protected DoubleProperty initPrecioLaborHaProperty(){
-		return initDoubleProperty(CosechaLabor.COSTO_COSECHA_HA,"0",config.config);
+		return initDoubleProperty(CosechaLabor.COSTO_COSECHA_HA,"0",config.getConfigProperties());
 	} 
 
 
@@ -225,6 +225,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 
 	@Override
 	public CosechaItem constructFeatureContainer(SimpleFeature harvestFeature) {
+		CosechaConfig config = (CosechaConfig) super.config;
 		CosechaItem ci = new CosechaItem(harvestFeature);
 		super.constructFeatureContainer(ci,harvestFeature);
 		double correccionRinde = correccionCosechaProperty.doubleValue();// me
@@ -308,9 +309,14 @@ public class CosechaLabor extends Labor<CosechaItem> {
 		//		}
 		return ci;
 	}
-
+	
+//se usa en los tasks
 	public CosechaConfig getConfiguracion() {
-		return config;
+		if(config==null){
+			config = new CosechaConfig();
+		}
+		return (CosechaConfig) config;
+	
 	}
 
 //	public void constructClasificador() {
@@ -322,10 +328,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 
 	@Override
 	public LaborConfig getConfigLabor() {
-		if(config==null){
-			config = new CosechaConfig();
-		}
-		return config;
+		return getConfiguracion();
 	}
 
 

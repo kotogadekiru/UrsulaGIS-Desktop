@@ -38,7 +38,7 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 	
 	public StringProperty colKgHaProperty;
 	
-	public FertilizacionConfig config=null;
+	//public FertilizacionConfig config=null;
 
 	public Property<Fertilizante> fertilizante=null;
 
@@ -302,7 +302,7 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 
 	@Override
 	protected DoubleProperty initPrecioLaborHaProperty() {
-		return initDoubleProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,"0",config.config);
+		return initDoubleProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,"0",config.getConfigProperties());
 	}
 
 	@Override

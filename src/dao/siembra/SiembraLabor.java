@@ -55,7 +55,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 
 	public StringProperty colSemillasMetroProperty;
 
-	public SiembraConfig config=null;
+	//public SiembraConfig config=null;
 	public Property<Semilla> producto=null;
 
 
@@ -256,13 +256,13 @@ public class SiembraLabor extends Labor<SiembraItem> {
 	}
 
 	public void constructClasificador() {
-		super.constructClasificador(config.config
+		super.constructClasificador(config.getConfigProperties()
 				.getPropertyOrDefault(Clasificador.TIPO_CLASIFICADOR,
 						Clasificador.CLASIFICADOR_JENKINS));
 	}
 
 	public SiembraConfig getConfiguracion() {
-		return config;
+		return (SiembraConfig) config;
 	}
 
 	public void setColumnsMap(Map<String, String> columns) {
@@ -279,7 +279,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 
 	@Override
 	protected DoubleProperty initPrecioLaborHaProperty() {
-		return initDoubleProperty(SiembraLabor.COSTO_LABOR_SIEMBRA,"0",config.config);
+		return initDoubleProperty(SiembraLabor.COSTO_LABOR_SIEMBRA,"0",config.getConfigProperties());
 	}
 
 	@Override

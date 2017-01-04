@@ -103,6 +103,8 @@ public abstract class Labor<E extends FeatureContainer>  {
 	public Map<Envelope,List<E>> cachedEnvelopes=Collections.synchronizedMap(new HashMap<Envelope,List<E>>());
 	private CoordinateReferenceSystem targetCRS;
 
+	public LaborConfig config = null;
+	
 	public Labor(){
 		clasificador=new Clasificador();
 		outCollection = new DefaultFeatureCollection("internal",getType());
@@ -120,7 +122,7 @@ public abstract class Labor<E extends FeatureContainer>  {
 	private void initConfigLabor() {
 		//	initConfig();//inicio el config de la sub labor 
 		List<String> availableColums = this.getAvailableColumns();		
-
+//	Configuracion properties = getConfigLabor().getConfigProperties();
 		LaborConfig laborConfig = getConfigLabor();
 		Configuracion properties = laborConfig.getConfigProperties();
 
@@ -204,8 +206,8 @@ public abstract class Labor<E extends FeatureContainer>  {
 				Double.parseDouble(properties.getPropertyOrDefault(
 						key, def)));
 		doubleProperty.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(key,
-					bool2.toString());
+		
+			properties.setProperty(key,	bool2.toString());
 		});
 		return doubleProperty;
 	}

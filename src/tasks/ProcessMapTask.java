@@ -505,7 +505,7 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
 	protected void runLater(Collection<FC> itemsToShow) {	
 		//this.pathTooltips.clear();
 		labor.getLayer().removeAllRenderables();
-		
+		//labor.getLayer().setPickEnabled(false);//evita que se muestre el tooltip
 		double min = Double.MAX_VALUE;
 	    double max = -Double.MAX_VALUE;
 	        

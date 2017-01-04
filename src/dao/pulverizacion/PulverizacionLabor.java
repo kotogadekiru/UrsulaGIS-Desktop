@@ -39,7 +39,7 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 	
 	private static Map<String, String> columnsMap= new HashMap<String, String>();
 	
-	public PulverizacionConfig config=null;
+	//public PulverizacionConfig config=null;
 
 	public PulverizacionLabor() {
 		initConfig();
@@ -243,18 +243,18 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 	}
 	
 	public void constructClasificador() {
-		super.constructClasificador(config.config
+		super.constructClasificador(config.getConfigProperties()
 		.getPropertyOrDefault(Clasificador.TIPO_CLASIFICADOR,
 				Clasificador.CLASIFICADOR_JENKINS));
 	}
 
 	public PulverizacionConfig getConfiguracion() {
-		return config;
+		return (PulverizacionConfig) config;
 	}
 
 	@Override
 	protected DoubleProperty initPrecioLaborHaProperty() {
-		return initDoubleProperty(PulverizacionLabor.COSTO_LABOR_PULVERIZACION,"0",config.config);
+		return initDoubleProperty(PulverizacionLabor.COSTO_LABOR_PULVERIZACION,"0",config.getConfigProperties());
 	}
 
 	@Override

@@ -68,11 +68,11 @@ public class LaborConfig {
 	/**
 	 * hace referencia al archivo donde se guardan las configuraciones
 	 */
-	private Configuracion config=null;
+	protected Configuracion config=null;
 
-	public LaborConfig(){
+	public LaborConfig(Configuracion _config){
 		super();
-		config =  Configuracion.getInstance();//levanto el archivo de propiedades default pero puedo guardarlo en otro archivo seteando el fileURL
+		 config =  _config;//levanto el archivo de propiedades default pero puedo guardarlo en otro archivo seteando el fileURL
 		
 		
 		DecimalFormat df = new DecimalFormat("#.0000");
@@ -251,14 +251,14 @@ public class LaborConfig {
 	}
 	
 	public void save(){
-		config.save();
+		getConfigProperties().save();
 	}
 
 	public Property<Boolean> resumirGeometriasProperty() {
 		return resumirGeometriasProperty;
 	}
 
-	public Configuracion getConfigProperties() {
+	public  Configuracion getConfigProperties(){
 		return config;
 	}
 

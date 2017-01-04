@@ -63,11 +63,11 @@ public class CosechaConfig extends LaborConfig{
 	/**
 	 * hace referencia al archivo donde se guardan las configuraciones
 	 */
-	Configuracion config=null;
+	//Configuracion config=null;
 	
 	public CosechaConfig(){
-		super();
-		config =  Configuracion.getInstance();//levanto el archivo de propiedades default pero puedo guardarlo en otro archivo seteando el fileURL
+		super(Configuracion.getInstance());
+		//Configuracion config =  super.getConfigProperties();//levanto el archivo de propiedades default pero puedo guardarlo en otro archivo seteando el fileURL
 		DecimalFormat df = new DecimalFormat("#.0000");
 		try{
 
