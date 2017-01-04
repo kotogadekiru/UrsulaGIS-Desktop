@@ -19,18 +19,19 @@ import org.geotools.referencing.crs.DefaultGeographicCRS;
 
 import dao.config.Configuracion;
 import dao.cosecha.CosechaLabor;
+import javafx.concurrent.Task;
 
 
-public class ExportHarvestMapTask extends FutureTask<File>{
+public class ExportHarvestMapTask extends Task<File>{
 	CosechaLabor laborToExport=null;
 	File shapeFile=null;
 	
 	public ExportHarvestMapTask(CosechaLabor _laborToExport,File _shapeFile){
-		super(new Callable<File>(){
-			@Override
-			public File call() throws Exception {
-				return this.call();
-			}});
+//		super(new Callable<File>(){
+//			@Override
+//			public File call() throws Exception {
+//				return this.call();
+//			}});
 		
 		 laborToExport=_laborToExport;
 		 shapeFile=_shapeFile;

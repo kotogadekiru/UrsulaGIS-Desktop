@@ -1,6 +1,8 @@
 package dao.pulverizacion;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.geotools.data.DataUtilities;
 import org.geotools.data.FileDataStore;
@@ -17,6 +19,7 @@ import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
+import dao.siembra.SiembraLabor;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -33,6 +36,8 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 	
 	public StringProperty colCostoPaqProperty;
 	public StringProperty colCantPasadasProperty;
+	
+	private static Map<String, String> columnsMap= new HashMap<String, String>();
 	
 	public PulverizacionConfig config=null;
 
@@ -52,7 +57,7 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 		List<String> availableColums = this.getAvailableColumns();		
 		
 		//config = new PulverizacionConfig();
-		Configuracion properties = config.config;
+		Configuracion properties = getConfigLabor().getConfigProperties();
 		
 		colCostoPaqProperty = new SimpleStringProperty(
 				properties.getPropertyOrDefault(
@@ -258,5 +263,12 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 			config = new PulverizacionConfig();
 		}
 		return config;
+	}
+
+		public void setColumnsMap(Map<String, String> columns) {
+		columnsMap=columns;
+		colCostoPaqProperty.setValue(columnsMap.get(PulverizacionItem.COLUMNA_COSTO_PAQUETE));
+		colCantPasadasProperty.setValue(columnsMap.get(PulverizacionItem.COLUMNA_CANT_PASADAS));
+
 	}
 }

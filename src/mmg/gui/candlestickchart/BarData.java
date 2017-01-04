@@ -25,7 +25,12 @@ import java.util.GregorianCalendar;
  */
 public class BarData implements Serializable {
         
-    public static long serialVersionUID = 1L;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	//public static long serialVersionUID = 1L;
 
     public static final Number NULL = -9D;
     public static final int OPEN = 1;
@@ -38,33 +43,33 @@ public class BarData implements Serializable {
         TICK, SECOND, MINUTE, HOUR, DAY, WEEK, MONTH, YEAR
     };
 
-    protected Number open;
+//    protected Number open;
     protected BigDecimal formattedOpen;
-    protected Number high;
+    protected Number max;
     protected BigDecimal formattedHigh;
-    protected Number low;
+    protected Number min;
     protected BigDecimal formattedLow;
-    protected Number close;
+    protected Number average;
     protected BigDecimal formattedClose;
     protected Number volume = 0;
     protected Number openInterest = 0;
     protected int barLength = 1;
-    protected Number rinde;
+    protected Number elevacion;
     //protected Logger logger = Logger.getLogger( Bar.class );
 
     public BarData() {
     }
 
-    public BarData( Number rinde, Number open, Number high, Number low, Number close, long volume) {
-        this.rinde = rinde;
-        this.open = open;
-        this.formattedOpen = format(open);
-        this.close = close;
-        this.formattedClose = format(close);
-        this.low = low;
-        this.formattedLow = format(low);
-        this.high = high;
-        this.formattedHigh = format(high);
+    public BarData( Number elev, Number max, Number min, Number average, Number volume) {
+        this.elevacion = elev;
+      //  this.open = open;
+       // this.formattedOpen = format(open);
+        this.average = average;
+        this.formattedClose = format(average);
+        this.min = min;
+        this.formattedLow = format(min);
+        this.max = max;
+        this.formattedHigh = format(max);
         this.volume = volume;
     }
 
@@ -74,51 +79,51 @@ public class BarData implements Serializable {
      *
      * @param date The date of this bar.
      * @param open The open price.
-     * @param high The high price.
-     * @param low The low price.
-     * @param close The closing price.
+     * @param max The high price.
+     * @param min The low price.
+     * @param average The closing price.
      * @param volume The volume for the bar.
      * @param openInterest The open interest for the bar.
      */
-    public BarData(Number rinde, Number open, Number high, Number low, Number close, long volume, long openInterest) {
-        this(rinde, open, high, low, close, volume);
+    public BarData(Number elev, Number max, Number min, Number average, long volume, long openInterest) {
+        this(elev, max, min, average, volume);
         this.openInterest = openInterest;
     }//constructor()
 
-    public Number getRinde() {
-        return rinde;
+    public Number getElevacion() {
+        return elevacion;
     }
 
-    public void setRinde(Number dateTime) {
-        this.rinde = dateTime;
+    public void setElevacion(Number dateTime) {
+        this.elevacion = dateTime;
     }
 
-    /**
-     * @return the open price of this bar.
-     */
-    public Number getOpen() {
-        return open;
-    }
+//    /**
+//     * @return the open price of this bar.
+//     */
+//    public Number getOpen() {
+//        return open;
+//    }
 
     /**
      * @return the High price of this bar.
      */
-    public Number getHigh() {
-        return high;
+    public Number getMax() {
+        return max;
     }
 
     /*
      * @return the Low price of this Bar.
      */
-    public Number getLow() {
-        return low;
+    public Number getMin() {
+        return min;
     }
 
     /**
      * @return the close price for this bar.
      */
-    public Number getClose() {
-        return close;
+    public Number getAverage() {
+        return average;
     }
 
     /**
@@ -140,17 +145,17 @@ public class BarData implements Serializable {
      *
      * @param open The open price for this bar.
      */
-    public void setOpen(Number open) {
-        this.open = open;
-    }
+//    public void setOpen(Number open) {
+//        this.open = open;
+//    }
 
     /**
      * Sets the high price for this bar.
      *
      * @param high The high price for this bar.
      */
-    public void setHigh(Number high) {
-        this.high = high;
+    public void setMax(Number high) {
+        this.max = high;
     }
 
     /**
@@ -158,17 +163,17 @@ public class BarData implements Serializable {
      *
      * @param low The low price for this bar.
      */
-    public void setLow(Number low) {
-        this.low = low;
+    public void setMin(Number low) {
+        this.min = low;
     }
 
     /**
      * Sets the closing price for this bar.
      *
-     * @param close The closing price for this bar.
+     * @param average The closing price for this bar.
      */
-    public void setClose(Number close) {
-        this.close = close;
+    public void setAverage(Number average) {
+        this.average = average;
     }
 
     /**
@@ -176,7 +181,7 @@ public class BarData implements Serializable {
      *
      * @param volume Sets the volume for this bar.
      */
-    public void setVolume(long volume) {
+    public void setVolume(Number volume) {
         this.volume = volume;
     }
     
@@ -186,14 +191,14 @@ public class BarData implements Serializable {
      * @param close The last price
      */
     public void update( Number close ) {
-        if( close.doubleValue() > high.doubleValue() ) {
-            high = close;
+        if( close.doubleValue() > max.doubleValue() ) {
+            max = close;
         }
         
-        if( close.doubleValue() < low.doubleValue() ) {
-            low = close;
+        if( close.doubleValue() < min.doubleValue() ) {
+            min = close;
         }
-        this.close = close;
+        this.average = close;
     }
     
 
@@ -214,13 +219,13 @@ public class BarData implements Serializable {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Rinde: ").append(rinde);
-        sb.append(" Open: ").append(open);
-        sb.append(" High: ").append(high);
-        sb.append(" Low: ").append(low);
-        sb.append(" Close: ").append(close);
+        sb.append("Rinde: ").append(elevacion);
+     //   sb.append(" Open: ").append(open);
+        sb.append(" Max: ").append(max);
+        sb.append(" Min: ").append(min);
+        sb.append(" Average: ").append(average);
         sb.append(" Volume: ").append(volume);
-        sb.append(" Open Int ").append(openInterest);
+     //   sb.append(" Open Int ").append(openInterest);
 
         return sb.toString();
     }//toString()
@@ -230,17 +235,17 @@ public class BarData implements Serializable {
         final int PRIME = 31;
         int result = 1;
         long temp;
-        temp = close.longValue();
+        temp = average.longValue();
         result = PRIME * result + (int) (temp ^ (temp >>> 32));
-        temp = high.longValue();
+        temp = max.longValue();
         result = PRIME * result + (int) (temp ^ (temp >>> 32));
-        temp = low.longValue();
+        temp = min.longValue();
         result = PRIME * result + (int) (temp ^ (temp >>> 32));
-        temp = open.longValue();
-        result = PRIME * result + (int) (temp ^ (temp >>> 32));
+     //   temp = open.longValue();
+    //    result = PRIME * result + (int) (temp ^ (temp >>> 32));
         temp = openInterest.longValue();
         result = PRIME * result + (int) (temp ^ (temp >>> 32));
-        result = PRIME * result + ((rinde == null) ? 0 : rinde.hashCode());
+        result = PRIME * result + ((elevacion == null) ? 0 : elevacion.hashCode());
         result = PRIME * result + ((volume == null) ? 0 : volume.hashCode());
         return result;
     }
@@ -257,26 +262,26 @@ public class BarData implements Serializable {
             return false;
         }
         final BarData other = (BarData) obj;
-        if (close != other.close) {
+        if (average != other.average) {
             return false;
         }
-        if (high != other.high ) {
+        if (max != other.max ) {
             return false;
         }
-        if (low != other.low) {
+        if (min != other.min) {
             return false;
         }
-        if (open != other.open) {
-            return false;
-        }
+//        if (open != other.open) {
+//            return false;
+//        }
         if (openInterest != other.openInterest) {
             return false;
         }
-        if (rinde == null) {
-            if (other.rinde != null) {
+        if (elevacion == null) {
+            if (other.elevacion != null) {
                 return false;
             }
-        } else if (!rinde.equals(other.rinde)) {
+        } else if (!elevacion.equals(other.elevacion)) {
             return false;
         }
         if (volume != other.volume) {

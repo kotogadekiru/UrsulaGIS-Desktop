@@ -124,6 +124,8 @@ public abstract class FeatureContainer implements Comparable<FeatureContainer>{
 	}
 
 	public abstract Double getAmount();		
+	
+	public abstract Double getImporteHa();		
 
 	public Double getId() {
 		return id;

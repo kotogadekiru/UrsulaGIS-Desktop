@@ -1,28 +1,20 @@
 package dao.pulverizacion;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
 
-import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.opengis.feature.simple.SimpleFeature;
-
-import com.vividsolutions.jts.geom.Geometry;
 
 import dao.FeatureContainer;
 
 public class PulverizacionItem extends FeatureContainer{
-//	private static final String COLUMNA_PASADAS = "Pasadas";
-//	private static final String COLUMNA_COSTO = "Costo";
-//	private static Map<String, String> columnsMap= new HashMap<String, String>();
+public static final String COLUMNA_COSTO_PAQUETE = "COLUMNA_COSTO_PAQUETE_PULVERIZACION";
+public static final Object COLUMNA_CANT_PASADAS = "CANT_PASADAS_PULVERIZACION";
 	
 	
 	Double costoPaquete ;//= (Long) simpleFeature.getAttribute("Costo");
 	Double cantPasadasHa ;//= (Integer) simpleFeature.getAttribute("Pasadas");	
 	Double costoLaborHa;
-	
 	Double importeHa;//es el (costo de lo agroquimicos de una pasada + el costo de labor de una pasada) por la cantidad de pasadas 
 	
 	
@@ -145,4 +137,11 @@ public class PulverizacionItem extends FeatureContainer{
 		};
 		return elements;
 	}
+
+	public static List<String> getRequieredColumns() {
+		List<String> requiredColumns = new ArrayList<String>();
+		requiredColumns.add(COLUMNA_COSTO_PAQUETE);		
+		return requiredColumns;
+	}
+	
 }

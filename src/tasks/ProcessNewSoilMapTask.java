@@ -32,7 +32,6 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
-import dao.RentabilidadItem;
 import dao.Suelo;
 import dao.SueloItem;
 import dao.config.Cultivo;
@@ -41,6 +40,7 @@ import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
+import dao.margen.MargenItem;
 import dao.pulverizacion.PulverizacionItem;
 import dao.siembra.SiembraItem;
 

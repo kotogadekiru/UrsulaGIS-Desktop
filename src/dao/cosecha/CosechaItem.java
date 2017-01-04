@@ -3,7 +3,6 @@ package dao.cosecha;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.opengis.feature.simple.SimpleFeature;
 
 import dao.FeatureContainer;

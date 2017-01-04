@@ -1,4 +1,4 @@
-package dao;
+package dao.margen;
 
 import java.util.Map;
 
@@ -13,8 +13,10 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 
+import dao.FeatureContainer;
 
-public class RentabilidadItem extends FeatureContainer{
+
+public class MargenItem extends FeatureContainer{
 	//Polygon harvestPolygon = (Polygon) geometry;
 	private Double importePulvHa ;//= getImportePulv(harvestPolygon);
 	private Double importeFertHa ;//= getImporteFert(harvestPolygon);
@@ -28,11 +30,11 @@ public class RentabilidadItem extends FeatureContainer{
 	private Double importeCosechaHa;
 	
 	
-	public RentabilidadItem(SimpleFeature feature) {
+	public MargenItem(SimpleFeature feature) {
 		super(feature);
 	}	
 	
-	public RentabilidadItem() {
+	public MargenItem() {
 	}
 
 	public Double getImportePulvHa() {
@@ -78,13 +80,8 @@ public class RentabilidadItem extends FeatureContainer{
 	}
 
 	public Double getCostoPorHa() {
-		return getImporteFertHa()+getImporteSiembraHa()+getImportePulvHa()+getCostoFijoPorHa();
-		
+		return getImporteFertHa()+getImporteSiembraHa()+getImportePulvHa()+getCostoFijoPorHa();		
 	}
-
-//	public void setCostoPorHa(Double costoPorHa) {
-//		this.costoPorHa = costoPorHa;
-//	}
 
 	public Double getIngresoHa() {
 		return ingresoHa;
@@ -99,34 +96,21 @@ public class RentabilidadItem extends FeatureContainer{
 			return new Double(getMargenPorHa()/getCostoPorHa()*100);
 		} else{
 			return new Double(0);
-		}
-		
+		}		
 	}
-
-
 
 	@Override
 	public Double getAmount() {
-	
 		return getRentabilidadHa();
-	}
-	@Override
-	protected Map<String, String> getColumnsMap() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	public void setImporteCosechaHa(Double importeCosechaPorHa) {
 		this.importeCosechaHa =importeCosechaPorHa; 
-		
 	}
 	
 	public Double getImporteCosechaHa() {
 		return this.importeCosechaHa; 
-		
 	}
-	
-	
 	
 	public Double getCostoFijoPorHa() {
 		return costoFijoPorHa;
@@ -135,48 +119,38 @@ public class RentabilidadItem extends FeatureContainer{
 	public void setCostoFijoPorHa(Double costoFijoPorHa) {
 		this.costoFijoPorHa = costoFijoPorHa;
 	}
-
-	public static SimpleFeatureType getType(){
-		SimpleFeatureType type=null;
-		try {
-			/*
-			 geom tiene que ser Point, Line o Polygon. no puede ser Geometry porque podria ser cualquiera y solo permite un tipo por archivo
-			 los nombre de las columnas no pueden ser de mas de 10 char
-			  */
-			
-			type = DataUtilities.createType("Rentabilidad",
-					"*geom:Polygon,"
-					+ "renta:Double,"
-					+ "margen:Double,"
-					+ "costoTo:Double,"
-					+ "ingreso:Double,"
-					+ "fertili:Double,"
-					+ "siembra:Double,"
-					+ "pulveri:Double"
-			);
-		} catch (SchemaException e) {
-			
-			e.printStackTrace();
-		}
-		return type;
-	}
 	
-	public SimpleFeature getFeature(SimpleFeatureBuilder featureBuilder){
-		
-		//SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(getType());
-		
-		featureBuilder.add(super.getGeometry());
-		featureBuilder.add(getRentabilidadHa());
-		featureBuilder.add(getMargenPorHa());
-		featureBuilder.add(getCostoPorHa());
-		featureBuilder.add(getIngresoHa());
-		featureBuilder.add(getImporteFertHa());		
-		featureBuilder.add(getImportePulvHa());
-		featureBuilder.add(getImporteSiembraHa());		
-				
-		SimpleFeature feature = featureBuilder.buildFeature(null);
-		return feature;
-		
+//	public SimpleFeature getFeature(SimpleFeatureBuilder featureBuilder){		
+//		featureBuilder.add(super.getGeometry());
+//		featureBuilder.add(getRentabilidadHa());
+//		featureBuilder.add(getMargenPorHa());
+//		featureBuilder.add(getCostoPorHa());
+//		featureBuilder.add(getIngresoHa());
+//		featureBuilder.add(getImporteFertHa());		
+//		featureBuilder.add(getImportePulvHa());
+//		featureBuilder.add(getImporteSiembraHa());		
+//				
+//		SimpleFeature feature = featureBuilder.buildFeature(null);
+//		return feature;
+//		
+//	}
+
+	@Override
+	public Double getImporteHa() {
+		return this.margenPorHa;
 	}
 
+	@Override
+	public Object[] getSpecialElementsArray() {
+		Object[] elements = new Object[]{
+				getRentabilidadHa(),
+				getMargenPorHa(),
+				getCostoPorHa(),
+				getIngresoHa(),
+				getImporteFertHa(),		
+				getImportePulvHa(),
+				getImporteSiembraHa()		
+		};
+		return elements;
+	}
 }

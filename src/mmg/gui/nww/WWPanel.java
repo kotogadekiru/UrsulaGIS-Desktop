@@ -4,13 +4,14 @@ import gov.nasa.worldwind.Model;
 import gov.nasa.worldwind.WorldWind;
 import gov.nasa.worldwind.WorldWindow;
 import gov.nasa.worldwind.avlist.AVKey;
+import gov.nasa.worldwind.awt.WorldWindowGLCanvas;
 import gov.nasa.worldwind.awt.WorldWindowGLJPanel;
 import gov.nasa.worldwind.event.SelectEvent;
 import gov.nasa.worldwind.layers.WorldMapLayer;
 import gov.nasa.worldwind.util.StatusBar;
 import gov.nasa.worldwindx.examples.ClickAndGoSelectListener;
 import gov.nasa.worldwindx.examples.util.HighlightController;
-
+import javafx.scene.layout.BorderPane;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -31,6 +32,7 @@ public class WWPanel extends JPanel {
 		super(new BorderLayout());
 
 		this.wwd = this.createWorldWindow();
+	//	((Component) this.wwd).setSize((int)canvasSize.getWidth()/4,(int) canvasSize.getHeight()/4);
 		((Component) this.wwd).setPreferredSize(canvasSize);
 
 		// Create the default model as described in the current worldwind
@@ -44,8 +46,10 @@ public class WWPanel extends JPanel {
 				.getWwd(), WorldMapLayer.class));
 
 		this.add((Component) this.wwd, BorderLayout.CENTER);
+		//this.setCenter(wwd);
 		if (includeStatusBar) {
 			this.statusBar = new StatusBar();
+			//this.setBottom(statusBar);
 			this.add(statusBar, BorderLayout.PAGE_END);
 			this.statusBar.setEventSource(wwd);
 		}
@@ -57,8 +61,9 @@ public class WWPanel extends JPanel {
 				SelectEvent.ROLLOVER);
 	}
 
-	@Override
+	//@Override
 	public void setPreferredSize(Dimension dim){
+	//	super.setPrefSize(dim.getWidth(),dim.getHeight());
 		super.setPreferredSize(dim);
 		((Component) this.wwd).setPreferredSize(dim);
 		//this.wwd.redraw();
@@ -66,7 +71,9 @@ public class WWPanel extends JPanel {
 	}
 
 	protected WorldWindow createWorldWindow() {//Este es el unico metodo de cambie de AppPanel porque sino no andaba con JavaFX
+		//return new WorldWindowGLCanvas();
 		return new WorldWindowGLJPanel();
+		//return new WorldWindow();
 	}
 
 	public WorldWindow getWwd() {

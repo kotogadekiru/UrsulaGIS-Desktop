@@ -331,25 +331,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			it.close();
 		}
 
-		//		//this.pathTooltips.clear();
-		//		labor.getLayer().removeAllRenderables();
-		//		for(CosechaItem c:itemsToShow){
-		//			Geometry g = c.getGeometry();
-		//			if(g instanceof Polygon){
-		//				//	pathTooltips.add(
-		//				getPathTooltip((Polygon)g,c);
-		//				//		);	
-		//			} else if(g instanceof MultiPolygon){
-		//				MultiPolygon mp = (MultiPolygon)g;			
-		//				for(int i=0;i<mp.getNumGeometries();i++){
-		//					Polygon p = (Polygon) (mp).getGeometryN(i);
-		//					getPathTooltip(p,c);
-		//					//	pathTooltips.add(getPathTooltip(p,c));	
-		//				}
-		//
-		//			}
-		//		}
-
+		//TODO resumir geometrias pero en base a la altimetria y dibujar los contornos en otra capa
 
 		runLater(itemsToShow);//XXX ojo! si son muchos esto me puede tomar toda la memoria.
 		//	canvasRunLater();

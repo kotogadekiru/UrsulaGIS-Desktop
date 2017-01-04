@@ -48,6 +48,7 @@ import dao.config.Cultivo;
 import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
+import dao.margen.Margen;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -207,6 +208,20 @@ public abstract class Labor<E extends FeatureContainer>  {
 					bool2.toString());
 		});
 		return doubleProperty;
+	}
+	
+	public static SimpleStringProperty initStringProperty(String key,Configuracion properties,List<String> availableColums){
+		SimpleStringProperty sProperty = new SimpleStringProperty(
+				properties.getPropertyOrDefault(key, key));
+		
+		if(availableColums!=null && !availableColums.contains(sProperty.get()) && availableColums.contains(key)){
+			sProperty.setValue(key);
+		}
+		
+		sProperty.addListener((obs, bool1, bool2) -> {
+			properties.setProperty(key,	bool2.toString());
+		});
+		return sProperty;
 	}
 
 	public abstract  String getTypeDescriptors();
@@ -424,7 +439,11 @@ public abstract class Labor<E extends FeatureContainer>  {
 	public void insertFeature(SimpleFeature f){
 		outCollection.add(f);
 	}
-
+	
+	public void constructClasificador() {
+		constructClasificador(getConfigLabor().getConfigProperties().getPropertyOrDefault(Clasificador.TIPO_CLASIFICADOR,
+				Clasificador.CLASIFICADOR_JENKINS));
+	}
 
 	public void constructClasificador(String nombreClasif) {
 		if (Clasificador.CLASIFICADOR_JENKINS.equalsIgnoreCase(nombreClasif)) {
@@ -442,7 +461,6 @@ public abstract class Labor<E extends FeatureContainer>  {
 			}
 			ocReader.close();
 			this.clasificador.constructHistogram(items);
-
 		}
 	}
 

@@ -73,7 +73,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 		List<String> availableColums = this.getAvailableColumns();		
 
 		//config = new SiembraConfig();
-		Configuracion properties = config.config;
+		Configuracion properties = getConfigLabor().getConfigProperties();
 
 		colSemillasMetroProperty = new SimpleStringProperty(
 				properties.getPropertyOrDefault(
@@ -270,6 +270,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 		colSemillasMetroProperty.setValue(columnsMap.get(SiembraLabor.COLUMNA_SEMILLAS_METRO));
 
 	}
+	
 	public static List<String> getRequieredColumns() {
 		List<String> requiredColumns = new ArrayList<String>();
 		requiredColumns.add(COLUMNA_SEMILLAS_METRO);		

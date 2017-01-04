@@ -17,9 +17,7 @@ import javafx.scene.text.TextAlignment;
 public class DoubleTableColumn<T> extends TableColumn<T,String> {
 	public DoubleTableColumn(String title,Function<T,Double>  getMethod, BiConsumer<T,Double> setMethod){
 		super(title);	
-		//TableColumn<Monitor,String> vacasOrdenie = new TableColumn<Monitor,String>(title);		
-	
-			setEditable(setMethod != null);
+				setEditable(setMethod != null);
 			DecimalFormat df = new DecimalFormat("###,###.###");
 		
 		//	 this.setCellValueFactory(new PropertyValueFactory<T, Date>("date"));

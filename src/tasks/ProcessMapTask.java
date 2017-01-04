@@ -1,6 +1,5 @@
 package tasks;
 
-import java.awt.Font;
 import java.io.IOException;
 import java.nio.DoubleBuffer;
 import java.text.DecimalFormat;
@@ -28,11 +27,9 @@ import dao.FeatureContainer;
 import dao.Labor;
 import gov.nasa.worldwind.WorldWind;
 import gov.nasa.worldwind.avlist.AVKey;
-import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Extent;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Sector;
-import gov.nasa.worldwind.render.BasicBalloonAttributes;
 import gov.nasa.worldwind.render.BasicShapeAttributes;
 import gov.nasa.worldwind.render.DrawContext;
 import gov.nasa.worldwind.render.Material;
@@ -62,7 +59,6 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
-import mmg.gui.nww.HiDPIHelper;
 import utils.ProyectionConstants;
 //import org.opengis.filter.FilterFactory2;
 
@@ -106,7 +102,7 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
 	protected abstract int getAmountMin() ;
 	protected abstract int gerAmountMax() ;
 
-
+ @Deprecated
 	protected gov.nasa.worldwind.render.ExtrudedPolygon  getPathFromGeom(Geometry poly, FC dao) {	
 		// Set the coordinates (in degrees) to draw your polygon
 		// To radians just change the method the class Position
@@ -223,12 +219,12 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
 					List<Position> interiorPositions = coordinatesToPositions(forPolygon.getInteriorRingN(interiorN).getCoordinates());
 					renderablePolygon.addInnerBoundary(interiorPositions);
 				}
-				renderablePolygon.setValue(AVKey.DISPLAY_NAME, tooltipText);
+				renderablePolygon.setValue(AVKey.DISPLAY_NAME, tooltipText);// el tooltip se muestra con el nww.ToolTipAnnotation
 				//renderablePolygon.setValue(AVKey., value)
 			
 //				renderablePolygon.setHighlightAttributes(highlightAttrs);
 				
-				renderablePolygon.setEnableBatchRendering(true);
+				renderablePolygon.setEnableBatchRendering(false);//XXX saco esto para ver si causa el problema del rendering
 				labor.getLayer().addRenderable(renderablePolygon);
 				//renderablePolygons.add(renderablePolygon);
 
@@ -519,7 +515,11 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
 		Color colorMin = null;
 		Color colorMax = null;
 		
+		
+		int workDone = 0;
 		for(FC c:itemsToShow){
+			this.updateProgress(workDone, itemsToShow.size());
+			workDone++;
 			double amount = c.getAmount();
 			if( min>amount){
 				min=amount;
@@ -539,7 +539,7 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
 				MultiPolygon mp = (MultiPolygon)g;			
 				for(int i=0;i<mp.getNumGeometries();i++){
 					Polygon p = (Polygon) (mp).getGeometryN(i);
-					getPathTooltip(p,c);
+					getPathTooltip(p,c);//se construye el poligono y se agrega al layer
 					//	pathTooltips.add(getPathTooltip(p,c));	
 				}
 
@@ -551,22 +551,26 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
 		double HUE_MAX = colorMax.getHue()/ 360d;//240d / 360d;
 		
 	
-		Format legendLabelFormat = new DecimalFormat() ;
+		//Format legendLabelFormat = new DecimalFormat() ;
+		DecimalFormat legendLabelFormat = new DecimalFormat("#.00");
 		final AnalyticSurfaceLegend legend = AnalyticSurfaceLegend.fromColorGradient(min, max,
 				HUE_MIN, HUE_MAX,
 				AnalyticSurfaceLegend.createDefaultColorGradientLabels(min, max, legendLabelFormat),
 				AnalyticSurfaceLegend.createDefaultTitle(labor.getNombreProperty().get()));
-		legend.setOpacity(1);
+		legend.setOpacity(0.6);
 		legend.setScreenLocation(new java.awt.Point(100, 400));
 		
-		
+    	ReferencedEnvelope bounds = labor.outCollection.getBounds();//null pointer
+        
+        Sector sector =  Sector.fromDegrees(bounds.getMinY(), bounds.getMaxY(),bounds.getMinX() ,bounds.getMaxX());
+        
 
-		Renderable renderable =  new Renderable(){
+		Renderable analiticLegendrenderable =  new Renderable(){
             public void render(DrawContext dc){
-            	ReferencedEnvelope bounds = labor.outCollection.getBounds();
-            
-             Sector sector =  Sector.fromDegrees(bounds.getMinY(), bounds.getMaxY(),bounds.getMinX() ,bounds.getMaxX());
-              Extent extent =  Sector.computeBoundingBox(dc.getGlobe(), dc.getVerticalExaggeration(), sector );
+            	//FIXME 2017-01-02T18:30:35.649-0300  SEVERE  Exception while picking Renderable
+            	// 2017-01-02T18:30:35.828-0300  SEVERE  Exception while rendering Renderable
+            	// java.util.ConcurrentModificationException
+         Extent extent =  Sector.computeBoundingBox(dc.getGlobe(), dc.getVerticalExaggeration(), sector );
                 if (!extent.intersects(dc.getView().getFrustumInModelCoordinates()))
                     return;
 
@@ -577,7 +581,7 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
             }
         };
         
-		labor.getLayer().addRenderable(renderable);
+		labor.getLayer().addRenderable(analiticLegendrenderable);
 		Coordinate centre = labor.outCollection.getBounds().centre();
 
 		
@@ -585,9 +589,9 @@ public abstract class ProcessMapTask<FC extends FeatureContainer,E extends Labor
 		PointPlacemark pmStandard = new PointPlacemark(pointPosition);
 		PointPlacemarkAttributes pointAttribute = new PointPlacemarkAttributes();
 		pointAttribute.setImageColor(java.awt.Color.red);
-		if(HiDPIHelper.isHiDPI()){
-			pointAttribute.setLabelFont(java.awt.Font.decode("Verdana-Bold-50"));
-		}
+//		if(HiDPIHelper.isHiDPI()){
+//			pointAttribute.setLabelFont(java.awt.Font.decode("Verdana-Bold-50"));
+//		}
 		pointAttribute.setLabelMaterial(Material.DARK_GRAY);
 		pmStandard.setLabelText(labor.nombreProperty.get());
 		pmStandard.setAttributes(pointAttribute);

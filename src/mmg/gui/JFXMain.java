@@ -25,11 +25,13 @@ import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Sector;
 import gov.nasa.worldwind.globes.ElevationModel;
 import gov.nasa.worldwind.globes.Globe;
+import gov.nasa.worldwind.layers.BasicTiledImageLayer;
 import gov.nasa.worldwind.layers.CompassLayer;
 import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.LayerList;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import gov.nasa.worldwind.layers.SurfaceImageLayer;
+import gov.nasa.worldwind.layers.TiledImageLayer;
 import gov.nasa.worldwind.layers.ViewControlsLayer;
 import gov.nasa.worldwind.layers.ViewControlsSelectListener;
 import gov.nasa.worldwind.layers.placename.PlaceNameLayer;
@@ -62,6 +64,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBuffer;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -75,6 +78,7 @@ import java.text.Format;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -115,6 +119,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Alert.AlertType;
@@ -130,6 +135,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
@@ -183,6 +189,21 @@ import tasks.ProcessSiembraMapTask;
 import tasks.ProcessSoilMapTask;
 import tasks.UnirCosechasMapTask;
 
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpResponseException;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.GenericJson;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.JsonObjectParser;
+import com.google.api.client.json.jackson.JacksonFactory;
+import com.jujutsu.tsne.barneshut.BarnesHutTSne;
+import com.jujutsu.tsne.barneshut.ParallelBHTsne;
+import com.jujutsu.utils.MatrixOps;
 import com.sun.javafx.runtime.async.BackgroundExecutor;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
@@ -190,8 +211,6 @@ import com.vividsolutions.jts.index.quadtree.Quadtree;
 import dao.Clasificador;
 import dao.FeatureContainer;
 import dao.Labor;
-import dao.Margen;
-import dao.RentabilidadItem;
 import dao.SueloItem;
 import dao.config.Configuracion;
 //
@@ -203,25 +222,25 @@ import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
+import dao.margen.Margen;
+import dao.margen.MargenItem;
 import dao.pulverizacion.PulverizacionItem;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
 
 public class JFXMain extends Application {
-	private static final String TITLE_VERSION = "WorldWind MarginMapViewer 0.2.14";
+	private static final String TITLE_VERSION = "Agrotoolbox 0.2.15";
 	static final String ICON = "mmg/gui/1-512.png";
 	//private static final String SOUND_FILENAME = "D:/Users/workspaceHackaton2015/WorldWindMarginMap/src/mmg/gui/Alarm08.wav";
 	private static final String SOUND_FILENAME = "Alarm08.wav";//TODO cortar este wav porque suena 2 veces
-	private Stage stage;
-	private Scene scene;
-
-
+	private Stage stage=null;
+	private Scene scene=null;
 
 	private Dimension canvasSize = new Dimension(1500, 800);
 
-	protected WWPanel wwjPanel;
-	protected LayerPanel layerPanel;
+	protected WWPanel wwjPanel=null;
+	protected LayerPanel layerPanel=null;
 	private VBox progressBox = new VBox();
 
 	//guardo referencia a las capas importadas o generadas
@@ -233,6 +252,7 @@ public class JFXMain extends Application {
 	private List<Margen> margenes= new ArrayList<Margen>();
 
 	private ExecutorService executorPool = Executors.newCachedThreadPool();
+	private Node wwNode=null;//contiene el arbol con los layers y el swingnode con el world wind
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
@@ -293,14 +313,14 @@ public class JFXMain extends Application {
 		};
 
 		pfMapTask.setOnSucceeded(handler -> {			
-			Node wwNode = (Node) handler.getSource().getValue();
+			wwNode = (Node) handler.getSource().getValue();
 			vBox1.getChildren().add( wwNode);
 			this.wwjPanel.repaint();	
 		});
 		executorPool.execute(pfMapTask);
 	}
 
-	protected BorderPane initializeWorldWind() {
+	protected Node initializeWorldWind() {
 		try {//com.sun.java.swing.plaf.windows.WindowsLookAndFeel
 			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");//UIManager.getSystemLookAndFeelClassName());
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
@@ -317,13 +337,13 @@ public class JFXMain extends Application {
 		wwSwingNode.setContent(wwjPanel);
 		// Put the pieces together.
 		//wwSwingNode.autosize();
-		this.layerPanel = new LayerPanel(this.wwjPanel.getWwd());
+		this.layerPanel = new LayerPanel(this.wwjPanel.getWwd(),stage.widthProperty(),stage.heightProperty());
 		this.layerPanel.addToScrollPaneBottom(progressBox);
 
 		setAccionesCosechas();
 
 		this.stage.widthProperty().addListener((o,old,nu)->{
-			this.wwjPanel.setPreferredSize(new Dimension(nu.intValue(),(int)stage.getHeight()));
+			this.wwjPanel.setPreferredSize(new Dimension(nu.intValue(),(int)stage.getWidth()));
 			this.wwjPanel.repaint();
 		});
 
@@ -337,11 +357,13 @@ public class JFXMain extends Application {
 			this.wwjPanel.repaint();	
 		});
 
-		BorderPane hbox = new BorderPane();
-		hbox.setLeft(layerPanel);
+		SplitPane sp = new SplitPane();
+		sp.getItems().addAll(layerPanel, wwSwingNode);
+		sp.setDividerPositions(0.15f);
+		//hbox.set(layerPanel);
 		//		wwSwingNode.setScaleX(1.5);
 		//		wwSwingNode.setScaleY(1.5);
-		hbox.setCenter(wwSwingNode);
+		//	hbox.setCenter(wwSwingNode);
 
 		// Create and install the view controls layer and register a controller
 		// for it with the World Window.
@@ -389,7 +411,7 @@ public class JFXMain extends Application {
 		// Center the application on the screen.
 		// WWUtil.alignComponent(null, this, AVKey.CENTER);
 		stage.setResizable(true);
-		return hbox;
+		return sp;
 	}
 
 	public static void setDefaultSize(int size) {
@@ -526,6 +548,20 @@ public class JFXMain extends Application {
 			}});
 
 		/**
+		 * Accion permite obtener ndvi
+		 */
+		predicates.add(new Function<Layer,String>(){			
+			@Override
+			public String apply(Layer layer) {
+				if(layer==null){
+					return "Obtener NDVI"; 
+				} else{
+					getNdviTiffFile((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+					return "ndvi obtenido" + layer.getName();
+				}
+			}});
+
+		/**
 		 * Accion muestra una tabla con los datos de la cosecha
 		 */
 		predicates.add(new Function<Layer,String>(){			
@@ -571,6 +607,7 @@ public class JFXMain extends Application {
 						cosechas.remove(labor);
 						System.out.println("cosechas despues de remover: "+cosechas.size());
 						layer.dispose();
+						getLayerPanel().update(getWwd());
 					}
 					return "layer removido" + layer.getName();
 				}
@@ -581,9 +618,8 @@ public class JFXMain extends Application {
 
 
 
-	protected void importElevations(){
-		try
-		{
+	private void importElevations(){
+		try{
 			// Download the data and save it in a temp file.
 			//  File sourceFile = ExampleUtil.saveResourceToTempFile(ELEVATIONS_PATH, ".tif");
 
@@ -597,32 +633,24 @@ public class JFXMain extends Application {
 			};
 			//  elevationModel.addElevations(sourceFile);
 
-			executorPool.execute(
-					//SwingUtilities.invokeLater(
-					new Runnable()
-					{
-						public void run()
-						{
-							// Get the WorldWindow's current elevation model.
-							Globe globe = getWwd().getModel().getGlobe();
-							ElevationModel currentElevationModel = globe.getElevationModel();
+			executorPool.execute(()->{
+				// Get the WorldWindow's current elevation model.
+				Globe globe = getWwd().getModel().getGlobe();
+				ElevationModel currentElevationModel = globe.getElevationModel();
 
-							// Add the new elevation model to the globe.
-							if (currentElevationModel instanceof CompoundElevationModel)
-								((CompoundElevationModel) currentElevationModel).addElevationModel(elevationModel);
-							else
-								globe.setElevationModel(elevationModel);
+				// Add the new elevation model to the globe.
+				if (currentElevationModel instanceof CompoundElevationModel)
+					((CompoundElevationModel) currentElevationModel).addElevationModel(elevationModel);
+				else
+					globe.setElevationModel(elevationModel);
 
-							// Set the view to look at the imported elevations, although they might be hard to detect. To
-							// make them easier to detect, replace the globe's CompoundElevationModel with the new elevation
-							// model rather than adding it.
-							//     Sector modelSector = elevationModel.getSector();
-							//   ExampleUtil.goTo(getWwd(), modelSector);
-						}
-					});
-		}
-		catch (Exception e)
-		{
+				// Set the view to look at the imported elevations, although they might be hard to detect. To
+				// make them easier to detect, replace the globe's CompoundElevationModel with the new elevation
+				// model rather than adding it.
+				//     Sector modelSector = elevationModel.getSector();
+				//   ExampleUtil.goTo(getWwd(), modelSector);
+			});
+		}catch (Exception e){
 			e.printStackTrace();
 		}
 	}
@@ -734,6 +762,7 @@ public class JFXMain extends Application {
 		addMenuItem("Pulverizacion",(a)->doOpenPulvMap(),menuImportar);
 		addMenuItem("Cosecha",(a)->doOpenHarvestMap(null),menuImportar);		
 		addMenuItem("NDVI",(a)->doOpenTiffFile(),menuImportar);
+		addMenuItem("Imagen",(a)->importImagery(),menuImportar);
 
 		final Menu menuCalcular = new Menu("Calcular");
 		//insertMenuItem(menuCalcular,"Retabilidades",a->doProcessMargin());
@@ -789,6 +818,11 @@ public class JFXMain extends Application {
 
 
 	private void showAmountVsElevacionChart(Labor<?> cosechaLabor) {
+		TextInputDialog anchoDialog = new TextInputDialog("20");
+		anchoDialog.setTitle("Configure la cantidad de grupos deseados");
+		anchoDialog.setContentText("Max grupos");
+		Optional<String> oGrupos = anchoDialog.showAndWait();
+		int grupos=Integer.parseInt(oGrupos.get());
 		Labor<?>[] cosechasAux = new Labor[]{cosechaLabor};
 		if(cosechaLabor==null){
 			Optional<CosechaLabor> optional = HarvestSelectDialogController.select(this.cosechas);
@@ -804,7 +838,7 @@ public class JFXMain extends Application {
 			protected AmountVsElevacionChart call() throws Exception {
 				try{
 					//	Labor labor = optional.get();		
-					AmountVsElevacionChart histoChart = new AmountVsElevacionChart(cosechasAux[0]);
+					AmountVsElevacionChart histoChart = new AmountVsElevacionChart(cosechasAux[0],grupos);
 					return histoChart;
 				}catch(Throwable t){
 					t.printStackTrace();
@@ -882,19 +916,70 @@ public class JFXMain extends Application {
 		//		currentTaskThread.start();
 	}
 
+	private void getNdviTiffFile(Labor labor){
+		HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+		JsonFactory JSON_FACTORY = new JacksonFactory();
+		HttpRequestFactory requestFactory =
+				HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
+					@Override
+					public void initialize(HttpRequest request) {
+						request.setParser(new JsonObjectParser(JSON_FACTORY));
+					}
+				});
+		//PlusUrl url = PlusUrl.listPublicActivities(USER_ID).setMaxResults(MAX_RESULTS);
+		String geeURL ="http://gee-api-helper.herokuapp.com";
+		GenericUrl url = new GenericUrl( "http://www.lanacion.com.ar");
+		url.put("fields", "items(id,url,object(content,plusoners/totalItems))");
+
+		try {
+			HttpRequest request = requestFactory.buildGetRequest(url);
+			parseResponse(request.execute());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static void parseResponse(HttpResponse response) throws IOException {
+		String content = response.parseAsString();
+		System.out.println("la nacion content :\n"+content);
+		//	    ActivityFeed feed = response.parseAs(ActivityFeed.class);
+		//	    if (feed.getActivities().isEmpty()) {
+		//	      System.out.println("No activities found.");
+		//	    } else {
+		//	      if (feed.getActivities().size() == MAX_RESULTS) {
+		//	        System.out.print("First ");
+		//	      }
+		//	      System.out.println(feed.getActivities().size() + " activities found:");
+		//	      for (Activity activity : feed.getActivities()) {
+		//	        System.out.println();
+		//	        System.out.println("-----------------------------------------------");
+		//	        System.out.println("HTML Content: " + activity.getActivityObject().getContent());
+		//	        System.out.println("+1's: " + activity.getActivityObject().getPlusOners().getTotalItems());
+		//	        System.out.println("URL: " + activity.getUrl());
+		//	        System.out.println("ID: " + activity.get("id"));
+		//	      }
+		//	    }
+	}
+
+
 
 	private void doOpenTiffFile() {
 		List<File>	files =chooseFiles("TIF", "*.tif");
 		files.forEach((file)->{
 			executorPool.execute(()->{
-			
-				try{
 
+				try{
 					BufferWrapperRaster raster = this.loadRasterFile(file);
-					if (raster == null)
+
+					if (raster == null){
+
 						return;
+					}
 
 					double[] extremes = WWBufferUtil.computeExtremeValues(raster.getBuffer(), raster.getTransparentValue());
+
+					Collection<Object> values = raster.getValues();
+
 					if (extremes == null)
 						return;
 
@@ -902,7 +987,7 @@ public class JFXMain extends Application {
 					surface.setSector(raster.getSector());
 					surface.setDimensions(raster.getWidth(), raster.getHeight());
 
-					
+
 					double HUE_MIN = Clasificador.colors[0].getHue()/360d;//0d / 360d;
 					double HUE_MAX = Clasificador.colors[Clasificador.colors.length-1].getHue()/360d;//240d / 360d;
 					double transparentValue =raster.getTransparentValue();
@@ -932,37 +1017,37 @@ public class JFXMain extends Application {
 							AnalyticSurfaceLegend.createDefaultTitle(file.getName() + " NDVI Values"));
 					legend.setOpacity(1);
 					legend.setScreenLocation(new Point(100, 400));
-					
+
 					Renderable renderable =  new Renderable()
-			        {
-			            public void render(DrawContext dc)
-			            {
-			                Extent extent = surface.getExtent(dc);
-			                if (!extent.intersects(dc.getView().getFrustumInModelCoordinates()))
-			                    return;
+					{
+						public void render(DrawContext dc)
+						{
+							Extent extent = surface.getExtent(dc);
+							if (!extent.intersects(dc.getView().getFrustumInModelCoordinates()))
+								return;
 
-			                if (WWMath.computeSizeInWindowCoordinates(dc, extent) < 300)
-			                    return;
+							if (WWMath.computeSizeInWindowCoordinates(dc, extent) < 300)
+								return;
 
-			                legend.render(dc);
-			            }
-			        };
+							legend.render(dc);
+						}
+					};
 					SurfaceImageLayer layer = new SurfaceImageLayer();
 					layer.setName(file.getName());
 					layer.setPickEnabled(false);
 					layer.addRenderable(surface);
 					layer.addRenderable(renderable);
 					Platform.runLater(()-> {
-					// Add the layer to the model and update the application's layer panel.
-					insertBeforeCompass(getWwd(), layer);
-					this.getLayerPanel().update(this.getWwd());
+						// Add the layer to the model and update the application's layer panel.
+						insertBeforeCompass(getWwd(), layer);
+						this.getLayerPanel().update(this.getWwd());
 
-					// Set the view to look at the imported image.
-					ExampleUtil.goTo(getWwd(), raster.getSector());
-					playSound();
+						// Set the view to look at the imported image.
+						ExampleUtil.goTo(getWwd(), raster.getSector());
+						playSound();
 
-			
-			});//fin del run later
+
+					});//fin del run later
 				} catch (Exception e)     {
 					e.printStackTrace();
 				}
@@ -974,12 +1059,123 @@ public class JFXMain extends Application {
 
 	private boolean isLocalPath(String path){
 		return new File(path).exists();
-//	//	 path = "http://example.com/something.pdf";
-//		if (path.matches("(?!file\\b)\\w+?:\\/\\/.*")) {
-//		    // Not a local file
-//			return false;
-//		}
-//		return true;
+		//	//	 path = "http://example.com/something.pdf";
+		//		if (path.matches("(?!file\\b)\\w+?:\\/\\/.*")) {
+		//		    // Not a local file
+		//			return false;
+		//		}
+		//		return true;
+	}
+
+
+	protected void importImagery()  {
+		List<File>	files =chooseFiles("TIF", "*.tif");
+		files.forEach((file)->{
+			executorPool.execute(()->{	
+				try {
+					// Read the data and save it in a temp file.
+					File sourceFile = file;
+
+					// Create a raster reader to read this type of file. The reader is created from the currently
+					// configured factory. The factory class is specified in the Configuration, and a different one can be
+					// specified there.
+					DataRasterReaderFactory readerFactory
+					= (DataRasterReaderFactory) WorldWind.createConfigurationComponent(
+							AVKey.DATA_RASTER_READER_FACTORY_CLASS_NAME);
+					DataRasterReader reader = readerFactory.findReaderFor(sourceFile, null);
+
+					// Before reading the raster, verify that the file contains imagery.
+					AVList metadata = reader.readMetadata(sourceFile, null);
+					if (metadata == null || !AVKey.IMAGE.equals(metadata.getStringValue(AVKey.PIXEL_FORMAT)))
+						throw new Exception("Not an image file.");
+
+					// Read the file into the raster. read() returns potentially several rasters if there are multiple
+					// files, but in this case there is only one so just use the first element of the returned array.
+					DataRaster[] rasters = reader.read(sourceFile, null);
+					if (rasters == null || rasters.length == 0)
+						throw new Exception("Can't read the image file.");
+
+					DataRaster raster = rasters[0];
+
+					// Determine the sector covered by the image. This information is in the GeoTIFF file or auxiliary
+					// files associated with the image file.
+					final Sector sector = (Sector) raster.getValue(AVKey.SECTOR);
+					if (sector == null)
+						throw new Exception("No location specified with image.");
+
+					// Request a sub-raster that contains the whole image. This step is necessary because only sub-rasters
+					// are reprojected (if necessary); primary rasters are not.
+					int width = raster.getWidth();
+					int height = raster.getHeight();
+					
+
+					// getSubRaster() returns a sub-raster of the size specified by width and height for the area indicated
+					// by a sector. The width, height and sector need not be the full width, height and sector of the data,
+					// but we use the full values of those here because we know the full size isn't huge. If it were huge
+					// it would be best to get only sub-regions as needed or install it as a tiled image layer rather than
+					// merely import it.
+					DataRaster subRaster = raster.getSubRaster(width, height, sector, null);
+
+					// Tne primary raster can be disposed now that we have a sub-raster. Disposal won't affect the
+					// sub-raster.
+					raster.dispose();
+
+					// Verify that the sub-raster can create a BufferedImage, then create one.
+					if (!(subRaster instanceof BufferedImageRaster))
+						throw new Exception("Cannot get BufferedImage.");
+					BufferedImage image = ((BufferedImageRaster) subRaster).getBufferedImage();
+
+				
+					DataBuffer buffer = image.getData().getDataBuffer();
+			
+					
+					double [][] doubleArray = new double[width*height][3];
+					for(int x=0;x<width;x++){
+						for(int y=0;y<height;y++){
+							int index = y*width+x;
+						double r = buffer.getElemDouble(0,index);
+						double g = buffer.getElemDouble(1,index);
+						double v = buffer.getElemDouble(2,index);
+						doubleArray[index][0]=r;
+						doubleArray[index][1]=g;
+						doubleArray[index][2]=v;
+					
+						}
+					}
+					 BarnesHutTSne  tsne = new ParallelBHTsne();
+					  double [][] Y = tsne.tsne(doubleArray, 1, 3, 20);   
+					  System.out.println(MatrixOps.doubleArrayToPrintString(Y, ", ", 50,10));
+					
+					// The sub-raster can now be disposed. Disposal won't affect the BufferedImage.
+					subRaster.dispose();
+					
+					
+					// Create a SurfaceImage to display the image over the specified sector.
+					final SurfaceImage si1 = new SurfaceImage(image, sector);
+
+					// On the event-dispatch thread, add the imported data as an SurfaceImageLayer.
+					Platform.runLater(()->{
+						// Add the SurfaceImage to a layer.
+						SurfaceImageLayer layer = new SurfaceImageLayer();
+						layer.setName("Imported Surface Image");
+						layer.setPickEnabled(false);
+						layer.addRenderable(si1);
+
+						// Add the layer to the model and update the application's layer panel.
+						insertBeforeCompass(getWwd(), layer);
+						this.getLayerPanel().update(this.getWwd());
+
+
+						// Set the view to look at the imported image.
+						ExampleUtil.goTo(getWwd(), sector);
+
+					});
+				}
+				catch (Exception e){
+					e.printStackTrace();
+				}
+			});//execute
+		});//foreach
 	}
 
 	private BufferWrapperRaster loadRasterFile(File file){
@@ -987,22 +1183,29 @@ public class JFXMain extends Application {
 			//TODO si el recurso es web podemos bajarlo a 
 			// Download the data and save it in a temp file.
 			String path = file.getAbsolutePath();
-			 file = ExampleUtil.saveResourceToTempFile(path, "." + WWIO.getSuffix(path));
+			file = ExampleUtil.saveResourceToTempFile(path, "." + WWIO.getSuffix(path));
 		}
-	
-	
+
+
 
 		// Create a raster reader for the file type.
 		DataRasterReaderFactory readerFactory = (DataRasterReaderFactory) WorldWind.createConfigurationComponent(
 				AVKey.DATA_RASTER_READER_FACTORY_CLASS_NAME);
 		DataRasterReader reader = readerFactory.findReaderFor(file, null);
 
-		try
-		{
+		try{
 			// Before reading the raster, verify that the file contains elevations.
 			AVList metadata = reader.readMetadata(file, null);
 			if (metadata == null || !AVKey.ELEVATION.equals(metadata.getStringValue(AVKey.PIXEL_FORMAT)))
 			{
+				Platform.runLater(()->{
+					Alert imagenAlert = new Alert(Alert.AlertType.ERROR);
+					imagenAlert.initOwner(stage);
+					imagenAlert.initModality(Modality.NONE);
+					imagenAlert.setTitle("Archivo no compatible");
+					imagenAlert.setContentText("El archivo no continen informacion ndvi. Por favor seleccione un archivo con solo una capa");
+					imagenAlert.show();
+				});
 				String msg = Logging.getMessage("ElevationModel.SourceNotElevations", file.getAbsolutePath());
 				Logging.logger().severe(msg);
 				throw new IllegalArgumentException(msg);
@@ -1010,8 +1213,7 @@ public class JFXMain extends Application {
 
 			// Read the file into the raster.
 			DataRaster[] rasters = reader.read(file, null);
-			if (rasters == null || rasters.length == 0)
-			{
+			if (rasters == null || rasters.length == 0)	{
 				String msg = Logging.getMessage("ElevationModel.CannotReadElevations", file.getAbsolutePath());
 				Logging.logger().severe(msg);
 				throw new WWRuntimeException(msg);
@@ -1060,7 +1262,27 @@ public class JFXMain extends Application {
 		if (stores != null) {
 			for(FileDataStore store : stores){//abro cada store y lo dibujo en el harvestMap individualmente
 				CosechaLabor labor = new CosechaLabor(store);
-				labor.setLayer(new RenderableLayer());
+				
+				//TODO sobreescribir el metodo render del layer para que solo renderee una vez y despues solo lo haga en una imagen de backup
+				RenderableLayer layer = new RenderableLayer();
+//				{
+//					Image backing =null;
+//					@Override
+//					public void render(DrawContext dc){
+//						if(backing ==null){
+//						for(Renderable r:this.renderables){
+//						
+//							super.render(dc);
+//							if(r instanceof gov.nasa.worldwind.render.Polygon){
+//								gov.nasa.worldwind.render.Polygon p = (gov.nasa.worldwind.render.Polygon) r;
+////								Object is = p.getTexture();
+//							}
+//							
+//						}}
+//					
+//					}
+//				};
+				labor.setLayer(layer);
 
 				Optional<CosechaLabor> cosechaConfigured= HarvestConfigDialogController.config(labor);
 				if(!cosechaConfigured.isPresent()){//
@@ -1118,7 +1340,7 @@ public class JFXMain extends Application {
 				this.getLayerPanel().update(this.getWwd());
 				umTask.uninstallProgressBar();
 				//	viewGoTo(ret);
-
+				this.wwjPanel.repaint();
 				System.out.println("EditHarvestMapTask succeded");
 				playSound();
 			});//fin del OnSucceeded						
@@ -1214,24 +1436,24 @@ public class JFXMain extends Application {
 		Optional<FertilizacionLabor> cosechaConfigured= FertilizacionConfigDialogController.config(labor);
 		if(!cosechaConfigured.isPresent()){//
 			System.out.println("el dialogo termino con cancel asi que no continuo con la cosecha");
-			continue;
+			return;
 		}							
 
-		RecomendFertFromHarvestPotentialMapTask umTask = new RecomendFertFromHarvestPotentialMapTask(labor);
-		umTask.installProgressBar(progressBox);
-
-		//	testLayer();
-		umTask.setOnSucceeded(handler -> {
-			FertilizacionLabor ret = (FertilizacionLabor)handler.getSource().getValue();
-			fertilizaciones.add(ret);//TODO cambiar esto cuando cambie las acciones a un menu contextual en layerPanel
-			insertBeforeCompass(getWwd(), ret.getLayer());
-			this.getLayerPanel().update(this.getWwd());
-			umTask.uninstallProgressBar();
-			viewGoTo(ret);
-
-			System.out.println("RecomendFertFromHarvestPotentialMapTask succeded");
-		});//fin del OnSucceeded
-		umTask.start();
+//		RecomendFertFromHarvestPotentialMapTask umTask = new RecomendFertFromHarvestPotentialMapTask(labor);
+//		umTask.installProgressBar(progressBox);
+//
+//		//	testLayer();
+//		umTask.setOnSucceeded(handler -> {
+//			FertilizacionLabor ret = (FertilizacionLabor)handler.getSource().getValue();
+//			fertilizaciones.add(ret);//TODO cambiar esto cuando cambie las acciones a un menu contextual en layerPanel
+//			insertBeforeCompass(getWwd(), ret.getLayer());
+//			this.getLayerPanel().update(this.getWwd());
+//			umTask.uninstallProgressBar();
+//			viewGoTo(ret);
+//
+//			System.out.println("RecomendFertFromHarvestPotentialMapTask succeded");
+//		});//fin del OnSucceeded
+//		umTask.start();
 	}
 
 	/**
@@ -1319,11 +1541,12 @@ public class JFXMain extends Application {
 			ProcessSiembraMapTask psMapTask = 
 					new ProcessSiembraMapTask(siembra);
 			//		sgroup, precioLabor,  precioInsumo, store);
-			ProgressBar progressBarTask = new ProgressBar();
-			progressBox.getChildren().add(progressBarTask);
-			progressBarTask.setProgress(0);
-			progressBarTask.progressProperty().bind(
-					psMapTask.progressProperty());
+			psMapTask.installProgressBar(progressBox);
+			//			ProgressBar progressBarTask = new ProgressBar();
+			//			progressBox.getChildren().add(progressBarTask);
+			//			progressBarTask.setProgress(0);
+			//			progressBarTask.progressProperty().bind(
+			//					psMapTask.progressProperty());
 			//			Thread currentTaskThread = new Thread(psMapTask);
 			//			currentTaskThread.setDaemon(true);
 			//			currentTaskThread.start();
@@ -1358,26 +1581,23 @@ public class JFXMain extends Application {
 
 			Optional<Map<String, String>> result = csd.showAndWait();
 
+			PulverizacionLabor labor = new PulverizacionLabor(store);
 			Map<String, String> columns = null;
 			if (result.isPresent()) {
 				columns = result.get();
 
-				PulverizacionLabor.setColumnsMap(columns);
+				labor.setColumnsMap(columns);
 				System.out.println("columns map: " + columns);
 			} else {
 				System.out.println("columns names not set");
 			}
 
-			Double precioLabor = Costos.getInstance().precioPulvProperty.getValue(); 
+			//Double precioLabor = Costos.getInstance().precioPulvProperty.getValue(); 
 
 			//Group pGroup = new Group();
-			PulverizacionLabor pl = new PulverizacionLabor(store);
-			ProcessPulvMapTask pulvmTask = new ProcessPulvMapTask(pl);
-			ProgressBar progressBarTask = new ProgressBar();
-			progressBox.getChildren().add(progressBarTask);
-			progressBarTask.setProgress(0);
-			progressBarTask.progressProperty().bind(
-					pulvmTask.progressProperty());
+			//PulverizacionLabor pl = new PulverizacionLabor(store);
+			ProcessPulvMapTask pulvmTask = new ProcessPulvMapTask(labor);
+			pulvmTask.installProgressBar(progressBox);
 			//			Thread currentTaskThread = new Thread(pulvmTask);
 			//			currentTaskThread.setDaemon(true);
 			//			currentTaskThread.start();
@@ -1398,9 +1618,9 @@ public class JFXMain extends Application {
 	}
 
 	private void doProcessMargin() {		
-		FileDataStore store = chooseShapeFileAndGetStore();
+		//FileDataStore store = chooseShapeFileAndGetStore();
 
-		if (store != null) {
+		//if (store != null) {
 
 			System.out.println("processingMargins");
 
@@ -1427,7 +1647,7 @@ public class JFXMain extends Application {
 				progressBox.getChildren().remove(progressBarTask);
 			});
 			executorPool.execute(uMmTask);
-		}
+		//}
 	}
 
 	//	private void doExportMargins() {
@@ -1878,7 +2098,7 @@ public class JFXMain extends Application {
 		SnapshotParameters params = new SnapshotParameters();
 		params.setFill(Color.TRANSPARENT);
 
-		WritableImage image = layerPanel.snapshot(params, null);
+		WritableImage image = wwNode.snapshot(params, null);
 		FileChooser fileChooser = new FileChooser();
 		fileChooser.setTitle("Save Image");
 

@@ -1,48 +1,32 @@
 package tasks;
 
-import gov.nasa.worldwind.render.ExtrudedPolygon;
-
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import javafx.scene.Group;
-import javafx.scene.shape.Path;
-
-import org.geotools.data.FileDataStore;
-import org.geotools.data.simple.SimpleFeatureCollection;
-import org.geotools.data.simple.SimpleFeatureIterator;
-import org.geotools.data.simple.SimpleFeatureSource;
-import org.opengis.feature.simple.SimpleFeature;
+import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.geometry.BoundingBox;
-
-import utils.ProyectionConstants;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
-import dao.Costos;
-import dao.Margen;
-import dao.RentabilidadItem;
-import dao.config.Configuracion;
+import dao.FeatureContainer;
+import dao.Labor;
 import dao.cosecha.CosechaConfig;
-import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
-import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
-import dao.pulverizacion.PulverizacionItem;
+import dao.margen.Margen;
+import dao.margen.MargenItem;
 import dao.pulverizacion.PulverizacionLabor;
-import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
+import utils.ProyectionConstants;
 
-public class ProcessMarginMapTask extends ProcessMapTask<RentabilidadItem,Margen> {
+public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 	//	public Group map = new Group();
 
 	double distanciaAvanceMax = 0;
@@ -62,110 +46,65 @@ public class ProcessMarginMapTask extends ProcessMapTask<RentabilidadItem,Margen
 	Double costoFijoHa;
 
 	public ProcessMarginMapTask(Margen margen, List<PulverizacionLabor> pulverizaciones, List<FertilizacionLabor> fertilizaciones, List<SiembraLabor> siembras,List<CosechaLabor> cosechas) {
-//		this.store = store;
-//		this.layer = map;
+		super(margen);
 		this.fertilizaciones = fertilizaciones;
 		this.pulverizaciones = pulverizaciones;
 		this.siembras = siembras;
 		this.cosechas = cosechas;
-		this.costoFijoHa = Costos.getInstance().costoFijoHaProperty.getValue();
+
+		this.costoFijoHa = margen.costoFijoHaProperty.getValue();
 
 		System.out.println("inicializando ProcessMarginMapTask con costo Fijo = "+ costoFijoHa);
 	}
 
 
 	public void doProcess() throws IOException {
-	//	this.featureTree = new Quadtree();
-
-	
-
-		// TODO si harvestTree es null crear grilla adecuada y calcular los
-		// costos
-		//		@SuppressWarnings("unchecked")
-		//		List<Cosecha> features = this.harvestTree.queryAll();
-		// Iterator<SimpleFeature> featuresIterator = features.iterator();
-
-	
+		//	this.featureTree = new Quadtree();
 		featureNumber = 0;
 
-		List<RentabilidadItem> itemsByIndex = new ArrayList<RentabilidadItem>();
-		List<RentabilidadItem> itemsByAmount = new ArrayList<RentabilidadItem>();
-		List<Polygon> geometryList = null;
-		if(Configuracion.getInstance().getGenerarMapaRentabilidadFromShp()){
-			geometryList = new ArrayList<Polygon>();
-
-			SimpleFeatureSource featureSource = store.getFeatureSource();
-			SimpleFeatureCollection featureCollection = featureSource.getFeatures();
-			SimpleFeatureIterator featuresIterator = featureCollection.features();
-			while (featuresIterator.hasNext()) {
-				SimpleFeature simpleFeature = featuresIterator.next();
-				Object geometry = simpleFeature.getDefaultGeometry();//cosehaItem.getGeometry();
-
-				if (geometry instanceof Polygon) {		
-					Polygon polygon = (Polygon) geometry;			
-					geometryList.add(polygon);	
-				} else if(geometry instanceof MultiPolygon){
-					MultiPolygon multipolygon = (MultiPolygon) geometry;
-					for(int indicePolygono=0; indicePolygono<multipolygon.getNumGeometries();indicePolygono++){
-						Polygon p = (Polygon) multipolygon.getGeometryN(indicePolygono);
-						geometryList.add(p);	
-					}
-				}
-			}	
-		}else{
-			geometryList = construirGrilla(getBounds());
-		}
-
+		List<Polygon> geometryList = construirGrilla(getBounds());
 
 		featureCount = geometryList.size();
-		
-		geometryList.parallelStream().forEach(polygon->{			
-			RentabilidadItem renta = createRentaForPoly(polygon);			
+		List<MargenItem> itemsToShow = new ArrayList<MargenItem>();
+		geometryList.parallelStream().forEach(polygon->{	
+			featureNumber++;
+			updateProgress(featureNumber, featureCount);	
+			MargenItem renta = createRentaForPoly(polygon);			
 			if(renta.getCostoPorHa()>0||renta.getImporteCosechaHa()>0){
-			itemsByIndex.add(renta);
-			featureTree.insert(polygon.getEnvelopeInternal(), renta);
+				labor.insertFeature(renta);
+				itemsToShow.add(renta);
 			}
-
 		});
 
-		itemsByAmount.addAll(itemsByIndex);
-		constructHistogram(itemsByAmount);
+		labor.constructClasificador();
+		runLater(itemsToShow);
+		updateProgress(0, featureCount);	
 
-		for (RentabilidadItem rentaItem : itemsByIndex) {
-			featureNumber++;
-			updateProgress(featureNumber, featureCount);
+	}
 
-			Geometry geometry = rentaItem.getGeometry();
 
-			if (geometry instanceof MultiPolygon) {
-				System.err.println("geometry is MultiPolygon");
+	private BoundingBox getBounds() {
+		List<Labor<?>> labores = new ArrayList<Labor<?>>();
+		labores.addAll(cosechas);
+		labores.addAll(siembras);
+		labores.addAll(fertilizaciones);
+		labores.addAll(pulverizaciones);
 
-			} else if (geometry instanceof Polygon) {				
-				Polygon harvestPolygon = (Polygon) geometry;
+		ReferencedEnvelope unionEnvelope = labores.stream()
+				.filter((labor)->labor.layer.isEnabled())
+				.map((l)->l.outCollection.getBounds())
+				.reduce(new ReferencedEnvelope(),
+						(e1,e2)->{
+							e1.expandToInclude(e2);
+							return e1;	
+						});
 
-				pathTooltips.add(
-						0,
-						getPathTooltip(harvestPolygon,rentaItem));
+		//new ReferencedEnvelope(),//new
+		//(u1,u2)->,
+		//(e1,e2)->e1.expandToInclude(e2)//combine
+		//);
 
-			} else if (geometry instanceof Geometry) {
-				System.err.println("geometry is Geometry");
-
-			} else if (geometry instanceof Point) {
-				System.err.println("geometry is Point");
-
-			} else {
-				System.out.println("no se que es la geometry " + geometry);
-			}
-
-		}// fin del while
-
-		runLater();
-
-		// saveFeaturesToNewShp(destinationFeatures);
-		updateProgress(0, featureCount);
-		// System.out.println("min: (" + minX + "," + minY + ") max: (" + maxX
-		// + "," + maxY + ")");
-
+		return unionEnvelope;
 	}
 
 
@@ -219,7 +158,7 @@ public class ProcessMarginMapTask extends ProcessMapTask<RentabilidadItem,Margen
 	}
 
 
-	private RentabilidadItem createRentaForPoly(Polygon harvestPolygon) {
+	private MargenItem createRentaForPoly(Polygon harvestPolygon) {
 		Double importeCosecha;
 		Double importePulv;
 		Double importeFert;
@@ -239,7 +178,7 @@ public class ProcessMarginMapTask extends ProcessMapTask<RentabilidadItem,Margen
 				- importePulv - importeFert - importeSiembra-importeFijo)
 				/ areaMargen;
 
-		RentabilidadItem renta = new RentabilidadItem();
+		MargenItem renta = new MargenItem();
 		renta.setGeometry(harvestPolygon);
 		renta.setImportePulvHa(importePulv/ areaMargen);
 		renta.setImporteFertHa(importeFert/ areaMargen);
@@ -252,188 +191,43 @@ public class ProcessMarginMapTask extends ProcessMapTask<RentabilidadItem,Margen
 
 
 	private Double getImporteCosecha(Geometry geometry) {
-		//	cosehaItem.getImporteHa();
-
-		Double importeCosecha = new Double(0);
-		if (!(geometry instanceof Point) && cosechas != null) {
-			@SuppressWarnings("rawtypes")
-			List cosechas = cosechas.query(geometry.getEnvelopeInternal());
-			for (Object cosechaObject : cosechas) {
-				if (cosechaObject instanceof CosechaItem) {
-
-					CosechaItem cosecha = (CosechaItem) cosechaObject;
-					Double costoHa = (Double) cosecha.getImporteHa();
-
-
-					Object cosechaGeomObject = cosecha.getGeometry();
-					if (cosechaGeomObject instanceof Geometry) {
-						Geometry cosechaGeom = (Geometry) cosechaGeomObject;
-						try {
-							Geometry inteseccionGeom = geometry
-									.intersection(cosechaGeom);// Computes a
-							// Geometry
-
-							Double area = inteseccionGeom.getArea() * ProyectionConstants.A_HAS;
-							importeCosecha += costoHa * area;
-						} catch (Exception e) {
-							System.out.println("Error al instersectar la geometria query con la geometria de la cosecha");
-							e.printStackTrace();
-						}
-					} else {
-						System.err
-						.println("la geometria de cosecha no es de tipo Geometry es: "
-								+ cosechaGeomObject.getClass());
-					}
-				} else {
-					System.err.println("me perdi en getImporteCosecha");
-				}
-			}
-		}
-		System.out
-		.println("el importe de la cosecha correspondiente a la query es = "
-				+ importeCosecha);
-		return importeCosecha;
+		return getImporteLabores(geometry,cosechas);
 	}
-
 	private Double getImporteSiembra(Geometry geometry) {
-		Double importeSiembra = new Double(0);
-		if (!(geometry instanceof Point) && siembras != null) {
-			@SuppressWarnings("rawtypes")
-			List siembras = siembras.query(geometry.getEnvelopeInternal());
-			for (Object siembraObj : siembras) {
-				if (siembraObj instanceof SiembraItem) {
-
-					SiembraItem siembra = (SiembraItem) siembraObj;
-					Double costoHa = (Double) siembra.getImporteHa();
-					
-					Object pulvGeomObject = siembra.getGeometry();
-					if (pulvGeomObject instanceof Geometry) {
-						Geometry pulvGeom = (Geometry) pulvGeomObject;
-						try {
-							Geometry inteseccionGeom = geometry
-									.intersection(pulvGeom);// Computes a
-							// Geometry
-
-							Double area = inteseccionGeom.getArea() * ProyectionConstants.A_HAS;
-							importeSiembra += costoHa * area;
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					} else {
-						System.err
-						.println("la geometria de fert no es de tipo Geometry es: "
-								+ pulvGeomObject.getClass());
-					}
-				} else {
-					System.err.println("me perdi en getImporteSiembra");
-				}
-			}
-		}
-		System.out
-		.println("el importe de la siembra correspondiente a la cosecha es = "
-				+ importeSiembra);
-		return importeSiembra;
+		return getImporteLabores(geometry,siembras);
 	}
-
 	private Double getImporteFert(Geometry geometry) {
-		Double importeFert = new Double(0);
-		if (!(geometry instanceof Point) && fertilizaciones != null) {
-			@SuppressWarnings("rawtypes")
-			List ferts = fertilizaciones.query(geometry.getEnvelopeInternal());
-
-			// System.out.println("encontre " + ferts.size()
-			// + " fertilizaciones en contacto con " + geometry);
-			for (Object fertObj : ferts) {
-				if (fertObj instanceof FertilizacionItem) {			
-					FertilizacionItem fert = (FertilizacionItem) fertObj;
-					Double costoHa = (Double) fert.getImporteHa();		
-
-					Object pulvGeomObject = fert.getGeometry();
-					if (pulvGeomObject instanceof Geometry) {
-						//	Double harvestArea = geometry.getArea();
-						Geometry pulvGeom = (Geometry) pulvGeomObject;
-						try {
-							Geometry inteseccionGeom = geometry
-									.intersection(pulvGeom);// Computes a
-							// Geometry
-
-							Double area = inteseccionGeom.getArea() * ProyectionConstants.A_HAS;
-							importeFert += costoHa * area;
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					} else {
-						System.out
-						.println("la geometria de fert no es de tipo Geometry es: "
-								+ pulvGeomObject.getClass());
-					}
-				} else {
-					System.out.println("me perdi en getImporteFert");
-				}
-			}
-		}
-		System.out
-		.println("el importe de la fertilizacion correspondiente a la cosecha es = "
-				+ importeFert);
-		return importeFert;
+		return getImporteLabores(geometry,fertilizaciones);
 	}
-
 	private Double getImportePulv(Geometry geometry) {
-		Double importePulv = new Double(0);
-		if (!(geometry instanceof Point) && pulverizaciones != null) {
-			@SuppressWarnings("rawtypes")
-			List pulves = pulverizaciones.query(geometry.getEnvelopeInternal());
-
-//			System.out.println("encontre " + pulves.size()
-//					+ " pulverizaciones en contacto con " + geometry);
-			for (Object pulvObj : pulves) {
-				if (pulvObj instanceof PulverizacionItem) {
-					// System.out
-					// .println("calculando el costo de la pulverizacion: "
-					// + pulvObj);
-					PulverizacionItem pulv = (PulverizacionItem) pulvObj;
-					Double costoHa = pulv.getImporteHa();
-					//.getAttribute(COLUMNA_COSTO_HA_PULV);
-
-				//	System.out
-//					.println("el costo por ha de la pulverizacion que se cruza con la geometria es="
-//							+ costoHa);
-
-					Object pulvGeomObject = pulv.getGeometry();
-					if (pulvGeomObject instanceof Geometry) {
-						// Double harvestArea = geometry.getArea();
-						Geometry pulvGeom = (Geometry) pulvGeomObject;
-						try {
-							Geometry inteseccionGeom = geometry
-									.intersection(pulvGeom);// Computes a
-							// Geometry
-
-							Double area = inteseccionGeom.getArea() * ProyectionConstants.A_HAS;
-							importePulv += costoHa * area;
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					} else {
-						System.out
-						.println("la geometria de pulv no es de tipo Geometry es: "
-								+ pulvGeomObject.getClass());
-					}
-				} else {
-					System.out.println("me perdi en getImportePulv");
-				}
-			}
-		}
-		System.out
-		.println("el importe de la pulverizacion correspondiente a la cosecha es = "
-				+ importePulv);
-		return importePulv;
+		return getImporteLabores(geometry,pulverizaciones);
 	}
+
+	private Double getImporteLabores(Geometry geometry, List<? extends Labor<?>> labores){
+		return labores.stream().filter((l)->l.getLayer().isEnabled())
+				.mapToDouble((labor)->{
+					List<? extends FeatureContainer> cItems = labor.outStoreQuery(geometry.getEnvelopeInternal());
+
+					Double importeCosecha =	cItems.stream().mapToDouble((ci)->{
+						Double costoHa = (Double) ci.getImporteHa();
+						Geometry cosechaGeom = ci.getGeometry();
+						Geometry interseccionGeom = geometry.intersection(cosechaGeom);// Computes a
+						Double area = interseccionGeom.getArea() * ProyectionConstants.A_HAS;
+						//importeCosecha+=costoHa*area;
+						return costoHa*area;
+					}).sum();
+
+					return importeCosecha;
+				}).sum();
+	}
+
 
 	// getPathFromGeom(importeFert/areaCosecha,importePulv/areaCosecha,importeSiembra/areaCosecha,importeCosechaPorHa,margenPorHa,
 	// harvestPolygon);
-	private ArrayList<Object> getPathTooltip( Polygon poly,RentabilidadItem renta) {
+	@Override
+	protected void getPathTooltip( Geometry poly,MargenItem renta) {
 
-		gov.nasa.worldwind.render.Polygon path = getPathFromGeom2D(poly, renta);
+	//	gov.nasa.worldwind.render.Polygon path = getPathFromGeom2D(poly, renta);
 
 		double area = poly.getArea() * ProyectionConstants.A_HAS;// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 
@@ -459,10 +253,11 @@ public class ProcessMarginMapTask extends ProcessMapTask<RentabilidadItem,Margen
 			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
 		}
 
-		ArrayList<Object> ret = new ArrayList<Object>();
-		ret.add(path);
-		ret.add(tooltipText);
-		return ret;
+//		ArrayList<Object> ret = new ArrayList<Object>();
+//		ret.add(path);
+//		ret.add(tooltipText);
+		//return ret;
+		super.getPathFromGeom2D(poly, renta,tooltipText);
 	}
 
 
@@ -472,10 +267,6 @@ public class ProcessMarginMapTask extends ProcessMapTask<RentabilidadItem,Margen
 	protected  int gerAmountMax() {return 500;}
 
 
-	@Override
-	protected void getPathTooltip(Geometry p, RentabilidadItem fc) {
-		// TODO Auto-generated method stub
-		
-	}
+
 
 }

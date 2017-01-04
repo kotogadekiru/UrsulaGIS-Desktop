@@ -171,7 +171,7 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 		this.setResultConverter(e -> {		
 			if(ButtonType.OK.equals(e)){					
 				if(chkMakeDefault.selectedProperty().get()){
-					labor.getConfiguracion().save();
+					labor.getConfigLabor().getConfigProperties().save();
 				}				
 				return labor;
 

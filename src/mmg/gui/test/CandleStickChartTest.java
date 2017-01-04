@@ -1,4 +1,4 @@
-package mmg.gui.candlestickchart;
+package mmg.gui.test;
 /*
 Copyright 2014 Zoi Capital, LLC
 
@@ -22,9 +22,12 @@ import java.util.List;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import mmg.gui.candlestickchart.BarData;
+import mmg.gui.candlestickchart.CandleStickChart;
+import mmg.gui.candlestickchart.DecimalAxisFormatter;
 
 
-public class MainApp extends Application {
+public class CandleStickChartTest extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
@@ -52,7 +55,7 @@ public class MainApp extends Application {
             double low = Math.min(open - getRandom(),close);
             previousClose = close;
             
-            BarData bar = new BarData(i, open, high, low, close, 1);
+            BarData bar = new BarData(i,  high, low, (close+open)/2,close-open);
           
             bars.add(bar);
         }

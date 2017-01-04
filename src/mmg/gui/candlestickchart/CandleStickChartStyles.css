@@ -13,8 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
  */
+ /* 0.75em*/
 .candlestick-tooltip-label {
-    -fx-font-size: 0.75em;
+    -fx-font-size: 2em;
     -fx-font-weight: bold;
     -fx-text-fill: #666666;
     -fx-padding: 2 5 2 0;
@@ -34,15 +35,15 @@ limitations under the License.
     -fx-stroke-width: 1px;
 }
 
-
+//rgb(25,225,25,1.00);
 .candlestick-bar.close-above-open {
-    -fx-background-color: rgb(25,225,25,1.00);
+    -fx-background-color: blue;
     -fx-border-width: 1, 1,1,1;
     -fx-border-color: #e2e2e2;
 }
 
 .candlestick-bar.open-above-close {
-    -fx-background-color: rgb(255,34,34,1.00); 
+    -fx-background-color: rgb(255,34,34,1.00);
     -fx-border-width: 1, 1,1,1;
     -fx-font-weight: bold;
     -fx-border-color: #e2e2e2;

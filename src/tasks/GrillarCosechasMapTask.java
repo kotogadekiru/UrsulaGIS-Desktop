@@ -117,14 +117,16 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		//FIXME si uso parallelStream soy mucho mas rapido pero al grabar pierdo features
 
 		ConcurrentMap<Polygon,CosechaItem > byPolygon =
-				grilla.parallelStream().collect(() -> new  ConcurrentHashMap< Polygon,CosechaItem>(),
+				grilla.parallelStream().collect(
+						() -> new  ConcurrentHashMap< Polygon,CosechaItem>(),
 						(map, poly) -> {
 							List<CosechaItem>  cosechasPoly = cosechas.parallelStream().collect(
 									()->new  ArrayList<CosechaItem>(),
 									(list, cosecha) ->{			
 										list.addAll(cosecha.cachedOutStoreQuery(poly.getEnvelopeInternal()));	
 									},
-									(list1, list2) -> list1.addAll(list2));
+									(list1, list2) -> list1.addAll(list2)
+									);
 
 							CosechaItem item = construirFeature(cosechasPoly,poly);                    			
 
@@ -149,7 +151,8 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 
 
 						},
-						(map1, map2) -> map1.putAll(map2));
+						(map1, map2) -> map1.putAll(map2)
+						);
 		//Limpio la cache de las labores despues de hacer las querys
 		for(CosechaLabor c:cosechas){
 			c.cachedEnvelopes.clear();

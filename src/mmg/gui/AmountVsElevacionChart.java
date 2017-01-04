@@ -1,35 +1,26 @@
 package mmg.gui;
 
-import java.text.DecimalFormat;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.scene.Node;
-import javafx.scene.chart.BarChart;
-import javafx.scene.chart.CategoryAxis;
-import javafx.scene.chart.LineChart;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
-import javafx.scene.chart.XYChart.Data;
-import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
-import mmg.gui.candlestickchart.BarData;
-import mmg.gui.candlestickchart.CandleStickChart;
+import java.util.Optional;
 
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.opengis.feature.simple.SimpleFeature;
-
-import utils.ProyectionConstants;
 
 import com.vividsolutions.jts.geom.Geometry;
 
 import dao.FeatureContainer;
 import dao.Labor;
-import dao.cosecha.CosechaLabor;
+
+import javafx.scene.control.TextInputDialog;
+import javafx.scene.layout.VBox;
+import mmg.gui.candlestickchart.BarData;
+import mmg.gui.candlestickchart.CandleStickChart;
+import mmg.gui.utils.TooltipUtil;
+import utils.ProyectionConstants;
 
 /**
  * grafico que muestra en un candle stick chart la relacion entre el rinde y la altura
@@ -37,35 +28,35 @@ import dao.cosecha.CosechaLabor;
  *
  */
 public class AmountVsElevacionChart extends VBox {
+	private static final double TOLERANCIA = 0.01;
+//	private static final double OPEN = 0.9;
+//	private static final double CLOSE = 1.1;
 	private static final String ICON = "gisUI/1-512.png";
-	private String[] colors = {
-			"rgb(158,1,66)",
-			"rgb(213,62,79)",
-			" rgb(244,109,67)", 
-			" rgb(253,174,97)",
-			" rgb(254,224,139)",
-			" rgb(255,255,191)",
-			" rgb(230,245,152)",
-			" rgb(171,221,164)",
-			"rgb(102,194,165)",
-			"rgb(50,136,189)",// "BLUE"};
-	"DARKBLUE" };
+	//	private String[] colors = {
+	//			"rgb(158,1,66)",
+	//			"rgb(213,62,79)",
+	//			" rgb(244,109,67)", 
+	//			" rgb(253,174,97)",
+	//			" rgb(254,224,139)",
+	//			" rgb(255,255,191)",
+	//			" rgb(230,245,152)",
+	//			" rgb(171,221,164)",
+	//			"rgb(102,194,165)",
+	//			"rgb(50,136,189)",// "BLUE"};
+	//	"DARKBLUE" };
 
 	// Color.rgb(94,79,162)};
 
 	//Double[] histograma = null;//new Double[colors.length];
 	//	Double[] promedios = new Double[colors.length];
-	Double superficieTotal= new Double(0),produccionTotal= new Double(0);
+	Double superficieTotal= new Double(0);
+	Double produccionTotal= new Double(0);
+	private int grupos = 20;
 
-	public AmountVsElevacionChart(Labor<?> labor) {
+	public AmountVsElevacionChart(Labor<?> labor,int grupos) {
 		super();
-		final NumberAxis xAxis = new NumberAxis();
-		xAxis.setLabel("Rinde");
-		final NumberAxis yAxis = new NumberAxis();
-		yAxis.setLabel("Altura");
-		yAxis.autoRangingProperty().set(true);
-		yAxis.forceZeroInRangeProperty().setValue(false);
-		//final LineChart<Number, Number> chart = new LineChart<Number, Number>(xAxis, yAxis);
+		TooltipUtil.setupCustomTooltipBehavior(50,100000,50);
+		this.grupos=grupos;
 		CandleStickChart chart = new CandleStickChart("Correlacion Rinde Vs Altura", createSeries(labor));
 		//chart.setAxisSortingPolicy(LineChart.SortingPolicy.X_AXIS);
 
@@ -73,83 +64,149 @@ public class AmountVsElevacionChart extends VBox {
 		//		XYChart.Series<Number, Number> series = createSeries(labor);
 		chart.setTitle(labor.getNombreProperty().get());
 		chart.legendVisibleProperty().setValue(false);
-		//	chart.getData().add(series);
 		VBox.getVgrow(chart);
 		this.getChildren().add(chart);
-		//	DecimalFormat df = new DecimalFormat("#.00");
+		chart.prefHeightProperty().bind(this.heightProperty());
 
 	}
 
 
 	private List<BarData> createSeries(Labor<?> labor) {			
-	//	CosechaLabor cL = (CosechaLabor) labor;
+		//	CosechaLabor cL = (CosechaLabor) labor;
 		// List<BarData> bars = new ArrayList<>(); 
-		 Map<Integer,BarData> bars=new HashMap<>(); 
-//		for(int i=0;i<colors.length;i++){
-//			bars.add(i, new BarData(0, 0, 0, 0, 0, 0));
-//		}
+		Map<Double,BarData> bars=new HashMap<>(); 
+		//		for(int i=0;i<colors.length;i++){
+		//			bars.add(i, new BarData(0, 0, 0, 0, 0, 0));
+		//		}
 
 		SimpleFeatureIterator it = labor.outCollection.features();
 		while(it.hasNext()){
 			SimpleFeature f = it.next();
 			Double rinde =FeatureContainer.getDoubleFromObj(f.getAttribute(labor.colAmount.get()));
+			//CosechaLabor.COLUMNA_ELEVACION
+			Double elevacion=FeatureContainer.getDoubleFromObj(f.getAttribute(labor.colElevacion.get()));
 
-			Double altura =FeatureContainer.getDoubleFromObj(f.getAttribute(CosechaLabor.COLUMNA_ELEVACION));
+			Geometry g = ((Geometry)f.getDefaultGeometry());
+			double dSup = g.getArea();
+			long sup =(long)(dSup*ProyectionConstants.A_HAS*ProyectionConstants.METROS2_POR_HA); 
 
-			int categoria = labor.getClasificador().getCategoryFor(rinde);
-			BarData bar = bars.get(new Integer(categoria));
-			if(bar ==null){
+			//int categoria = labor.getClasificador().getCategoryFor(x);
+			//buscar una barra para la que x este dentro del 10%
+			BarData bar = null;
+
+			//averageMin<x<averageMax
+			for(Double elevKey : bars.keySet()){
+				Double cvElev = Math.abs((elevacion-elevKey)/elevKey);
+				if(bar!=null)break;
+				if(cvElev<TOLERANCIA ){
+					//System.out.println("rank es "+rank);
+					bar = bars.get(elevKey);
+					double rinde2 = bar.getAverage().doubleValue();
+					Double cvRinde = Math.abs((rinde2-rinde)/rinde);
+					if(cvRinde>TOLERANCIA)bar = null;
+				}
+			}
+
+			//	BarData bar = bars.get(new Integer(categoria));
+			if(bar == null){
 				bar = new BarData(0, 0, 0, 0, 0, 0);
-				bar.setRinde(rinde);
-				bar.setOpen(altura);
-				bar.setClose(altura);
-				bar.setHigh(altura);
-				bar.setLow( altura);
-				bar.setVolume(1);
+				bar.setElevacion(elevacion);
+				bar.setAverage(rinde);
+				//bar.setClose(rinde*CLOSE);
+				bar.setMax(rinde);
+				bar.setMin( rinde);
+				bar.setVolume(sup);
 			} else{
-//			int N = bar.getVolume().intValue();
-//			if(N==0){
-//				bar.setRinde(rinde);
-//				bar.setOpen(altura);
-//				bar.setClose(altura);
-//				bar.setHigh(altura);
-//				bar.setLow( altura);
-//
-//				//		        double open = getNewValue(previousClose);
-//				//	            double close = getNewValue(open);
-//				//	            double high = Math.max(open + getRandom(),close);
-//				//	            double low = Math.min(open - getRandom(),close);
-//				//	            
-//
-//				bar.setVolume(1);
-//
-//
-//
-//
-//			}else{
-				//New average = old average * (n-1)/n + new value /n	
-				int N = bar.getVolume().intValue();
-				double rindeProm = bar.getRinde().doubleValue()*(N-1)/N+rinde/N;
+				bars.remove(bar.getElevacion());//elevKey
 
-				bar.setRinde(rindeProm);
-				bar.setOpen(Math.min(bar.getOpen().doubleValue(), altura));
-				bar.setClose(Math.max(bar.getClose().doubleValue(), altura));
-				bar.setHigh(Math.max(bar.getHigh().doubleValue(), altura));
-				bar.setLow(Math.min(bar.getLow().doubleValue(), altura));			
-				bar.setVolume(N+1);
-				//FIXME me muestra el minimo y el maximo pero no me muestra los promedios que son lo que importa. 
+				//New average = old average * (n-1)/n + new value /n	
+				double supAnt = bar.getVolume().doubleValue();
+				double elevAnterior = bar.getElevacion().doubleValue();
+				double rindeAnt = bar.getAverage().doubleValue();
+				double supDesp = supAnt+sup;
+				//double rindeProm = bar.getRinde().doubleValue()*(N-1)/N+x/N;
+				double elevProm = (elevAnterior*supAnt+elevacion*sup)/supDesp;
+				
+				double rindeProm = (rindeAnt*supAnt+rinde*sup)/supDesp;
+
+				bar.setElevacion(elevProm);
+				bar.setAverage(rindeProm);//Math.min(bar.getOpen().doubleValue(), y));
+				//bar.setClose(rinde*CLOSE);//Math.max(bar.getClose().doubleValue(), y));
+				bar.setMax(Math.max(bar.getMax().doubleValue(), rinde));
+				bar.setMin(Math.min(bar.getMin().doubleValue(), rinde));			
+				bar.setVolume(supDesp);
+				
 				//1 dato fuera de lugar me altera todo el grafico
 			}
-			
-			bars.put(new Integer(categoria), bar);
+			//new Integer(categoria)
+			bars.put(bar.getElevacion().doubleValue(), bar);
 
 		}
 		it.close();
 
+		// recombinar los bars que quedaron mas cerca que la tolerancia despues de todo
+
+		return recombinar(bars);
+
+	}
+
+
+	private List<BarData> recombinar(Map<Double, BarData> bars) {
 		ArrayList<BarData> ret = new ArrayList<BarData>();
 		ret.addAll(bars.values());
-		return ret;
+		// usar stream y flatmap o algo para recorrer la lista buscando los duplicados
+		ret.sort((b1,b2)->{
+			return new BigDecimal(b1.getElevacion().toString()).compareTo(new BigDecimal(b2.getElevacion().toString()));});
+		//System.out.println("ordenados:\n"+ret);
 
+		boolean huboMatch=false;
+		int iTol=1;
+	
+		do{
+		
+			huboMatch=false;
+		
+			for(int index=0;(index<ret.size()-1)&&(ret.size()>2);index++){	
+				BarData test = ret.get(index);
+				BarData test2 = ret.get(index+1);
+
+
+				double elev1 = test.getElevacion().doubleValue();
+				double elev2 = test2.getElevacion().doubleValue();
+				
+				double rinde1 = test.getAverage().doubleValue();
+				double rinde2 = test2.getAverage().doubleValue();
+				
+				double vol1 = test.getVolume().doubleValue();
+				double vol2 = test2.getVolume().doubleValue();
+
+				double supDesp = vol1+vol2;
+
+				Double cvElev = Math.abs((elev2-elev1)/elev1);
+				Double cvRinde = Math.abs((rinde2-rinde1)/rinde1);
+				double cvTol = TOLERANCIA*iTol;
+				huboMatch = (cvElev<cvTol);//&&(cvRinde<cvTol);
+				if(huboMatch){
+				//	System.out.println(index +" y "+(index+1)+ " hubo match r1="+elev1+" r2="+elev2);
+					
+					double elevProm = (elev1*vol1+elev2*vol2)/supDesp;
+					double rindeProm = (rinde1*vol1+rinde2*vol2)/supDesp;
+					BarData sintesis = new BarData(elevProm,
+							Math.max(test.getMax().doubleValue(), test2.getMax().doubleValue()),
+							Math.min(test.getMin().doubleValue(), test2.getMin().doubleValue()),
+							rindeProm, 
+							supDesp);
+					
+					ret.remove(test);
+					ret.remove(test2);
+					ret.add(index, sintesis);
+					//System.out.println("sintesis = "+sintesis);
+				}
+			}
+			iTol++;
+		}while(//huboMatch&&
+				ret.size()>=grupos);//huboMatch);
+		return ret;
 	}
 
 }

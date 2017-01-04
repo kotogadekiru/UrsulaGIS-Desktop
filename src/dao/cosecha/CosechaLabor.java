@@ -313,12 +313,12 @@ public class CosechaLabor extends Labor<CosechaItem> {
 		return config;
 	}
 
-	public void constructClasificador() {
-		this.constructClasificador(config.config
-				.getPropertyOrDefault(Clasificador.TIPO_CLASIFICADOR,
-						Clasificador.CLASIFICADOR_JENKINS));
-
-	}
+//	public void constructClasificador() {
+//		this.constructClasificador(config.config
+//				.getPropertyOrDefault(Clasificador.TIPO_CLASIFICADOR,
+//						Clasificador.CLASIFICADOR_JENKINS));
+//
+//	}
 
 	@Override
 	public LaborConfig getConfigLabor() {

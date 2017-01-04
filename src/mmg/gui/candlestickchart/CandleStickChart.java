@@ -16,7 +16,6 @@ package mmg.gui.candlestickchart;
  */
 
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -31,7 +30,6 @@ import javafx.event.ActionEvent;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.chart.Axis;
-import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
@@ -41,6 +39,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Path;
 import javafx.util.Duration;
+import utils.ProyectionConstants;
 
 /**
  * A candlestick chart is a style of bar-chart used primarily to describe price
@@ -54,7 +53,8 @@ import javafx.util.Duration;
  */
 public class CandleStickChart extends XYChart<Number, Number> {
 
-    private static final String CANDLE_STICK_CHART_STYLES_CSS = "CandleStickChartStyles.css";
+  //  private static final double AVE_HEIGHT = 0.05;
+	private static final String CANDLE_STICK_CHART_STYLES_CSS = "/mmg/gui/candlestickchart/CandleStickChartStyles.css";
 	SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
     protected static final Logger logger = Logger.getLogger(CandleStickChart.class.getName());
     protected int maxBarsToDisplay;
@@ -72,6 +72,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
      */
     public CandleStickChart(String title, List<BarData> bars) {
         this(title, bars, Integer.MAX_VALUE);
+     
     }
 
     
@@ -94,7 +95,8 @@ public class CandleStickChart extends XYChart<Number, Number> {
      * @param bars The bars to display on the chart
      * @param maxBarsToDisplay The maximum number of bars to display on the chart.
      */
-    public CandleStickChart(String title, NumberAxis xAxis, NumberAxis yAxis, List<BarData> bars, int maxBarsToDisplay) {
+    @SuppressWarnings("unchecked")
+	public CandleStickChart(String title, NumberAxis xAxis, NumberAxis yAxis, List<BarData> bars, int maxBarsToDisplay) {
         super(xAxis, yAxis);
         this.xAxis = xAxis;
         this.yAxis = yAxis;
@@ -116,9 +118,9 @@ public class CandleStickChart extends XYChart<Number, Number> {
         XYChart.Series<Number, Number> series = new XYChart.Series<>();
         List<BarData> sublist = getSubList(bars, maxBarsToDisplay);
         for (BarData bar : sublist) {
-            series.getData().add(new XYChart.Data<>(bar.getRinde(), bar.getOpen(), bar));
-            logger.log(Level.INFO, "Adding bar with rinde: {0}", bar.getRinde());
-            logger.log(Level.INFO, "Adding bar with open: {0}", bar.getOpen());
+            series.getData().add(new XYChart.Data<>(bar.getElevacion(), bar.getAverage(), bar));
+            logger.log(Level.INFO, "Adding bar with rinde: {0}", bar.getElevacion());
+            logger.log(Level.INFO, "Adding bar with open: {0}", bar.getAverage());
         }
 
         dataSeries = FXCollections.observableArrayList(series);
@@ -137,30 +139,29 @@ public class CandleStickChart extends XYChart<Number, Number> {
     }
 
     
-    /**
-     * Appends a new bar on to the end of the chart.
-     * @param bar The bar to append to the chart
-     */
-    public void addBar(BarData bar) {
-
-        if (dataSeries.get(0).getData().size() >= maxBarsToDisplay) {
-            dataSeries.get(0).getData().remove(0);
-        }
-
-        int datalength = dataSeries.get(0).getData().size();
-        dataSeries.get(0).getData().get(datalength - 1).setYValue(bar.getOpen());
-        dataSeries.get(0).getData().get(datalength - 1).setExtraValue(bar);
-      
-        logger.log(Level.INFO, "Adding bar with rinde:  {0}", bar.getRinde());
-      //  logger.log(Level.INFO, "Adding bar with formated time: {0}", label);
-
-        lastBar = new BarData(bar.getRinde(), bar.getClose(), bar.getClose(), bar.getClose(), bar.getClose(), 0);
-        Data<Number, Number> data = new XYChart.Data<>(lastBar.getRinde(), lastBar.getOpen(), lastBar);
-        dataSeries.get(0).getData().add(data);
-        
-        
-        
-    }
+//    /**
+//     * Appends a new bar on to the end of the chart.
+//     * @param bar The bar to append to the chart
+//     */
+//    public void addBar(BarData bar) {
+//
+//        if (dataSeries.get(0).getData().size() >= maxBarsToDisplay) {
+//            dataSeries.get(0).getData().remove(0);
+//        }
+//
+//        int datalength = dataSeries.get(0).getData().size();
+//        dataSeries.get(0).getData().get(datalength - 1).setYValue(bar.getAverage());
+//        dataSeries.get(0).getData().get(datalength - 1).setExtraValue(bar);
+//      
+//        logger.log(Level.INFO, "Adding bar with rinde:  {0}", bar.getElevacion());
+//      //  logger.log(Level.INFO, "Adding bar with formated time: {0}", label);
+//
+//        lastBar = bar;//new BarData();
+//        		//bar.getElevacion(), bar.getAverage(), bar.getAverage(), bar.getAverage(), bar.getAverage(), 0);
+//        
+//        Data<Number, Number> data = new XYChart.Data<>(lastBar.getElevacion(), lastBar.getAverage(), lastBar);
+//        dataSeries.get(0).getData().add(data);  
+//    }
 
     
     /**
@@ -170,10 +171,10 @@ public class CandleStickChart extends XYChart<Number, Number> {
     public void updateLast(double price) {
         if (lastBar != null) {
             lastBar.update(price);
-            logger.log(Level.INFO, "Updating last bar with rinde: {0}", lastBar.getRinde());
+            logger.log(Level.INFO, "Updating last bar with rinde: {0}", lastBar.getElevacion());
 
             int datalength = dataSeries.get(0).getData().size();
-            dataSeries.get(0).getData().get(datalength - 1).setYValue(lastBar.getOpen());
+            dataSeries.get(0).getData().get(datalength - 1).setYValue(lastBar.getAverage());
 
             dataSeries.get(0).getData().get(datalength - 1).setExtraValue(lastBar);
             logger.log(Level.INFO, "Updating last bar with formatteddate/time: {0}", dataSeries.get(0).getData().get(datalength - 1).getXValue());
@@ -183,7 +184,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
     
     
     protected List<BarData> getSubList(List<BarData> bars, int maxBars) {
-        List<BarData> sublist;
+      //  List<BarData> sublist;
         if (bars.size() > maxBars) {
             return bars.subList(bars.size() - 1 - maxBars, bars.size() - 1);
         } else {
@@ -219,15 +220,21 @@ public class CandleStickChart extends XYChart<Number, Number> {
                 if (itemNode instanceof Candle && item.getYValue() != null) {
                     Candle candle = (Candle) itemNode;
 
-                    double close = getYAxis().getDisplayPosition(bar.getClose());
-                    double high = getYAxis().getDisplayPosition(bar.getHigh());
-                    double low = getYAxis().getDisplayPosition(bar.getLow());
-                    double candleWidth = 10;
+                    //double close = getYAxis().getDisplayPosition(bar.getAverage())*(1-AVE_HEIGHT);
+                    double high = getYAxis().getDisplayPosition(bar.getMax());
+                    double low = getYAxis().getDisplayPosition(bar.getMin());
+                    double candleWidth = Math.min(100, bar.getVolume().intValue()/ProyectionConstants.METROS2_POR_HA);
                     // update candle
-                    candle.update(close - y, high - y, low - y, candleWidth);//esto da cero porque y y close, etc son iguales
+                    double closeOfset = -10;//close - y;// es el alto de la barra que muestra el promedio
+                   
+                    candle.update(closeOfset, high - y, low - y, candleWidth);//esto da cero porque y y close, etc son iguales
 
                     // update tooltip content
-                    candle.updateTooltip(bar.getOpen(), bar.getClose(), bar.getHigh(), bar.getLow());
+                    candle.updateTooltip(bar.getElevacion(),
+                    		bar.getVolume(),              
+                    		bar.getAverage(),
+                    		bar.getMax(),
+                    		bar.getMin());
 
                     // position the candle
                     candle.setLayoutX(x);
@@ -281,7 +288,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
     protected void seriesAdded(Series<Number, Number> series, int seriesIndex) {
         // handle any data already in series
         for (int j = 0; j < series.getData().size(); j++) {
-            Data item = series.getData().get(j);
+            Data<?,?> item = series.getData().get(j);
             Node candle = createCandle(seriesIndex, item, j);
             if (shouldAnimate()) {
                 candle.setOpacity(0);
@@ -328,7 +335,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
      * @param itemIndex The index of the data item in the series
      * @return New candle node to represent the give data item
      */
-    private Node createCandle(int seriesIndex, final Data item, int itemIndex) {
+    private Node createCandle(int seriesIndex, final Data<?,?> item, int itemIndex) {
         Node candle = item.getNode();
         // check if candle has already been created
         if (candle instanceof Candle) {
@@ -369,8 +376,8 @@ public class CandleStickChart extends XYChart<Number, Number> {
                     if (yData != null) {
                         BarData extras = (BarData) data.getExtraValue();
                         if (extras != null) {
-                            yData.add(extras.getHigh());
-                            Number low = extras.getLow();
+                            yData.add(extras.getMax());
+                            Number low = extras.getMin();
                             if(low.doubleValue()!=0){
                             	yData.add(low);
                             }
@@ -408,7 +415,9 @@ public class CandleStickChart extends XYChart<Number, Number> {
             this.dataStyleClass = dataStyleClass;
             updateStyleClasses();
             tooltip.setGraphic(new TooltipContent());
+         
             Tooltip.install(bar, tooltip);
+          //  Tooltip.install(highLowLine, tooltip);
         }
 
         public void setSeriesAndDataStyleClasses(String seriesStyleClass, String dataStyleClass) {
@@ -427,20 +436,22 @@ public class CandleStickChart extends XYChart<Number, Number> {
             }
             if (openAboveClose) {
                 bar.resizeRelocate(-candleWidth / 2, 0, candleWidth, closeOffset);
-            } else {
+            } else {//close above open, es positivo
                 bar.resizeRelocate(-candleWidth / 2, closeOffset, candleWidth, closeOffset * -1);
             }
         }
 
-        public void updateTooltip(Number open, Number close, Number high, Number low) {
+        public void updateTooltip(Number open,Number sup, Number average, Number max, Number min) {
             TooltipContent tooltipContent = (TooltipContent) tooltip.getGraphic();
-            tooltipContent.update(open.doubleValue(), close.doubleValue(), high.doubleValue(), low.doubleValue());
+            tooltipContent.update(open.doubleValue(),sup.doubleValue(), average.doubleValue(), max.doubleValue(), min.doubleValue());
         }
 
         private void updateStyleClasses() {
             getStyleClass().setAll("candlestick-candle", seriesStyleClass, dataStyleClass);
+            
             highLowLine.getStyleClass().setAll("candlestick-line", seriesStyleClass, dataStyleClass,
                     openAboveClose ? "open-above-close" : "close-above-open");
+            
             bar.getStyleClass().setAll("candlestick-bar", seriesStyleClass, dataStyleClass,
                     openAboveClose ? "open-above-close" : "close-above-open");
         }
@@ -448,38 +459,61 @@ public class CandleStickChart extends XYChart<Number, Number> {
 
     private class TooltipContent extends GridPane {
 
-        private final Label openValue = new Label();
-        private final Label closeValue = new Label();
-        private final Label highValue = new Label();
-        private final Label lowValue = new Label();
+        private final Label elevValue = new Label();
+        private final Label supValue = new Label();
+        private final Label maxValue = new Label();
+        private final Label minValue = new Label();
+        private final Label aveValue = new Label();
 
         private TooltipContent() {
-            Label open = new Label("OPEN:");
-            Label close = new Label("CLOSE:");
-            Label high = new Label("HIGH:");
-            Label low = new Label("LOW:");
-            open.getStyleClass().add("candlestick-tooltip-label");
-            close.getStyleClass().add("candlestick-tooltip-label");
-            high.getStyleClass().add("candlestick-tooltip-label");
-            low.getStyleClass().add("candlestick-tooltip-label");
-            setConstraints(open, 0, 0);
-            setConstraints(openValue, 1, 0);
-            setConstraints(close, 0, 1);
-            setConstraints(closeValue, 1, 1);
-            setConstraints(high, 0, 2);
-            setConstraints(highValue, 1, 2);
-            setConstraints(low, 0, 3);
-            setConstraints(lowValue, 1, 3);
+            Label elev = new Label("Elevacion:");
+            Label sup = new Label("Sup (Ha):");
+            Label max = new Label("Max Rinde:");
+            Label min = new Label("Min Rinde:");
+            Label ave = new Label("Rinde:");
+            elev.getStyleClass().add("candlestick-tooltip-label");
+            elevValue.getStyleClass().add("candlestick-tooltip-label");
+            sup.getStyleClass().add("candlestick-tooltip-label");
+            supValue.getStyleClass().add("candlestick-tooltip-label");
+            max.getStyleClass().add("candlestick-tooltip-label");
+            maxValue.getStyleClass().add("candlestick-tooltip-label");
+            min.getStyleClass().add("candlestick-tooltip-label");
+            minValue.getStyleClass().add("candlestick-tooltip-label");
+            ave.getStyleClass().add("candlestick-tooltip-label");
+            aveValue.getStyleClass().add("candlestick-tooltip-label");
+            
+            int row =0;
+            setConstraints(ave, 0, row);
+            setConstraints(aveValue, 1,row);
+            row++;
+            setConstraints(elev, 0, row);
+            setConstraints(elevValue, 1, row);
+            row++;
+            setConstraints(max, 0, row);
+            setConstraints(maxValue, 1, row);
+            row++;
+            setConstraints(min, 0, row);
+            setConstraints(minValue, 1, row);
+            row++;
+            setConstraints(sup, 0, row);
+            setConstraints(supValue, 1, row);
+        
+           
             
            
-            getChildren().addAll(open, openValue, close, closeValue, high, highValue, low, lowValue);
+            getChildren().addAll(elev, elevValue, 
+            		sup, supValue,
+            		ave, aveValue,
+            		max, maxValue, min, minValue);
         }
 
-        public void update(Number open, Number close, Number high, Number low) {
-            openValue.setText(open.toString());
-            closeValue.setText(close.toString());
-            highValue.setText(high.toString());
-            lowValue.setText(low.toString());
+        public void update(Number elev, Number sup,Number average, Number max, Number min) {
+        	DecimalFormat df = new DecimalFormat("#.00");
+            elevValue.setText(df.format(elev));//.toString());
+            supValue.setText(df.format(sup.doubleValue()/ProyectionConstants.METROS2_POR_HA));//close.toString());
+            maxValue.setText(df.format(max));//high.toString());
+            aveValue.setText(df.format(average));//low.toString());
+            minValue.setText(df.format(min));//low.toString());
         }
     }
 

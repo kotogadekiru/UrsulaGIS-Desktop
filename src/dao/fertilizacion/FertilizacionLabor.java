@@ -60,7 +60,7 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 		List<String> availableColums = this.getAvailableColumns();		
 		
 		//config = new FertilizacionConfig();
-		Configuracion properties = config.config;
+		Configuracion properties = getConfigLabor().getConfigProperties();
 		
 		colKgHaProperty = new SimpleStringProperty(
 				properties.getPropertyOrDefault(
@@ -257,11 +257,11 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 		return fi;
 	}
 	
-	public void constructClasificador() {
-		super.constructClasificador(config.config
-		.getPropertyOrDefault(Clasificador.TIPO_CLASIFICADOR,
-				Clasificador.CLASIFICADOR_JENKINS));
-	}
+//	public void constructClasificador() {
+//		super.constructClasificador(config.config
+//		.getPropertyOrDefault(Clasificador.TIPO_CLASIFICADOR,
+//				Clasificador.CLASIFICADOR_JENKINS));
+//	}
 
 //	@Override
 //	public void constructClasificador() {
