@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
@@ -15,7 +16,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="content" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mmg.gui.FertilizacionConfigDialogController">
+<VBox fx:id="content" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mmg.gui.MargenConfigDialogController">
    <children>
       <TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="361.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE">
         <tabs>
@@ -42,28 +43,14 @@
                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
-                              <ComboBox id="comboElev" fx:id="comboElev" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                              <ComboBox id="comboRend" fx:id="comboDosis" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                              <Label text="Precio Fertilizante" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                              <Label text="Costo Fijo por Tn" GridPane.columnIndex="2" GridPane.rowIndex="1">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
-                              <Label text="Elevacion *" GridPane.rowIndex="2">
-                                 <opaqueInsets>
-                                    <Insets left="5.0" right="5.0" />
-                                 </opaqueInsets>
-                              </Label>
-                              <Label text="Kg Fert/Ha" GridPane.rowIndex="1">
-                                 <opaqueInsets>
-                                    <Insets left="5.0" right="5.0" />
-                                 </opaqueInsets>
-                              </Label>
-                              <TextField id="textPrecioGrano" fx:id="textPrecioFert" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-                              <Label text="Costo Lab. Fert por Ha" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-                              <TextField id="textCostoCosechaHa" fx:id="textCostoLaborHa" GridPane.columnIndex="3" GridPane.rowIndex="2" />
-                              <Label text="Fertilizante" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-                              <ComboBox id="comboCultivo" fx:id="comboFertilizante" prefWidth="150.0" promptText="Fertilizante" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+                              <TextField id="textPrecioGrano" fx:id="textCostoTn" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                              <Label text="Costo Fijo por Ha" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                              <TextField id="textCostoCosechaHa" fx:id="textCostoHa" GridPane.columnIndex="3" GridPane.rowIndex="2" />
                               <Label text="Nombre">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
@@ -72,6 +59,18 @@
                               <TextField id="textPrecioGrano" fx:id="textNombre" prefHeight="25.0" prefWidth="147.0" GridPane.columnIndex="1" />
                               <DatePicker fx:id="datePickerFecha" GridPane.columnIndex="3" />
                               <Label text="Fecha" GridPane.columnIndex="2" />
+                              <Label text="Flete por Tn" GridPane.rowIndex="1">
+                                 <opaqueInsets>
+                                    <Insets left="5.0" right="5.0" />
+                                 </opaqueInsets>
+                              </Label>
+                              <TextField id="textPrecioGrano" fx:id="textFlete" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                              <ChoiceBox fx:id="comboAmount" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                              <Label fx:id="comboCampo" text="Dibujar" GridPane.rowIndex="2">
+                                 <opaqueInsets>
+                                    <Insets left="5.0" right="5.0" />
+                                 </opaqueInsets>
+                              </Label>
                            </children>
                         </GridPane>
                      </children>
@@ -101,11 +100,10 @@
                               <RowConstraints maxHeight="38.0" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
-                              <Label text="Corregir:" wrapText="true" />
-                              <Label text="Clasificador" wrapText="true" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                              <ComboBox fx:id="comboClasificador" prefWidth="150.0" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-                              <Label text="Clases Clasificador" GridPane.rowIndex="1" />
-                              <TextField id="textToleranciaCV" fx:id="textClasesClasificador" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                              <Label text="Clasificador" wrapText="true" GridPane.columnIndex="2" />
+                              <ComboBox fx:id="comboClasificador" prefWidth="150.0" GridPane.columnIndex="3" />
+                              <Label text="Clases Clasificador" />
+                              <TextField id="textToleranciaCV" fx:id="textClasesClasificador" GridPane.columnIndex="1" />
                            </children>
                         </GridPane>
                      </children>

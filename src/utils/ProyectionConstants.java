@@ -20,15 +20,30 @@ public class ProyectionConstants {
 	public static final int RADIO_TERRESTRE_ECUATORIAL = 6378137;
 	public static final int RADIO_TERRESTRE_POLAR =  6356752;
 	
-	public static final int LATITUD_ARGENTINA =34;
+	private static final int LATITUD_ARGENTINA =-34;
 	public static final double METROS2_POR_HA = 10000;
 	
-	public static double metersToLong = 180 / ( Math.PI * RADIO_TERRESTRE_ECUATORIAL*Math.cos(Math.toRadians(LATITUD_ARGENTINA)));// para
-	public static double metersToLat = 180 / ( Math.PI * RADIO_TERRESTRE_POLAR);// para
+	private static double LATITUD_CALCULO=LATITUD_ARGENTINA;
+	//public static double metersToLong = 180 / ( Math.PI * RADIO_TERRESTRE_ECUATORIAL*Math.cos(Math.toRadians(LATITUD_ARGENTINA)));// para
+	//public static double metersToLat = 180 / ( Math.PI * RADIO_TERRESTRE_POLAR);// para
 	
 	//getArea() - area returned in the same units as the coordinates (be careful of lat/lon data!)
-	public static final double A_HAS =1/(metersToLong*metersToLat*METROS2_POR_HA);//1/8.06e-11 * 10000
+	//public static final double A_HAS =1/(metersToLong()*metersToLat()*METROS2_POR_HA);//1/8.06e-11 * 10000
 	
+	public static void setLatitudCalculo(double lat){
+	//	System.out.println("actualizando la latitud de trabajo a: "+lat);
+		LATITUD_CALCULO=lat;
+	}
+	public static double A_HAS(){
+		return 1/(metersToLong()*metersToLat()*METROS2_POR_HA);
+	}
+	public static double metersToLong(){
+		return 180 / ( Math.PI * RADIO_TERRESTRE_ECUATORIAL*Math.cos(Math.toRadians(LATITUD_CALCULO)));// para
+	}
+	
+	public static double metersToLat(){
+		return 180 / ( Math.PI * RADIO_TERRESTRE_POLAR);
+	}
 	public static double metersToLongLat(double meters){
 		GeometryFactory factory = new GeometryFactory(new PrecisionModel(
 				PrecisionModel.FLOATING), SRID.WGS84_SRID.getSRID());
@@ -36,7 +51,7 @@ public class ProyectionConstants {
 //		CoordinateReferenceSystem utmArg = factory.createCoordinateReferenceSystem("EPSG:28880");
 //		CoordinateReferenceSystem defaultcrs = factory.createCoordinateReferenceSystem("EPSG:4326");
 //		   MathTransform transform = CRS.findMathTransform(dataCRS, worldCRS, lenient);
-		return meters*metersToLat;
+		return meters*metersToLat();
 	}
 	
 	public static GeometryFactory getGeometryFactory(){

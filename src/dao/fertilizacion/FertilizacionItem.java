@@ -11,13 +11,13 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-import dao.FeatureContainer;
+import dao.LaborItem;
 /**
  *   Cuando el ingreso marginal es igual al costo unitario el beneficio ($/Ha) de agregar N es máximo
  * @author tomas
  *
  */
-public class FertilizacionItem extends FeatureContainer {	
+public class FertilizacionItem extends LaborItem {	
 	private Double cantFertHa;	
 	private Double importeHa;
 	private Double precioFert;

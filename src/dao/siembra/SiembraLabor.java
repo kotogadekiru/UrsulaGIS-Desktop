@@ -12,7 +12,7 @@ import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
 import dao.Clasificador;
-import dao.FeatureContainer;
+import dao.LaborItem;
 import dao.Labor;
 import dao.LaborConfig;
 import dao.config.Configuracion;
@@ -49,14 +49,15 @@ public class SiembraLabor extends Labor<SiembraItem> {
 	private static final String COSTO_LABOR_SIEMBRA = "costoLaborSiembra";
 	private static final String SEMILLA_DEFAULT = "SEMILLA_DEFAULT";
 
-	private static SimpleDoubleProperty entreSurco =null; //new Double(Configuracion.getInstance().getPropertyOrDefault(ENTRE_SURCO_KEY, ENTRE_SURCO_DEFAULT));
-	private static SimpleDoubleProperty semillasPorBolsa=null;// new Double(Configuracion.getInstance().getPropertyOrDefault(SEMILLAS_POR_BOLSA_KEY, SEMILLAS_POR_BOLSA_DEFAULT));
+	public  SimpleDoubleProperty entreSurco =null; //new Double(Configuracion.getInstance().getPropertyOrDefault(ENTRE_SURCO_KEY, ENTRE_SURCO_DEFAULT));
+	public  SimpleDoubleProperty semillasPorBolsa=null;// new Double(Configuracion.getInstance().getPropertyOrDefault(SEMILLAS_POR_BOLSA_KEY, SEMILLAS_POR_BOLSA_DEFAULT));
 
 
 	public StringProperty colSemillasMetroProperty;
 
 	//public SiembraConfig config=null;
-	public Property<Semilla> producto=null;
+	public Property<Semilla> semilla=null;
+
 
 
 	public SiembraLabor() {
@@ -192,7 +193,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 
 		String fertKEY = properties.getPropertyOrDefault(
 				SiembraLabor.SEMILLA_DEFAULT, "Semilla de Soja");
-		producto = new SimpleObjectProperty<Semilla>(Semilla.semillas.get(fertKEY));//values().iterator().next());
+		semilla = new SimpleObjectProperty<Semilla>(Semilla.semillas.get(fertKEY));//values().iterator().next());
 	}
 
 	@Override
@@ -218,7 +219,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 		super.constructFeatureContainerStandar(siembraItem,next,newIDS);
 
 
-		Double bolsasHa = FeatureContainer.getDoubleFromObj(next
+		Double bolsasHa = LaborItem.getDoubleFromObj(next
 				.getAttribute(COLUMNA_BOLSAS_HA));
 	//	bolsasHa = bolsasHa*(ProyectionConstants.METROS2_POR_HA/ENTRE_SURCO)/SEMILLAS_POR_BOLSA;
 		siembraItem.setBolsasHa(bolsasHa);
@@ -239,7 +240,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 		super.constructFeatureContainer(si,next);
 		
 
-		Double bolsasHa = FeatureContainer.getDoubleFromObj(next
+		Double bolsasHa = LaborItem.getDoubleFromObj(next
 				.getAttribute(colSemillasMetroProperty.get()));
 		Double semillasMetro = bolsasHa*(ProyectionConstants.METROS2_POR_HA/entreSurco.get())/semillasPorBolsa.get();
 

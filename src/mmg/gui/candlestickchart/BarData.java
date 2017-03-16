@@ -23,7 +23,7 @@ import java.util.GregorianCalendar;
  *
  * @author RobTerpilowski
  */
-public class BarData implements Serializable {
+public class BarData implements Serializable, Comparable {
         
     /**
 	 * 
@@ -55,6 +55,8 @@ public class BarData implements Serializable {
     protected Number openInterest = 0;
     protected int barLength = 1;
     protected Number elevacion;
+
+	private int clase;
     //protected Logger logger = Logger.getLogger( Bar.class );
 
     public BarData() {
@@ -219,7 +221,7 @@ public class BarData implements Serializable {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Rinde: ").append(elevacion);
+        sb.append("Elevacion: ").append(elevacion);
      //   sb.append(" Open: ").append(open);
         sb.append(" Max: ").append(max);
         sb.append(" Min: ").append(min);
@@ -249,6 +251,21 @@ public class BarData implements Serializable {
         result = PRIME * result + ((volume == null) ? 0 : volume.hashCode());
         return result;
     }
+    
+    @Override
+    public int compareTo(Object o){
+    
+    	try{
+    		BarData b = (BarData)o;
+    		return Double.compare(this.getElevacion().doubleValue(), b.getElevacion().doubleValue());
+    	}catch(ClassCastException e){
+    	e.printStackTrace();
+    		return -2;
+    	}
+    	
+    	
+    }
+    
 
     @Override
     public boolean equals(Object obj) {
@@ -289,5 +306,14 @@ public class BarData implements Serializable {
         }
         return true;
     }
+
+	public void setClase(int index) {
+		this.clase=index;
+		// TODO Auto-generated method stub
+		
+	}
+	public int getClase(){
+		return this.clase;
+	}
     
 }

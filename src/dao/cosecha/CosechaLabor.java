@@ -18,7 +18,7 @@ import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
 import dao.Clasificador;
-import dao.FeatureContainer;
+import dao.LaborItem;
 import dao.Labor;
 import dao.LaborConfig;
 import dao.config.Configuracion;
@@ -52,7 +52,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 
 	//public CosechaConfig config = null;
 
-	public StringProperty colVelocidad= null;
+	//public StringProperty colVelocidad= null;
 	public StringProperty colRendimiento= null;
 	
 	public SimpleDoubleProperty precioGranoProperty= null;
@@ -90,16 +90,16 @@ public class CosechaLabor extends Labor<CosechaItem> {
 
 		Configuracion properties = getConfigLabor().getConfigProperties();
 
-		colVelocidad = new SimpleStringProperty(
-				properties.getPropertyOrDefault(CosechaLabor.COLUMNA_VELOCIDAD,
-						CosechaLabor.COLUMNA_VELOCIDAD));
-		if(!availableColums.contains(colVelocidad.get())&&availableColums.contains(CosechaLabor.COLUMNA_VELOCIDAD)){
-			colVelocidad.setValue(CosechaLabor.COLUMNA_VELOCIDAD);
-		}
-		colVelocidad.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(CosechaLabor.COLUMNA_VELOCIDAD,
-					bool2.toString());
-		});
+//		colVelocidad = new SimpleStringProperty(
+//				properties.getPropertyOrDefault(CosechaLabor.COLUMNA_VELOCIDAD,
+//						CosechaLabor.COLUMNA_VELOCIDAD));
+//		if(!availableColums.contains(colVelocidad.get())&&availableColums.contains(CosechaLabor.COLUMNA_VELOCIDAD)){
+//			colVelocidad.setValue(CosechaLabor.COLUMNA_VELOCIDAD);
+//		}
+//		colVelocidad.addListener((obs, bool1, bool2) -> {
+//			properties.setProperty(CosechaLabor.COLUMNA_VELOCIDAD,
+//					bool2.toString());
+//		});
 
 		colRendimiento = new SimpleStringProperty(
 				properties.getPropertyOrDefault(
@@ -107,6 +107,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 						CosechaLabor.COLUMNA_RENDIMIENTO));
 		if(!availableColums.contains(colRendimiento.get())&&availableColums.contains(CosechaLabor.COLUMNA_RENDIMIENTO)){
 			colRendimiento.setValue(CosechaLabor.COLUMNA_RENDIMIENTO);
+			this.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
 		}
 		colRendimiento.addListener((obs, bool1, bool2) -> {
 			properties.setProperty(CosechaLabor.COLUMNA_RENDIMIENTO,
@@ -229,7 +230,12 @@ public class CosechaLabor extends Labor<CosechaItem> {
 		CosechaItem ci = new CosechaItem(harvestFeature);
 		super.constructFeatureContainer(ci,harvestFeature);
 		double correccionRinde = correccionCosechaProperty.doubleValue();// me
-		Double rindeDouble = FeatureContainer.getDoubleFromObj(harvestFeature.getAttribute(colRendimiento.get()));
+		Double rindeDouble = LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colRendimiento.get()));
+		
+		if(this.getConfiguracion().correccionAnchoEnabled()){			
+		
+			ci.setAncho(this.anchoDefaultProperty.doubleValue());
+		} 
 
 		if (config.correccionFlowToRindeProperty().getValue()) {
 			// ("Mass_Flow_" *0.453592) /((("Width" *2.54/100)*
@@ -241,7 +247,13 @@ public class CosechaLabor extends Labor<CosechaItem> {
 			 */
 			double constantes = ProyectionConstants.METROS2_POR_HA
 					* KG_POR_LIBRA/KG_POR_TN;// XXX asume un dato por segundo
-			rindeDouble = rindeDouble * constantes / (ci.getDistancia() * ci.getAncho());
+			//FIXME si la distancia o el ancho son cero esto da infinito
+			double divisor = ci.getDistancia() * ci.getAncho();
+			if(divisor>0){
+				rindeDouble = rindeDouble * constantes / (divisor);
+			} else {
+				rindeDouble =0.0;
+			}
 		}
 
 		/*
@@ -250,14 +262,17 @@ public class CosechaLabor extends Labor<CosechaItem> {
 		 */
 		ci.rindeTnHa = rindeDouble * (correccionRinde / 100);
 
-		if(!colVelocidad.get().equals(Labor.NONE_SELECTED)){
-		ci.velocidad = FeatureContainer.getDoubleFromObj(harvestFeature
-				.getAttribute(colVelocidad.get()));
-		}
+//		if(!colVelocidad.get().equals(Labor.NONE_SELECTED)){
+//		ci.velocidad = LaborItem.getDoubleFromObj(harvestFeature
+//				.getAttribute(colVelocidad.get()));
+//		}
 //		ci.elevacion = FeatureContainer.getDoubleFromObj(harvestFeature
 //				.getAttribute(colElevacion.get()));
 		ci.precioTnGrano = precioGranoProperty.doubleValue();
-		ci.importeHa = ci.rindeTnHa * ci.precioTnGrano;
+		//TODO tomar en cuenta el costo fijo por ha de la cosecha y el costo variable
+		double costoTn = this.costoCosechaTnProperty.get();
+		double costoHa = this.precioLaborProperty.get();
+		ci.importeHa = ci.rindeTnHa *( ci.precioTnGrano-costoTn)-costoHa;
 
 		return ci;
 	}
@@ -281,13 +296,13 @@ public class CosechaLabor extends Labor<CosechaItem> {
 		// =FeatureContainer.getDoubleFromObj(harvestFeature.getAttribute(CosechaLabor.COLUMNA_PASADA));//no
 		// se pudo leer
 
-		ci.velocidad = FeatureContainer.getDoubleFromObj(harvestFeature
+		ci.velocidad = LaborItem.getDoubleFromObj(harvestFeature
 				.getAttribute(CosechaLabor.COLUMNA_VELOCIDAD));
 //		ci.ancho = FeatureContainer.getDoubleFromObj(harvestFeature
 //				.getAttribute(CosechaLabor.COLUMNA_ANCHO));
-		ci.rindeTnHa = FeatureContainer.getDoubleFromObj(harvestFeature
+		ci.rindeTnHa = LaborItem.getDoubleFromObj(harvestFeature
 				.getAttribute(CosechaLabor.COLUMNA_RENDIMIENTO));
-		ci.desvioRinde = FeatureContainer.getDoubleFromObj(harvestFeature
+		ci.desvioRinde = LaborItem.getDoubleFromObj(harvestFeature
 				.getAttribute(CosechaLabor.COLUMNA_DESVIO_REND));
 	
 //		if(this.clasificador!=null && clasificador.isInitialized()){
@@ -296,9 +311,9 @@ public class CosechaLabor extends Labor<CosechaItem> {
 //		}	
 
 
-		ci.precioTnGrano = FeatureContainer.getDoubleFromObj(harvestFeature
+		ci.precioTnGrano = LaborItem.getDoubleFromObj(harvestFeature
 				.getAttribute(CosechaLabor.COLUMNA_PRECIO));
-		ci.importeHa = FeatureContainer.getDoubleFromObj(harvestFeature
+		ci.importeHa = LaborItem.getDoubleFromObj(harvestFeature
 				.getAttribute(CosechaLabor.COLUMNA_IMPORTE_HA));
 
 		//		ci.categoria = FeatureContainer.getDoubleFromObj(harvestFeature

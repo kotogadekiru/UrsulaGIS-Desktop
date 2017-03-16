@@ -14,9 +14,9 @@ import utils.ProyectionConstants;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-import dao.FeatureContainer;
+import dao.LaborItem;
 
-public class SiembraItem extends FeatureContainer {
+public class SiembraItem extends LaborItem {
 	private Double elevacion;	
 	private Double bolsasHa;
 	private Double precioBolsa;

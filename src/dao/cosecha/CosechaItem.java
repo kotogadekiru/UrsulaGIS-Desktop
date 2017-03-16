@@ -5,9 +5,9 @@ import java.math.RoundingMode;
 
 import org.opengis.feature.simple.SimpleFeature;
 
-import dao.FeatureContainer;
+import dao.LaborItem;
 
-public class CosechaItem extends FeatureContainer{	
+public class CosechaItem extends LaborItem{	
 	//private static final int KG_POR_TN = 1000;
 
 	//	public static Double CosechaID =new Double(0);//XXX este id no es global sino que depende de la labor
@@ -154,7 +154,10 @@ public class CosechaItem extends FeatureContainer{
 	}
 
 	public Double getImporteHa() {
-		this.importeHa = rindeTnHa * this.precioTnGrano;
+//		double costoTn = this.costoCosechaTnProperty.get();
+//		double costoHa = this.precioLaborProperty.get();
+//		ci.importeHa = ci.rindeTnHa *( ci.precioTnGrano-costoTn)-costoHa;
+//		this.importeHa = rindeTnHa * this.precioTnGrano;
 		return importeHa;
 	}
 
@@ -238,9 +241,12 @@ public class CosechaItem extends FeatureContainer{
 		Object[] elements = new Object[]{
 				getRindeTnHa(),
 				getDesvioRinde(),
-				round(getVelocidad()),	
-				round(getPrecioTnGrano()),
-				round(getImporteHa())
+				getVelocidad(),	
+				getPrecioTnGrano(),
+				getImporteHa()
+//				round(getVelocidad()),	
+//				round(getPrecioTnGrano()),
+//				round(getImporteHa())
 		};
 		return elements;
 	}

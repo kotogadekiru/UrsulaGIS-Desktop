@@ -211,7 +211,7 @@ public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLab
 	public  void  getPathTooltip( Geometry poly,SiembraItem siembraFeature) {
 	//	Path path = getPathFromGeom(poly,siembraFeature);		
 		
-		double area = poly.getArea() *ProyectionConstants.A_HAS;// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+		double area = poly.getArea() *ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		DecimalFormat df = new DecimalFormat("#.00"); 
 		String tooltipText = new String(
 				"Densidad: "+ df.format(siembraFeature.getBolsasHa()) + " Bolsa/Ha\n\n"
@@ -227,7 +227,7 @@ public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLab
 		}
 
 		
-		super.getPathFromGeom2D(poly, siembraFeature,tooltipText);
+		super.getRenderPolygonFromGeom(poly, siembraFeature,tooltipText);
 	//	return ret;		
 	}
 	

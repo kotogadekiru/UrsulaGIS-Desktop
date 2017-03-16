@@ -194,11 +194,11 @@ public class ProcessPulvMapTask extends ProcessMapTask<PulverizacionItem,Pulveri
 	protected void getPathTooltip(Geometry poly, PulverizacionItem pulv) {
 	//	Path path = getPathFromGeom(poly, pulv);
 
-		double area = poly.getArea() * ProyectionConstants.A_HAS;
+		double area = poly.getArea() * ProyectionConstants.A_HAS();
 
 		DecimalFormat df = new DecimalFormat("#.00");
 		String tooltipText = new String("Costo Agroquimicos: "
-				+ df.format(pulv.getCostoPaquete()) + " U$S/Ha\n"
+				+ df.format(pulv.getDosis()) + " U$S/Ha\n"
 				+ "Pulverizacion: " + df.format(pulv.getImporteHa())
 				+ " U$S/Ha\n" 
 		// +"feature: " + featureNumber
@@ -210,7 +210,7 @@ public class ProcessPulvMapTask extends ProcessMapTask<PulverizacionItem,Pulveri
 			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
 		}
 
-		super.getPathFromGeom2D(poly, pulv,tooltipText);
+		super.getRenderPolygonFromGeom(poly, pulv,tooltipText);
 	}
 
 	protected int getAmountMin() {

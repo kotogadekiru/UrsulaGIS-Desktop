@@ -1,6 +1,7 @@
 package mmg.gui;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +16,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
@@ -23,6 +25,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
+import mmg.gui.utils.DateConverter;
 import dao.Clasificador;
 import dao.Labor;
 import dao.config.Cultivo;
@@ -43,14 +46,17 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 	@FXML
 	private VBox content;
 
-	@FXML
-	private ComboBox<String> comboVelo;//ok
+//	@FXML
+//	private ComboBox<String> comboVelo;//ok
 
 	@FXML
 	private ComboBox<String> comboRend;//ok
 
 	@FXML
 	private TextField textPrecioGrano;//ok
+	
+	@FXML
+	private DatePicker datePickerFecha;//ok
 
 	@FXML
 	private CheckBox chkOutlayers;//ok
@@ -214,11 +220,11 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 //			isValid=false;
 			labor.colElevacion.set(Labor.NONE_SELECTED);
 		}
-		if(cols.indexOf(comboVelo.getValue())==-1){
-//			message.append("Debe seleccionar la columna velocidad\n");
-//			isValid=false;
-			labor.colVelocidad.set(Labor.NONE_SELECTED);
-		}
+//		if(cols.indexOf(comboVelo.getValue())==-1){
+////			message.append("Debe seleccionar la columna velocidad\n");
+////			isValid=false;
+//			labor.colVelocidad.set(Labor.NONE_SELECTED);
+//		}
 		if(!isValid){
 			Alert alert = new Alert(AlertType.ERROR, message.toString(), ButtonType.OK);
 			alert.initOwner(this.getDialogPane().getScene().getWindow());
@@ -245,9 +251,9 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		//TODO si avalilableColumns contiene las columnas estanddar seleccionarlas
 
 
-		this.comboVelo.setItems(FXCollections.observableArrayList(availableColums));
-
-		this.comboVelo.valueProperty().bindBidirectional(labor.colVelocidad);
+//		this.comboVelo.setItems(FXCollections.observableArrayList(availableColums));
+//
+//		this.comboVelo.valueProperty().bindBidirectional(labor.colVelocidad);
 
 
 		//	this.comboVelo.getSelectionModel().select(-1);
@@ -264,6 +270,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		this.comboRend.setItems(FXCollections.observableArrayList(availableColums));
 
 		this.comboRend.valueProperty().bindBidirectional(labor.colRendimiento);
+		
 
 		//		int index = availableColums.indexOf(labor.colRendimiento);
 		//		comboRend.getSelectionModel().select(index);
@@ -387,6 +394,16 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		chkFlow.selectedProperty().bindBidirectional(cosechaConfig.correccionFlowToRindeProperty());
 
 		chkResumirGeometrias.selectedProperty().bindBidirectional(labor.config.resumirGeometriasProperty());
+		
+		//StringConverter<LocalDate> dateConverter = this.datePickerFecha.getConverter();
+		datePickerFecha.setValue(l.fechaProperty.getValue());
+		datePickerFecha.setConverter(new DateConverter());
+		datePickerFecha.valueProperty().addListener((obs, bool1, bool2) -> {
+			l.fechaProperty.setValue(datePickerFecha.getValue());
+		//	l.fechaProperty.setValue(dateConverter.toString(bool2));
+		});
+	//	Bindings.bindBidirectional(this.datePickerFecha.valueProperty()., l.fechaProperty, );
+		
 	}
 
 

@@ -12,25 +12,26 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
-public abstract class FeatureContainer implements Comparable<FeatureContainer>{
+public abstract class LaborItem implements Comparable<LaborItem>{
 	protected Double id=new Double(0);
 	protected Geometry geometry;
-	
 
+	//solo es importante en las labores de puntos
 	protected Double distancia =new Double(0);
 	protected Double rumbo=new Double(0);
 	protected Double ancho=new Double(0);
+
 	protected Double elevacion=new Double(0);
 	protected Integer categoria=new Integer(0);
-	
+
 	protected Double areaSinSup= new Double(0);
 
 
-	public FeatureContainer(SimpleFeature feature) {
+	public LaborItem(SimpleFeature feature) {
 		this.geometry = (Geometry) feature.getDefaultGeometry();
 	}
 
-	public FeatureContainer() {
+	public LaborItem() {
 
 	}
 
@@ -115,16 +116,18 @@ public abstract class FeatureContainer implements Comparable<FeatureContainer>{
 	 * @param elevacion the elevacion to set
 	 */
 	public void setElevacion(Double elevacion) {
-		this.elevacion = elevacion;
+		if(elevacion !=null){
+			this.elevacion = elevacion>1?elevacion:1;//esto es un hack para que no se rompa si la elevacion es ninguna. no puede ser cero
+		}
 	}
 
-	public int compareTo(FeatureContainer dao){
+	public int compareTo(LaborItem dao){
 		return getAmount().compareTo(dao.getAmount());
 
 	}
 
 	public abstract Double getAmount();		
-	
+
 	public abstract Double getImporteHa();		
 
 	public Double getId() {
@@ -173,8 +176,8 @@ public abstract class FeatureContainer implements Comparable<FeatureContainer>{
 
 	@Override
 	public boolean equals(Object o){
-		if(o instanceof FeatureContainer){
-			return compareTo((FeatureContainer)o) == 0;
+		if(o instanceof LaborItem){
+			return compareTo((LaborItem)o) == 0;
 		} else{
 			return false;
 		}
@@ -200,7 +203,8 @@ public abstract class FeatureContainer implements Comparable<FeatureContainer>{
 
 	//abstract public SimpleFeature getFeature(SimpleFeatureBuilder featureBuilder);
 
-	public SimpleFeature getFeature(SimpleFeatureBuilder featureBuilder) {
+	public  SimpleFeature getFeature(SimpleFeatureBuilder featureBuilder) {
+
 		Object[] basicElements = new Object[]{
 				this.getGeometry(),
 				distancia,
@@ -208,33 +212,36 @@ public abstract class FeatureContainer implements Comparable<FeatureContainer>{
 				ancho,
 				elevacion,
 				getCategoria()};
-	
+
 		Object[] specialElements= getSpecialElementsArray();
 		Object[] completeElements = new Object[basicElements.length+specialElements.length];
 		for(int i =0;i<basicElements.length;i++){
 			completeElements[i]=basicElements[i];
 		}
-		
+
 		for(int i =0;i<specialElements.length;i++){
 			completeElements[i+basicElements.length]=
 					specialElements[i];
 		}
-		
-	
-	featureBuilder.addAll(completeElements);
-		
-		
-	//System.out.println("construyendo el simplefeature para el id:"+this.getId());//construuendo el simplefeature para el id:0.0
-	SimpleFeature feature = featureBuilder.buildFeature("\\."+this.getId().intValue());
-	
-	return feature;
+		synchronized(featureBuilder){
+			try{
+				featureBuilder.addAll(completeElements);
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+
+			//System.out.println("construyendo el simplefeature para el id:"+this.getId());//construuendo el simplefeature para el id:0.0
+			SimpleFeature feature = featureBuilder.buildFeature("\\."+this.getId().intValue());
+			return feature;
+		}
+
 	}
-	
-//	public SimpleFeature getFeatureAsPoint(SimpleFeatureBuilder featureBuilder) { 
-//		this.geometry=this.geometry.getCentroid();
-//		return getFeature(featureBuilder);
-//	}
-	
+
+	//	public SimpleFeature getFeatureAsPoint(SimpleFeatureBuilder featureBuilder) { 
+	//		this.geometry=this.geometry.getCentroid();
+	//		return getFeature(featureBuilder);
+	//	}
+
 	/**
 	 * devuelve un array con los elementos particulares de la subclase
 	 * @return

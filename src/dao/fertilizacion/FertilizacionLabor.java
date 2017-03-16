@@ -9,7 +9,7 @@ import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
 import dao.Clasificador;
-import dao.FeatureContainer;
+import dao.LaborItem;
 import dao.Labor;
 import dao.LaborConfig;
 import dao.config.Configuracion;
@@ -41,7 +41,6 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 	//public FertilizacionConfig config=null;
 
 	public Property<Fertilizante> fertilizante=null;
-
 
 	public FertilizacionLabor() {
 		initConfig();
@@ -221,7 +220,7 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 		 
 	
 	
-	fi.setCantFertHa( FeatureContainer.getDoubleFromObj(next
+	fi.setCantFertHa( LaborItem.getDoubleFromObj(next
 			.getAttribute(COLUMNA_KG_HA)));
 //	Object cantObj = harvestFeature.getAttribute(getColumn(KG_HA_COLUMN));
 //	ci.cantFertHa = super.getDoubleFromObj(cantObj);
@@ -244,7 +243,7 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 		super.constructFeatureContainer(fi,next);
 
 		
-	fi.setCantFertHa( FeatureContainer.getDoubleFromObj(next
+	fi.setCantFertHa( LaborItem.getDoubleFromObj(next
 			.getAttribute(colKgHaProperty.get())));
 //	Object cantObj = harvestFeature.getAttribute(getColumn(KG_HA_COLUMN));
 //	ci.cantFertHa = super.getDoubleFromObj(cantObj);

@@ -12,7 +12,7 @@ import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
-public class SueloItem extends FeatureContainer {
+public class SueloItem extends LaborItem {
 	public static final String AGUA_PERFIL= "Agua Perfil";
 	public static final String PROF_NAPA= "Napa";
 	public static final String PPM_FOSFORO = "Fosforo";

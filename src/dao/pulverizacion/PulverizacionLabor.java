@@ -4,42 +4,40 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.geotools.data.DataUtilities;
 import org.geotools.data.FileDataStore;
-import org.geotools.feature.SchemaException;
 import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
 
 import dao.Clasificador;
-import dao.FeatureContainer;
 import dao.Labor;
 import dao.LaborConfig;
+import dao.LaborItem;
+import dao.config.Agroquimico;
 import dao.config.Configuracion;
-import dao.cosecha.CosechaConfig;
-import dao.cosecha.CosechaItem;
-import dao.cosecha.CosechaLabor;
-import dao.fertilizacion.FertilizacionLabor;
-import dao.siembra.SiembraLabor;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.Property;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public class PulverizacionLabor extends Labor<PulverizacionItem> {
-	private static final String COLUMNA_COSTO_PAQ = "CostoPaq";
+	private static final String COLUMNA_DOSIS = "Dosis";
 	private static final String COLUMNA_PASADAS = "CantPasada";
 	public static final String COLUMNA_PRECIO_PASADA = "CostoLab";	
-	public static final String COLUMNA_IMPORTE_HA = "importe_ha";
+	public static final String COLUMNA_IMPORTE_HA = "Importe_ha";
 
 	private static final String COSTO_LABOR_PULVERIZACION = "costoLaborPulverizacion";
+	private static final String AGROQUIMICO_DEFAULT = "AGROQUIMICO_DEFAULT_KEY";
+	private static final String PRECIO_INSUMO_KEY = "PRECIO_INSUMO";
 	
-	public StringProperty colCostoPaqProperty;
+	public StringProperty colDosisProperty;
 	public StringProperty colCantPasadasProperty;
 	
 	private static Map<String, String> columnsMap= new HashMap<String, String>();
 	
 	//public PulverizacionConfig config=null;
+	public Property<Agroquimico> agroquimico=null;
 
 	public PulverizacionLabor() {
 		initConfig();
@@ -59,67 +57,80 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 		//config = new PulverizacionConfig();
 		Configuracion properties = getConfigLabor().getConfigProperties();
 		
-		colCostoPaqProperty = new SimpleStringProperty(
+		colDosisProperty = new SimpleStringProperty(
 				properties.getPropertyOrDefault(
-						PulverizacionLabor.COLUMNA_COSTO_PAQ,
-						PulverizacionLabor.COLUMNA_COSTO_PAQ));
-		if(!availableColums.contains(colCostoPaqProperty.get())&&availableColums.contains(PulverizacionLabor.COLUMNA_COSTO_PAQ)){
-			colCostoPaqProperty.setValue(PulverizacionLabor.COLUMNA_COSTO_PAQ);
+						PulverizacionLabor.COLUMNA_DOSIS,
+						PulverizacionLabor.COLUMNA_DOSIS));
+		if(!availableColums.contains(colDosisProperty.get())&&availableColums.contains(PulverizacionLabor.COLUMNA_DOSIS)){
+			colDosisProperty.setValue(PulverizacionLabor.COLUMNA_DOSIS);
 		}
-		colCostoPaqProperty.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(PulverizacionLabor.COLUMNA_COSTO_PAQ,
+		colDosisProperty.addListener((obs, bool1, bool2) -> {
+			properties.setProperty(PulverizacionLabor.COLUMNA_DOSIS,
 					bool2.toString());
 		});
 		
-		colAmount= new SimpleStringProperty(PulverizacionLabor.COLUMNA_COSTO_PAQ);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
+		colAmount= new SimpleStringProperty(PulverizacionLabor.COLUMNA_DOSIS);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
 
+		
+		colCantPasadasProperty = new SimpleStringProperty(
+				properties.getPropertyOrDefault(
+						PulverizacionLabor.COLUMNA_PASADAS,
+						PulverizacionLabor.COLUMNA_PASADAS));
+		if(!availableColums.contains(colCantPasadasProperty.get())&&availableColums.contains(PulverizacionLabor.COLUMNA_PASADAS)){
+			colCantPasadasProperty.setValue(PulverizacionLabor.COLUMNA_PASADAS);
+		}
+		colCantPasadasProperty.addListener((obs, bool1, bool2) -> {
+			properties.setProperty(PulverizacionLabor.COLUMNA_PASADAS,
+					bool2.toString());
+		});
+		
 		/*columnas nuevas*/
 		colElevacion = new SimpleStringProperty(
-				properties.getPropertyOrDefault(CosechaLabor.COLUMNA_ELEVACION,
-						CosechaLabor.COLUMNA_ELEVACION));
-		if(!availableColums.contains(colElevacion.get())&&availableColums.contains(CosechaLabor.COLUMNA_ELEVACION)){
-			colElevacion.setValue(CosechaLabor.COLUMNA_ELEVACION);
+				properties.getPropertyOrDefault(Labor.COLUMNA_ELEVACION,
+						Labor.COLUMNA_ELEVACION));
+		if(!availableColums.contains(colElevacion.get())&&availableColums.contains(Labor.COLUMNA_ELEVACION)){
+			colElevacion.setValue(Labor.COLUMNA_ELEVACION);
 		}
 		colElevacion.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(CosechaLabor.COLUMNA_ELEVACION,
+			properties.setProperty(Labor.COLUMNA_ELEVACION,
 					bool2.toString());
 		});
 		
 		colAncho = new SimpleStringProperty(properties.getPropertyOrDefault(
-				CosechaLabor.COLUMNA_ANCHO, CosechaLabor.COLUMNA_ANCHO));
-		if(!availableColums.contains(colAncho.get())&&availableColums.contains(CosechaLabor.COLUMNA_ANCHO)){
-			colAncho.setValue(CosechaLabor.COLUMNA_ANCHO);
+				Labor.COLUMNA_ANCHO, Labor.COLUMNA_ANCHO));
+		if(!availableColums.contains(colAncho.get())&&availableColums.contains(Labor.COLUMNA_ANCHO)){
+			colAncho.setValue(Labor.COLUMNA_ANCHO);
 		} 
 		colAncho.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(CosechaLabor.COLUMNA_ANCHO, bool2);
+			properties.setProperty(Labor.COLUMNA_ANCHO, bool2);
 		});// bool2 es un string asi que no necesito convertirlo
 		
 		colDistancia = new SimpleStringProperty(properties.getPropertyOrDefault(
-				CosechaLabor.COLUMNA_DISTANCIA, CosechaLabor.COLUMNA_DISTANCIA));
-		if(!availableColums.contains(colAncho.get())&&availableColums.contains(CosechaLabor.COLUMNA_DISTANCIA)){
-			colDistancia.setValue(CosechaLabor.COLUMNA_DISTANCIA);
+				Labor.COLUMNA_DISTANCIA, Labor.COLUMNA_DISTANCIA));
+		if(!availableColums.contains(colAncho.get())&&availableColums.contains(Labor.COLUMNA_DISTANCIA)){
+			colDistancia.setValue(Labor.COLUMNA_DISTANCIA);
 		} 
 		colAncho.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(CosechaLabor.COLUMNA_ANCHO, bool2);
+			properties.setProperty(Labor.COLUMNA_ANCHO, bool2);
 		});// bool2 es un string asi que no necesito convertirlo
 		
 		colCurso = new SimpleStringProperty(properties.getPropertyOrDefault(
-				CosechaLabor.COLUMNA_CURSO, CosechaLabor.COLUMNA_CURSO));
-		if(!availableColums.contains(colCurso.get())&&availableColums.contains(CosechaLabor.COLUMNA_CURSO)){
-			colCurso.setValue(CosechaLabor.COLUMNA_CURSO);
+				Labor.COLUMNA_CURSO, Labor.COLUMNA_CURSO));
+		if(!availableColums.contains(colCurso.get())&&availableColums.contains(Labor.COLUMNA_CURSO)){
+			colCurso.setValue(Labor.COLUMNA_CURSO);
 		}
 		colCurso.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(CosechaLabor.COLUMNA_CURSO, bool2.toString());
+			properties.setProperty(Labor.COLUMNA_CURSO, bool2.toString());
 		});
 
 		colDistancia = new SimpleStringProperty(
-				properties.getPropertyOrDefault(CosechaLabor.COLUMNA_DISTANCIA,
-						CosechaLabor.COLUMNA_DISTANCIA));
-		if(!availableColums.contains(colDistancia.get())&&availableColums.contains(CosechaLabor.COLUMNA_DISTANCIA)){
-			colDistancia.setValue(CosechaLabor.COLUMNA_DISTANCIA);
+				properties.getPropertyOrDefault(Labor.COLUMNA_DISTANCIA,
+						Labor.COLUMNA_DISTANCIA));
+		if(!availableColums.contains(colDistancia.get())&&availableColums.contains(Labor.COLUMNA_DISTANCIA)){
+			colDistancia.setValue(Labor.COLUMNA_DISTANCIA);
 		}
 		colDistancia.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(CosechaLabor.COLUMNA_DISTANCIA,
+			properties.setProperty(Labor.COLUMNA_DISTANCIA,
 					bool2.toString());
 		});
 		
@@ -136,9 +147,9 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 		
 		precioInsumoProperty = new SimpleDoubleProperty(
 				Double.parseDouble(properties.getPropertyOrDefault(
-						PulverizacionLabor.COLUMNA_COSTO_PAQ, "0")));
+						PulverizacionLabor.PRECIO_INSUMO_KEY, "0.0")));
 		precioInsumoProperty.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(PulverizacionLabor.COLUMNA_COSTO_PAQ,
+			properties.setProperty(PulverizacionLabor.PRECIO_INSUMO_KEY,
 					bool2.toString());
 		});
 		
@@ -157,6 +168,10 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 				}
 			);
 		
+		String fertKEY = properties.getPropertyOrDefault(
+				PulverizacionLabor.AGROQUIMICO_DEFAULT, Agroquimico.agroquimicos.values().iterator().next().getNombre());
+		 agroquimico = new SimpleObjectProperty<Agroquimico>(Agroquimico.agroquimicos.get(fertKEY));//values().iterator().next());
+
 	}
 		
 //	@Override
@@ -197,7 +212,7 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 				getCostoLaborHa(),
 				getImporteHa()
 		 */
-		String type = PulverizacionLabor.COLUMNA_COSTO_PAQ + ":Double,"
+		String type = PulverizacionLabor.COLUMNA_DOSIS + ":Double,"
 				+ PulverizacionLabor.COLUMNA_PASADAS + ":Double,"
 				+ PulverizacionLabor.COLUMNA_PRECIO_PASADA + ":Double,"
 				+ PulverizacionLabor.COLUMNA_IMPORTE_HA + ":Double";
@@ -210,13 +225,14 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 		PulverizacionItem pItem = new PulverizacionItem(next);
 		super.constructFeatureContainerStandar(pItem,next,newIDS);
 			
-	pItem.setCostoPaquete( FeatureContainer.getDoubleFromObj(next
-			.getAttribute(PulverizacionLabor.COLUMNA_COSTO_PAQ)));
+	pItem.setPrecioInsumo(this.precioInsumoProperty.get());
+	pItem.setDosis( LaborItem.getDoubleFromObj(next
+			.getAttribute(PulverizacionLabor.COLUMNA_DOSIS)));
 
-	pItem.setCantPasadasHa(FeatureContainer.getDoubleFromObj(next
+	pItem.setCantPasadasHa(LaborItem.getDoubleFromObj(next
 			.getAttribute(PulverizacionLabor.COLUMNA_PASADAS)));
 	
-	pItem.setCostoLaborHa(FeatureContainer.getDoubleFromObj(next
+	pItem.setCostoLaborHa(LaborItem.getDoubleFromObj(next
 			.getAttribute(PulverizacionLabor.COLUMNA_PRECIO_PASADA)));	
 	//ci.setImporteHa(cantFertHa * precioFert + precioPasada);//no hace falta setearlo porque se actualiza en el get
 	
@@ -229,12 +245,12 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 		
 		PulverizacionItem fi = new PulverizacionItem(next);
 		super.constructFeatureContainer(fi,next);
-		
-	
 
-	fi.setCostoPaquete( FeatureContainer.getDoubleFromObj(next
-			.getAttribute(colCostoPaqProperty.get())));
-	fi.setCantPasadasHa(FeatureContainer.getDoubleFromObj(next
+	fi.setDosis( LaborItem.getDoubleFromObj(next
+			.getAttribute(colDosisProperty.get())));
+	fi.setPrecioInsumo(this.precioInsumoProperty.get());
+	
+	fi.setCantPasadasHa(LaborItem.getDoubleFromObj(next
 			.getAttribute(colCantPasadasProperty.get())));
 	fi.setCostoLaborHa(this.precioLaborProperty.get());	
 	//ci.setImporteHa(cantFertHa * precioFert + precioPasada);//no hace falta setearlo porque se actualiza en el get
@@ -267,7 +283,7 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 
 		public void setColumnsMap(Map<String, String> columns) {
 		columnsMap=columns;
-		colCostoPaqProperty.setValue(columnsMap.get(PulverizacionItem.COLUMNA_COSTO_PAQUETE));
+		colDosisProperty.setValue(columnsMap.get(PulverizacionItem.COLUMNA_COSTO_PAQUETE));
 		colCantPasadasProperty.setValue(columnsMap.get(PulverizacionItem.COLUMNA_CANT_PASADAS));
 
 	}

@@ -3,7 +3,9 @@ package tasks;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.geometry.BoundingBox;
@@ -15,9 +17,10 @@ import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
-import dao.FeatureContainer;
+import dao.LaborItem;
 import dao.Labor;
 import dao.cosecha.CosechaConfig;
+import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.margen.Margen;
@@ -32,7 +35,7 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 	double distanciaAvanceMax = 0;
 	double anchoMax = 0;
 
-	Quadtree geometryTree = null;
+//	Quadtree geometryTree = null;
 	//Quadtree featureTree = null;
 
 	private int featureCount;
@@ -53,7 +56,7 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 		this.cosechas = cosechas;
 
 		this.costoFijoHa = margen.costoFijoHaProperty.getValue();
-
+	
 		System.out.println("inicializando ProcessMarginMapTask con costo Fijo = "+ costoFijoHa);
 	}
 
@@ -64,18 +67,31 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 
 		List<Polygon> geometryList = construirGrilla(getBounds());
 
+		
 		featureCount = geometryList.size();
-		List<MargenItem> itemsToShow = new ArrayList<MargenItem>();
-		geometryList.parallelStream().forEach(polygon->{	
+	//	List<MargenItem> itemsToShow = new ArrayList<MargenItem>();
+		
+		List<MargenItem> itemsToShow = 	geometryList.parallelStream().collect(	
+				() -> new  LinkedList<MargenItem>(),
+				(list, polygon) -> {//	).forEach(polygon->{	
 			featureNumber++;
 			updateProgress(featureNumber, featureCount);	
 			MargenItem renta = createRentaForPoly(polygon);			
-			if(renta.getCostoPorHa()>0||renta.getImporteCosechaHa()>0){
+			if(renta.getImporteFertHa()>0||
+					renta.getImportePulvHa()>0||
+					renta.getImporteSiembraHa()>0||
+					renta.getImporteCosechaHa()!=0){//solo lo descarto si no tienen costos variables
 				labor.insertFeature(renta);
-				itemsToShow.add(renta);
+				list.add(renta);
 			}
-		});
+		},
+		(list1, list2) -> list1.addAll(list2));
 
+		pulverizaciones.forEach((l)->l.clearCache());
+		fertilizaciones.forEach((l)->l.clearCache());
+		cosechas.forEach((l)->l.clearCache());
+		siembras.forEach((l)->l.clearCache());
+		
 		labor.constructClasificador();
 		runLater(itemsToShow);
 		updateProgress(0, featureCount);	
@@ -107,28 +123,35 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 		return unionEnvelope;
 	}
 
-
-	public List<Polygon> construirGrilla(BoundingBox bounds) {
+	/**
+	 * 
+	 * @param bounds en long/lat
+	 * @param ancho en metros
+	 * @return una lista de poligonos que representa una grilla con un 100% de superposiocion
+	 */
+	private List<Polygon> construirGrilla(BoundingBox bounds) {
+		Double ancho=10d;//new CosechaConfig().getAnchoFiltroOutlayers()/3;
+		
 		System.out.println("construyendo grilla");
 		List<Polygon> polygons = new ArrayList<Polygon>();
-		//	 = getBounds();
-		Double minX = bounds.getMinX()/ProyectionConstants.metersToLong;
-		Double minY = bounds.getMinY()/ProyectionConstants.metersToLat;
-		Double maxX = bounds.getMaxX()/ProyectionConstants.metersToLong;
-		Double maxY = bounds.getMaxY()/ProyectionConstants.metersToLat;
-		Double ancho=new CosechaConfig().getAnchoFiltroOutlayers()/4;
-		for(int x=0;(minX+x*ancho)<maxX;x++){
-			Double x0=minX+x*ancho;
+		//convierte los bounds de longlat a metros
+		Double minX = bounds.getMinX()/ProyectionConstants.metersToLong() - ancho/2;
+		Double minY = bounds.getMinY()/ProyectionConstants.metersToLat() - ancho/2;
+		Double maxX = bounds.getMaxX()/ProyectionConstants.metersToLong() + ancho/2;
+		Double maxY = bounds.getMaxY()/ProyectionConstants.metersToLat() + ancho/2;
+		Double x0=minX;
+		for(int x=0;(x0)<maxX;x++){
+			x0=minX+x*ancho;
 			Double x1=minX+(x+1)*ancho;
 			for(int y=0;(minY+y*ancho)<maxY;y++){
 				Double y0=minY+y*ancho;
 				Double y1=minY+(y+1)*ancho;
 
 
-				Coordinate D = new Coordinate(x0*ProyectionConstants.metersToLong, y0*ProyectionConstants.metersToLat); 
-				Coordinate C = new Coordinate(x1*ProyectionConstants.metersToLong, y0*ProyectionConstants.metersToLat);
-				Coordinate B = new Coordinate(x1*ProyectionConstants.metersToLong, y1*ProyectionConstants.metersToLat);
-				Coordinate A =  new Coordinate(x0*ProyectionConstants.metersToLong, y1*ProyectionConstants.metersToLat);
+				Coordinate D = new Coordinate(x0*ProyectionConstants.metersToLong(), y0*ProyectionConstants.metersToLat()); 
+				Coordinate C = new Coordinate(x1*ProyectionConstants.metersToLong(), y0*ProyectionConstants.metersToLat());
+				Coordinate B = new Coordinate(x1*ProyectionConstants.metersToLong(), y1*ProyectionConstants.metersToLat());
+				Coordinate A =  new Coordinate(x0*ProyectionConstants.metersToLong(), y1*ProyectionConstants.metersToLat());
 
 				/**
 				 * D-- ancho de carro--C ^ ^ | | avance ^^^^^^^^ avance | | A-- ancho de
@@ -156,6 +179,55 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 		}
 		return polygons;
 	}
+	
+//	public List<Polygon> construirGrilla(BoundingBox bounds) {
+//		System.out.println("construyendo grilla");
+//		List<Polygon> polygons = new ArrayList<Polygon>();
+//		//	 = getBounds();
+//		Double minX = bounds.getMinX()/ProyectionConstants.metersToLong();
+//		Double minY = bounds.getMinY()/ProyectionConstants.metersToLat();
+//		Double maxX = bounds.getMaxX()/ProyectionConstants.metersToLong();
+//		Double maxY = bounds.getMaxY()/ProyectionConstants.metersToLat();
+//		Double ancho=new CosechaConfig().getAnchoFiltroOutlayers()/4;
+//		for(int x=0;(minX+x*ancho)<maxX;x++){
+//			Double x0=minX+x*ancho;
+//			Double x1=minX+(x+1)*ancho;
+//			for(int y=0;(minY+y*ancho)<maxY;y++){
+//				Double y0=minY+y*ancho;
+//				Double y1=minY+(y+1)*ancho;
+//
+//
+//				Coordinate D = new Coordinate(x0*ProyectionConstants.metersToLong(), y0*ProyectionConstants.metersToLat()); 
+//				Coordinate C = new Coordinate(x1*ProyectionConstants.metersToLong(), y0*ProyectionConstants.metersToLat());
+//				Coordinate B = new Coordinate(x1*ProyectionConstants.metersToLong(), y1*ProyectionConstants.metersToLat());
+//				Coordinate A =  new Coordinate(x0*ProyectionConstants.metersToLong(), y1*ProyectionConstants.metersToLat());
+//
+//				/**
+//				 * D-- ancho de carro--C ^ ^ | | avance ^^^^^^^^ avance | | A-- ancho de
+//				 * carro--B
+//				 * 
+//				 */
+//				Coordinate[] coordinates = { A, B, C, D, A };// Tiene que ser cerrado.
+//				// Empezar y terminar en
+//				// el mismo punto.
+//				// sentido antihorario
+//
+//				//			GeometryFactory fact = X.getFactory();
+//				GeometryFactory fact = new GeometryFactory();
+//
+//
+//				//				DirectPosition upper = positionFactory.createDirectPosition(new double[]{-180,-90});
+//				//				DirectPosition lower = positionFactory.createDirectPosition(new double[]{180,90});
+//				//	Envelope envelope = geometryFactory.createEnvelope( upper, lower );
+//
+//				LinearRing shell = fact.createLinearRing(coordinates);
+//				LinearRing[] holes = null;
+//				Polygon poly = new Polygon(shell, holes, fact);			
+//				polygons.add(poly);
+//			}
+//		}
+//		return polygons;
+//	}
 
 
 	private MargenItem createRentaForPoly(Polygon harvestPolygon) {
@@ -163,7 +235,7 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 		Double importePulv;
 		Double importeFert;
 		Double importeSiembra;
-		Double areaMargen = harvestPolygon.getArea() * ProyectionConstants.A_HAS;
+		Double areaMargen = harvestPolygon.getArea() * ProyectionConstants.A_HAS();
 		Double importeFijo = costoFijoHa*areaMargen;
 
 		importeCosecha = getImporteCosecha(harvestPolygon);
@@ -172,6 +244,7 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 		importePulv = getImportePulv(harvestPolygon);
 		importeFert = getImporteFert(harvestPolygon);
 		importeSiembra = getImporteSiembra(harvestPolygon);
+		
 
 
 		Double margenPorHa = (importeCosecha
@@ -179,6 +252,10 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 				/ areaMargen;
 
 		MargenItem renta = new MargenItem();
+		synchronized(labor){
+			//c = new CosechaItem();
+			renta.setId(labor.getNextID());
+		}
 		renta.setGeometry(harvestPolygon);
 		renta.setImportePulvHa(importePulv/ areaMargen);
 		renta.setImporteFertHa(importeFert/ areaMargen);
@@ -186,6 +263,11 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 		renta.setCostoFijoPorHa(costoFijoHa);
 		renta.setImporteCosechaHa(importeCosecha/ areaMargen);
 		renta.setMargenPorHa(margenPorHa);
+		
+		renta.setAncho(0d);
+		renta.setDistancia(0d);
+		renta.setElevacion(1d);
+		renta.setRumbo(0d);
 		return renta;
 	}
 
@@ -204,21 +286,22 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 	}
 
 	private Double getImporteLabores(Geometry geometry, List<? extends Labor<?>> labores){
-		return labores.stream().filter((l)->l.getLayer().isEnabled())
+		Double ret =  labores.stream().filter((l)->l.getLayer().isEnabled())
 				.mapToDouble((labor)->{
-					List<? extends FeatureContainer> cItems = labor.outStoreQuery(geometry.getEnvelopeInternal());
+					List<? extends LaborItem> cItems = labor.cachedOutStoreQuery(geometry.getEnvelopeInternal());
 
 					Double importeCosecha =	cItems.stream().mapToDouble((ci)->{
 						Double costoHa = (Double) ci.getImporteHa();
 						Geometry cosechaGeom = ci.getGeometry();
 						Geometry interseccionGeom = geometry.intersection(cosechaGeom);// Computes a
-						Double area = interseccionGeom.getArea() * ProyectionConstants.A_HAS;
+						Double area = interseccionGeom.getArea() * ProyectionConstants.A_HAS();
 						//importeCosecha+=costoHa*area;
 						return costoHa*area;
 					}).sum();
 
 					return importeCosecha;
 				}).sum();
+		return ret;
 	}
 
 
@@ -229,10 +312,13 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 
 	//	gov.nasa.worldwind.render.Polygon path = getPathFromGeom2D(poly, renta);
 
-		double area = poly.getArea() * ProyectionConstants.A_HAS;// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 
 
-		DecimalFormat df = new DecimalFormat("#.00");
+		DecimalFormat df = new DecimalFormat("0.00");
+		df.setGroupingSize(3);
+		
+		df.setGroupingUsed(true);
 
 		String tooltipText = new String(
 				"Rentabilidad: "+ df.format(renta.getRentabilidadHa())+ "%\n\n" 
@@ -257,7 +343,7 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 //		ret.add(path);
 //		ret.add(tooltipText);
 		//return ret;
-		super.getPathFromGeom2D(poly, renta,tooltipText);
+		super.getRenderPolygonFromGeom(poly, renta,tooltipText);
 	}
 
 

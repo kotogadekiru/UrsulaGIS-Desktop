@@ -39,6 +39,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Path;
 import javafx.util.Duration;
+import mmg.gui.CosechaHistoChart;
 import utils.ProyectionConstants;
 
 /**
@@ -226,7 +227,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
                     double candleWidth = Math.min(100, bar.getVolume().intValue()/ProyectionConstants.METROS2_POR_HA);
                     // update candle
                     double closeOfset = -10;//close - y;// es el alto de la barra que muestra el promedio
-                   
+                   candle.color = CosechaHistoChart.colors[bar.getClase()];
                     candle.update(closeOfset, high - y, low - y, candleWidth);//esto da cero porque y y close, etc son iguales
 
                     // update tooltip content
@@ -407,6 +408,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
         private String dataStyleClass;
         private boolean openAboveClose = true;
         private final Tooltip tooltip = new Tooltip();
+        String color = "blue";
 
         private Candle(String seriesStyleClass, String dataStyleClass) {
             setAutoSizeChildren(false);
@@ -452,8 +454,13 @@ public class CandleStickChart extends XYChart<Number, Number> {
             highLowLine.getStyleClass().setAll("candlestick-line", seriesStyleClass, dataStyleClass,
                     openAboveClose ? "open-above-close" : "close-above-open");
             
-            bar.getStyleClass().setAll("candlestick-bar", seriesStyleClass, dataStyleClass,
-                    openAboveClose ? "open-above-close" : "close-above-open");
+//            bar.getStyleClass().setAll("candlestick-bar", seriesStyleClass, dataStyleClass,
+//                    openAboveClose ? "open-above-close" : "close-above-open");
+          
+			
+			bar.setStyle("  -fx-background-color:  " + color + ";"
+		    +"-fx-border-width: 1, 1,1,1;"
+		    +"-fx-border-color: #e2e2e2;");
         }
     }
 

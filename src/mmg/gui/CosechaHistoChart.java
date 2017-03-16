@@ -25,14 +25,14 @@ import utils.ProyectionConstants;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-import dao.FeatureContainer;
+import dao.LaborItem;
 import dao.Labor;
 import dao.cosecha.CosechaLabor;
 
 public class CosechaHistoChart extends VBox {
 	// VBox root = new VBox();
 	private static final String ICON = "gisUI/1-512.png";
-	private String[] colors = {
+	public static final String[] colors = {
 		//	"rgb(158,1,66)",
 		//	"rgb(213,62,79)",
 			" rgb(244,109,67)", 
@@ -178,9 +178,9 @@ public class CosechaHistoChart extends VBox {
 		SimpleFeatureIterator it = labor.outCollection.features();
 		while(it.hasNext()){
 			SimpleFeature f = it.next();
-			Double rinde = FeatureContainer.getDoubleFromObj(f.getAttribute(labor.colAmount.get()));//labor.colAmount.get()
+			Double rinde = LaborItem.getDoubleFromObj(f.getAttribute(labor.colAmount.get()));//labor.colAmount.get()
 			Geometry geometry = (Geometry) f.getDefaultGeometry();
-			Double area = geometry.getArea() * ProyectionConstants.A_HAS;
+			Double area = geometry.getArea() * ProyectionConstants.A_HAS();
 			int categoria = labor.getClasificador().getCategoryFor(rinde);
 
 			Double sup = superficies[categoria];

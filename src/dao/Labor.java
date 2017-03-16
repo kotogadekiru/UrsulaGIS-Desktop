@@ -3,13 +3,17 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.MalformedURLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 import org.geotools.data.DataUtilities;
 import org.geotools.data.DefaultTransaction;
@@ -27,6 +31,7 @@ import org.geotools.feature.SchemaException;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.filter.identity.FeatureIdImpl;
 import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.geotools.index.quadtree.QuadTree;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -37,11 +42,14 @@ import org.opengis.filter.Id;
 import org.opengis.filter.spatial.BBOX;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
+import com.google.api.client.util.Lists;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.index.quadtree.Quadtree;
 
 import dao.config.Configuracion;
 import dao.config.Cultivo;
@@ -51,11 +59,14 @@ import dao.cosecha.CosechaLabor;
 import dao.margen.Margen;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.Property;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import mmg.gui.nww.LaborLayer;
+import mmg.gui.utils.DateConverter;
 import utils.ProyectionConstants;
 
 /**
@@ -64,14 +75,15 @@ import utils.ProyectionConstants;
  *
  * @param <E>
  */
-public abstract class Labor<E extends FeatureContainer>  {
+public abstract class Labor<E extends LaborItem>  {
 	public static final String NONE_SELECTED = "Ninguna";
 	public static final String LABOR_LAYER_IDENTIFICATOR = "LABOR";
 	public FileDataStore inStore = null;
 	//public ShapefileDataStore outStore = null;
 	public DefaultFeatureCollection outCollection=null;
+	public DefaultFeatureCollection inCollection=null;
 	public StringProperty nombreProperty = new SimpleStringProperty();
-	public RenderableLayer layer;//realmente quiero guardar esto aca?? o me conviene ponerlo en un mapa en otro lado para evitar la vinculacion de objetos
+	public LaborLayer layer;//realmente quiero guardar esto aca?? o me conviene ponerlo en un mapa en otro lado para evitar la vinculacion de objetos
 
 	protected static final String COLUMNA_CATEGORIA = "Categoria";
 	public static final String COLUMNA_DISTANCIA = "Distancia";
@@ -80,6 +92,7 @@ public abstract class Labor<E extends FeatureContainer>  {
 	public static final String COLUMNA_ELEVACION = "Elevacion";
 
 	private static final String ANCHO_DEFAULT = "ANCHO_DEFAULT";
+	private static final String FECHA_KEY = "FECHA_KEY";
 
 	public Clasificador clasificador=null;
 	public SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(getType());
@@ -96,15 +109,36 @@ public abstract class Labor<E extends FeatureContainer>  {
 	/**
 	 * precio es el costo por hectarea de la labor
 	 */
+	public Property<LocalDate> fechaProperty=null;
 	public DoubleProperty precioLaborProperty=null;
 	public DoubleProperty precioInsumoProperty=null;
 	public SimpleDoubleProperty anchoDefaultProperty= null;
 
-	public Map<Envelope,List<E>> cachedEnvelopes=Collections.synchronizedMap(new HashMap<Envelope,List<E>>());
+	//public Map<Envelope,List<E>> cachedEnvelopes=Collections.synchronizedMap(new HashMap<Envelope,List<E>>());
+	
+	public Quadtree treeCache = null;
+	
 	private CoordinateReferenceSystem targetCRS;
 
 	public LaborConfig config = null;
+
+	public Double minElev=Double.MAX_VALUE;
+	public Double maxElev=-Double.MAX_VALUE;
+	//average 
+	//desvio
+	public Double minAmount=Double.MAX_VALUE;
+	public Double maxAmount=-Double.MAX_VALUE;
+	//average
+	//desvio
 	
+	//TODO cambiar por un referencedEnvelope
+	public Double minX = Double.MAX_VALUE;
+	public Double minY = Double.MAX_VALUE;
+	public Double maxX = -Double.MAX_VALUE;
+	public Double maxY = -Double.MAX_VALUE;
+
+	public Geometry envelope = null;// no puedo cachear la geometria total porque tarda mucho
+
 	public Labor(){
 		clasificador=new Clasificador();
 		outCollection = new DefaultFeatureCollection("internal",getType());
@@ -122,19 +156,19 @@ public abstract class Labor<E extends FeatureContainer>  {
 	private void initConfigLabor() {
 		//	initConfig();//inicio el config de la sub labor 
 		List<String> availableColums = this.getAvailableColumns();		
-//	Configuracion properties = getConfigLabor().getConfigProperties();
+		//	Configuracion properties = getConfigLabor().getConfigProperties();
 		LaborConfig laborConfig = getConfigLabor();
 		Configuracion properties = laborConfig.getConfigProperties();
 
 		colElevacion = new SimpleStringProperty(
-				properties.getPropertyOrDefault(CosechaLabor.COLUMNA_ELEVACION,
-						CosechaLabor.COLUMNA_ELEVACION));
+				properties.getPropertyOrDefault(COLUMNA_ELEVACION,
+						COLUMNA_ELEVACION));
 		if(!availableColums.contains(colElevacion.get()) && 
-				availableColums.contains(CosechaLabor.COLUMNA_ELEVACION)){
-			colElevacion.setValue(CosechaLabor.COLUMNA_ELEVACION);
+				availableColums.contains(COLUMNA_ELEVACION)){
+			colElevacion.setValue(COLUMNA_ELEVACION);
 		}
 		colElevacion.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(CosechaLabor.COLUMNA_ELEVACION,
+			properties.setProperty(COLUMNA_ELEVACION,
 					bool2.toString());
 		});
 
@@ -167,9 +201,18 @@ public abstract class Labor<E extends FeatureContainer>  {
 			properties.setProperty(CosechaLabor.COLUMNA_DISTANCIA,
 					bool2.toString());
 		});
-
-
-
+		
+		fechaProperty = new SimpleObjectProperty<LocalDate>();
+		DateConverter dc = new DateConverter(); 		
+		String defaultDate = properties.getPropertyOrDefault(Labor.FECHA_KEY,	dc.toString(LocalDate.now()));	
+		//LocalDate ld = dc.fromString(dc.toString(LocalDate.now()));		
+		LocalDate ld = dc.fromString(defaultDate);		
+		fechaProperty.setValue(ld);
+		fechaProperty.addListener((obs, bool1, bool2) -> {
+			System.out.println("cambiando la fecha a "+bool2);
+			properties.setProperty(Labor.FECHA_KEY,dc.toString(bool2));
+				//	bool2.toString());
+		});
 
 		precioLaborProperty = initPrecioLaborHaProperty();// initDoubleProperty(CosechaLabor.COSTO_COSECHA_HA, properties);
 
@@ -206,20 +249,20 @@ public abstract class Labor<E extends FeatureContainer>  {
 				Double.parseDouble(properties.getPropertyOrDefault(
 						key, def)));
 		doubleProperty.addListener((obs, bool1, bool2) -> {
-		
+
 			properties.setProperty(key,	bool2.toString());
 		});
 		return doubleProperty;
 	}
-	
+
 	public static SimpleStringProperty initStringProperty(String key,Configuracion properties,List<String> availableColums){
 		SimpleStringProperty sProperty = new SimpleStringProperty(
 				properties.getPropertyOrDefault(key, key));
-		
+
 		if(availableColums!=null && !availableColums.contains(sProperty.get()) && availableColums.contains(key)){
 			sProperty.setValue(key);
 		}
-		
+
 		sProperty.addListener((obs, bool1, bool2) -> {
 			properties.setProperty(key,	bool2.toString());
 		});
@@ -250,11 +293,11 @@ public abstract class Labor<E extends FeatureContainer>  {
 		return clasificador;
 	}
 
-	public RenderableLayer getLayer() {
+	public LaborLayer getLayer() {
 		return layer;
 	}
 
-	public void setLayer(RenderableLayer renderableLayer) {		
+	public void setLayer(LaborLayer renderableLayer) {		
 		this.layer = renderableLayer;
 		renderableLayer.setValue(LABOR_LAYER_IDENTIFICATOR, this);//TODO usar esto para no tener el layer dentro de la cosecha
 		this.nombreProperty.addListener((o,old,nu)->{
@@ -276,48 +319,87 @@ public abstract class Labor<E extends FeatureContainer>  {
 		return nextID;
 	}
 
+//	public List<E> cachedOutStoreQueryOLD(Envelope envelope){
+//		List<E> objects = new ArrayList<E>();
+//		Envelope cachedEnvelope=null;
+//
+//		synchronized(cachedEnvelopes){//tengo que poner todo el metodo en synchro sino pierdo valores al hacer el filtro outlayers
+//			if(cachedEnvelopes.size()>0){
+//
+//				for(Envelope ce : cachedEnvelopes.keySet()){
+//					if(ce.contains(envelope))cachedEnvelope=ce;
+//				}
+//			}
+//
+//			if( cachedEnvelope==null ){
+//				cachedEnvelope = updateCachedEnvelope(envelope);
+//				FeatureType schema = this.outCollection.getSchema();			    
+//				targetCRS = schema.getGeometryDescriptor().getCoordinateReferenceSystem();		
+//			}
+//		}
+//		ReferencedEnvelope bbox = new ReferencedEnvelope(envelope,targetCRS);		
+//		Polygon boundsPolygon = constructPolygon(bbox);
+//		List<E> cachedObjects = cachedEnvelopes.get(cachedEnvelope);
+//
+//		for(E cachedObject : cachedObjects){
+//			Geometry geomEnvelope = cachedObject.getGeometry();
+//			boolean intersects = false;
+//			if(geomEnvelope!=null){
+//				intersects = geomEnvelope.intersects(boundsPolygon);
+//			}
+//			if(intersects){
+//				objects.add(cachedObject);
+//			}
+//		}
+//
+//		return objects;
+//	}
+	
 	public List<E> cachedOutStoreQuery(Envelope envelope){
 		List<E> objects = new ArrayList<E>();
-		Envelope cachedEnvelope=null;
-		if(cachedEnvelopes.size()>0){
-			synchronized(cachedEnvelopes){
-				for(Envelope ce : cachedEnvelopes.keySet()){
-					if(ce.contains(envelope))cachedEnvelope=ce;
-				}
+		synchronized(this){
+			if( treeCache==null){			
+				updateAllCachedEnvelopes(envelope);			
 			}
 		}
-		if( cachedEnvelope==null ){
-			cachedEnvelope = updateCachedEnvelope(envelope);
-			FeatureType schema = this.outCollection.getSchema();			    
-			targetCRS = schema.getGeometryDescriptor().getCoordinateReferenceSystem();		
-		}
+		@SuppressWarnings("unchecked")
+		List<SimpleFeature> cachedObjects = treeCache.query(envelope);
 
-		ReferencedEnvelope bbox = new ReferencedEnvelope(envelope,targetCRS);		
-		Polygon boundsPolygon = constructPolygon(bbox);
-		List<E> cachedObjects = cachedEnvelopes.get(cachedEnvelope);
-
-		for(E cachedObject : cachedObjects){
-			Geometry geomEnvelope = cachedObject.getGeometry();
+		for(SimpleFeature sf : cachedObjects){
+			Geometry sfGeom = (Geometry) sf.getDefaultGeometry();
 			boolean intersects = false;
-			if(geomEnvelope!=null){
-				intersects = geomEnvelope.intersects(boundsPolygon);
+			if(sfGeom!=null){
+				intersects = envelope.intersects(sfGeom.getEnvelopeInternal());
 			}
 			if(intersects){
-				objects.add(cachedObject);
+				objects.add(constructFeatureContainerStandar(sf,false));
 			}
 		}
 
 		return objects;
 	}
 
-	private Envelope updateCachedEnvelope(Envelope envelope){
-		Envelope cachedEnvelope = new Envelope(envelope);
-		double height = cachedEnvelope.getHeight();
-		double width = cachedEnvelope.getHeight();
-		cachedEnvelope.expandBy(width*4, height*4);
-
-		cachedEnvelopes.put(cachedEnvelope, outStoreQuery(cachedEnvelope));
-		return cachedEnvelope;
+	public void clearCache(){
+		treeCache = null;
+	}
+//	private Envelope updateCachedEnvelope(Envelope envelope){
+//		Envelope cachedEnvelope = new Envelope(envelope);
+//		double height = cachedEnvelope.getHeight();
+//		double width = cachedEnvelope.getHeight();
+//		cachedEnvelope.expandBy(width*4, height*4);
+//		cachedEnvelopes.put(cachedEnvelope, outStoreQuery(cachedEnvelope));
+//		return cachedEnvelope;
+//	}
+	
+	private void updateAllCachedEnvelopes(Envelope envelope){
+		treeCache=new Quadtree();
+//TODO cargar todas las features en memoria pero en guardarlas indexadas en cachedEnvelopes
+		@SuppressWarnings("unchecked")
+		Collection<SimpleFeature> items= Lists.newArrayList(outCollection.iterator());
+		items.forEach((it)->{
+			Geometry g =(Geometry) it.getDefaultGeometry();
+			treeCache.insert(g.getEnvelopeInternal(), it);
+		});
 	}
 
 	public List<E> outStoreQuery(Envelope envelope){
@@ -422,26 +504,30 @@ public abstract class Labor<E extends FeatureContainer>  {
 	public void insertFeature(E cosechaFeature) {
 		Geometry cosechaGeom = cosechaFeature.getGeometry();
 		Envelope geomEnvelope=cosechaGeom.getEnvelopeInternal();
-		if(cachedEnvelopes.size()>0){
-			synchronized(cachedEnvelopes){
-				for(Envelope ce : cachedEnvelopes.keySet()){
-					if(ce.contains(geomEnvelope)){
-						List<E> objects = cachedEnvelopes.get(ce);
-						objects.add(cosechaFeature);
-						cachedEnvelopes.replace(ce,  objects);
-					}						
-				}					
+//		if(cachedEnvelopes.size()>0){
+//			synchronized(cachedEnvelopes){
+//				for(Envelope ce : cachedEnvelopes.keySet()){
+//					if(ce.contains(geomEnvelope)){
+//						List<E> objects = cachedEnvelopes.get(ce);
+//						objects.add(cosechaFeature);
+//						cachedEnvelopes.replace(ce,  objects);
+//					}						
+//				}					
+//			}
+//		}
+		synchronized(featureBuilder){
+			SimpleFeature fe = cosechaFeature.getFeature(featureBuilder);
+			if(treeCache!=null){
+				treeCache.insert(geomEnvelope, fe);
 			}
+			this.insertFeature(fe);
 		}
-
-		SimpleFeature fe = cosechaFeature.getFeature(featureBuilder);
-		this.insertFeature(fe);
 	}
 
 	public void insertFeature(SimpleFeature f){
 		outCollection.add(f);
 	}
-	
+
 	public void constructClasificador() {
 		constructClasificador(getConfigLabor().getConfigProperties().getPropertyOrDefault(Clasificador.TIPO_CLASIFICADOR,
 				Clasificador.CLASIFICADOR_JENKINS));
@@ -502,14 +588,20 @@ public abstract class Labor<E extends FeatureContainer>  {
 			inStore = null;
 		}
 
-		if(cachedEnvelopes!=null){
-			cachedEnvelopes.clear();
-			cachedEnvelopes = null;
-		}
-
+//		if(cachedEnvelopes!=null){
+//			cachedEnvelopes.clear();
+//			cachedEnvelopes = null;
+//		}
+		clearCache();
+		
 		if(outCollection!=null){
 			outCollection.clear();
 			outCollection=null;
+		}
+
+		if(inCollection!=null){
+			inCollection.clear();
+			inCollection=null;
 		}
 
 		if(layer!=null){
@@ -520,6 +612,22 @@ public abstract class Labor<E extends FeatureContainer>  {
 			layer=null;
 		}
 
+	}
+
+
+	/**
+	 * @return the inCollection
+	 */
+	public DefaultFeatureCollection getInCollection() {
+		return inCollection;
+	}
+
+
+	/**
+	 * @param inCollection the inCollection to set
+	 */
+	public void setInCollection(DefaultFeatureCollection inCollection) {
+		this.inCollection = inCollection;
 	}
 
 
@@ -561,19 +669,19 @@ public abstract class Labor<E extends FeatureContainer>  {
 		return type;
 	}
 
-	public void constructFeatureContainerStandar(FeatureContainer ci, SimpleFeature harvestFeature, Boolean newIDS) {
-		ci.id = FeatureContainer.getDoubleFromObj(FeatureContainer.getID(harvestFeature));
+	public void constructFeatureContainerStandar(LaborItem ci, SimpleFeature harvestFeature, Boolean newIDS) {
+		ci.id = LaborItem.getDoubleFromObj(LaborItem.getID(harvestFeature));
 		if(ci.id ==null || newIDS){// flag que me permita ignorar el id del feature y asignar uno nuevo
 			ci.id= this.getNextID();
 		}
 
-		ci.distancia = FeatureContainer.getDoubleFromObj(harvestFeature
+		ci.distancia = LaborItem.getDoubleFromObj(harvestFeature
 				.getAttribute(COLUMNA_DISTANCIA));
-		ci.rumbo = FeatureContainer.getDoubleFromObj(harvestFeature
+		ci.rumbo = LaborItem.getDoubleFromObj(harvestFeature
 				.getAttribute(COLUMNA_CURSO));
-		ci.ancho = FeatureContainer.getDoubleFromObj(harvestFeature
+		ci.ancho = LaborItem.getDoubleFromObj(harvestFeature
 				.getAttribute(COLUMNA_ANCHO));
-		ci.elevacion = FeatureContainer.getDoubleFromObj(harvestFeature
+		ci.elevacion = LaborItem.getDoubleFromObj(harvestFeature
 				.getAttribute(COLUMNA_ELEVACION));
 
 		if(this.clasificador!=null && clasificador.isInitialized()){
@@ -587,17 +695,17 @@ public abstract class Labor<E extends FeatureContainer>  {
 
 	}
 
-	public void constructFeatureContainer(FeatureContainer ci, SimpleFeature harvestFeature) {
+	public void constructFeatureContainer(LaborItem ci, SimpleFeature harvestFeature) {
 		ci.setId(getNextID());
 
-		String idString = FeatureContainer.getID(harvestFeature);
-		ci.setId(FeatureContainer.getDoubleFromObj(idString));
+		String idString = LaborItem.getID(harvestFeature);
+		ci.setId(LaborItem.getDoubleFromObj(idString));
 
 		double toMetros = getConfigLabor().valorMetrosPorUnidadDistanciaProperty()
 				.doubleValue();
 
 		String anchoColumn = colAncho.get();
-		ci.setAncho(FeatureContainer.getDoubleFromObj(harvestFeature
+		ci.setAncho(LaborItem.getDoubleFromObj(harvestFeature
 				.getAttribute(anchoColumn)));
 		ci.setAncho(ci.getAncho() * toMetros);
 
@@ -606,22 +714,22 @@ public abstract class Labor<E extends FeatureContainer>  {
 		// cosechaItem a la labor
 		try {//para permitir editar la distancia
 			ci.setDistancia(new Double(distColumn));
-		} catch (Exception e) {
+		} catch (Exception e) {//si distColumn no es un numero procedo a parsear el contenido
 			Object distAttribute = harvestFeature.getAttribute(distColumn);
 
-			ci.setDistancia(FeatureContainer.getDoubleFromObj(distAttribute)
+			ci.setDistancia(LaborItem.getDoubleFromObj(distAttribute)
 					* toMetros);
 		}
 
-		ci.setRumbo(FeatureContainer.getDoubleFromObj(harvestFeature
-				.getAttribute(colCurso.get())));//hay valores que tienen rumbo 0 o 270 que parecen ser errores por no tener continuidad
-
-		//		ci.pasada = FeatureContainer.getDoubleFromObj(harvestFeature
-		//				.getAttribute(colPasada.get()));
+		ci.setRumbo(LaborItem.getDoubleFromObj(harvestFeature
+				.getAttribute(colCurso.get())));
 
 		if(!colElevacion.get().equals(Labor.NONE_SELECTED)){
-			ci.setElevacion( FeatureContainer.getDoubleFromObj(harvestFeature
-					.getAttribute(colElevacion.get())));
+			Double elevacion =  LaborItem.getDoubleFromObj(harvestFeature
+					.getAttribute(colElevacion.get()));
+			ci.setElevacion(elevacion);
+		} else{
+			ci.setElevacion(1.0);
 		}
 
 	}

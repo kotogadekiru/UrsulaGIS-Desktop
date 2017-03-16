@@ -55,7 +55,7 @@ import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 
-import dao.FeatureContainer;
+import dao.LaborItem;
 import dao.config.Cultivo;
 import dao.cosecha.CosechaItem;
 
@@ -205,13 +205,13 @@ public abstract class Process3DMapTask extends Task<Group>{
 	 * @param elementos Lista de Dao ordenados por getAmount() de menor a mayor
 	 * @return 
 	 */
-	public static Double[] constructHistogram(List<? extends FeatureContainer> elementosItem){
+	public static Double[] constructHistogram(List<? extends LaborItem> elementosItem){
 		//1 ordeno los elementos de menor a mayor
 		//2 bsuco el i*size/12 elemento y anoto si amount en la posicion i del vector de rangos
 
 		//elementos.sort((e1, e2) -> e1.getAmount().compareTo(e2.getAmount()));//sorg ascending
 
-		List<FeatureContainer> elementos = new LinkedList<FeatureContainer>(elementosItem);
+		List<LaborItem> elementos = new LinkedList<LaborItem>(elementosItem);
 
 		//Collections.sort(elementos);	
 		System.out.println("termine de ordenar los elementos en constructHistogram");
@@ -286,7 +286,7 @@ public abstract class Process3DMapTask extends Task<Group>{
 	}
 
 
-	protected Path getPathFromGeom(Geometry poly, FeatureContainer dao) {			
+	protected Path getPathFromGeom(Geometry poly, LaborItem dao) {			
 		Path path = new Path();		
 		/**
 		 * recorro el vector de puntos que contiene el poligono gis y creo un
@@ -350,7 +350,7 @@ pathClass = 0x9e0142ff
 		return path;
 	}
 
-	protected List<Polygon> getPolygons(FeatureContainer dao){
+	protected List<Polygon> getPolygons(LaborItem dao){
 
 		List<Polygon> polygons = new ArrayList<Polygon>();
 		Object geometry = dao.getGeometry();

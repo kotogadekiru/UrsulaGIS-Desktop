@@ -9,12 +9,14 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public class Semilla {
-	StringProperty nombre = new SimpleStringProperty();
-	Property<Cultivo> productoProperty=new SimpleObjectProperty<Cultivo>();//values().iterator().next());;
+	private StringProperty nombre = new SimpleStringProperty();
+	private Property<Cultivo> productoProperty=new SimpleObjectProperty<Cultivo>();//values().iterator().next());;
 
 	public static Map<String,Semilla> semillas = new HashMap<String,Semilla>();
 	static{																		
 		semillas.put("Semilla de Maiz",new Semilla("Semilla de Maiz",Cultivo.cultivos.get(Cultivo.MAIZ)));	
+		semillas.put("Semilla de Soja",new Semilla("Semilla de Soja",Cultivo.cultivos.get(Cultivo.SOJA)));
+		semillas.put("Semilla de Trigo",new Semilla("Semilla de Trigo",Cultivo.cultivos.get(Cultivo.TRIGO)));
 
 	}
 
@@ -23,19 +25,42 @@ public class Semilla {
 		productoProperty.setValue(producto);
 	}
 
+	public String getNombre(){
+		return this.nombre.get();
+	}
+
+	public void setNombre(String n){
+		this.nombre.set(n);
+	}
+
+	public String getCultivo(){
+		return this.productoProperty.getValue().getNombre();
+	}
+
+	public void setCultivo(String nombreC){
+		Cultivo c=	Cultivo.cultivos.get(nombreC);	
+		if(c!=null){
+			this.productoProperty.setValue(c);
+		}
+
+	}
+
 	/**
 	 * @return the nombre
 	 */
-	public StringProperty getNombre() {
+	public StringProperty getNombreProperty() {
 		return nombre;
 	}
 
 	/**
 	 * @param nombre the nombre to set
 	 */
-	public void setNombre(StringProperty nombre) {
+	public void setNombreProperty(StringProperty nombre) {
 		this.nombre = nombre;
 	}
 
-	
+	@Override
+	public String toString() {
+		return nombre.getValue();
+	}
 }

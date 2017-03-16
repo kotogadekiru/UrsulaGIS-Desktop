@@ -7,7 +7,7 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
-import dao.FeatureContainer;
+import dao.LaborItem;
 import dao.cosecha.CosechaItem;
 import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
@@ -195,7 +195,7 @@ public class ProcessFertMapTask extends ProcessMapTask<FertilizacionItem,Fertili
 	@Override
 	protected void getPathTooltip(Geometry poly, FertilizacionItem fertFeature) {
 
-		double area = poly.getArea() * ProyectionConstants.A_HAS;// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
 		DecimalFormat df = new DecimalFormat("#.00");
 
@@ -218,7 +218,7 @@ public class ProcessFertMapTask extends ProcessMapTask<FertilizacionItem,Fertili
 		}
 
 		//List  paths = 
-		super.getPathFromGeom2D(poly, fertFeature,tooltipText);
+		super.getRenderPolygonFromGeom(poly, fertFeature,tooltipText);
 
 		//return null;
 	}

@@ -5,6 +5,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import dao.Clasificador;
+import dao.Labor;
+import dao.config.Agroquimico;
+import dao.pulverizacion.PulverizacionLabor;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -18,19 +22,12 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
-import dao.Clasificador;
-import dao.Labor;
-import dao.config.Cultivo;
-import dao.config.Fertilizante;
-import dao.cosecha.CosechaLabor;
-import dao.fertilizacion.FertilizacionLabor;
 
 
 /**
@@ -38,37 +35,37 @@ import dao.fertilizacion.FertilizacionLabor;
  * @author tomas
  *
  */
-public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLabor>{
-	private static final String FERT_CONFIG_DIALOG_FXML = "FertilizacionConfigDialog.fxml";
+public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLabor>{
+	private static final String CONFIG_DIALOG_FXML = "PulvConfigDialog.fxml";
 
 	@FXML
 	private VBox content;
 
-
+//variables
 	@FXML
 	private ComboBox<String> comboDosis;//ok
-
+	
 	@FXML
-	private TextField textPrecioFert;//ok
+	private ComboBox<String> comboPasadas;//ok
 
-
-
-
-
-	@FXML
-	private ComboBox<String> comboElev;//ok
+//fijos
 
 	@FXML
 	private TextField textNombre;//ok
 	
 	@FXML
 	private DatePicker datePickerFecha;//ok
+	
+	@FXML
+	private TextField textPrecioInsumo;//ok
 
-
-
+	@FXML
+	private ComboBox<Agroquimico> comboInsumo;
+	
 	@FXML
 	private TextField textCostoLaborHa;//ok
 
+	//opciones
 	@FXML
 	private TextField textClasesClasificador;
 
@@ -78,15 +75,10 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 	@FXML
 	private ComboBox<String> comboClasificador;//ok
 
-
-	@FXML
-	private ComboBox<Fertilizante> comboFertilizante;
+	private PulverizacionLabor labor;
 
 
-	private FertilizacionLabor labor;
-
-
-	public FertilizacionConfigDialogController() {
+	public PulverizacionConfigDialogController() {
 		super();
 		System.out.println("construyendo el controller");
 
@@ -134,11 +126,7 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 			message.append("Debe seleccionar la columna Dosis\n");
 			isValid=false;
 		}
-		if(cols.indexOf(comboElev.getValue())==-1){
-//			message.append("Debe seleccionar la columna Elevacion\n");
-//			isValid=false;
-			labor.colElevacion.set(Labor.NONE_SELECTED);
-		}
+
 		
 		if(!isValid){
 			Alert alert = new Alert(AlertType.ERROR, message.toString(), ButtonType.OK);
@@ -154,7 +142,7 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 
 
 
-	public void setLabor(FertilizacionLabor l) {
+	public void setLabor(PulverizacionLabor l) {
 		this.labor = l;
 
 		List<String> availableColums = labor.getAvailableColumns();
@@ -162,29 +150,33 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 			return a.compareTo(b);
 		});
 		availableColums.add(Labor.NONE_SELECTED);
+		textNombre.textProperty().bindBidirectional(labor.nombreProperty);
+		
+		//datePickerFecha.valueProperty().bindBidirectional(l.fechaProperty,);
+		datePickerFecha.setValue(l.fechaProperty.getValue());
+		datePickerFecha.valueProperty().addListener((obs, bool1, bool2) -> {
+			
+			l.fechaProperty.setValue(bool2);
+		});
 
-
-		//comboElev
-		this.comboElev.setItems(FXCollections.observableArrayList(availableColums));
-		this.comboElev.valueProperty().bindBidirectional(labor.colElevacion);
-
-
-
-		// colRendimiento;
+		// colDosis
 		this.comboDosis.setItems(FXCollections.observableArrayList(availableColums));
-		this.comboDosis.valueProperty().bindBidirectional(labor.colKgHaProperty);
+		this.comboDosis.valueProperty().bindBidirectional(labor.colDosisProperty);
+		//pasadas
+		this.comboPasadas.setItems(FXCollections.observableArrayList(availableColums));
+		this.comboPasadas.valueProperty().bindBidirectional(labor.colCantPasadasProperty);
 
-	
-		this.comboFertilizante.setItems(FXCollections.observableArrayList(Fertilizante.fertilizantes.values()));
-		this.comboFertilizante.valueProperty().bindBidirectional(labor.fertilizante);
+		//insumo
+		this.comboInsumo.setItems(FXCollections.observableArrayList(Agroquimico.agroquimicos.values()));
+		this.comboInsumo.valueProperty().bindBidirectional(labor.agroquimico);
 
 
 		StringConverter<Number> converter = new NumberStringConverter();
 
 		//textPrecioGrano
-		Bindings.bindBidirectional(this.textPrecioFert.textProperty(), labor.precioInsumoProperty, converter);
+		Bindings.bindBidirectional(this.textPrecioInsumo.textProperty(), labor.precioInsumoProperty, converter);
 
-		//textCostoCosechaHa
+		//textCostoLaborHa
 		Bindings.bindBidirectional(this.textCostoLaborHa.textProperty(), labor.precioLaborProperty, converter);
 
 
@@ -193,13 +185,7 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 		this.comboClasificador.setItems(FXCollections.observableArrayList(Clasificador.clasficicadores));
 		this.comboClasificador.valueProperty().bindBidirectional(labor.clasificador.tipoClasificadorProperty);
 
-		textNombre.textProperty().bindBidirectional(labor.nombreProperty);
-		
-		datePickerFecha.setValue(l.fechaProperty.getValue());
-		datePickerFecha.valueProperty().addListener((obs, bool1, bool2) -> {
-			
-			l.fechaProperty.setValue(bool2);
-		});
+
 	}
 
 
@@ -212,18 +198,18 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 
 
 
-	public static Optional<FertilizacionLabor> config(FertilizacionLabor labor2) {
-		Optional<FertilizacionLabor> ret = Optional.empty();
+	public static Optional<PulverizacionLabor> config(PulverizacionLabor labor2) {
+		Optional<PulverizacionLabor> ret = Optional.empty();
 		try{
-			FXMLLoader myLoader = new FXMLLoader(FertilizacionConfigDialogController.class.getResource(
-					FERT_CONFIG_DIALOG_FXML));
+			FXMLLoader myLoader = new FXMLLoader(PulverizacionConfigDialogController.class.getResource(
+					CONFIG_DIALOG_FXML));
 			myLoader.load();//aca se crea el constructor
-			FertilizacionConfigDialogController controller = ((FertilizacionConfigDialogController) myLoader.getController());
+			PulverizacionConfigDialogController controller = ((PulverizacionConfigDialogController) myLoader.getController());
 			controller.setLabor(labor2);
 			controller.init();
 			ret = controller.showAndWait();
 		} catch (IOException e1) {
-			System.err.println("no se pudo levantar el fxml "+FERT_CONFIG_DIALOG_FXML);
+			System.err.println("no se pudo levantar el fxml "+CONFIG_DIALOG_FXML);
 			e1.printStackTrace();
 			System.exit(0);
 		}

@@ -29,8 +29,10 @@ import dao.Clasificador;
 import dao.Labor;
 import dao.config.Cultivo;
 import dao.config.Fertilizante;
+import dao.config.Semilla;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
+import dao.siembra.SiembraLabor;
 
 
 /**
@@ -38,8 +40,8 @@ import dao.fertilizacion.FertilizacionLabor;
  * @author tomas
  *
  */
-public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLabor>{
-	private static final String FERT_CONFIG_DIALOG_FXML = "FertilizacionConfigDialog.fxml";
+public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
+	private static final String FERT_CONFIG_DIALOG_FXML = "SiembraConfigDialog.fxml";
 
 	@FXML
 	private VBox content;
@@ -52,7 +54,11 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 	private TextField textPrecioFert;//ok
 
 
-
+	@FXML
+	private TextField textEntresurco;//ok
+	
+	@FXML
+	private TextField textSemillasBolsa;//ok
 
 
 	@FXML
@@ -80,13 +86,13 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 
 
 	@FXML
-	private ComboBox<Fertilizante> comboFertilizante;
+	private ComboBox<Semilla> comboInsumo;
 
 
-	private FertilizacionLabor labor;
+	private SiembraLabor labor;
 
 
-	public FertilizacionConfigDialogController() {
+	public SiembraConfigDialogController() {
 		super();
 		System.out.println("construyendo el controller");
 
@@ -153,16 +159,15 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 	}
 
 
-
-	public void setLabor(FertilizacionLabor l) {
+	public void setLabor(SiembraLabor l) {
 		this.labor = l;
 
 		List<String> availableColums = labor.getAvailableColumns();
 		availableColums.sort((a,b)->{
 			return a.compareTo(b);
 		});
-		availableColums.add(Labor.NONE_SELECTED);
 
+		availableColums.add(Labor.NONE_SELECTED);
 
 		//comboElev
 		this.comboElev.setItems(FXCollections.observableArrayList(availableColums));
@@ -172,11 +177,11 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 
 		// colRendimiento;
 		this.comboDosis.setItems(FXCollections.observableArrayList(availableColums));
-		this.comboDosis.valueProperty().bindBidirectional(labor.colKgHaProperty);
+		this.comboDosis.valueProperty().bindBidirectional(labor.colSemillasMetroProperty);
 
 	
-		this.comboFertilizante.setItems(FXCollections.observableArrayList(Fertilizante.fertilizantes.values()));
-		this.comboFertilizante.valueProperty().bindBidirectional(labor.fertilizante);
+		this.comboInsumo.setItems(FXCollections.observableArrayList(Semilla.semillas.values()));
+		this.comboInsumo.valueProperty().bindBidirectional(labor.semilla);
 
 
 		StringConverter<Number> converter = new NumberStringConverter();
@@ -186,6 +191,10 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 
 		//textCostoCosechaHa
 		Bindings.bindBidirectional(this.textCostoLaborHa.textProperty(), labor.precioLaborProperty, converter);
+		
+		Bindings.bindBidirectional(this.textEntresurco.textProperty(), labor.entreSurco, converter);
+		
+		Bindings.bindBidirectional(this.textSemillasBolsa.textProperty(), labor.semillasPorBolsa, converter);
 
 
 		Bindings.bindBidirectional(this.textClasesClasificador.textProperty(), labor.clasificador.clasesClasificadorProperty, converter);
@@ -195,6 +204,7 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 
 		textNombre.textProperty().bindBidirectional(labor.nombreProperty);
 		
+	
 		datePickerFecha.setValue(l.fechaProperty.getValue());
 		datePickerFecha.valueProperty().addListener((obs, bool1, bool2) -> {
 			
@@ -212,13 +222,13 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 
 
 
-	public static Optional<FertilizacionLabor> config(FertilizacionLabor labor2) {
-		Optional<FertilizacionLabor> ret = Optional.empty();
+	public static Optional<SiembraLabor> config(SiembraLabor labor2) {
+		Optional<SiembraLabor> ret = Optional.empty();
 		try{
-			FXMLLoader myLoader = new FXMLLoader(FertilizacionConfigDialogController.class.getResource(
+			FXMLLoader myLoader = new FXMLLoader(SiembraConfigDialogController.class.getResource(
 					FERT_CONFIG_DIALOG_FXML));
 			myLoader.load();//aca se crea el constructor
-			FertilizacionConfigDialogController controller = ((FertilizacionConfigDialogController) myLoader.getController());
+			SiembraConfigDialogController controller = ((SiembraConfigDialogController) myLoader.getController());
 			controller.setLabor(labor2);
 			controller.init();
 			ret = controller.showAndWait();

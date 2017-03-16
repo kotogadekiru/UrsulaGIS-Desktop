@@ -92,6 +92,7 @@ public class Clasificador {
 		//return getColorByHue(rinde, rindeMin, rindeMax, porcent);
 	}
 	
+
 	private  int getColorByHistogram(Double rinde, Double[] histo) {
 		int colorIndex = histo.length-1;
 		try {
@@ -160,7 +161,7 @@ public class Clasificador {
 	 * @param elementos Lista de FeatureContainer
 	 * @return 
 	 */
-	public  Double[] constructHistogram(List<? extends FeatureContainer> elementosItem){
+	public  Double[] constructHistogram(List<? extends LaborItem> elementosItem){
 
 		//1 ordeno los elementos de menor a mayor
 		//2 bsuco el i*size/12 elemento y anoto si amount en la posicion i del vector de rangos
@@ -173,8 +174,8 @@ public class Clasificador {
 		Double average = new Double(0);
 		Double sup= new Double(0);
 		Double amount= new Double(0);
-		for(FeatureContainer dao: elementosItem){
-			Double area = dao.getGeometry().getArea()*ProyectionConstants.A_HAS;
+		for(LaborItem dao: elementosItem){
+			Double area = dao.getGeometry().getArea()*ProyectionConstants.A_HAS();
 			sup +=area;
 			amount+=dao.getAmount()*area;		
 		}
@@ -188,16 +189,13 @@ public class Clasificador {
 		if(elementosItem.size()>0){
 			
 			double desvios = new Double(0);
-			for(FeatureContainer dao: elementosItem){
+			for(LaborItem dao: elementosItem){
 				//Double area = dao.getGeometry().getArea()*ProyectionConstants.A_HAS;
 				desvios += Math.abs(dao.getAmount()-average);
 			}
 			 desvioEstandar= desvios/(elementosItem.size());
 		}
-		
-		
-
-
+	
 		System.out.println("termine de ordenar los elementos en constructHistogram");
 		histograma=new Double[getNumClasses()];
 
@@ -217,13 +215,18 @@ public class Clasificador {
 		return histograma;
 	}
 	
-	public Color getColorFor(FeatureContainer dao) {	
-		int absCat = getCategoryFor(dao.getAmount());//entre 0 y numClases-1
+	public Color getColorFor(double amount) {
+		int absCat = getCategoryFor(amount);//entre 0 y numClases-1
 		int length =colors.length-1;
 		int clases =getNumClasses()-1;
 		int colorIndex = absCat*(length/clases);
 	//	System.out.println(absCat+"*"+length+"/"+clases+" = "+colorIndex+" colorIndex");
 		return colors[colorIndex];
+	}
+	
+	public Color getColorFor(LaborItem dao) {	
+		return getColorFor(dao.getAmount());
+	
 	}
 
 	public int getNumClasses() {
@@ -239,6 +242,8 @@ public class Clasificador {
 		
 	}
 	public boolean isInitialized(){return initialized;}
+
+
 	
 //	/**
 //	 * Metodo que busca los limites de las alturas despues hay que buscar los elementos que estan dentro de un entorno y agregarlos a una lista para dibujarlos

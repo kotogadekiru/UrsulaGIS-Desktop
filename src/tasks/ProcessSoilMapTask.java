@@ -83,9 +83,9 @@ public class ProcessSoilMapTask extends ProcessMapTask {
 	private ArrayList<Object> getPathTooltip(Polygon poly,
 			SueloItem fertFeature) {
 
-		Path path = getPathFromGeom(poly, fertFeature);
+		Path path = getExrudedPolygonFromGeom(poly, fertFeature);
 
-		double area = poly.getArea() * ProyectionConstants.A_HAS;// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		DecimalFormat df = new DecimalFormat("#.00");
 		String tooltipText = new String(
 				

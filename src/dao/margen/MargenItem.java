@@ -13,21 +13,23 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 
-import dao.FeatureContainer;
+import dao.LaborItem;
 
 
-public class MargenItem extends FeatureContainer{
+public class MargenItem extends LaborItem{
 	//Polygon harvestPolygon = (Polygon) geometry;
-	private Double importePulvHa ;//= getImportePulv(harvestPolygon);
-	private Double importeFertHa ;//= getImporteFert(harvestPolygon);
-	private Double importeSiembraHa ;//= getImporteSiembra(harvestPolygon);
-	private Double area ;
+	private Double importePulvHa =new Double(0);//= getImportePulv(harvestPolygon);
+	private Double importeFertHa =new Double(0);//= getImporteFert(harvestPolygon);
+	private Double importeSiembraHa =new Double(0);//= getImporteSiembra(harvestPolygon);
+	private Double importeCosechaHa=new Double(0);
+	
+	private Double area =new Double(0);
 
-	private Double margenPorHa ;//= (importeCosechaPorHa * areaCosecha  - importePulv - importeFert - importeSiembra) / areaCosecha;
-	private Double costoFijoPorHa;
-	private Double ingresoHa;
+	private Double margenPorHa =new Double(0);//= (importeCosechaPorHa * areaCosecha  - importePulv - importeFert - importeSiembra) / areaCosecha;
+	private Double costoFijoPorHa=new Double(0);
+//	private Double ingresoHa=new Double(0);
 //	private Double rentabilidadHa;
-	private Double importeCosechaHa;
+
 	
 	
 	public MargenItem(SimpleFeature feature) {
@@ -83,13 +85,13 @@ public class MargenItem extends FeatureContainer{
 		return getImporteFertHa()+getImporteSiembraHa()+getImportePulvHa()+getCostoFijoPorHa();		
 	}
 
-	public Double getIngresoHa() {
-		return ingresoHa;
-	}
-
-	public void setIngresoHa(Double ingresoHa) {
-		this.ingresoHa = ingresoHa;
-	}
+//	public Double getIngresoHa() {
+//		return ingresoHa;
+//	}
+//
+//	public void setIngresoHa(Double ingresoHa) {
+//		this.ingresoHa = ingresoHa;
+//	}
 
 	public Double getRentabilidadHa() {
 		if(getCostoPorHa()>0){
@@ -101,6 +103,7 @@ public class MargenItem extends FeatureContainer{
 
 	@Override
 	public Double getAmount() {
+		//TODO cambiar esto segun lo que se haya seleccionado
 		return getRentabilidadHa();
 	}
 
@@ -139,14 +142,26 @@ public class MargenItem extends FeatureContainer{
 	public Double getImporteHa() {
 		return this.margenPorHa;
 	}
+	
+/*
+ * String type = Margen.COLUMNA_RENTABILIDAD + ":Double,"	
+				+Margen.COLUMNA_MARGEN + ":Double,"	
+				+Margen.COLUMNA_COSTO_TOTAL + ":Double,"	
+				+Margen.COLUMNA_IMPORTE_FIJO + ":Double,"	
+				+Margen.COLUMNA_IMPORTE_COSECHA + ":Double,"
+				+Margen.COLUMNA_IMPORTE_FERT+":Double,"
+				+Margen.COLUMNA_IMPORTE_PULV+":Double,"
+				+Margen.COLUMNA_IMPORTE_SIEMBR+":Double";
 
+ */
 	@Override
 	public Object[] getSpecialElementsArray() {
 		Object[] elements = new Object[]{
 				getRentabilidadHa(),
 				getMargenPorHa(),
 				getCostoPorHa(),
-				getIngresoHa(),
+				getCostoFijoPorHa(),
+				getImporteCosechaHa(),
 				getImporteFertHa(),		
 				getImportePulvHa(),
 				getImporteSiembraHa()		

@@ -3,16 +3,18 @@ package mmg.gui;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-import dao.FeatureContainer;
+import dao.LaborItem;
 import dao.Labor;
 
 import javafx.scene.control.TextInputDialog;
@@ -29,8 +31,8 @@ import utils.ProyectionConstants;
  */
 public class AmountVsElevacionChart extends VBox {
 	private static final double TOLERANCIA = 0.01;
-//	private static final double OPEN = 0.9;
-//	private static final double CLOSE = 1.1;
+	//	private static final double OPEN = 0.9;
+	//	private static final double CLOSE = 1.1;
 	private static final String ICON = "gisUI/1-512.png";
 	//	private String[] colors = {
 	//			"rgb(158,1,66)",
@@ -82,13 +84,13 @@ public class AmountVsElevacionChart extends VBox {
 		SimpleFeatureIterator it = labor.outCollection.features();
 		while(it.hasNext()){
 			SimpleFeature f = it.next();
-			Double rinde =FeatureContainer.getDoubleFromObj(f.getAttribute(labor.colAmount.get()));
+			Double rinde =LaborItem.getDoubleFromObj(f.getAttribute(labor.colAmount.get()));//cuando leo de outCollection amount siempre es Rinde
 			//CosechaLabor.COLUMNA_ELEVACION
-			Double elevacion=FeatureContainer.getDoubleFromObj(f.getAttribute(labor.colElevacion.get()));
+			Double elevacion=LaborItem.getDoubleFromObj(f.getAttribute(Labor.COLUMNA_ELEVACION));
 
 			Geometry g = ((Geometry)f.getDefaultGeometry());
 			double dSup = g.getArea();
-			long sup =(long)(dSup*ProyectionConstants.A_HAS*ProyectionConstants.METROS2_POR_HA); 
+			long sup =(long)(dSup*ProyectionConstants.A_HAS()*ProyectionConstants.METROS2_POR_HA); 
 
 			//int categoria = labor.getClasificador().getCategoryFor(x);
 			//buscar una barra para la que x este dentro del 10%
@@ -126,7 +128,7 @@ public class AmountVsElevacionChart extends VBox {
 				double supDesp = supAnt+sup;
 				//double rindeProm = bar.getRinde().doubleValue()*(N-1)/N+x/N;
 				double elevProm = (elevAnterior*supAnt+elevacion*sup)/supDesp;
-				
+
 				double rindeProm = (rindeAnt*supAnt+rinde*sup)/supDesp;
 
 				bar.setElevacion(elevProm);
@@ -135,7 +137,7 @@ public class AmountVsElevacionChart extends VBox {
 				bar.setMax(Math.max(bar.getMax().doubleValue(), rinde));
 				bar.setMin(Math.min(bar.getMin().doubleValue(), rinde));			
 				bar.setVolume(supDesp);
-				
+
 				//1 dato fuera de lugar me altera todo el grafico
 			}
 			//new Integer(categoria)
@@ -145,27 +147,45 @@ public class AmountVsElevacionChart extends VBox {
 		it.close();
 
 		// recombinar los bars que quedaron mas cerca que la tolerancia despues de todo
-
-		return recombinar(bars);
+		List<BarData> resumidas = recombinar(bars);
+		for(BarData resumida :resumidas){
+			int index = labor.getClasificador().getCategoryFor(resumida.getAverage().doubleValue());
+			
+//				int length =CosechaHistoChart.colors.length-1;
+//				int clases = resumidas.size()-1;//las clases van de cero a numclases -1 para un total de numclases
+				int colorIndex = index;//*(length/clases);
+				//System.out.println(absCat+"*"+length+"/"+clases+" = "+colorIndex+" colorIndex");
+		
+			resumida.setClase(colorIndex);
+		}
+		return resumidas;
 
 	}
 
 
 	private List<BarData> recombinar(Map<Double, BarData> bars) {
-		ArrayList<BarData> ret = new ArrayList<BarData>();
-		ret.addAll(bars.values());
+		List<BarData> ret = new ArrayList<BarData>(bars.values());
+		
 		// usar stream y flatmap o algo para recorrer la lista buscando los duplicados
-		ret.sort((b1,b2)->{
-			return new BigDecimal(b1.getElevacion().toString()).compareTo(new BigDecimal(b2.getElevacion().toString()));});
-		//System.out.println("ordenados:\n"+ret);
+		//XXX no estoy seguro porque pero si no filtro los datos no los puedo ordenar
+		ret =ret.stream().filter((b)->{
+			try{new BigDecimal(b.getElevacion().toString());
+			}catch(Exception e){return false;}					
+			return true;
+		}).collect(Collectors.toList());
+		
+		ret.sort((b1,b2)->b1.compareTo(b2));
+
+//		ret.forEach((b)->System.out.println(b));
+		
 
 		boolean huboMatch=false;
 		int iTol=1;
-	
+
 		do{
-		
+
 			huboMatch=false;
-		
+
 			for(int index=0;(index<ret.size()-1)&&(ret.size()>2);index++){	
 				BarData test = ret.get(index);
 				BarData test2 = ret.get(index+1);
@@ -173,10 +193,10 @@ public class AmountVsElevacionChart extends VBox {
 
 				double elev1 = test.getElevacion().doubleValue();
 				double elev2 = test2.getElevacion().doubleValue();
-				
+
 				double rinde1 = test.getAverage().doubleValue();
 				double rinde2 = test2.getAverage().doubleValue();
-				
+
 				double vol1 = test.getVolume().doubleValue();
 				double vol2 = test2.getVolume().doubleValue();
 
@@ -187,8 +207,8 @@ public class AmountVsElevacionChart extends VBox {
 				double cvTol = TOLERANCIA*iTol;
 				huboMatch = (cvElev<cvTol);//&&(cvRinde<cvTol);
 				if(huboMatch){
-				//	System.out.println(index +" y "+(index+1)+ " hubo match r1="+elev1+" r2="+elev2);
-					
+					//	System.out.println(index +" y "+(index+1)+ " hubo match r1="+elev1+" r2="+elev2);
+
 					double elevProm = (elev1*vol1+elev2*vol2)/supDesp;
 					double rindeProm = (rinde1*vol1+rinde2*vol2)/supDesp;
 					BarData sintesis = new BarData(elevProm,
@@ -196,7 +216,7 @@ public class AmountVsElevacionChart extends VBox {
 							Math.min(test.getMin().doubleValue(), test2.getMin().doubleValue()),
 							rindeProm, 
 							supDesp);
-					
+
 					ret.remove(test);
 					ret.remove(test2);
 					ret.add(index, sintesis);

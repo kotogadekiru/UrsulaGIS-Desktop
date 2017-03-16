@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="content" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mmg.gui.FertilizacionConfigDialogController">
+<VBox fx:id="content" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mmg.gui.SiembraConfigDialogController">
    <children>
       <TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="361.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE">
         <tabs>
@@ -44,7 +44,7 @@
                            <children>
                               <ComboBox id="comboElev" fx:id="comboElev" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                               <ComboBox id="comboRend" fx:id="comboDosis" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                              <Label text="Precio Fertilizante" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                              <Label text="Precio Semilla" GridPane.columnIndex="2" GridPane.rowIndex="1">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
@@ -54,16 +54,16 @@
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
-                              <Label text="Kg Fert/Ha" GridPane.rowIndex="1">
+                              <Label text="Rate" GridPane.rowIndex="1">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
                               <TextField id="textPrecioGrano" fx:id="textPrecioFert" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-                              <Label text="Costo Lab. Fert por Ha" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                              <Label text="Costo Lab. por Ha" GridPane.columnIndex="2" GridPane.rowIndex="2" />
                               <TextField id="textCostoCosechaHa" fx:id="textCostoLaborHa" GridPane.columnIndex="3" GridPane.rowIndex="2" />
-                              <Label text="Fertilizante" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-                              <ComboBox id="comboCultivo" fx:id="comboFertilizante" prefWidth="150.0" promptText="Fertilizante" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+                              <Label text="Semilla" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                              <ComboBox id="comboCultivo" fx:id="comboInsumo" prefWidth="150.0" promptText="Semilla" GridPane.columnIndex="3" GridPane.rowIndex="3" />
                               <Label text="Nombre">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
@@ -72,6 +72,18 @@
                               <TextField id="textPrecioGrano" fx:id="textNombre" prefHeight="25.0" prefWidth="147.0" GridPane.columnIndex="1" />
                               <DatePicker fx:id="datePickerFecha" GridPane.columnIndex="3" />
                               <Label text="Fecha" GridPane.columnIndex="2" />
+                              <Label text="Entresurco" GridPane.columnIndex="2" GridPane.rowIndex="4">
+                                 <opaqueInsets>
+                                    <Insets left="5.0" right="5.0" />
+                                 </opaqueInsets>
+                              </Label>
+                              <TextField id="textPrecioGrano" fx:id="textEntresurco" GridPane.columnIndex="3" GridPane.rowIndex="4" />
+                              <Label text="Semillas/Bolsa" GridPane.columnIndex="2" GridPane.rowIndex="5">
+                                 <opaqueInsets>
+                                    <Insets left="5.0" right="5.0" />
+                                 </opaqueInsets>
+                              </Label>
+                              <TextField id="textPrecioGrano" fx:id="textSemillasBolsa" GridPane.columnIndex="3" GridPane.rowIndex="5" />
                            </children>
                         </GridPane>
                      </children>

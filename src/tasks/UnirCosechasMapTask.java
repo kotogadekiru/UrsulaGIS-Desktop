@@ -2,6 +2,7 @@ package tasks;
 
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.layers.RenderableLayer;
+import mmg.gui.nww.LaborLayer;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -60,7 +61,7 @@ public class UnirCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 		labor.colCurso.set(CosechaLabor.COLUMNA_CURSO);
 		labor.colDistancia.set(CosechaLabor.COLUMNA_DISTANCIA);
 		labor.colElevacion.set(CosechaLabor.COLUMNA_ELEVACION);
-		labor.colVelocidad.set(CosechaLabor.COLUMNA_VELOCIDAD);
+		//labor.colVelocidad.set(CosechaLabor.COLUMNA_VELOCIDAD);
 		//labor.colPasada.set(CosechaLabor.COLUMNA_ANCHO);
 
 		labor.getConfiguracion().valorMetrosPorUnidadDistanciaProperty().set(1.0);
@@ -86,6 +87,7 @@ public class UnirCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 		if(cosechas.size()>1){
 			prefijo = "union";
 		}
+		int featuresInsertadas=0;
 		for(CosechaLabor c:cosechas){
 			if(nombre == null){
 				nombre=prefijo+" "+c.getNombreProperty().get();	
@@ -99,15 +101,23 @@ public class UnirCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 				SimpleFeature nf=ci.getFeature(labor.featureBuilder);
 				//FIXME outCollection no tiene memoria y entonces no puedo corregir rindes o reprocesar geometrias
 				boolean ret = labor.outCollection.add(nf);
+				featuresInsertadas++;
 				if(!ret){
 					System.out.println("no se pudo agregar la feature "+f);
 				}
 			}
+			
 			reader.close();
 		}
-
+		
+		System.out.println("inserte "+featuresInsertadas+" elementos");
+		int elementosContiene = labor.outCollection.getCount();
+		System.out.println("la labor contiene "+elementosContiene+" elementos");
+		if(featuresInsertadas!=elementosContiene){
+			System.out.println("no se insertaron todos los elementos con exito.");
+		}
 		labor.nombreProperty.set(nombre);
-		labor.setLayer(new RenderableLayer());
+		labor.setLayer(new LaborLayer());
 
 
 		//TODO 4 mostrar la cosecha sintetica creada
@@ -141,7 +151,7 @@ public class UnirCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 		runLater(itemsToShow);
 		updateProgress(0, featureCount);
 		long time=System.currentTimeMillis()-init;
-		System.out.println("tarde "+time+" milisegundos en unir las cosechas. es "+time+" milisegundos");
+		System.out.println("tarde "+time+" milisegundos en unir las cosechas.");
 	}
 
 	protected void getPathTooltip(Geometry poly,
@@ -150,7 +160,7 @@ public class UnirCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 		//	List<gov.nasa.worldwind.render.Polygon>  paths = super.getPathFromGeom2D(poly, cosechaFeature);
 		//ExtrudedPolygon  path = super.getPathFromGeom2D(poly, cosechaFeature);
 
-		double area = poly.getArea() * ProyectionConstants.A_HAS;// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
 		DecimalFormat df = new DecimalFormat("#.00");
 
@@ -170,7 +180,7 @@ public class UnirCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 		//tooltipText=tooltipText.concat("Pasada: "+df.format(cosechaFeature.getPasada() ) + "\n");
 		tooltipText=tooltipText.concat("feature: "+cosechaFeature.getId() + "\n");
 
-		 super.getPathFromGeom2D(poly, cosechaFeature,tooltipText);
+		 super.getRenderPolygonFromGeom(poly, cosechaFeature,tooltipText);
 	}
 
 	@Override

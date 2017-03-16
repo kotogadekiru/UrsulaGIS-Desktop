@@ -1,8 +1,6 @@
 package dao.fertilizacion;
 
-import dao.config.Configuracion;
 import dao.cosecha.CosechaConfig;
-import javafx.beans.property.Property;
 
 public class FertilizacionConfig extends CosechaConfig {
 //TODO agregar las keys a las propiedades especificas de la labor de fertilizacion

@@ -260,10 +260,14 @@ public class JuntarShapefilesTask {
 			Geometry geo = (Geometry)oGeom;
 			GeometryFactory fact = geo.getFactory(); 
 			Geometry center = fact.createPoint(envelope.centre());
-			double distancia =geo.distance(center);// /ProyectionConstants.metersToLat;
+			//FIXME distancia es mayor al ancho si la geometria es muy grande y se encuentra en contacto con el envelope
+			double distancia =geo.distance(center);// /ProyectionConstants.metersToLat();
 
 			double distanciaInvert = (ancho-distancia)/ancho;
-			if(distanciaInvert<0)System.out.println("distancia-1 es menor a cero "+distanciaInvert);
+			//if(distanciaInvert<0)System.out.println("distancia-1 es menor a cero "+distanciaInvert);
+			/*
+			 * 
+			 */
 			//los pesos van de ~ancho^2 para los mas cercanos a 0 para los mas lejanos
 			retDist =  Math.pow(distanciaInvert,2);
 			//System.out.println("distancia "+distancia+" peso "+retDist);
@@ -354,10 +358,10 @@ public class JuntarShapefilesTask {
 		System.out.println("construyendo grilla");
 		List<Polygon> polygons = new ArrayList<Polygon>();
 		//convierte los bounds de longlat a metros
-		Double minX = bounds.getMinX()/ProyectionConstants.metersToLong - ancho/2;
-		Double minY = bounds.getMinY()/ProyectionConstants.metersToLat - ancho/2;
-		Double maxX = bounds.getMaxX()/ProyectionConstants.metersToLong + ancho/2;
-		Double maxY = bounds.getMaxY()/ProyectionConstants.metersToLat + ancho/2;
+		Double minX = bounds.getMinX()/ProyectionConstants.metersToLong() - ancho/2;
+		Double minY = bounds.getMinY()/ProyectionConstants.metersToLat() - ancho/2;
+		Double maxX = bounds.getMaxX()/ProyectionConstants.metersToLong() + ancho/2;
+		Double maxY = bounds.getMaxY()/ProyectionConstants.metersToLat() + ancho/2;
 		Double x0=minX;
 		for(int x=0;(x0)<maxX;x++){
 			x0=minX+x*ancho;
@@ -367,10 +371,10 @@ public class JuntarShapefilesTask {
 				Double y1=minY+(y+1)*ancho;
 
 
-				Coordinate D = new Coordinate(x0*ProyectionConstants.metersToLong, y0*ProyectionConstants.metersToLat); 
-				Coordinate C = new Coordinate(x1*ProyectionConstants.metersToLong, y0*ProyectionConstants.metersToLat);
-				Coordinate B = new Coordinate(x1*ProyectionConstants.metersToLong, y1*ProyectionConstants.metersToLat);
-				Coordinate A =  new Coordinate(x0*ProyectionConstants.metersToLong, y1*ProyectionConstants.metersToLat);
+				Coordinate D = new Coordinate(x0*ProyectionConstants.metersToLong(), y0*ProyectionConstants.metersToLat()); 
+				Coordinate C = new Coordinate(x1*ProyectionConstants.metersToLong(), y0*ProyectionConstants.metersToLat());
+				Coordinate B = new Coordinate(x1*ProyectionConstants.metersToLong(), y1*ProyectionConstants.metersToLat());
+				Coordinate A =  new Coordinate(x0*ProyectionConstants.metersToLong(), y1*ProyectionConstants.metersToLat());
 
 				/**
 				 * D-- ancho de carro--C ^ ^ | | avance ^^^^^^^^ avance | | A-- ancho de
