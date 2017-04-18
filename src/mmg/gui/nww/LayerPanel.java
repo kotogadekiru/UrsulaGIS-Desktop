@@ -7,6 +7,7 @@ import java.util.function.Function;
 import dao.Labor;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
+import dao.margen.Margen;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.WorldWindow;
@@ -168,25 +169,30 @@ public class LayerPanel extends VBox {
 			}else if(value != null && value instanceof FertilizacionLabor){				
 				fertilizacionestItem.getChildren().add(checkBoxTreeItem);
 				fertilizacionestItem.setExpanded(true);
-			}else{
+//			}else if(value != null && value instanceof Margen){				
+//					margenesItem.getChildren().add(checkBoxTreeItem);
+//					margenesItem.setExpanded(true);
+				
+			}else if(value != null){
 				TreeItem<Layer> knownItem=null;
 				
 				String rootItemName ="unknown";
-				if(value instanceof Labor){//margen y lo que pueda suceder mas adelante
-					rootItemName=  value.getClass().getSimpleName();
-				} else if(value instanceof String){
+				
+				if(value instanceof String){
 					rootItemName=(String) value;
 					
-				} else{
+				} else if(value instanceof Object){//margen y lo que pueda suceder mas adelante
+					rootItemName=  value.getClass().getSimpleName();
+				} else {
 					continue;
 				}
 				
 				for(TreeItem<Layer> item :rootItem.getChildren()){
-					if(item.getValue().getName().equals(value)){
+					if(item.getValue().getName().equals(rootItemName)){//antes comparaba con value en vez de rootItem
 						knownItem=item;		
 					}
 				}
-				if(knownItem==null){
+				if(knownItem==null){//si esto tira un falso positivo se me generan los layers duplicados
 					RenderableLayer rootLayer = new RenderableLayer();
 					rootLayer.setName(rootItemName);
 					knownItem = new CheckBoxTreeItem<Layer>(rootLayer);

@@ -69,10 +69,13 @@ import com.google.api.client.json.jackson.JacksonFactory;
 import com.google.api.client.util.ArrayMap;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
 
 import dao.Clasificador;
 import dao.Labor;
 import dao.LaborItem;
+import dao.Ndvi;
+import dao.Poligono;
 import dao.config.Configuracion;
 //
 import dao.config.Cultivo;
@@ -85,6 +88,7 @@ import dao.fertilizacion.FertilizacionLabor;
 import dao.margen.Margen;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.siembra.SiembraLabor;
+import dao.suelo.Suelo;
 import gov.nasa.worldwind.Configuration;
 import gov.nasa.worldwind.View;
 import gov.nasa.worldwind.WorldWind;
@@ -140,6 +144,7 @@ import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.embed.swing.SwingFXUtils;
@@ -171,6 +176,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.web.WebView;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
@@ -188,8 +194,11 @@ import tasks.ProcessFertMapTask;
 import tasks.ProcessHarvestMapTask;
 import tasks.ProcessMapTask;
 import tasks.ProcessMarginMapTask;
+import tasks.ProcessNewSoilMapTask;
 import tasks.ProcessPulvMapTask;
 import tasks.ProcessSiembraMapTask;
+import tasks.RecomendFertPFromHarvestMapTask;
+import tasks.ShowNDVITifFileTask;
 import tasks.UnirCosechasMapTask;
 import utils.ProyectionConstants;
 
@@ -199,14 +208,14 @@ public class JFXMain extends Application {
 	private static final String GOV_NASA_WORLDWIND_AVKEY_INITIAL_ALTITUDE = "gov.nasa.worldwind.avkey.InitialAltitude";
 	private static final String GOV_NASA_WORLDWIND_AVKEY_INITIAL_LONGITUDE = "gov.nasa.worldwind.avkey.InitialLongitude";
 	private static final String GOV_NASA_WORLDWIND_AVKEY_INITIAL_LATITUDE = "gov.nasa.worldwind.avkey.InitialLatitude";
-	private static final double MAX_VALUE = 1.0;
-	private static final double MIN_VALUE = 0.2;
+//	private static final double MAX_VALUE = 1.0;
+//	private static final double MIN_VALUE = 0.2;
 	private static final String TITLE_VERSION = "Ursula GIS 0.2.18";
-	private static final String BUILD_INFO="Esta aplicacion fue compilada el 14 de marzo de 2017."
-										+"<br>Ursula GIS es de uso libre y gratutito provista sin ninguna garantia."
-										+"<br>Se encuentra en estado de desarrollo y se provee a modo de prueba."
-										+"<br>Desarrollada por Tomas Lund Petersen, cualquier consulta enviar un mail a kotogadekiru@gmail.com"
-										+"<br>Twitter: @redbaron_ar";
+	private static final String BUILD_INFO="Esta aplicacion fue compilada el 10 de Abril de 2017."
+			+"<br>Ursula GIS es de uso libre y gratutito provista sin ninguna garantia."
+			+"<br>Se encuentra en estado de desarrollo y se provee a modo de prueba."
+			+"<br>Desarrollada por Tomas Lund Petersen, cualquier consulta enviar un mail a kotogadekiru@gmail.com"
+			+"<br>Twitter: @redbaron_ar";
 	static final String ICON = "mmg/gui/1-512.png";
 	//private static final String SOUND_FILENAME = "D:/Users/workspaceHackaton2015/WorldWindMarginMap/src/mmg/gui/Alarm08.wav";
 	private static final String SOUND_FILENAME = "Alarm08.wav";//TODO cortar este wav porque suena 2 veces
@@ -224,6 +233,8 @@ public class JFXMain extends Application {
 	private List<FertilizacionLabor> fertilizaciones = new ArrayList<FertilizacionLabor>();
 	private List<SiembraLabor> siembras = new ArrayList<SiembraLabor>();
 	private List<PulverizacionLabor> pulverizaciones = new ArrayList<PulverizacionLabor>();
+
+	private List<Suelo> suelos = new ArrayList<Suelo>();
 
 	private List<Margen> margenes= new ArrayList<Margen>();
 
@@ -267,11 +278,11 @@ public class JFXMain extends Application {
 			});
 		});
 		primaryStage.show();
-		
-		
-		
-		
-		
+
+
+
+
+
 	}
 
 	private static void setInitialPosition() {
@@ -280,8 +291,8 @@ public class JFXMain extends Application {
 		double initLong = Double.parseDouble(config.getPropertyOrDefault(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LONGITUDE, "-62"));
 		double initAltitude = Double.parseDouble(config.getPropertyOrDefault(GOV_NASA_WORLDWIND_AVKEY_INITIAL_ALTITUDE, "19.07e5"));
 		//   <Property name="gov.nasa.worldwind.avkey.InitialLatitude" value="-35"/>
-	    //<Property name="gov.nasa.worldwind.avkey.InitialLongitude" value="-62"/>
-	    //<Property name="gov.nasa.worldwind.avkey.InitialAltitude" value="19.07e5"/>
+		//<Property name="gov.nasa.worldwind.avkey.InitialLongitude" value="-62"/>
+		//<Property name="gov.nasa.worldwind.avkey.InitialAltitude" value="19.07e5"/>
 		Configuration.setValue(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LATITUDE, initLat);
 		Configuration.setValue(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LONGITUDE,initLong);
 		Configuration.setValue(GOV_NASA_WORLDWIND_AVKEY_INITIAL_ALTITUDE, initAltitude);
@@ -311,8 +322,8 @@ public class JFXMain extends Application {
 			wwNode = (Node) handler.getSource().getValue();
 			vBox1.getChildren().add( wwNode);
 			this.wwjPanel.repaint();	
-	
-		
+
+
 		});
 		executorPool.execute(pfMapTask);
 	}
@@ -428,6 +439,10 @@ public class JFXMain extends Application {
 		}
 	}
 
+	/**
+	 * aca se configuran los menues contextuales del arbol de capas
+	 //XXX agregar nuevas funcionalidades aca!!! 
+	 */
 	private void setAccionesTreePanel() {
 		Map<Class<?>,List<Function<Layer, String>>> predicates = new HashMap<Class<?>,List<Function<Layer,String>>>();
 		List<Function<Layer, String>> cosechasP = new ArrayList<Function<Layer,String>>();
@@ -438,110 +453,149 @@ public class JFXMain extends Application {
 		predicates.put(SiembraLabor.class, siembrasP);
 		List<Function<Layer, String>> pulverizacionesP = new ArrayList<Function<Layer,String>>();
 		predicates.put(PulverizacionLabor.class, pulverizacionesP);
+		List<Function<Layer, String>> margenesP = new ArrayList<Function<Layer,String>>();
+		predicates.put(Margen.class, margenesP);
+		List<Function<Layer, String>> ndviP = new ArrayList<Function<Layer,String>>();
+		predicates.put(Ndvi.class, ndviP);
+
+		List<Function<Layer, String>> poligonosP = new ArrayList<Function<Layer,String>>();
+		predicates.put(Poligono.class, poligonosP);
 
 		List<Function<Layer, String>> laboresP = new ArrayList<Function<Layer,String>>();
 		predicates.put(Labor.class, laboresP);
 		List<Function<Layer, String>> todosP = new ArrayList<Function<Layer,String>>();
 		predicates.put(Object.class, todosP);
 
-		laboresP.add(new Function<Layer,String>(){			
-			@Override
-			public String apply(Layer layer) {
-				if(layer==null){
-					return "Ir a"; 
-				} else{
-					Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-					if (layerObject==null){//manejar ir a para mapas de ndvi y otros
-						//					RenderableLayer l = layer;
-						//					Position harvestPosition = l.
-						//					viewGoTo(harvestPosition);
+		poligonosP.add((layer)->{
+			if(layer==null){
+				return "Convertir a Siembra"; 
+			} else {
+				Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+				if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){
+					//doConvertirASiembra((Polygon) layerObject);
+					enDesarrollo();
+				}
+				return "converti a Siembra";
+			}});
 
-					}else if(Labor.class.isAssignableFrom(layerObject.getClass())){
-						viewGoTo((Labor<?>) layerObject);
+		poligonosP.add((layer)->{
+			if(layer==null){
+				return "Convertir a Fertilizacion"; 
+			} else {
+				Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+				if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){					
+					enDesarrollo();
+				}
+				return "converti a Fertilizacion";
+			}});
 
-					}
-					return "went to " + layer.getName();
-				} 
+		poligonosP.add((layer)->{
+			if(layer==null){
+				return "Convertir a Pulverizacion"; 
+			} else {
+				Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+				if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){
+					enDesarrollo();
+				}
+				return "converti a Pulverizacion";
+			}});
+
+		poligonosP.add((layer)->{
+			if(layer==null){
+				return "Convertir a Cosecha"; 
+			} else {
+				Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+				if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){
+					enDesarrollo();
+				}
+				return "converti a Pulverizacion";
+			}});
+
+		laboresP.add((layer)->{
+			if(layer==null){
+				return "Ir a"; 
+			} else{
+				Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+				if (layerObject==null){
+				}else if(Labor.class.isAssignableFrom(layerObject.getClass())){
+					viewGoTo((Labor<?>) layerObject);
+				}
+				return "went to " + layer.getName();
+			}});
+
+
+
+		/**
+		 *Accion que permite editar un mapa de rentabilidad
+		 */
+		margenesP.add((layer)->{ 
+			if(layer==null){
+				return "Editar"; 
+			} else{
+				doEditMargin((Margen) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+				return "margen editada" + layer.getName();
+
 			}});
 
 		/**
 		 *Accion que permite editar una cosecha
 		 */
-		cosechasP.add(new Function<Layer,String>(){			
-			@Override
-			public String apply(Layer layer) {
-				if(layer==null){
-					return "Editar"; 
-				} else{
-					doEditCosecha((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-					return "cosecha editada" + layer.getName();
-				}
+		fertilizacionesP.add((layer)-> {
+			if(layer==null){
+				return "Editar"; 
+			} else{
+				doEditFertilizacion((FertilizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+				return "fertilizacion editada" + layer.getName();
 			}});
 
 		/**
 		 *Accion que permite editar una cosecha
 		 */
-		fertilizacionesP.add(new Function<Layer,String>(){			
-			@Override
-			public String apply(Layer layer) {
-				if(layer==null){
-					return "Editar"; 
-				} else{
-					doEditFertilizacion((FertilizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-					return "cosecha editada" + layer.getName();
-				}
+		cosechasP.add((layer)->{
+			if(layer==null){
+				return "Editar"; 
+			} else{
+				doEditCosecha((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+				return "cosecha editada" + layer.getName();
+
+			}});
+		/**
+		 * Accion que permite pasar una grilla sobre la cosecha
+		 */
+		cosechasP.add((layer)->{
+			if(layer==null){
+				return "Grillar cosecha"; 
+			} else{
+				doGrillarCosechas((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+				return "cosecha editada" + layer.getName();
 			}});
 
 		/**
 		 * Accion que permite pasar una grilla sobre la cosecha
 		 */
-		cosechasP.add(new Function<Layer,String>(){			
-			@Override
-			public String apply(Layer layer) {
-				if(layer==null){
-					return "Grillar cosecha"; 
-				} else{
-					doGrillarCosechas((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-					return "cosecha editada" + layer.getName();
-				}
-			}
-
-		});
-
-		/**
-		 * Accion que permite pasar una grilla sobre la cosecha
-		 */
-		cosechasP.add(new Function<Layer,String>(){			
-			@Override
-			public String apply(Layer layer) {
-				if(layer==null){
-					return "Clonar cosecha"; 
-				} else{
-					doUnirCosechas((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-					return "cosecha clonada" + layer.getName();
-				}
-			}
-
-		});
+		cosechasP.add((layer)->{
+			if(layer==null){
+				return "Clonar cosecha"; 
+			} else{
+				doUnirCosechas((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+				return "cosecha clonada" + layer.getName();
+			}});
 
 		/**
 		 * Accion que muesta el histograma
 		 */
-		cosechasP.add((layer)->applyHistogramaCosecha(layer));
+		laboresP.add((layer)->applyHistogramaCosecha(layer));
 
 
 		/**
 		 * Accion que muesta el la relacion entre el rinde y la elevacion
 		 */
-		cosechasP.add(new Function<Layer,String>(){			
-			@Override
-			public String apply(Layer layer) {
-				if(layer==null){
-					return "Elevacion vs Cantidad"; 
-				} else{
-					showAmountVsElevacionChart((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-					return "grafico mostrado " + layer.getName();
-				}
+		cosechasP.add((layer)-> {
+			if(layer==null){
+				return "Elevacion vs Cantidad"; 
+			} else{
+				showAmountVsElevacionChart((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+				return "grafico mostrado " + layer.getName();
 			}});
 
 		/**
@@ -563,99 +617,126 @@ public class JFXMain extends Application {
 		/**
 		 * Accion permite exportar la cosecha como shp
 		 */
-		cosechasP.add(new Function<Layer,String>(){			
-			@Override
-			public String apply(Layer layer) {
-				if(layer==null){
-					return "Exportar"; 
-				} else{
-					doExportHarvest((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-					return "cosecha Exportada" + layer.getName();
-				}
+		cosechasP.add((layer)->{
+			if(layer==null){
+				return "Exportar"; 
+			} else{
+				doExportHarvest((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+				return "cosecha Exportada" + layer.getName();
 			}});
 
 		/**
-		 * Accion permite obtener ndvi
+		 * Accion permite exportar la cosecha como shp
 		 */
-		todosP.add(new Function<Layer,String>(){			
-			@Override
-			public String apply(Layer layer) {
-				if(layer==null){
-					return "Obtener NDVI"; 
-				} else{
-					Object o =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-					Object positions = layer.getValue("POSITIONS");
-					if(o instanceof String){
-						doGetNdviTiffFile(positions);
-					}else {
-						doGetNdviTiffFile(o);
-					}
-					return "ndvi obtenido" + layer.getName();
-				}
-			}
-
-			});
+		cosechasP.add((layer)->{
+			if(layer==null){
+				return "Recomendar Fertilizacion P"; 
+			} else{
+				doRecomendFertFromHarvest((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+				return "Fertilizacion P Creada" + layer.getName();
+			}});
 
 		/**
 		 * Accion muestra una tabla con los datos de la cosecha
 		 */
-		cosechasP.add(new Function<Layer,String>(){			
-			@Override
-			public String apply(Layer layer) {
-				if(layer==null){
-					return "Ver Tabla"; 
-				} else{
-					doShowDataTable((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-					return "Tabla mostrada" + layer.getName();
-				}
+		cosechasP.add((layer)->{
+			if(layer==null){
+				return "Ver Tabla"; 
+			} else{
+				doShowDataTable((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+				return "Tabla mostrada" + layer.getName();
 			}});
 
 		/**
 		 * Accion permite exportar la cosecha como shp de puntos
 		 */
-		cosechasP.add(new Function<Layer,String>(){			
-			@Override
-			public String apply(Layer layer) {
-				if(layer==null){
-					return "Exportar a puntos"; 
-				} else{
-					doExportHarvestDePuntos((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-					return "cosecha exportada como puntos: " + layer.getName();
-				}
+		cosechasP.add((layer)->{
+			if(layer==null){
+				return "Exportar a puntos"; 
+			} else{
+				doExportHarvestDePuntos((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+				return "cosecha exportada como puntos: " + layer.getName();
 			}});
+
+
+		ndviP.add((layer)->{
+			if(layer==null){//TODO implementar estimar Rinde desde ndvi
+				return "Estimar Rinde"; 
+			} else{
+				Object o =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+
+				enDesarrollo();
+				return "rinde estimado desde ndvi" + layer.getName();
+			}});
+
+		ndviP.add((layer)->{
+			if(layer==null){
+				return "Histograma"; 
+			} else{//TODO implementar histograma ndvi
+				Object o =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+
+				enDesarrollo();
+				return "histograma ndvi mostrado" + layer.getName();
+			}});
+
+		/**
+		 * Accion permite obtener ndvi
+		 */
+		laboresP.add((layer)->{
+			if(layer==null){
+				return "Obtener NDVI"; 
+			} else{
+				Object o =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);			
+				if(o instanceof Labor){
+					doGetNdviTiffFile(o);
+				}
+				return "ndvi obtenido" + layer.getName();	
+			}});
+		
+		poligonosP.add((layer)->{
+			if(layer==null){
+				return "Obtener NDVI"; 
+			} else{
+				Object o =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);			
+				if(o instanceof Poligono){
+					doGetNdviTiffFile(o);
+				}
+				return "ndvi obtenido" + layer.getName();	
+			}});
+
+
 
 
 		/**
 		 * Accion que permite eliminar una cosecha
 		 */
-		todosP.add(new Function<Layer,String>(){
-			@Override
-			public String apply(Layer layer) {
-				if(layer==null){
-					return "Quitar"; 
-				} else{
-					getWwd().getModel().getLayers().remove(layer);
-					Object layerObject =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-					if(layerObject!=null && Labor.class.isAssignableFrom(layerObject.getClass())){
-						Labor<?> l = (Labor<?>)layerObject;
-
-
-						fertilizaciones.remove(l);
-						pulverizaciones.remove(l);
-						siembras.remove(l);
-						cosechas.remove(l);
-						l.dispose();
-
-
-					}
-					layer.dispose();
-					getLayerPanel().update(getWwd());
-					return "layer removido" + layer.getName();
+		todosP.add((layer)->{
+			if(layer==null){
+				return "Quitar"; 
+			} else{
+				getWwd().getModel().getLayers().remove(layer);
+				Object layerObject =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+				if(layerObject!=null && Labor.class.isAssignableFrom(layerObject.getClass())){
+					Labor<?> l = (Labor<?>)layerObject;
+					fertilizaciones.remove(l);
+					pulverizaciones.remove(l);
+					siembras.remove(l);
+					cosechas.remove(l);
+					suelos.remove(l);
+					l.dispose();
 				}
+				layer.dispose();
+				getLayerPanel().update(getWwd());
+				return "layer removido" + layer.getName();
 			}});
 
 
 		layerPanel.setMenuItems(predicates);
+	}
+
+	private void enDesarrollo() {
+		Alert enDesarrollo = new Alert(AlertType.INFORMATION,"funcionalidad en desarrollo");
+		enDesarrollo.show();
 	}
 
 
@@ -667,7 +748,7 @@ public class JFXMain extends Application {
 			return "histograma mostrado" + layer.getName();
 		}
 	}
-	
+
 	private void importElevations(){
 		try{
 			// Download the data and save it in a temp file.
@@ -822,6 +903,7 @@ public class JFXMain extends Application {
 		addMenuItem("Unir Shapefiles",(a)->JuntarShapefilesTask.process(),menuCalcular);
 		addMenuItem("Rentabilidades",(a)->doProcessMargin(),menuCalcular);
 		addMenuItem("Unir Cosechas",(a)->doUnirCosechas(null),menuCalcular);
+		addMenuItem("Balance De Fosforo",(a)->doProcesarBalanceFosforo(),menuCalcular);
 
 		/*Menu Exportar*/
 		final Menu menuExportar = new Menu("Exportar");		
@@ -845,151 +927,154 @@ public class JFXMain extends Application {
 
 
 	private void doMedirSuperfice() {
-	RenderableLayer surfaceLayer = new RenderableLayer();
-	
+		RenderableLayer surfaceLayer = new RenderableLayer();
+
 		MeasureTool measureTool = new MeasureTool(getWwd(),surfaceLayer);
-        measureTool.setController(new MeasureToolController());
-       // MeasureToolPanel  measurePanel=  new MeasureToolPanel(getWwd(), measureTool);
-        
-        measureTool.setMeasureShapeType(MeasureTool.SHAPE_POLYGON);
-        measureTool.setPathType(AVKey.GREAT_CIRCLE);
-        measureTool.getUnitsFormat().setLengthUnits(UnitsFormat.METERS);
-        measureTool.getUnitsFormat().setAreaUnits(UnitsFormat.HECTARE);
-        measureTool.getUnitsFormat().setShowDMS(false);
-        measureTool.setFollowTerrain(true);
-        measureTool.setShowControlPoints(true);
-       // measureTool.setMeasureShape(new SurfacePolygon());
-        measureTool.clear();
-        measureTool.setArmed(true);
-        
-        insertBeforeCompass(this.getWwd(), surfaceLayer);
-        Alert supDialog = new Alert(Alert.AlertType.INFORMATION);
-        supDialog.initOwner(this.stage);
-        supDialog.setTitle("Medir Superficie");
-        supDialog.setHeaderText("Superficie");
-        Text t = new Text();
-       
-        supDialog.setGraphic(t);
-        supDialog.initModality(Modality.NONE);
-        
-        DoubleProperty valueProperty = new SimpleDoubleProperty();
-        measureTool.addPropertyChangeListener((event)->{
-        	//System.out.println(event.getPropertyName());
-                // Add, remove or change positions
-        		if(event.getPropertyName().equals(MeasureTool.EVENT_ARMED)){
-                    if (measureTool.isArmed()) {
-                        ((Component) getWwd()).setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
-                    } else {                    
-                        ((Component) getWwd()).setCursor(Cursor.getDefaultCursor());
-                    }
-                }
-                // Metric changed - sent after each render frame
-                else if(event.getPropertyName().equals(MeasureTool.EVENT_METRIC_CHANGED)){
-                	DecimalFormat dc = new DecimalFormat("0.00");
-                	dc.setGroupingSize(3);
-                	dc.setGroupingUsed(true);
-                	double	value = measureTool.getArea();
-                	if(value != valueProperty.doubleValue() && value > 0){
-                		String formated = dc.format(value/ProyectionConstants.METROS2_POR_HA)+" Ha";
-                		t.textProperty().set(formated);
-                		surfaceLayer.setName(formated);
-                		ArrayList<? extends Position> positions = measureTool.getPositions();
-                		surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, "Medicion");
-                		surfaceLayer.setValue("POSITIONS", measureTool.getPositions());
-                		
-                		valueProperty.setValue(value);
-                		this.getLayerPanel().update(this.getWwd());
-                		//  System.out.println("lengh="+measureTool.getLength());
-                	}                	                  
-                	//updateMetric();
-                }
-        });
-        
-   
-        supDialog.show();
-        supDialog.setOnHidden((event)->{
-        		measureTool.setArmed(false);
-        	  ((Component) getWwd()).setCursor(Cursor.getDefaultCursor());
-        		this.getLayerPanel().update(this.getWwd());
-        });
-      
-        supDialog.getResult();      
-		
+		measureTool.setController(new MeasureToolController());
+		// MeasureToolPanel  measurePanel=  new MeasureToolPanel(getWwd(), measureTool);
+
+		measureTool.setMeasureShapeType(MeasureTool.SHAPE_POLYGON);
+		measureTool.setPathType(AVKey.GREAT_CIRCLE);
+		measureTool.getUnitsFormat().setLengthUnits(UnitsFormat.METERS);
+		measureTool.getUnitsFormat().setAreaUnits(UnitsFormat.HECTARE);
+		measureTool.getUnitsFormat().setShowDMS(false);
+		measureTool.setFollowTerrain(true);
+		measureTool.setShowControlPoints(true);
+		// measureTool.setMeasureShape(new SurfacePolygon());
+		measureTool.clear();
+		measureTool.setArmed(true);
+
+		insertBeforeCompass(this.getWwd(), surfaceLayer);
+		Alert supDialog = new Alert(Alert.AlertType.INFORMATION);
+		supDialog.initOwner(this.stage);
+		supDialog.setTitle("Medir Superficie");
+		supDialog.setHeaderText("Superficie");
+		Text t = new Text();
+
+		supDialog.setGraphic(t);
+		supDialog.initModality(Modality.NONE);
+
+		DoubleProperty valueProperty = new SimpleDoubleProperty();
+		measureTool.addPropertyChangeListener((event)->{
+			//System.out.println(event.getPropertyName());
+			// Add, remove or change positions
+			if(event.getPropertyName().equals(MeasureTool.EVENT_ARMED)){
+				if (measureTool.isArmed()) {
+					((Component) getWwd()).setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+				} else {                    //al cerrar el alert se hace un setArmed(false);
+					((Component) getWwd()).setCursor(Cursor.getDefaultCursor());
+				}
+			}
+			// Metric changed - sent after each render frame
+			else if(event.getPropertyName().equals(MeasureTool.EVENT_METRIC_CHANGED)){
+				DecimalFormat dc = new DecimalFormat("0.00");
+				dc.setGroupingSize(3);
+				dc.setGroupingUsed(true);
+				double	value = measureTool.getArea();
+				if(value != valueProperty.doubleValue() && value > 0){
+					String formated = dc.format(value/ProyectionConstants.METROS2_POR_HA)+" Ha";
+					t.textProperty().set(formated);
+					surfaceLayer.setName(formated);
+					Poligono poli =new Poligono();
+					poli.setPositions( measureTool.getPositions());
+					poli.setLayer(surfaceLayer);
+					//ArrayList<? extends Position> positions = measureTool.getPositions();
+					surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, poli);
+					//surfaceLayer.setValue("POSITIONS", poli.getPositions());
+
+					valueProperty.setValue(value);
+					this.getLayerPanel().update(this.getWwd());
+					//  System.out.println("lengh="+measureTool.getLength());
+				}                	                  
+				//updateMetric();
+			}
+		});
+
+
+		supDialog.show();
+		supDialog.setOnHidden((event)->{			
+			measureTool.setArmed(false);
+			//((Component) getWwd()).setCursor(Cursor.getDefaultCursor());
+			this.getLayerPanel().update(this.getWwd());
+		});
+
+		//supDialog.getResult();      
+
 	}
 
 	private void doMedirDistancia() {		 
 		RenderableLayer layer = new RenderableLayer();
 		layer.setName("Distancia");
 		MeasureTool measureTool = new MeasureTool(getWwd());
-        measureTool.setController(new MeasureToolController());
-       // MeasureToolPanel  measurePanel=  new MeasureToolPanel(getWwd(), measureTool);
-        
-        measureTool.setMeasureShapeType(MeasureTool.SHAPE_PATH);
-        measureTool.setPathType(AVKey.GREAT_CIRCLE);
-        measureTool.getUnitsFormat().setLengthUnits(UnitsFormat.METERS);
-        measureTool.getUnitsFormat().setAreaUnits(UnitsFormat.HECTARE);
-        measureTool.getUnitsFormat().setShowDMS(false);
-        measureTool.setFollowTerrain(true);
-        measureTool.setShowControlPoints(true);
-       // measureTool.setMeasureShape(new SurfacePolygon());
-        measureTool.clear();
-        measureTool.setArmed(true);
-        
-        Alert distanciaDialog = new Alert(Alert.AlertType.INFORMATION);
-        distanciaDialog.initOwner(this.stage);
-        Text t = new Text();
-       distanciaDialog.setTitle("Medir Distancia");
-       distanciaDialog.setHeaderText("Distancia");
-        distanciaDialog.setGraphic(t);
-        distanciaDialog.initModality(Modality.NONE);
-        
-        DoubleProperty valueProperty = new SimpleDoubleProperty();
-        measureTool.addPropertyChangeListener((event)->{
-        	//System.out.println(event.getPropertyName());
-                // Add, remove or change positions
-        		if(event.getPropertyName().equals(MeasureTool.EVENT_ARMED)){
-                    if (measureTool.isArmed()) {
-                        ((Component) getWwd()).setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
-                    } else {                    
-                        ((Component) getWwd()).setCursor(Cursor.getDefaultCursor());
-                    }
-                }
-                // Metric changed - sent after each render frame
-                else if(event.getPropertyName().equals(MeasureTool.EVENT_METRIC_CHANGED)){
-                	double	value = measureTool.getLength();
-                	DecimalFormat dc = new DecimalFormat("0.00");
-                	dc.setGroupingSize(3);
-                	dc.setGroupingUsed(true);
-                	if(value != valueProperty.doubleValue() && value > 0){
-                		String formated = dc.format(value)+" mts";
-                		t.textProperty().set(formated);
-                		measureTool.getLayer().setName(formated);
-                		measureTool.getLayer().setValue(Labor.LABOR_LAYER_IDENTIFICATOR, "Medicion");
-                		valueProperty.setValue(value);
-                		this.getLayerPanel().update(this.getWwd());
-                		
-                		
-//                		t.textProperty().set(dc.format(value));
-//                		measureTool.getLayer().setName("Distancia "+dc.format(value));
-//                		measureTool.getLayer().setValue(Labor.LABOR_LAYER_IDENTIFICATOR, "Medicion");
-//                		valueProperty.setValue(value);
-//                		this.getLayerPanel().update(this.getWwd());
-                		
-                		//  System.out.println("lengh="+measureTool.getLength());
-                	}                	                  
-                	//updateMetric();
-                }
-        });
-        
-   
-        distanciaDialog.show();
-        distanciaDialog.setOnHidden((event)->{
-        		measureTool.setArmed(false);
-        	  ((Component) getWwd()).setCursor(Cursor.getDefaultCursor());
-        		this.getLayerPanel().update(this.getWwd());
-        });
-      
-        distanciaDialog.getResult();               
+		measureTool.setController(new MeasureToolController());
+		// MeasureToolPanel  measurePanel=  new MeasureToolPanel(getWwd(), measureTool);
+
+		measureTool.setMeasureShapeType(MeasureTool.SHAPE_PATH);
+		measureTool.setPathType(AVKey.GREAT_CIRCLE);
+		measureTool.getUnitsFormat().setLengthUnits(UnitsFormat.METERS);
+		measureTool.getUnitsFormat().setAreaUnits(UnitsFormat.HECTARE);
+		measureTool.getUnitsFormat().setShowDMS(false);
+		measureTool.setFollowTerrain(true);
+		measureTool.setShowControlPoints(true);
+		// measureTool.setMeasureShape(new SurfacePolygon());
+		measureTool.clear();
+		measureTool.setArmed(true);
+
+		Alert distanciaDialog = new Alert(Alert.AlertType.INFORMATION);
+		distanciaDialog.initOwner(this.stage);
+		Text t = new Text();
+		distanciaDialog.setTitle("Medir Distancia");
+		distanciaDialog.setHeaderText("Distancia");
+		distanciaDialog.setGraphic(t);
+		distanciaDialog.initModality(Modality.NONE);
+
+		DoubleProperty valueProperty = new SimpleDoubleProperty();
+		measureTool.addPropertyChangeListener((event)->{
+			//System.out.println(event.getPropertyName());
+			// Add, remove or change positions
+			if(event.getPropertyName().equals(MeasureTool.EVENT_ARMED)){
+				if (measureTool.isArmed()) {
+					((Component) getWwd()).setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+				} else {                    
+					((Component) getWwd()).setCursor(Cursor.getDefaultCursor());
+				}
+			}
+			// Metric changed - sent after each render frame
+			else if(event.getPropertyName().equals(MeasureTool.EVENT_METRIC_CHANGED)){
+				double	value = measureTool.getLength();
+				DecimalFormat dc = new DecimalFormat("0.00");
+				dc.setGroupingSize(3);
+				dc.setGroupingUsed(true);
+				if(value != valueProperty.doubleValue() && value > 0){
+					String formated = dc.format(value)+" mts";
+					t.textProperty().set(formated);
+					measureTool.getLayer().setName(formated);
+					measureTool.getLayer().setValue(Labor.LABOR_LAYER_IDENTIFICATOR, "Medicion");
+					valueProperty.setValue(value);
+					this.getLayerPanel().update(this.getWwd());
+
+
+					//                		t.textProperty().set(dc.format(value));
+					//                		measureTool.getLayer().setName("Distancia "+dc.format(value));
+					//                		measureTool.getLayer().setValue(Labor.LABOR_LAYER_IDENTIFICATOR, "Medicion");
+					//                		valueProperty.setValue(value);
+					//                		this.getLayerPanel().update(this.getWwd());
+
+					//  System.out.println("lengh="+measureTool.getLength());
+				}                	                  
+				//updateMetric();
+			}
+		});
+
+
+		distanciaDialog.show();
+		distanciaDialog.setOnHidden((event)->{
+			measureTool.setArmed(false);
+			((Component) getWwd()).setCursor(Cursor.getDefaultCursor());
+			this.getLayerPanel().update(this.getWwd());
+		});
+
+		distanciaDialog.getResult();               
 	}
 
 	/**
@@ -1020,7 +1105,7 @@ public class JFXMain extends Application {
 		}
 	}
 	public void viewGoTo(Position position) {
-		
+
 		Configuracion config =Configuracion.getInstance();
 		config.setProperty(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LATITUDE, String.valueOf(position.getLatitude().degrees));
 		config.setProperty(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LONGITUDE,String.valueOf(position.getLongitude().degrees));
@@ -1126,12 +1211,12 @@ public class JFXMain extends Application {
 		executorPool.submit(pfMapTask);
 	}
 
-	
+
 
 	private void doGetNdviTiffFile(Object labor) {
 		DateConverter dc = new DateConverter();
-		
-		
+
+
 		LocalDate initialDate = LocalDate.now();
 		if(labor instanceof Labor){
 			initialDate= (LocalDate)((Labor)labor).fechaProperty.getValue();
@@ -1141,23 +1226,43 @@ public class JFXMain extends Application {
 		dateDialog.setContentText("Fecha");
 		dateDialog.initOwner(this.stage);
 		Optional<String> anchoOptional = dateDialog.showAndWait();
-				
-		GetNDVIForLaborTask task = new GetNDVIForLaborTask(labor);
+
+		File downloadLocation = directoryChooser();
+		ObservableList<File> observableList = FXCollections.observableArrayList(new ArrayList<File>());
+		
+		GetNDVIForLaborTask task = new GetNDVIForLaborTask(labor,downloadLocation,observableList);
 		if(anchoOptional.isPresent()){
 			task.setDate(dc.fromString(anchoOptional.get()));
 
 		}
 		task.installProgressBar(progressBox);
 		task.setOnSucceeded(handler -> {
-			List<File> ndviFiles = (List<File>) handler.getSource().getValue();	
-			ndviFiles.forEach((file)->{
-				showNdviTiffFile(file);
-
-			});//fin del foreach
+			if(labor instanceof Poligono){
+				((Poligono)labor).getLayer().setEnabled(false);
+			}
+//			@SuppressWarnings("unchecked")
+//			List<File> ndviFiles = (List<File>) handler.getSource().getValue();	
+//			ndviFiles.forEach((file)->{
+//				showNdviTiffFile(file);//TODO esto espera a que descarguen todos los archivos.
+//				//ver de que se muestren los archivos a medida que se descargan
+//			});//fin del foreach
 			task.uninstallProgressBar();
 		});
 		executorPool.submit(task);
 		
+		observableList.addListener(new ListChangeListener<File>(){
+			@Override
+			public void onChanged(javafx.collections.ListChangeListener.Change<? extends File> c) {
+				System.out.println("mostrando los archivos agregados");
+				if(c.next()){
+				c.getAddedSubList().forEach((file)->{
+					showNdviTiffFile(file);
+				});//fin del foreach
+				}
+			}}
+
+		);
+
 	}
 
 	private void doOpenNDVITiffFile() {
@@ -1170,119 +1275,16 @@ public class JFXMain extends Application {
 	}
 
 	private void showNdviTiffFile(File file) {
-		executorPool.execute(()->{
+		ShowNDVITifFileTask task = new ShowNDVITifFileTask(file);
+		task.setOnSucceeded(handler -> {
+			Layer ndviLayer = (Layer) handler.getSource().getValue();	
+			insertBeforeCompass(getWwd(), ndviLayer);
+			this.getLayerPanel().update(this.getWwd());
+			viewGoTo(ndviLayer);
+			playSound();	
+		});
+		executorPool.submit(task);
 
-			try{
-				BufferWrapperRaster raster = this.loadRasterFile(file);
-
-				if (raster == null){
-
-					return;
-				}
-
-				//Buffer bb = raster.getBuffer().getBackingBuffer();
-				//	double[] extremes = WWBufferUtil.computeExtremeValues(raster.getBuffer(), raster.getTransparentValue());
-
-				//Collection<Object> values = raster.getValues();
-
-				//if (extremes == null)return;
-
-				final ExportableAnalyticSurface surface = new ExportableAnalyticSurface();
-				surface.setSector(raster.getSector());
-				surface.setDimensions(raster.getWidth(), raster.getHeight());
-
-				//					surface.setExportImageName("ndviExportedImage");
-				//					surface.setExportImagePath("/exportedImagePath");
-				//					OutputStream outStream = null;					
-				//					KMZDocumentBuilder kmzB = new KMZDocumentBuilder(outStream);
-				//					kmzB.writeObject(surface);
-				//					Object writer = writer = XMLOutputFactory.newInstance().createXMLStreamWriter(this.zipStream);
-				//					surface.export(KMLConstants.KML_MIME_TYPE, writer);//mimeType, output);
-
-				double HUE_MIN = Clasificador.colors[0].getHue()/360d;//0d / 360d;
-				double HUE_MAX = Clasificador.colors[Clasificador.colors.length-1].getHue()/360d;//240d / 360d;
-				double transparentValue =raster.getTransparentValue();
-				System.out.println("ndvi transparent value = "+transparentValue);
-				//double transparentValue =extremes[0];
-				transparentValue=0;//para que pueda interpretar los valores clipeados como transparente
-				surface.setValues(AnalyticSurface.createColorGradientValues(
-						raster.getBuffer(), transparentValue, MIN_VALUE, MAX_VALUE, HUE_MIN, HUE_MAX));
-				// surface.setVerticalScale(5e3);
-				surface.setVerticalScale(100);
-				//surface.setAltitude(10);
-
-				AnalyticSurfaceAttributes attr = new AnalyticSurfaceAttributes();
-				attr.setDrawOutline(false);
-				attr.setDrawShadow(false);
-				attr.setInteriorOpacity(1);
-				surface.setSurfaceAttributes(attr);
-
-				Format legendLabelFormat = new DecimalFormat() ;
-				//					{
-				//						public StringBuffer format(double number, StringBuffer result, FieldPosition fieldPosition)  {
-				//						//	double valueInFeet = number * WWMath.METERS_TO_FEET;
-				//							return super.format(number, result, fieldPosition);
-				//						}
-				//					};
-
-				final AnalyticSurfaceLegend legend = AnalyticSurfaceLegend.fromColorGradient(MIN_VALUE,MAX_VALUE,
-						HUE_MIN, HUE_MAX,
-						AnalyticSurfaceLegend.createDefaultColorGradientLabels(MIN_VALUE, MAX_VALUE, legendLabelFormat),
-						AnalyticSurfaceLegend.createDefaultTitle(file.getName() + " NDVI Values"));
-				legend.setOpacity(1);
-				legend.setScreenLocation(new Point(100, 400));
-
-				Renderable renderable =  new Renderable()	{
-					public void render(DrawContext dc)
-					{
-						Extent extent = surface.getExtent(dc);
-						if (!extent.intersects(dc.getView().getFrustumInModelCoordinates()))
-							return;
-
-						if (WWMath.computeSizeInWindowCoordinates(dc, extent) < 300)
-							return;
-
-						legend.render(dc);
-					}
-				};
-				SurfaceImageLayer layer = new SurfaceImageLayer();
-				layer.setName(file.getName());
-				layer.setPickEnabled(false);
-				layer.addRenderable(surface);
-				layer.addRenderable(renderable);
-				layer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, new String("NDVI"));
-
-				Sector s = raster.getSector();
-				Position pointPosition = Position.fromDegrees(s.getMinLatitude().degrees, s.getMinLongitude().degrees);
-				PointPlacemark pmStandard = new PointPlacemark(pointPosition);
-				PointPlacemarkAttributes pointAttribute = new PointPlacemarkAttributes();
-				pointAttribute.setImageColor(java.awt.Color.red);
-				//		if(HiDPIHelper.isHiDPI()){
-				//			pointAttribute.setLabelFont(java.awt.Font.decode("Verdana-Bold-50"));
-				//		}
-				pointAttribute.setLabelMaterial(Material.DARK_GRAY);
-				pmStandard.setLabelText(file.getName());
-				pmStandard.setAttributes(pointAttribute);
-				layer.addRenderable(pmStandard);
-
-				layer.setValue(ProcessMapTask.ZOOM_TO_KEY, pointPosition);
-
-				Platform.runLater(()-> {
-					// Add the layer to the model and update the application's layer panel.
-					insertBeforeCompass(getWwd(), layer);
-					this.getLayerPanel().update(this.getWwd());
-
-					viewGoTo(layer);
-					// Set the view to look at the imported image.
-					//	ExampleUtil.goTo(getWwd(), raster.getSector());
-					playSound();
-
-
-				});//fin del run later
-			} catch (Exception e)     {
-				e.printStackTrace();
-			}
-		});//fin del executor pool
 	}
 
 	private boolean isLocalPath(String path){
@@ -1522,7 +1524,7 @@ public class JFXMain extends Application {
 				ProcessHarvestMapTask umTask = new ProcessHarvestMapTask(labor);
 				umTask.installProgressBar(progressBox);
 
-				
+
 				umTask.setOnSucceeded(handler -> {
 					CosechaLabor ret = (CosechaLabor)handler.getSource().getValue();
 					cosechas.add(ret);
@@ -1687,7 +1689,7 @@ public class JFXMain extends Application {
 	}
 
 
-	private void doRecomendFertFromHarvestPotential(CosechaLabor value) {
+	private void doRecomendFertFromHarvest(CosechaLabor value) {
 		// TODO generar un layer de fertilizacion a partir de una cosecha
 		//el proceso consiste el levantar las geometrias de la cosecha y preguntarle la usuario
 		//que producto aplico y en que densidad por hectarea
@@ -1696,28 +1698,28 @@ public class JFXMain extends Application {
 		FertilizacionLabor labor = new FertilizacionLabor();
 		labor.setLayer(new LaborLayer());
 
-
+		labor.getNombreProperty().setValue(value.getNombreProperty().get()+" Prescripcion P");
 		Optional<FertilizacionLabor> cosechaConfigured= FertilizacionConfigDialogController.config(labor);
 		if(!cosechaConfigured.isPresent()){//
 			System.out.println("el dialogo termino con cancel asi que no continuo con la cosecha");
 			return;
 		}							
 
-		//		RecomendFertFromHarvestPotentialMapTask umTask = new RecomendFertFromHarvestPotentialMapTask(labor);
-		//		umTask.installProgressBar(progressBox);
-		//
-		//		//	testLayer();
-		//		umTask.setOnSucceeded(handler -> {
-		//			FertilizacionLabor ret = (FertilizacionLabor)handler.getSource().getValue();
-		//			fertilizaciones.add(ret);//TODO cambiar esto cuando cambie las acciones a un menu contextual en layerPanel
-		//			insertBeforeCompass(getWwd(), ret.getLayer());
-		//			this.getLayerPanel().update(this.getWwd());
-		//			umTask.uninstallProgressBar();
-		//			viewGoTo(ret);
-		//
-		//			System.out.println("RecomendFertFromHarvestPotentialMapTask succeded");
-		//		});//fin del OnSucceeded
-		//		umTask.start();
+		RecomendFertPFromHarvestMapTask umTask = new RecomendFertPFromHarvestMapTask(labor,value);
+		umTask.installProgressBar(progressBox);
+
+		//	testLayer();
+		umTask.setOnSucceeded(handler -> {
+			FertilizacionLabor ret = (FertilizacionLabor)handler.getSource().getValue();
+			fertilizaciones.add(ret);//TODO cambiar esto cuando cambie las acciones a un menu contextual en layerPanel
+			insertBeforeCompass(getWwd(), ret.getLayer());
+			this.getLayerPanel().update(this.getWwd());
+			umTask.uninstallProgressBar();
+			viewGoTo(ret);
+
+			System.out.println("RecomendFertFromHarvestPotentialMapTask succeded");
+		});//fin del OnSucceeded
+		umTask.start();
 	}
 
 	/**
@@ -1956,21 +1958,22 @@ public class JFXMain extends Application {
 	}
 
 	private void doProcessMargin() {		
-		//FileDataStore store = chooseShapeFileAndGetStore();
-
-		//if (store != null) {
-
 		System.out.println("processingMargins");
-
 
 		Margen margen = new Margen();
 		margen.setLayer(new LaborLayer());
-		
+
 		//todo pasar el filtrado por visibles aca y pasar nuevas listas solo con las visibles
 		List<PulverizacionLabor> pulvEnabled = pulverizaciones.stream().filter((l)->l.getLayer().isEnabled()).collect(Collectors.toList());
 		List<FertilizacionLabor> fertEnabled = fertilizaciones.stream().filter((l)->l.getLayer().isEnabled()).collect(Collectors.toList());
 		List<SiembraLabor> siemEnabled = siembras.stream().filter((l)->l.getLayer().isEnabled()).collect(Collectors.toList());
 		List<CosechaLabor> cosechasEnabled = cosechas.stream().filter((l)->l.getLayer().isEnabled()).collect(Collectors.toList());
+
+
+		margen.setFertilizaciones(fertEnabled);
+		margen.setPulverizaciones(pulvEnabled);
+		margen.setSiembras(siemEnabled);
+		margen.setCosechas(cosechasEnabled);
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("Renta ");
@@ -1984,8 +1987,7 @@ public class JFXMain extends Application {
 		}							
 
 
-		ProcessMarginMapTask uMmTask = new ProcessMarginMapTask(margen,
-				pulvEnabled, fertEnabled, siemEnabled, cosechasEnabled);
+		ProcessMarginMapTask uMmTask = new ProcessMarginMapTask(margen);
 		//	ProgressBar progressBarTask = new ProgressBar();
 		uMmTask.installProgressBar(progressBox);
 		//progressBox.getChildren().add(progressBarTask);
@@ -2010,7 +2012,68 @@ public class JFXMain extends Application {
 			System.out.println("ProcessMarginTask succeded");
 		});
 		executorPool.execute(uMmTask);
+	}
+
+	private void doEditMargin(Margen margen) {		
+		System.out.println("editingMargins");
+		Optional<Margen> margenConfigured= MargenConfigDialogController.config(margen);
+		if(!margenConfigured.isPresent()){//
+			System.out.println("el dialogo termino con cancel asi que no continuo con el calculo de los margenes");
+			return;
+		}							
+		ProcessMarginMapTask uMmTask = new ProcessMarginMapTask(margen);
+		uMmTask.installProgressBar(progressBox);
+		uMmTask.setOnSucceeded(handler -> {
+			this.getLayerPanel().update(this.getWwd());
+			uMmTask.uninstallProgressBar();
+			this.wwjPanel.repaint();
+			System.out.println("EditMarginTask succeded");
+			playSound();
+		});
+		executorPool.execute(uMmTask);
 		//}
+	}
+
+	private void doProcesarBalanceFosforo() {		
+		System.out.println("processingBalanceDeFosforo");
+		//todo pasar el filtrado por visibles aca y pasar nuevas listas solo con las visibles
+		List<Suelo> suelosEnabled = suelos.stream().filter((l)->l.getLayer().isEnabled()).collect(Collectors.toList());
+		List<FertilizacionLabor> fertEnabled = fertilizaciones.stream().filter((l)->l.getLayer().isEnabled()).collect(Collectors.toList());
+		//List<SiembraLabor> siemEnabled = siembras.stream().filter((l)->l.getLayer().isEnabled()).collect(Collectors.toList());
+		List<CosechaLabor> cosechasEnabled = cosechas.stream().filter((l)->l.getLayer().isEnabled()).collect(Collectors.toList());
+
+		//		Suelo suelo = new Suelo();
+		//		suelo.setLayer(new LaborLayer());
+		//		StringBuilder sb = new StringBuilder();
+		//		sb.append("Suelo ");
+		//		cosechasEnabled.forEach((c)->sb.append(c.getNombreProperty().get()+" "));
+		//		suelo.getNombreProperty().setValue(sb.toString());
+
+		//		Optional<Margen> margenConfigured= MargenConfigDialogController.config(margen);
+		//		if(!margenConfigured.isPresent()){//
+		//			System.out.println("el dialogo termino con cancel asi que no continuo con el calculo del balance de fosforo");
+		//			return;
+		//		}							
+
+
+		ProcessNewSoilMapTask balanceFosforoTask = new ProcessNewSoilMapTask(suelosEnabled,
+				cosechasEnabled, fertEnabled);
+
+		balanceFosforoTask.installProgressBar(progressBox);
+
+		balanceFosforoTask.setOnSucceeded(handler -> {
+			Suelo ret = (Suelo)handler.getSource().getValue();
+			balanceFosforoTask.uninstallProgressBar();
+
+			this.suelos.add(ret);
+			insertBeforeCompass(getWwd(), ret.getLayer());
+			this.getLayerPanel().update(this.getWwd());
+
+			playSound();
+			viewGoTo(ret);
+			System.out.println("ProcessBalanceDeFosforoTask succeded");
+		});
+		executorPool.execute(balanceFosforoTask);
 	}
 
 	//	private void doExportMargins() {
@@ -2379,27 +2442,27 @@ public class JFXMain extends Application {
 	 * 
 	 */
 	private void doShowAcercaDe() {
-	Alert acercaDe = new Alert(AlertType.INFORMATION);
-	acercaDe.titleProperty().set("Acerca de "+this.TITLE_VERSION);
-	acercaDe.initOwner(this.stage);
-	//acercaDe.setHeaderText(this.TITLE_VERSION+"\n"+this.BUILD_INFO+"\nVisitar www.ursulagis.com");
-	//acercaDe.contentTextProperty().set();
-	 String content =   "<b>"+this.TITLE_VERSION+"</b><br>"
-			 	+this.BUILD_INFO
-			 	+ "<br><b>"+"Visitar <a href=\"http://www.ursulagis.com\">www.ursulagis.com</a>"+"</b>";
-			 	
-	 WebView webView = new WebView();
-	 webView.getEngine().loadContent("<html>"+content+"</html>");
-       
-     
-   //   webView.setPrefSize(150, 60);
-	 acercaDe.setHeaderText("");
-      acercaDe.setGraphic(null);
-	
-     acercaDe.getDialogPane().setContent(webView);;
-     //  alert.showAndWait();
-       acercaDe.setResizable(true);
-	acercaDe.show();
+		Alert acercaDe = new Alert(AlertType.INFORMATION);
+		acercaDe.titleProperty().set("Acerca de "+this.TITLE_VERSION);
+		acercaDe.initOwner(this.stage);
+		//acercaDe.setHeaderText(this.TITLE_VERSION+"\n"+this.BUILD_INFO+"\nVisitar www.ursulagis.com");
+		//acercaDe.contentTextProperty().set();
+		String content =   "<b>"+this.TITLE_VERSION+"</b><br>"
+				+this.BUILD_INFO
+				+ "<br><b>"+"Visitar <a href=\"http://www.ursulagis.com\">www.ursulagis.com</a>"+"</b>";
+
+		WebView webView = new WebView();
+		webView.getEngine().loadContent("<html>"+content+"</html>");
+
+
+		//   webView.setPrefSize(150, 60);
+		acercaDe.setHeaderText("");
+		acercaDe.setGraphic(null);
+
+		acercaDe.getDialogPane().setContent(webView);;
+		//  alert.showAndWait();
+		acercaDe.setResizable(true);
+		acercaDe.show();
 		//TODO mostrar dialogo con informacion de la version, link a www.agrotoolbox.com y los creadores
 	}
 
@@ -2564,6 +2627,37 @@ public class JFXMain extends Application {
 		}
 		return stores;
 	}
+	
+	private File directoryChooser(){
+		DirectoryChooser fileChooser = new DirectoryChooser();
+		fileChooser.setTitle("Seleccione un directorio");
+		
+		Configuracion config = Configuracion.getInstance();
+		File lastFile = null;
+		String lastFileName =config.getPropertyOrDefault(Configuracion.LAST_FILE,"");
+		if(lastFileName != null){
+			lastFile = new File(lastFileName);
+		}
+		if(lastFile != null ){
+		
+//			if(!lastFile.isDirectory()){
+//				lastFile= lastFile.getParentFile();
+//			}
+			fileChooser.setInitialDirectory(lastFile);
+		}
+		
+
+		File selectedDirectory = fileChooser.showDialog(new Stage());
+		
+		
+		if(selectedDirectory!=null){
+			File f = selectedDirectory;
+			config.setProperty(Configuracion.LAST_FILE,f.getAbsolutePath());	
+			config.save();
+		}
+		
+		return selectedDirectory;
+	}
 
 	/**
 	 * 
@@ -2573,6 +2667,7 @@ public class JFXMain extends Application {
 	private List<File> chooseFiles(String f1,String f2) {
 		List<File> files =null;
 		FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle("Seleccione un archivo");
 		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(f1, f2));
 
 		Configuracion config = Configuracion.getInstance();
@@ -2690,9 +2785,9 @@ public class JFXMain extends Application {
 						config.save();
 						doOpenCosecha(shpFiles);//ok!
 					}
-				
-					
-					
+
+
+
 					FileNameExtensionFilter tifFilter = new FileNameExtensionFilter("tif only","tif");
 					List<File> tifFiles = db.getFiles();
 					tifFiles.removeIf(f->!tifFilter.accept(f));
@@ -2704,7 +2799,7 @@ public class JFXMain extends Application {
 						config.save();
 						tifFiles.stream().forEach((f)->showNdviTiffFile(f));
 					}
-				
+
 					//ok!
 
 				}

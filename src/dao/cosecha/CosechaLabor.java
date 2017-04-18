@@ -268,9 +268,9 @@ public class CosechaLabor extends Labor<CosechaItem> {
 //		}
 //		ci.elevacion = FeatureContainer.getDoubleFromObj(harvestFeature
 //				.getAttribute(colElevacion.get()));
-		ci.precioTnGrano = precioGranoProperty.doubleValue();
+		ci.precioTnGrano = precioGranoProperty.doubleValue();//FIXME si es una grilla no se actualiza el precio del grano
 		//TODO tomar en cuenta el costo fijo por ha de la cosecha y el costo variable
-		double costoTn = this.costoCosechaTnProperty.get();
+		double costoTn = this.costoCosechaTnProperty.get()*ci.precioTnGrano/100;//FIXME esto es un porcentaje del precio del grano (costo=precio*costoTn)
 		double costoHa = this.precioLaborProperty.get();
 		ci.importeHa = ci.rindeTnHa *( ci.precioTnGrano-costoTn)-costoHa;
 

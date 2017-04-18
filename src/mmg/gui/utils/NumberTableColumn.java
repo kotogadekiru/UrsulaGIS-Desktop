@@ -14,19 +14,19 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.TextAlignment;
-
-public class IntegerTableColumn<T> extends TableColumn<T,String> {
-	public IntegerTableColumn(String title,Function<T,Integer>  getMethod, BiConsumer<T,Integer> setMethod){
+@Deprecated
+public class NumberTableColumn<T> extends TableColumn<T,String> {
+	public NumberTableColumn(String title,Function<T,Number>  getMethod, BiConsumer<T,Number> setMethod){
 		super(title);	
 		//TableColumn<Monitor,String> vacasOrdenie = new TableColumn<Monitor,String>(title);		
 	
 			setEditable(setMethod != null);
-			//DecimalFormat df = new DecimalFormat("###,###.###");
-			NumberFormat df = NumberFormat.getIntegerInstance();
+			DecimalFormat df = new DecimalFormat("###,###.###");
+			//NumberFormat df = NumberFormat.getInstance();//getNumberInstance();//getIntegerInstance();
 		
 		//	 this.setCellValueFactory(new PropertyValueFactory<T, Date>("date"));
 		setCellValueFactory(cellData ->{
-			Integer IntegerValue = getMethod.apply(cellData.getValue());
+			Number IntegerValue = getMethod.apply(cellData.getValue());
 			try{
 			return new SimpleStringProperty(df.format(IntegerValue));	
 			}catch(Exception e){
@@ -61,14 +61,10 @@ public class IntegerTableColumn<T> extends TableColumn<T,String> {
 													T p = cellEditingEvent.getRowValue();
 													
 													try {
-														Integer newVal;
-														newVal = df.parse(cellEditingEvent.getNewValue()).intValue();
+														Number newVal = df.parse(cellEditingEvent.getNewValue());//Long?
 														setMethod.accept(p,newVal);//Integer.valueOf( cellEditingEvent.getNewValue()));		
 														//DAH.save(p);
-													} catch (Exception e) {
-														// TODO Auto-generated catch block
-														e.printStackTrace();
-													}
+													} catch (Exception e) {	e.printStackTrace();}
 												
 													});
 		this.setComparator(new Comparator<String>(){
@@ -77,8 +73,8 @@ public class IntegerTableColumn<T> extends TableColumn<T,String> {
 			public int compare(String arg0, String arg1) {
 				
 				try {
-					Integer d0 = df.parse(arg0).intValue();
-					Integer d1 = df.parse(arg1).intValue();
+					Double d0 = df.parse(arg0).doubleValue();
+					Double d1 = df.parse(arg1).doubleValue();
 					
 					return d0.compareTo(d1);
 				} catch (ParseException e) {

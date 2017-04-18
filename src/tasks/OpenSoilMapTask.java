@@ -1,18 +1,23 @@
 package tasks;
 
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
-import dao.SueloItem;
 import dao.fertilizacion.FertilizacionItem;
+import dao.suelo.Suelo;
+import dao.suelo.SueloItem;
 import javafx.scene.Group;
 import javafx.scene.shape.Path;
 
+import org.geotools.data.FeatureReader;
 import org.geotools.data.FileDataStore;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
 
 import utils.ProyectionConstants;
 
@@ -21,79 +26,81 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProcessSoilMapTask extends ProcessMapTask {
 
+/**
+ * 
+ * @author quero
+ * task que toma un store y devuelve una capa de suelo a partir del store
+ */
 
-	public ProcessSoilMapTask(Group map1,  FileDataStore store) {
-		super.layer = map1;
-		super.store = store;
-	
+public class OpenSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
+	public OpenSoilMapTask(Suelo sueloMap) {
+		this.labor=sueloMap;
 	}
-
-	public void doProcess() throws IOException {
-		SimpleFeatureSource featureSource = store.getFeatureSource();
-		SimpleFeatureCollection featureCollection = featureSource.getFeatures();
-		SimpleFeatureIterator featuresIterator = featureCollection.features();
-
-		this.featureTree = new Quadtree();
-
-		featureCount = featureCollection.size();
-	//	pathTooltips = new ArrayList<ArrayList<Object>>();
-		//
-		List<SueloItem> itemsByIndex = new ArrayList<SueloItem>();
-		List<SueloItem> itemsByAmount = new ArrayList<SueloItem>();
-
-		while (featuresIterator.hasNext()) {
-			SimpleFeature simpleFeature = featuresIterator.next();
-			itemsByIndex.add(new SueloItem(simpleFeature));
-		}
-		itemsByAmount.addAll(itemsByIndex);
-		constructHistogram(itemsByAmount);
-
 	
-		featureCount = itemsByIndex.size();
+	public void doProcess() throws IOException {
+		FeatureReader<SimpleFeatureType, SimpleFeature> reader =null;
+		//	CoordinateReferenceSystem storeCRS =null;
+		if(labor.getInStore()!=null){
+			if(labor.outCollection!=null)labor.outCollection.clear();
+			reader = labor.getInStore().getFeatureReader();
+			//		 storeCRS = labor.getInStore().getSchema().getCoordinateReferenceSystem();
+			//convierto los features en cosechas
+			featureCount=labor.getInStore().getFeatureSource().getFeatures().size();
+		} else{//XXX cuando es una grilla los datos estan en outstore y instore es null
+			reader = labor.outCollection.reader();
+			//	 storeCRS = labor.outCollection.getSchema().getCoordinateReferenceSystem();
+			//convierto los features en cosechas
+			featureCount=labor.outCollection.size();
+		}
 		
+		int divisor = 1;
 
-		for (SueloItem soilFeature : itemsByIndex) {		
+		while (reader.hasNext()) {
+
+			SimpleFeature simpleFeature = reader.next();
+			SueloItem si = labor.constructFeatureContainer(simpleFeature);
+
 
 			featureNumber++;
-			updateProgress(featureNumber, featureCount);
 
-//			System.out.println("Feature " + featureNumber + " of "
-//					+ featureCount);
+			updateProgress(featureNumber/divisor, featureCount);
+			Object geometry = si.getGeometry();
 
-			featureTree.insert(soilFeature.getGeometry().getEnvelopeInternal(),
-					soilFeature);
-
-			List<Polygon> mp = getPolygons(soilFeature);
-			for (int i = 0; i < mp.size(); i++) {
-				Polygon p = mp.get(i);
-
-				pathTooltips.add(0, getPathTooltip(p, soilFeature));
+			/**
+			 * si la geometria es un point procedo a poligonizarla
+			 *
+			 */
+			if (geometry instanceof Point) {
+				//TODO crear una grilla e interpolar los valores con el promedio ponderado po las distancias (como se llamaba?) resumir geometrias?
+			
+			} else { // no es point. Estoy abriendo una cosecha de poligonos.
+				labor.insertFeature(si);
 			}
-		}// fin del while
-
-		runLater();
-
-		// saveFeaturesToNewShp(destinationFeatures);
+			
+		}// fin del for que recorre las cosechas por indice
+		reader.close();
+		
+		List<SueloItem> itemsToShow = new ArrayList<SueloItem>();
+		SimpleFeatureIterator it = labor.outCollection.features();
+		while(it.hasNext()){
+			SimpleFeature f=it.next();
+			itemsToShow.add(labor.constructFeatureContainerStandar(f,false));
+		}
+		it.close();
+		labor.constructClasificador();
+		runLater(itemsToShow);
 		updateProgress(0, featureCount);
 
 	}
 
-	private ArrayList<Object> getPathTooltip(Polygon poly,
-			SueloItem fertFeature) {
-
-		Path path = getExrudedPolygonFromGeom(poly, fertFeature);
-
+	
+	@Override
+	protected void getPathTooltip(Geometry poly, SueloItem si) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		DecimalFormat df = new DecimalFormat("#.00");
 		String tooltipText = new String(
-				
-				 " PpmFosforo/Ha: "+ df.format(fertFeature.getPpmP()) +"\n"
-//						+ "Sup: "
-//						+ df.format(area * ProyectionConstants.METROS2_POR_HA)
-//						+ " m2\n"
-		// +"feature: " + featureNumber
+				 " PpmFosforo/Ha: "+ df.format(si.getPpmP()) +"\n"
 		);
 
 		if(area<1){
@@ -101,16 +108,12 @@ public class ProcessSoilMapTask extends ProcessMapTask {
 		} else {
 			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
 		}
+
+		super.getRenderPolygonFromGeom(poly, si,tooltipText);
+
 		
-		ArrayList<Object> ret = new ArrayList<Object>();
-		ret.add(path);
-		ret.add(tooltipText);
-		return ret;
 	}
-
-	// TODO devolver un color entre el minimo y el maximo variando el hue entre
-	// el hue del rojo hasta el hue del verde
-
+	
 	protected int getAmountMin() {
 		return 0;
 	}

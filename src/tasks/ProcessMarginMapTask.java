@@ -47,16 +47,17 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 	private List<PulverizacionLabor> pulverizaciones;
 	//ArrayList<ArrayList<Object>> pathTooltips = new ArrayList<ArrayList<Object>>();
 	Double costoFijoHa;
-
-	public ProcessMarginMapTask(Margen margen, List<PulverizacionLabor> pulverizaciones, List<FertilizacionLabor> fertilizaciones, List<SiembraLabor> siembras,List<CosechaLabor> cosechas) {
+	boolean showMargen = false;
+	public ProcessMarginMapTask(Margen margen) {
 		super(margen);
-		this.fertilizaciones = fertilizaciones;
-		this.pulverizaciones = pulverizaciones;
-		this.siembras = siembras;
-		this.cosechas = cosechas;
+		this.fertilizaciones = margen.getFertilizaciones();
+		this.pulverizaciones = margen.getPulverizaciones();
+		this.siembras = margen.getSiembras();
+		this.cosechas = margen.getCosechas();
 
 		this.costoFijoHa = margen.costoFijoHaProperty.getValue();
-	
+		showMargen = Margen.COLUMNA_MARGEN.equals(labor.colAmount.get());
+		System.out.println("showMargen es "+showMargen);
 		System.out.println("inicializando ProcessMarginMapTask con costo Fijo = "+ costoFijoHa);
 	}
 
@@ -91,8 +92,8 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 		fertilizaciones.forEach((l)->l.clearCache());
 		cosechas.forEach((l)->l.clearCache());
 		siembras.forEach((l)->l.clearCache());
-		
-		labor.constructClasificador();
+		System.out.println("clasificador antes de constructClasificador es "+labor.clasificador.tipoClasificadorProperty.get());
+		labor.constructClasificador();//labor.clasificador.tipoClasificadorProperty.get());
 		runLater(itemsToShow);
 		updateProgress(0, featureCount);	
 
@@ -127,7 +128,7 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 	 * 
 	 * @param bounds en long/lat
 	 * @param ancho en metros
-	 * @return una lista de poligonos que representa una grilla con un 100% de superposiocion
+	 * @return una lista de poligonos que representa una grilla con un 100% de superposiocion 10mts de ancho
 	 */
 	private List<Polygon> construirGrilla(BoundingBox bounds) {
 		Double ancho=10d;//new CosechaConfig().getAnchoFiltroOutlayers()/3;
@@ -264,6 +265,7 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 		renta.setImporteCosechaHa(importeCosecha/ areaMargen);
 		renta.setMargenPorHa(margenPorHa);
 		
+		renta.setShowMargen(showMargen);
 		renta.setAncho(0d);
 		renta.setDistancia(0d);
 		renta.setElevacion(1d);
@@ -273,25 +275,58 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 
 
 	private Double getImporteCosecha(Geometry geometry) {
-		return getImporteLabores(geometry,cosechas);
+		//TODO agregar al importe de cosecha el importe de flete y comercializacion
+		double fletePorTN =this.labor.costoFleteProperty.getValue().doubleValue();
+		double costoTN = this.labor.costoTnProperty.getValue().doubleValue();
+	//	double cantidadCosechas = getCantidadLabores(geometry,cosechas);
+		
+		return getImporteLabores(geometry,cosechas,(-fletePorTN-costoTN));
 	}
 	private Double getImporteSiembra(Geometry geometry) {
-		return getImporteLabores(geometry,siembras);
+		return getImporteLabores(geometry,siembras,null);
 	}
 	private Double getImporteFert(Geometry geometry) {
-		return getImporteLabores(geometry,fertilizaciones);
+		return getImporteLabores(geometry,fertilizaciones,null);
 	}
 	private Double getImportePulv(Geometry geometry) {
-		return getImporteLabores(geometry,pulverizaciones);
+		return getImporteLabores(geometry,pulverizaciones,null);
 	}
 
-	private Double getImporteLabores(Geometry geometry, List<? extends Labor<?>> labores){
+	
+	private Double getImporteLabores(Geometry geometry, List<? extends Labor<?>> labores,Double costoVariable){
+		Double ret =  labores.stream().filter((l)->l.getLayer().isEnabled())
+				.mapToDouble((labor)->{
+					List<? extends LaborItem> lItems = labor.cachedOutStoreQuery(geometry.getEnvelopeInternal());
+
+					Double importeLabor =	lItems.stream().mapToDouble((li)->{
+						
+						Double costoHa = (Double) li.getImporteHa();
+						Geometry liGeom = li.getGeometry();
+						//getAmount es el amount/ha
+						Double costoVariableHa = costoVariable!=null?li.getAmount()*costoVariable:0.0;
+						Geometry interseccionGeom = geometry.intersection(liGeom);// Computes a
+						Double area = interseccionGeom.getArea() * ProyectionConstants.A_HAS();
+						//importeCosecha+=costoHa*area;
+//						System.out.println("importeHa:"+costoHa
+//								+"\ncantHa:"+li.getAmount()
+//								+"\ncostoVariable:"+costoVariable
+//								+"\ncantHa*costoVariable:"+costoVariableHa
+//								+"\nimporteHa+importeVariable:"+(costoHa+costoVariableHa));
+						return (costoHa+costoVariableHa)*area;
+					}).sum();
+
+					return importeLabor;
+				}).sum();
+		return ret;
+	}
+	
+	private Double getCantidadLabores(Geometry geometry, List<? extends Labor<?>> labores){
 		Double ret =  labores.stream().filter((l)->l.getLayer().isEnabled())
 				.mapToDouble((labor)->{
 					List<? extends LaborItem> cItems = labor.cachedOutStoreQuery(geometry.getEnvelopeInternal());
 
 					Double importeCosecha =	cItems.stream().mapToDouble((ci)->{
-						Double costoHa = (Double) ci.getImporteHa();
+						Double costoHa = (Double) ci.getAmount();
 						Geometry cosechaGeom = ci.getGeometry();
 						Geometry interseccionGeom = geometry.intersection(cosechaGeom);// Computes a
 						Double area = interseccionGeom.getArea() * ProyectionConstants.A_HAS();

@@ -107,4 +107,13 @@ public class ProyectionConstants {
 	     */ 
 	    public abstract int getSRID(); 
 	}
+
+	/**
+	 * 
+	 * @param area area en grados al cuadrado como viene de Geometry.getArea();
+	 * @return area en Hectareas
+	 */
+	public static Double A_HAS(double area) {
+		return area*A_HAS();
+	}
 }

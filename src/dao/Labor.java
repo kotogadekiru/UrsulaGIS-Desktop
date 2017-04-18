@@ -96,7 +96,7 @@ public abstract class Labor<E extends LaborItem>  {
 
 	public Clasificador clasificador=null;
 	public SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(getType());
-	public StringProperty colAmount=null; //usada por el clasificador para leer el outstore
+	public StringProperty colAmount=null; //usada por el clasificador para leer el outstore tiene que ser parte de TYPE
 	//columnas configuradas para leer el instore
 	public StringProperty colElevacion=null;
 	public StringProperty colAncho=null;
@@ -219,7 +219,7 @@ public abstract class Labor<E extends LaborItem>  {
 		// anchoDefaultProperty
 		anchoDefaultProperty = initDoubleProperty(ANCHO_DEFAULT, "8", properties);
 
-		clasificador.tipoClasificadorProperty = new SimpleStringProperty(
+		clasificador.tipoClasificadorProperty.set(
 				properties.getPropertyOrDefault(Clasificador.TIPO_CLASIFICADOR,
 						Clasificador.CLASIFICADOR_JENKINS));
 		clasificador.tipoClasificadorProperty
@@ -529,15 +529,16 @@ public abstract class Labor<E extends LaborItem>  {
 	}
 
 	public void constructClasificador() {
-		constructClasificador(getConfigLabor().getConfigProperties().getPropertyOrDefault(Clasificador.TIPO_CLASIFICADOR,
-				Clasificador.CLASIFICADOR_JENKINS));
+		constructClasificador(getClasificador().tipoClasificadorProperty.get());
+//				getConfigLabor().getConfigProperties().getPropertyOrDefault(Clasificador.TIPO_CLASIFICADOR,
+//				Clasificador.CLASIFICADOR_JENKINS));
 	}
 
 	public void constructClasificador(String nombreClasif) {
+		System.out.println("constructClasificador "+nombreClasif);
 		if (Clasificador.CLASIFICADOR_JENKINS.equalsIgnoreCase(nombreClasif)) {
-
-			this.clasificador.constructJenksClasifier(this.outCollection,
-					this.colAmount.get());
+			System.out.println("construyendo clasificador jenkins");
+			this.clasificador.constructJenksClasifier(this.outCollection,this.colAmount.get());
 		} else {
 			System.out
 			.println("no hay jenks Classifier falling back to histograma");
@@ -554,12 +555,13 @@ public abstract class Labor<E extends LaborItem>  {
 
 	public List<String> getAvailableColumns() {
 		List<String> availableColumns = new ArrayList<String>();
-		SimpleFeatureType sch;
+		SimpleFeatureType sch=null;
 		try {
 			if(inStore==null){
+				//XXX quizas haya que tener en cuenta inCollection tambien
 				sch =this.outCollection.getSchema();
 			} else {
-				sch = inStore.getSchema();//FIXME esto es null si la cosecha es generada por una union		
+				sch = inStore.getSchema();	
 			}
 
 			List<AttributeType> types = sch.getTypes();

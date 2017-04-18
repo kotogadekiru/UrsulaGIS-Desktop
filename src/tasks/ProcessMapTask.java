@@ -105,7 +105,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		try {
 			doProcess();
 		} catch (Exception e1) {
-			System.err.println("Error al procesar el Shape de cosechas");
+			System.err.println("Error al procesar el task");
 			e1.printStackTrace();
 		}
 
@@ -182,7 +182,17 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				}
 				for(Coordinate c:coordinates){
 
-					c.z=(dao.getElevacion()-labor.minElev)*scale;
+				//	if(c.z<=labor.minElev){
+						c.z=(dao.getElevacion()-labor.minElev)*scale;
+				//	} else{
+						/*al quitar las superposiciones
+						 * 2017-04-10T18:42:33.681-0300  SEVERE  Matrix is not symmetric (NaN, NaN, NaN, 0.0, 
+							NaN, NaN, NaN, 0.0, 
+							NaN, NaN, NaN, 0.0, 
+							0.0, 0.0, 0.0, 0.0)
+						 */
+				//		c.z=(c.z-labor.minElev)*scale;
+				//	}
 
 					if(c.z<1){
 						//System.out.println("corrigiendo la elevacion porque era menor a 1 elev="+c.z);

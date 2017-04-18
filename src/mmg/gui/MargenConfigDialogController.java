@@ -132,9 +132,6 @@ public class MargenConfigDialogController  extends Dialog<Margen>{
 			l.fechaProperty.setValue(bool2);
 		});
 
-	
-
-
 		StringConverter<Number> converter = new NumberStringConverter();
 
 		//textPrecioGrano
@@ -145,17 +142,42 @@ public class MargenConfigDialogController  extends Dialog<Margen>{
 		//textCostoLaborHa
 		Bindings.bindBidirectional(this.textFlete.textProperty(), labor.costoFleteProperty, converter);
 		
-		List<String> options = Arrays.asList("Rentabilida","Margen");
+		List<String> options = Arrays.asList("Rentabilidad","Margen");
 		this.comboAmount.setItems(FXCollections.observableArrayList(options));
-		this.comboAmount.valueProperty().bindBidirectional(labor.amountProperty);
-		
-
+		if(Margen.COLUMNA_RENTABILIDAD.equalsIgnoreCase(labor.colAmount.get())){				
+			this.comboAmount.getSelectionModel().select(0);
+		} else{
+			this.comboAmount.getSelectionModel().select(1);
+		}
+		this.comboAmount.valueProperty().addListener((o,s,s2)->{
+			System.out.println("cambiando colAmount a "+s2);
+			if(options.get(0).equalsIgnoreCase(s2)){				
+				labor.colAmount.set(Margen.COLUMNA_RENTABILIDAD);
+				String n = textNombre.textProperty().get().replace("Margen","Renta");;
+			
+				
+				System.out.println("nombre despues de reemplazar renta es "+n);
+				textNombre.textProperty().set(n);
+			} else{
+				labor.colAmount.set(Margen.COLUMNA_MARGEN);
+				String n = textNombre.textProperty().get().replace("Renta","Margen");;
+				
+				textNombre.textProperty().set(n);
+			}
+			
+		});
 
 		Bindings.bindBidirectional(this.textClasesClasificador.textProperty(), labor.clasificador.clasesClasificadorProperty, converter);
 
+//		this.comboClasificador.setItems(FXCollections.observableArrayList(Clasificador.clasficicadores));
+//		this.comboClasificador.valueProperty().bindBidirectional(labor.clasificador.tipoClasificadorProperty);
+		
 		this.comboClasificador.setItems(FXCollections.observableArrayList(Clasificador.clasficicadores));
 		this.comboClasificador.valueProperty().bindBidirectional(labor.clasificador.tipoClasificadorProperty);
-
+//		this.comboClasificador.valueProperty().addListener((o,s,s2)->{
+//			System.out.println("cambiando clasificador a "+s2);
+//		
+//		});
 
 	}
 

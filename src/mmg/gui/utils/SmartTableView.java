@@ -20,66 +20,68 @@ import javafx.scene.input.MouseButton;
 
 public class SmartTableView<T> extends TableView<T> {
 	private Supplier<T> onDoubleClick=null;
-	
+
 	public SmartTableView(ObservableList<T> data,ObservableList<T> filtered){
 		super(data);
-		
-		  // 3. Wrap the FilteredList in a SortedList. 
-        SortedList<T> sortedData = new SortedList<>(filtered);
 
-        // 4. Bind the SortedList comparator to the TableView comparator.
-        sortedData.comparatorProperty().bind(this.comparatorProperty());
-        // 5. Add sorted (and filtered) data to the table.
-        this.setItems(sortedData);
-        
+		// 3. Wrap the FilteredList in a SortedList. 
+		SortedList<T> sortedData = new SortedList<>(filtered);
+
+		// 4. Bind the SortedList comparator to the TableView comparator.
+		sortedData.comparatorProperty().bind(this.comparatorProperty());
+		// 5. Add sorted (and filtered) data to the table.
+		this.setItems(sortedData);
+
 		if(data.size()>0){
 			populateColumns(data.get(0).getClass());
 		}else{
 			System.out.println("no creo las columnas porque no hay datos");
 		}
-		
-		this.setOnMouseClicked( event->{
-				if ( MouseButton.PRIMARY.equals(event.getButton()) && event.getClickCount() == 2) {
-		        	  if(onDoubleClick!=null){
-			            	data.add(onDoubleClick.get());
-			            }		            
-		        } else if(MouseButton.SECONDARY.equals(event.getButton()) && event.getClickCount() == 2){
-		        	T rowData = this.getSelectionModel().getSelectedItem();
-		        	if(rowData!=null){
-		        	data.remove(rowData);
-		        	
-		        	//DAH.remove(rowData);
-		        	}
-		        }
-		    
-		});
-		
-		data.addListener(new ListChangeListener<T>(){
 
-			@Override
-			public void onChanged(javafx.collections.ListChangeListener.Change<? extends T> c) {
-			if(	getColumns().size()==0){
-				
-				
-				populateColumns(c.getList().get(0).getClass());
+		this.setOnMouseClicked( event->{
+			if ( MouseButton.PRIMARY.equals(event.getButton()) && event.getClickCount() == 2) {
+				if(onDoubleClick!=null){
+					data.add(onDoubleClick.get());
+				}		            
+			} else if(MouseButton.SECONDARY.equals(event.getButton()) && event.getClickCount() == 2){
+				T rowData = this.getSelectionModel().getSelectedItem();
+				if(rowData!=null){
+					data.remove(rowData);
+
+					//DAH.remove(rowData);
+				}
 			}
-				
-			}
-			
+
 		});
+
+		data.addListener((javafx.collections.ListChangeListener.Change<? extends T> c)->{if(	getColumns().size()==0){
+			populateColumns(c.getList().get(0).getClass());
+		}});
+
+		//		new ListChangeListener<T>(){
+		//
+		//			@Override
+		//			public void onChanged(javafx.collections.ListChangeListener.Change<? extends T> c) {
+		//			if(	getColumns().size()==0){
+		//				populateColumns(c.getList().get(0).getClass());
+		//			}
+		//				
+		//			}
+		//			
+		//		});
 
 	}
-	
+
 
 	private void populateColumns(Class<?> clazz) {
 		Method[] methods = clazz.getDeclaredMethods();
 		Class<?> superclass =clazz.getSuperclass();
 		Method[] superMethods = superclass.getDeclaredMethods();
-		
+
 		Method[] result = Arrays.copyOf(methods, methods.length + superMethods.length);
-		  System.arraycopy(superMethods, 0, result, methods.length, superMethods.length);
-		 
-		
+		System.arraycopy(superMethods, 0, result, methods.length, superMethods.length);
+
+
 		for (Method method :  result) {
 			int mods = method.getModifiers();
 			if(Modifier.isStatic(mods) || Modifier.isAbstract(mods)){
@@ -90,8 +92,6 @@ public class SmartTableView<T> extends TableView<T> {
 				Class<?> fieldType = method.getReturnType();
 				String setMethodName = name.replace("get", "set");
 				name = name.replace("get", "");
-
-
 				if(String.class.isAssignableFrom(fieldType)){
 					//TODO obtener el nombre de la columna de un bundle de idiomas o de un archivo de configuracion
 					String propName = name.replace("Property", "");
@@ -99,10 +99,7 @@ public class SmartTableView<T> extends TableView<T> {
 					column.setEditable(true);
 					column.setCellFactory(TextFieldTableCell.forTableColumn());
 					column.setCellValueFactory(new PropertyValueFactory<>(propName));
-
 					try {
-						
-						
 						Method setMethod = clazz.getDeclaredMethod(setMethodName, fieldType);
 						if(setMethod!=null){
 							column.setOnEditCommit(cellEditingEvent -> { 
@@ -110,15 +107,12 @@ public class SmartTableView<T> extends TableView<T> {
 								T p = cellEditingEvent.getTableView().getItems().get(row);
 								try {
 									setMethod.invoke(p,cellEditingEvent.getNewValue());
-								//	DAH.save(p);
+									//	DAH.save(p);
 									refresh();
-								} catch (Exception e) {		
-									e.printStackTrace();
-								}
-								
+								} catch (Exception e) {	e.printStackTrace();}
 							});
 						}
-					
+
 					} catch (NoSuchMethodException e1) {
 						//XXX el metodo es solo de tipo get
 					} catch (SecurityException e1) {
@@ -126,93 +120,65 @@ public class SmartTableView<T> extends TableView<T> {
 					}
 
 
-					this.getColumns().add(0,column);
-				} else 	if(Double.class.isAssignableFrom(fieldType)){
+					this.getColumns().add(column);
+				} else 	if(double.class.isAssignableFrom(fieldType)){
 					//TODO obtener el nombre de la columna de un bundle de idiomas o de un archivo de configuracion
 					String propName = name.replace("Property", "");
 					DoubleTableColumn<T> dColumn = new DoubleTableColumn<T>(propName,
-							(p)->{
-								try {
-									return ((Double) method.invoke(p, (Object[])null));
-								} catch (Exception e) {
-									
-									e.printStackTrace();
-								}
-								return null;
-							},
-							(p,d)->{
-								try {
-									Method setMethod = clazz.getDeclaredMethod(setMethodName, fieldType);
-									setMethod.invoke(p,d);
+							(p)->{	try {
+								return ((Double) method.invoke(p, (Object[])null));
+							} catch (Exception e) {	e.printStackTrace();}
+							return null;
+							},(p,d)->{ try {
+								Method setMethod = clazz.getDeclaredMethod(setMethodName, fieldType);
+								setMethod.invoke(p,d);
 								//	DAH.save(p);
-									refresh();
-								} catch (Exception e) {
-									
-									e.printStackTrace();
-								}
-							}
-							);
+								refresh();
+							} catch (Exception e) {	e.printStackTrace();}
+							});
 
+					this.getColumns().add(dColumn);
 
-					this.getColumns().add(0,dColumn);
-					//this.getColumns().add(dColumn);
-
-				}else 	if(Integer.class.isAssignableFrom(fieldType)){
+				}else 	if(Double.class.isAssignableFrom(fieldType)){
 					//TODO obtener el nombre de la columna de un bundle de idiomas o de un archivo de configuracion
 					String propName = name.replace("Property", "");
-					IntegerTableColumn<T> dColumn = new IntegerTableColumn<T>(propName,
-							(p)->{
-								try {
-									return ((Integer) method.invoke(p, (Object[])null));
-								} catch (Exception e) {
-									
-									e.printStackTrace();
-								}
-								return null;
-							},
-							(p,d)->{
+					DoubleTableColumn<T> dColumn = new DoubleTableColumn<T>(propName,
+							(p)->{try {
+								return ((Double) method.invoke(p, (Object[])null));
+							} catch (Exception e) {	e.printStackTrace();}
+							return null;
+							},(p,d)->{
 								try {
 									Method setMethod = clazz.getDeclaredMethod(setMethodName, fieldType);
-									setMethod.invoke(p,d);
-								//	DAH.save(p);
+									setMethod.invoke(p,fieldType.cast(d));
+									//	DAH.save(p);
 									refresh();
-								} catch (Exception e) {
-									
-									e.printStackTrace();
-								}
-							}
-							);
+								} catch (Exception e) {	e.printStackTrace();}
+							});
 
-					this.getColumns().add(0,dColumn);
+					this.getColumns().add(dColumn);
 					//this.getColumns().add(dColumn);
 
 				} else 	if(Calendar.class.isAssignableFrom(fieldType)){
 					//TODO obtener el nombre de la columna de un bundle de idiomas o de un archivo de configuracion
 					String propName = name.replace("Property", "");
 					DateColumn<T> dColumn = new DateColumn<T>(propName,
-							(p)->{
-								try {
-									return ((Calendar) method.invoke(p, null));
-								} catch (Exception e) {
-									
-									e.printStackTrace();
-								}
-								return null;
-							},
-							(p,d)->{
-								try {
-									Method setMethod = clazz.getDeclaredMethod(setMethodName, fieldType);
-									setMethod.invoke(p,d);
-								//	DAH.save(p);
-									refresh();
-								} catch (Exception e) {
-									
-									e.printStackTrace();
-								}
-							}
-							);
+							(p)->{try {
+								return ((Calendar) method.invoke(p, null));
+							} catch (Exception e) {
 
-					this.getColumns().add(0,dColumn);
+								e.printStackTrace();
+							}
+							return null;
+							},(p,d)->{try {
+								Method setMethod = clazz.getDeclaredMethod(setMethodName, fieldType);
+								setMethod.invoke(p,d);
+								//	DAH.save(p);
+								refresh();
+							} catch (Exception e) {e.printStackTrace();}
+							});
+
+					this.getColumns().add(dColumn);
 					//this.getColumns().add(dColumn);
 
 				}
@@ -224,7 +190,7 @@ public class SmartTableView<T> extends TableView<T> {
 							(p)->{try {
 								return ((CosechaItem) method.invoke(p, null));
 							} catch (Exception e) {
-								
+
 								e.printStackTrace();
 							}
 							return null;},
@@ -235,7 +201,7 @@ public class SmartTableView<T> extends TableView<T> {
 								//	DAH.save(p);
 									refresh();
 								} catch (Exception e) {
-									
+
 									e.printStackTrace();
 								}
 							}
@@ -249,7 +215,7 @@ public class SmartTableView<T> extends TableView<T> {
 							(p)->{try {
 								return ((Empresa) method.invoke(p, null));
 							} catch (Exception e) {
-								
+
 								e.printStackTrace();
 							}
 							return null;},
@@ -260,7 +226,7 @@ public class SmartTableView<T> extends TableView<T> {
 									DAH.save(p);
 									refresh();
 								} catch (Exception e) {
-									
+
 									e.printStackTrace();
 								}
 							}
@@ -274,7 +240,7 @@ public class SmartTableView<T> extends TableView<T> {
 							(p)->{try {
 								return ((Establecimiento) method.invoke(p, null));
 							} catch (Exception e) {
-								
+
 								e.printStackTrace();
 							}
 							return null;},
@@ -285,7 +251,7 @@ public class SmartTableView<T> extends TableView<T> {
 									DAH.save(p);
 									refresh();
 								} catch (Exception e) {
-									
+
 									e.printStackTrace();
 								}
 							}
@@ -299,7 +265,7 @@ public class SmartTableView<T> extends TableView<T> {
 							(p)->{try {
 								return ((Lote) method.invoke(p, null));
 							} catch (Exception e) {
-								
+
 								e.printStackTrace();
 							}
 							return null;},
@@ -310,7 +276,7 @@ public class SmartTableView<T> extends TableView<T> {
 									DAH.save(p);
 									refresh();
 								} catch (Exception e) {
-									
+
 									e.printStackTrace();
 								}
 							}
@@ -324,7 +290,7 @@ public class SmartTableView<T> extends TableView<T> {
 							(p)->{try {
 								return ((Campania) method.invoke(p, null));
 							} catch (Exception e) {
-								
+
 								e.printStackTrace();
 							}
 							return null;},
@@ -342,12 +308,12 @@ public class SmartTableView<T> extends TableView<T> {
 					this.getColumns().add(dColumn);
 
 				}
-	*/
+				 */
 
 			}//fin del if method name starts with get
-			
+
 		}
-	
+
 	}
 
 
@@ -365,12 +331,12 @@ public class SmartTableView<T> extends TableView<T> {
 	public void setOnDoubleClick(Supplier<T> onDoubleClick) {
 		this.onDoubleClick = onDoubleClick;
 	}
-	
+
 	public void refresh() { 
-        //Wierd JavaFX bug 
+		//Wierd JavaFX bug 
 		ObservableList<T> data = this.getItems();
-        this.setItems(null); 
-        this.layout(); 
-        this.setItems(data); 
-}
+		this.setItems(null); 
+		this.layout(); 
+		this.setItems(data); 
+	}
 }

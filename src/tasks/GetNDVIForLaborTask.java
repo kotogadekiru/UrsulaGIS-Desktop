@@ -3,21 +3,15 @@ package tasks;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.geotools.geometry.jts.ReferencedEnvelope;
 
@@ -35,9 +29,10 @@ import com.google.api.client.json.jackson.JacksonFactory;
 import com.google.api.client.util.ArrayMap;
 
 import dao.Labor;
-import dao.cosecha.CosechaLabor;
+import dao.Poligono;
 import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -47,7 +42,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import utils.FileHelper;
 import utils.UnzipUtility;
 
 
@@ -75,8 +69,12 @@ public class GetNDVIForLaborTask extends Task<List<File>>{
 	
 	Object placementObject = null;
 	private LocalDate end;
-	public GetNDVIForLaborTask(Object labor) {
+	private File downloadDir=null;
+	private List<File> observableList =null;
+	public GetNDVIForLaborTask(Object labor, File downloadDirectory,List<File> _observableList ) {
 		this.placementObject=labor;
+		downloadDir=downloadDirectory;
+		observableList=_observableList;
 	}
 
 	/**
@@ -91,10 +89,10 @@ public class GetNDVIForLaborTask extends Task<List<File>>{
 		if(placementObject instanceof Labor){
 			Labor c =(Labor)placementObject;
 			LocalDate endDate = (LocalDate) c.fechaProperty.getValue(); // "1/8/2016" ->
-			System.out.println("parseando la fecha "+endDate);			
+			//System.out.println("parseando la fecha "+endDate);			
 			end= java.sql.Date.valueOf(endDate);
-			System.out.println("endDate= "+end);
-			//TODO extrer la fecha de la cosecha
+			//System.out.println("endDate= "+end);
+		
 		}
 		if(this.end!=null){
 			end= java.sql.Date.valueOf(this.end);
@@ -109,9 +107,13 @@ public class GetNDVIForLaborTask extends Task<List<File>>{
 		SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd");
 
 		String sEnd = format1.format(cal.getTime());// cal.get(Calendar.YEAR)+"-"+cal.get(Calendar.MONTH)+"-"+cal.get(Calendar.DAY_OF_MONTH);
-		cal.roll(Calendar.MONTH, -1);//busco la fecha de un mes atras
+//		if(cal.get(Calendar.MONTH)==1){//FIXME si la fecha es de enero cal -1 me pasa a diciembre de este anio no del anterior
+//			cal.roll(Calendar.YEAR, -1);
+//		}
+		cal.add(Calendar.MONTH, -1);//busco la fecha de un mes atras no usar roll porque no me cambia el anio
+		
 		String sBegin = format1.format(cal.getTime());//cal.get(Calendar.YEAR)+"-"+cal.get(Calendar.MONTH)+"-"+cal.get(Calendar.DAY_OF_MONTH);
-
+		System.out.println("buscando los ndvi entre "+sBegin+" y "+sEnd);
 
 		GenericUrl url = new GenericUrl(HTTPS_GEE_API_HELPER_HEROKUAPP_COM_S2_PRODUCT_FINDER);
 		url.put(GEE_POLYGONS_GET_REQUEST_KEY, polygons);		
@@ -193,8 +195,8 @@ polygons=[[[[-64.69101905822754,-34.860017354204885],[-64.69058990478516,-34.867
 	}
 
 	private String getPolygonsFromLabor(Object labor) {
-		if(labor instanceof CosechaLabor){
-			CosechaLabor c = (CosechaLabor)labor;
+		if(labor instanceof Labor){
+			Labor c = (Labor)labor;
 			ReferencedEnvelope bounds = c.outCollection.getBounds();
 			StringBuilder sb = new StringBuilder();
 			sb.append("[[[");
@@ -205,8 +207,8 @@ polygons=[[[[-64.69101905822754,-34.860017354204885],[-64.69058990478516,-34.867
 			sb.append("]]]");
 			String polygons=sb.toString();
 			return polygons;
-		} else if(labor instanceof ArrayList){
-			ArrayList<Position> positions = (ArrayList<Position>)labor;
+		} else if(labor instanceof Poligono){
+			ArrayList<? extends Position> positions = ((Poligono)labor).getPositions();
 			
 			StringBuilder sb = new StringBuilder();
 			sb.append("[[[");
@@ -226,7 +228,7 @@ polygons=[[[[-64.69101905822754,-34.860017354204885],[-64.69058990478516,-34.867
 
 	@SuppressWarnings("unchecked")
 	private  List<File> parseNDVIResponse(HttpResponse response) throws IOException {
-		List<File> files = new ArrayList<File>();
+		//List<File> files = new ArrayList<File>();
 		GenericJson content = response.parseAs(GenericJson.class);
 
 		ArrayMap<String,Object> data = ((ArrayMap<String, Object>) content.get(DATA));
@@ -236,46 +238,44 @@ polygons=[[[[-64.69101905822754,-34.860017354204885],[-64.69058990478516,-34.867
 			System.out.println("path2 "+path2);
 			//path2 https://earthengine.googleapis.com/api/download?docid=0d32b479051b60a92f40ade16f8bacf4&token=175f51742e66ef7e981aeb15ffe93993
 			//TODO construir un request para path2 y descargar el zip, descomprimirlo y mostrarlo con showNdviTiffFile(file);
-			files.add(downloadGoogleTifFile(path2));
-			updateProgress(files.size(), data.size());
+			observableList.add(downloadGoogleTifFile(path2));
+			updateProgress(observableList.size(), data.size());
 		}
 		//System.out.println(data);
 		//"path2": "https://earthengine.googleapis.com/api/download?docid=0d32b479051b60a92f40ade16f8bacf4&token=1677640d60ae8b508e17d6089fa091dd"
 		//es un zip con el tif a dentro. hay que descargarlo, descomprimirlo y mostrarlo :)
-		return files;
+		return observableList;
 
 	}
 	
 	public  File downloadGoogleTifFile(String path){
-		 File uploadDir = new File("upload");
-			if(!uploadDir.exists()){
-				System.out.println("creando directorio upload "+uploadDir);
-				uploadDir.mkdir(); // create the upload directory if it doesn't exist
-			}
+//		String uploadDirPath = Configuracion.getInstance().getPropertyOrDefault(Configuracion.LAST_FILE,"Upload");
+//		 File uploadDir = new File(uploadDirPath).getParentFile();
+//			if(!uploadDir.exists()){
+//				System.out.println("creando directorio upload "+uploadDir);
+//				uploadDir.mkdir(); // create the upload directory if it doesn't exist
+//			}
 			
-		Path uploadedFilePath=null;
-		try{
-		 uploadedFilePath = Files.createTempDirectory(uploadDir.toPath(),"");
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		
+//		Path uploadedFilePath=null;
+//		try{
+//		 uploadedFilePath = Files.createTempDirectory(uploadDir.toPath(),"");
+//		}catch(Exception e){
+//			e.printStackTrace();
+//		}
+//		
 	
-		
+			List<String> filePaths=null;
 		GenericUrl url = new GenericUrl(path);
 		HttpResponse response = makeRequest(url);
 		  try {
 			InputStream is = response.getContent();
-		
-			
-			UnzipUtility.unzip(is, uploadedFilePath);
+			filePaths = UnzipUtility.unzip(is, downloadDir.toPath());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		List<File> files = FileHelper.selectAllFiles(uploadedFilePath);
-		 List<File> tifFiles = files.stream().filter((f)->f.getName().endsWith(".tif")).collect(Collectors.toList());
+		  List<File> tifFiles = filePaths.stream().map((s)->new File(s)).filter((f)->f.getName().endsWith(".tif")).collect(Collectors.toList());
+		//List<File> files = FileHelper.selectAllFiles(uploadDir.toPath());
+		 //List<File> tifFiles = files.stream().filter((f)->f.getName().endsWith(".tif")).collect(Collectors.toList());
 		return tifFiles.get(0);
 		
 	}

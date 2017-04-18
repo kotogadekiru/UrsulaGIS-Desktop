@@ -1,21 +1,12 @@
 package dao.margen;
 
-import java.util.Map;
-
-import org.geotools.data.DataUtilities;
-import org.geotools.factory.GeoTools;
-import org.geotools.feature.SchemaException;
-import org.geotools.feature.simple.SimpleFeatureBuilder;
-import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
 
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Polygon;
 
 import dao.LaborItem;
+import lombok.Data;
 
-
+@Data
 public class MargenItem extends LaborItem{
 	//Polygon harvestPolygon = (Polygon) geometry;
 	private Double importePulvHa =new Double(0);//= getImportePulv(harvestPolygon);
@@ -27,6 +18,8 @@ public class MargenItem extends LaborItem{
 
 	private Double margenPorHa =new Double(0);//= (importeCosechaPorHa * areaCosecha  - importePulv - importeFert - importeSiembra) / areaCosecha;
 	private Double costoFijoPorHa=new Double(0);
+	
+	private boolean showMargen = true;
 //	private Double ingresoHa=new Double(0);
 //	private Double rentabilidadHa;
 
@@ -85,14 +78,6 @@ public class MargenItem extends LaborItem{
 		return getImporteFertHa()+getImporteSiembraHa()+getImportePulvHa()+getCostoFijoPorHa();		
 	}
 
-//	public Double getIngresoHa() {
-//		return ingresoHa;
-//	}
-//
-//	public void setIngresoHa(Double ingresoHa) {
-//		this.ingresoHa = ingresoHa;
-//	}
-
 	public Double getRentabilidadHa() {
 		if(getCostoPorHa()>0){
 			return new Double(getMargenPorHa()/getCostoPorHa()*100);
@@ -103,6 +88,9 @@ public class MargenItem extends LaborItem{
 
 	@Override
 	public Double getAmount() {
+		if(showMargen){
+			return getMargenPorHa();
+		}
 		//TODO cambiar esto segun lo que se haya seleccionado
 		return getRentabilidadHa();
 	}

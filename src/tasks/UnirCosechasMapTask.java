@@ -36,6 +36,7 @@ import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 
+import dao.Clasificador;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 
@@ -121,7 +122,14 @@ public class UnirCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 
 
 		//TODO 4 mostrar la cosecha sintetica creada
-		labor.constructClasificador();
+//		if(cosechas.size()==1){
+//			CosechaLabor original = cosechas.get(0);
+//			Clasificador co=original.getClasificador();
+//			 labor.clasificador=co.clone();
+//			
+//		} else{
+			labor.constructClasificador();
+//		}
 
 		List<CosechaItem> itemsToShow = new ArrayList<CosechaItem>();
 

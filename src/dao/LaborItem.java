@@ -14,7 +14,7 @@ import com.vividsolutions.jts.geom.Point;
 
 public abstract class LaborItem implements Comparable<LaborItem>{
 	protected Double id=new Double(0);
-	protected Geometry geometry;
+	protected Geometry geometry=null;
 
 	//solo es importante en las labores de puntos
 	protected Double distancia =new Double(0);

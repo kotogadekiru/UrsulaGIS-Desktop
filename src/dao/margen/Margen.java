@@ -11,13 +11,18 @@ import dao.LaborConfig;
 import dao.config.Configuracion;
 import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaLabor;
+import dao.fertilizacion.FertilizacionLabor;
+import dao.pulverizacion.PulverizacionLabor;
+import dao.siembra.SiembraLabor;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-
+import lombok.Data;
+@Data
 public class Margen extends Labor<MargenItem> {
-	private static final String COLUMNA_RENTABILIDAD = "RENTA";
-	private static final String COLUMNA_MARGEN = "MARGEN";
+	public static final String COLUMNA_RENTABILIDAD = "RENTA";
+	public static final String COLUMNA_MARGEN = "MARGEN";
 	private static final String COLUMNA_COSTO_TOTAL = "COSTO_T";
 	private static final String COLUMNA_IMPORTE_COSECHA = "IMP_COSECH";
 	private static final String COLUMNA_IMPORTE_FERT = "IMP_FERT";
@@ -28,7 +33,7 @@ public class Margen extends Labor<MargenItem> {
 	private static final String COSTO_FLETE_KEY = "COSTO_FLETE_KEY";
 	private static final String COSTO_TN_KEY = "COSTO_TN_KEY";
 	private static final String COSTO_FIJO_KEY = "COSTO_FIJO_KEY";
-	private static final String AMOUNT_COLUMN_KEY = "AMOUNT_COLUMN_KEY";//define si se calcula la rentabilidad o el margen
+	public static final String AMOUNT_COLUMN_KEY = COLUMNA_RENTABILIDAD;//"AMOUNT_COLUMN_KEY";//define si se calcula la rentabilidad o el margen
 	
 	
 	public StringProperty colRentabilidad= null;
@@ -45,7 +50,12 @@ public class Margen extends Labor<MargenItem> {
 	private LaborConfig config=null;
 	public Property<Number> costoTnProperty= null;
 	public Property<Number> costoFleteProperty= null;
-	public Property<String> amountProperty= null;//segun si es rentabilidad o margen se dibuja uno o el otro.
+//	public Property<String> amountProperty= null;//segun si es rentabilidad o margen se dibuja uno o el otro.
+	
+	private List<FertilizacionLabor> fertilizaciones;
+	private List<SiembraLabor> siembras;
+	private List<CosechaLabor> cosechas;
+	private List<PulverizacionLabor> pulverizaciones;
 	
 	public Margen() {
 		super();
@@ -75,8 +85,9 @@ public class Margen extends Labor<MargenItem> {
 		this.colCostoTotal = initStringProperty(Margen.COLUMNA_COSTO_TOTAL, properties, availableColums);
 		this.colCostoFijo = initStringProperty(Margen.COLUMNA_IMPORTE_FIJO, properties, availableColums);
 		
-		this.amountProperty=initStringProperty(Margen.AMOUNT_COLUMN_KEY, properties, availableColums);
+		this.colAmount=initStringProperty(Margen.AMOUNT_COLUMN_KEY, properties, availableColums);
 		
+		System.out.println("colAmount de Margen en initConfig es "+colAmount.get());
 		this.costoFleteProperty=initDoubleProperty(Margen.COSTO_FLETE_KEY, "0", properties);
 		this.costoTnProperty=initDoubleProperty(Margen.COSTO_TN_KEY, "0", properties);
 		this.costoFijoHaProperty = initDoubleProperty(Margen.COSTO_FIJO_KEY, "0", properties);
@@ -102,9 +113,12 @@ public class Margen extends Labor<MargenItem> {
 		ci.setImporteCosechaHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(Margen.COLUMNA_IMPORTE_COSECHA)));
 		ci.setImportePulvHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(Margen.COLUMNA_IMPORTE_PULV)));
 		ci.setImporteSiembraHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(Margen.COLUMNA_IMPORTE_SIEMBR)));
+		ci.setShowMargen(Margen.COLUMNA_MARGEN.equals(this.colAmount.get()));
 		return ci;
 	}
 
+	
+	
 	@Override
 	public MargenItem constructFeatureContainer(SimpleFeature harvestFeature) {
 		MargenItem ci = new MargenItem(harvestFeature);
@@ -125,6 +139,7 @@ public class Margen extends Labor<MargenItem> {
 		ci.setImporteCosechaHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colIngreso.get())));
 		ci.setImportePulvHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colCostoPulverizacion.get())));
 		ci.setImporteSiembraHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colCostoSiembra.get())));
+		ci.setShowMargen(Margen.COLUMNA_MARGEN.equals(this.colAmount.get()));
 		return ci;
 	}
 

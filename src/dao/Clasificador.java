@@ -17,10 +17,12 @@ import org.opengis.filter.expression.PropertyName;
 import utils.ProyectionConstants;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.Property;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.paint.Color;
-
+import lombok.Data;
+@Data
 public class Clasificador {
 	public static final String NUMERO_CLASES_CLASIFICACION = "NUMERO_CLASES_CLASIFICACION";
 	public static final String CLASIFICADOR_JENKINS = "JENKINS";
@@ -131,7 +133,7 @@ public class Clasificador {
 			System.out.println("evaluando la colleccion para poder hacer jenkins");
 			clasifier = (Classifier) func.evaluate(collection);//XXX esto demora unos segundos!
 		} else{
-			System.out.println("no se pudo evaluar jenkins porque la coleccion de datos es de tamaño cero");
+			System.out.println("no se pudo evaluar jenkins porque la coleccion de datos es de tamanio cero");
 		}
 		if(clasifier == null){
 			System.out.println("No se pudo evaluar la colleccion de features con el metodo de Jenkins");
@@ -243,7 +245,15 @@ public class Clasificador {
 	}
 	public boolean isInitialized(){return initialized;}
 
-
+//	public Clasificador clone(){
+//		Clasificador cn = new Clasificador();
+//		cn.setClasesClasificadorProperty(new SimpleIntegerProperty(this.getClasesClasificadorProperty().get()));
+//		cn.getTipoClasificadorProperty().set(this.getTipoClasificadorProperty().get());
+//		//XXX si el tipo de clasificador es jenkins hay que volver a constriur el clasificador
+//		cn.setHistograma(this.getHistograma().clone());
+//		cn.setInitialized(this.isInitialized());
+//		return cn;
+//	}
 	
 //	/**
 //	 * Metodo que busca los limites de las alturas despues hay que buscar los elementos que estan dentro de un entorno y agregarlos a una lista para dibujarlos

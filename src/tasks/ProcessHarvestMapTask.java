@@ -96,6 +96,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			//XXX cuando es una grilla los datos estan en outstore y instore es null
 			//FIXME si leo del outCollection y luego escribo en outCollection me quedo sin memoria
 			reader = labor.getInCollection().reader();
+			labor.outCollection.clear();
 			featureCount=labor.getInCollection().size();
 		}
 
@@ -156,7 +157,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			 */
 			if (geometry instanceof Point) {
 				Point longLatPoint = (Point) geometry;
-
+				//longLatPoint.getCoordinate().z=altura;
 				//double distanciaXLast = lastX.distance(longLatPoint)*ProyectionConstants.metersToLat();
 				ProyectionConstants.setLatitudCalculo(longLatPoint.getY());
 				if(	lastX!=null && labor.getConfiguracion().correccionDistanciaEnabled() && 
@@ -269,6 +270,8 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 				}
 
 			} else { // no es point. Estoy abriendo una cosecha de poligonos.
+				
+				//FIXME aunque sea de polygonos tengo que volver a calcular el importe y el precio
 						List<Polygon> mp = getPolygons(ci);
 								Polygon p = mp.get(0);
 								
@@ -889,6 +892,8 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		//en vez de tomar de 0 a inf, va de ancho*(10-2^1/2) a 0
 		ancho = Math.sqrt(2)*ancho;
 		
+		
+		
 		for(CosechaItem cosecha : features){
 			double cantidadCosecha = cosecha.getAmount();	
 			Geometry geo2 = cosecha.getGeometry().getCentroid();
@@ -903,7 +908,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			cantidadCosecha = Math.min(cantidadCosecha,labor.maxRindeProperty.doubleValue());
 			cantidadCosecha = Math.max(cantidadCosecha,labor.minRindeProperty.doubleValue());
 			//if(isBetweenMaxMin(cantidadCosecha)){
-				
+				//TODO solo promediar la altura si esta dentro de los 2 quintiles centrales
 				sumatoriaAltura+=cosecha.getElevacion()*weight;
 				sumatoriaRinde+=cantidadCosecha*weight;
 				divisor+=weight;		
@@ -1015,7 +1020,8 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		//System.out.println("createGeometryForPoint(); "+System.currentTimeMillis());
 		double x = X.getX();
 		double y = X.getY();
-		double z = elevacion;
+		
+		double z =elevacion;
 		
 	//	System.out.println("creando geometria con elevacion "+z);
 		//z=20;
@@ -1035,10 +1041,11 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			if (lastD == null) {
 				lastD = A;
 				lastC = B;
-			}else{
-				lastC.z=z;
-				lastD.z=z;
 			}
+//			else{
+//				lastC.z=z;
+//				lastD.z=z;
+//			}
 			Point2D a2d = new Point2D(A.x, A.y);
 			Point2D b2d = new Point2D(B.x, B.y);
 			Point2D lc2d = new Point2D(lastC.x, lastC.y);
@@ -1057,7 +1064,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			// && distBlC < distAlC && distAlD < distBlD));
 
 			// evito juntar las puntas cuando las lineas se cruzan o quedan
-			// demaciado lejos
+			// demasiado lejos
 			//FIXME corregir esto para que tenga en cuenta que es un cuadrilatero y no un rectangulo; hay otras opciones de cuadrilateros validos que no estoy tomando
 			if (distAlD < tolerancia 
 					&& distBlC < distAlC*1.01 
@@ -1065,8 +1072,8 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 					&& mismaPasada) {
 				Afinal = lastD;
 				Bfinal = lastC;				
-				Afinal.z=z;
-				Bfinal.z=z;
+//				Afinal.z=z;
+//				Bfinal.z=z;
 			} else {
 				// Cuando la cosechadora termina de dar una vuelta y empieza a
 				// cosechar un nuevo tramo tarda hasta entrar en regimen
@@ -1166,6 +1173,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 					//					geometryUnion= pr.reduce(geometryUnion);
 					//					 polyG = pr.reduce(poly);
 
+					//XXX creo que no puedo hacer la superposicion de 2 poligonos que no son coplanares
 					difGeom = polyG.difference(geometryUnion);// Computes a Geometry//found non-noded intersection between LINESTRING ( -61.9893807883
 				}
 				difGeom = makeGood(difGeom);

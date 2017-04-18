@@ -2,131 +2,255 @@ package dao.config;
 
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Data;
 
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 
+//La información acerca del cultivo modelado debe contener:
+//o Fecha de siembra
+//o Fecha estimada de cosecha
+//o Duración aproximada de cada etapa fenológica
+//o Profundidad radicular en cada etapa fenológica
+//o Consumo hídrico en cada etapa fenológica
+
+
+@Data
 public class Cultivo{
+	static final String GIRASOL = "Girasol";
 	static final String SOJA = "Soja";
 	static final String TRIGO = "Trigo";
 	static final String MAIZ = "Maiz";
+	static final String SORGO = "Sorgo";
+	static final String CEBADA = "Cebada";
 	
-	StringProperty nombre =new SimpleStringProperty();
-	DoubleProperty absN03=new SimpleDoubleProperty();
-	DoubleProperty extN03=new SimpleDoubleProperty();
+	String nombre =new String();
 	
-	//es lo que pierde el lote despues de la cosecha
-	DoubleProperty absP=new SimpleDoubleProperty();
-	//es lo que se lleva el grano
-	DoubleProperty extP=new SimpleDoubleProperty();
+	//es lo que absorve (kg) la planta para producir una tonelada de grano seco
+	Double absN=new Double(0);
+	Double absP=new Double(0);
+	Double absK=new Double(0);
+	Double absS=new Double(0);
 	
-	DoubleProperty rindeEsperado=new SimpleDoubleProperty();
+	//mm absorvidos de agua por tn de grano producido
+	Double absAgua=new Double(0);
+	
+	//es lo que se lleva el grano por cada TN 
+	Double extN=new Double(0);
+	Double extP=new Double(0);
+	Double extK=new Double(0);
+	Double extS=new Double(0);
+
+	Double rindeEsperado=new Double(0);
 	
 	public static Map<String,Cultivo> cultivos = new HashMap<String,Cultivo>();
 	static{				//String _nombre, Double _absP, Double _extP,Double rinde
-		cultivos.put(MAIZ,new Cultivo(MAIZ, 1.4, new Double(0.0),0.0,0.0,new Double(10.0)));
-		cultivos.put(TRIGO,new Cultivo(TRIGO, new Double(1.76), 0.0,0.0,new Double(0.0),new Double(4.0)));
-		cultivos.put(SOJA,new Cultivo(SOJA, new Double(1.76),0.0,0.0, new Double(0.0),new Double(4.0)));
+		cultivos.put(MAIZ, getMaiz());
+		cultivos.put(TRIGO,getTrigo());
+		cultivos.put(SOJA, getSoja());
+		cultivos.put(CEBADA,getCebada());
+		cultivos.put(SORGO,getSorgo());
+		cultivos.put(GIRASOL,getGirasol());
 	}
 	
-	public Cultivo(String nombre) {
+	public Cultivo(String _nombre) {
 		super();
-		this.nombre.set(nombre);
-	}
-	
-	public Cultivo(String _nombre, Double _absP, Double _extP, Double _absN, Double _extN,Double rinde) {
-		this.nombre.set(_nombre);
-		this.absP.set(_absP);
-		this.extP.set(_extP);
-		this.absN03.set(_absN);
-		this.extN03.set(_extN);
-		
-		
-		this.rindeEsperado.set(rinde);
-	}
-
-	public String getNombre() {
-		return nombre.getValue();
-	}
-
-
-	public Double getRindeEsperado() {
-		return rindeEsperado.getValue();
-	}
-	
-	/**
-	 * @return the absN03
-	 */
-	public Double getAbsN03() {
-		return absN03.get();
-	}
-
-	/**
-	 * @return the absP
-	 */
-	public Double getAbsP() {
-		return absP.get();
-	}
-	
-	/**
-	 * @return the extN03
-	 */
-	public Double getExtN03() {
-		return extN03.get();
-	}
-	
-	/**
-	 * @return the extP
-	 */
-	public Double getExtP() {
-		return extP.get();
-	}
-
-
-	/**
-	 * @param absP the absP to set
-	 */
-	public void setAbsP(Double absP) {
-		this.absP.set(absP);
-	}
-	
-
-	/**
-	 * @param extP the extP to set
-	 */
-	public void setExtP(Double extP) {
-		this.extP.set(extP);
-	}
-	
-	/**
-	 * @param absN03 the absN03 to set
-	 */
-	public void setAbsN03(Double absN03) {
-		this.absN03.set(absN03);
-	}
-	/**
-	 * @param extN03 the extN03 to set
-	 */
-	public void setExtN03(Double extN03) {
-		this.extN03.set(extN03);
-	}
-
-
-	public void setRindeEsperado(Double reqP) {
-		this.rindeEsperado.setValue(reqP);
-	}
-
-	public void setNombre(String nombre) {
-		this.nombre.set(nombre);
+		this.nombre=_nombre;
 	}
 
 	@Override
 	public String toString() {
-		return nombre.getValue();
+		return nombre;
 	}
 	
+//	-	(kg ton-1)	(%)
+//	N	22	0.68
+//	P	4	0.76
+//	K	19	0.21
+//	Ca	3	0.07
+//	Mg	3	0.53
+//	S	4	0.35
+//	B	0.02	0.25
+//	Cl	0.444	0.06
+//	Cu	0.013	0.29
+//	Fe	0.125	0.36
+//	Mn	0.189	0.17
+//	Mo	0.001	0.63
+//	Zn	0.053	0.5
+//	Ni	-	-
+	private static Cultivo getMaiz(){
+		Cultivo c = new Cultivo(MAIZ);
+		c.setAbsN(22d);
+		c.setAbsP(4d);
+		c.setAbsK(19d);
+		c.setAbsS(5d);
+		
+		c.setExtN(c.getAbsN()*0.68);
+		c.setExtP(c.getAbsP()*0.76);
+		c.setExtK(c.getAbsK()*0.21);
+		c.setExtS(c.getAbsS()*0.35);
+		c.setRindeEsperado(10d);
+		c.setAbsAgua(1000/12d);
+		return c;
+	}
 	
+//	NUTRIENTE	REQUERIMIENTO	IC
+//	-	(kg ton-1)	(%)
+//	N	30	0.66
+//	P	4.4	0.82
+//	K	20.8	0.19
+//	Ca	-	-
+//	Mg	4.5	0.29
+//	S	3.75	0.57
+//	B	-	-
+//	Cl	-	-
+//	Cu	-	-
+//	Fe	-	-
+//	Mn	-	-
+//	Mo	-	-
+//	Zn	-	-
+//	Ni	-	-
+	private static Cultivo getSorgo(){
+		Cultivo c = new Cultivo(SORGO);
+		c.setAbsN(30d);
+		c.setAbsP(4.4d);
+		c.setAbsK(20.8d);
+		c.setAbsS(3.75d);
+		
+		c.setExtN(c.getAbsN()*0.66);
+		c.setExtP(c.getAbsP()*0.82);
+		c.setExtK(c.getAbsK()*0.19);
+		c.setExtS(c.getAbsS()*0.57);
+		c.setRindeEsperado(10d);
+		c.setAbsAgua(1000/12d);
+		return c;
+	}
+	
+//	N	30	0.69
+//	P	5	0.8
+//	K	19	0.21
+//	Ca	3	0.14
+//	Mg	4	0.63
+//	S	5	0.34
+//	B	0.025	0.5
+//	Cl	-	-
+//	Cu	0.01	0.75
+//	Fe	0.137	0.99
+//	Mn	0.07	0.17
+//	Mo	-	-
+//	Zn	0.052	0.5
+//	Ni	-	-
+	private static Cultivo getTrigo(){
+		Cultivo c = new Cultivo(TRIGO);
+		c.setAbsN(30d);
+		c.setAbsP(5d);
+		c.setAbsK(19d);
+		c.setAbsS(5d);
+		
+		c.setExtN(c.getAbsN()*0.69);
+		c.setExtP(c.getAbsP()*0.8);
+		c.setExtK(c.getAbsK()*0.21);
+		c.setExtS(c.getAbsS()*0.34);
+		c.setRindeEsperado(4d);
+		c.setAbsAgua(1000/12d);
+		return c;
+	}
+	
+//	NUTRIENTE	REQUERIMIENTO	IC
+//	-	(kg ton-1)	(%)
+//	N	26.3	0.68
+//	P	4	0.76
+//	K	19	0.21
+//	Ca	19.7	0.07
+//	Mg	-	-
+//	S	4.15	0.48
+//	B	-	-
+//	Cl	-	-
+//	Cu	-	-
+//	Fe	-	-
+//	Mn	-	-
+//	Mo	-	-
+//	Zn	-	-
+//	Ni	-	-
+	private static Cultivo getCebada(){
+		Cultivo c = new Cultivo(CEBADA);
+		c.setAbsN(26d);
+		c.setAbsP(4d);
+		c.setAbsK(19d);
+		c.setAbsS(4.15d);
+		
+		c.setExtN(c.getAbsN()*0.68);
+		c.setExtP(c.getAbsP()*0.76);
+		c.setExtK(c.getAbsK()*0.21);
+		c.setExtS(c.getAbsS()*0.48);
+		c.setRindeEsperado(4d);
+		c.setAbsAgua(1000/12d);
+		return c;
+	}
+	
+//	NUTRIENTE	REQUERIMIENTO	IC
+//	-	(kg ton-1)	(%)
+//	N	30	0.69
+//	P	5	0.8
+//	K	19	0.21
+//	Ca	3	0.14
+//	Mg	4	0.63
+//	S	5	0.34
+//	B	0.025	0.5
+//	Cl	-	-
+//	Cu	0.01	0.75
+//	Fe	0.137	0.99
+//	Mn	0.07	0.17
+//	Mo	-	-
+//	Zn	0.052	0.5
+//	Ni	-	-
+	private static Cultivo getSoja(){
+		Cultivo c = new Cultivo(SOJA);
+		c.setAbsN(30d);
+		c.setAbsP(5d);
+		c.setAbsK(19d);
+		c.setAbsS(5d);
+		
+		c.setExtN(c.getAbsN()*0.69);
+		c.setExtP(c.getAbsP()*0.8);
+		c.setExtK(c.getAbsK()*0.21);
+		c.setExtS(c.getAbsS()*0.34);
+		c.setRindeEsperado(4d);
+		//para producir 1 Tn de grano se necesita una lámina de agua 125 – 160 mm (Ing. Marta Castiglione)
+		c.setAbsAgua(142.5);
+		
+		//135 dias de desarrollo para una Soja P
+		return c;
+	}
+	
+//	NUTRIENTE	REQUERIMIENTO	IC
+//	-	(kg ton-1)	(%)
+//	N	22.2	0.66
+//	P	4	0.84
+//	K	26.2	0.1
+//	Ca	2.8	0.04
+//	Mg	2.4	0.42
+//	S	0.94	0.64
+//	B	0.016	0.5
+//	Cl	-	-
+//	Cu	0.027	0.92
+//	Fe	0.35	0.57
+//	Mn	0.37	0.16
+//	Mo	-	-
+//	Zn	0.04	0.5
+//	Ni	-	-
+	private static Cultivo getGirasol(){
+		Cultivo c = new Cultivo(GIRASOL);
+		c.setAbsN(22.2);
+		c.setAbsP(4d);
+		c.setAbsK(26.2);
+		c.setAbsS(0.94);
+		
+		c.setExtN(c.getAbsN()*0.66);
+		c.setExtP(c.getAbsP()*0.84);
+		c.setExtK(c.getAbsK()*0.1);
+		c.setExtS(c.getAbsS()*0.64);
+		c.setRindeEsperado(6d);
+		c.setAbsAgua(1000/12d);
+		return c;
+	}
 }
 

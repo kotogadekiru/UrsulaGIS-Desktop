@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.simple.SimpleFeature;
@@ -187,8 +188,11 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		System.out.println("cree una union de "+byPolygon.size()+" elementos");
 
 //FIXME esto hace que la grilla no tenga memoria
-		boolean ret = labor.outCollection.addAll(features);
-		//boolean ret = labor.inCollection.addAll(features);
+		if(labor.inCollection == null){
+			labor.inCollection = new DefaultFeatureCollection("internal",labor.getType());
+		}
+		labor.inCollection.addAll(features);
+		boolean ret= labor.outCollection.addAll(features);
 		if(!ret){//XXX si esto falla es provablemente porque se estan creando mas de una feature con el mismo id
 			System.out.println("no se pudieron agregar las features al outCollection");
 		}

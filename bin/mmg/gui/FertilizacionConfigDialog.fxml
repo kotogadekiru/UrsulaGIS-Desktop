@@ -1,14 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.text.*?>
-<?import javafx.scene.effect.*?>
-<?import javafx.scene.*?>
-<?import javafx.geometry.*?>
-<?import java.lang.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="content" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mmg.gui.FertilizacionConfigDialogController">
+<VBox fx:id="content" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mmg.gui.FertilizacionConfigDialogController">
    <children>
       <TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="361.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE">
         <tabs>
@@ -35,26 +42,14 @@
                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
-                              <ComboBox id="comboAnch" fx:id="comboAnch" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                              <ComboBox id="comboCurs" fx:id="comboDistancia" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                              <ComboBox id="comboElev" fx:id="comboElev" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                              <ComboBox id="comboElev" fx:id="comboElev" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                               <ComboBox id="comboRend" fx:id="comboDosis" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                              <Label text="Distancia" GridPane.rowIndex="4">
-                                 <opaqueInsets>
-                                    <Insets left="5.0" right="5.0" />
-                                 </opaqueInsets>
-                              </Label>
                               <Label text="Precio Fertilizante" GridPane.columnIndex="2" GridPane.rowIndex="1">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
-                              <Label text="Ancho" GridPane.rowIndex="2">
-                                 <opaqueInsets>
-                                    <Insets left="5.0" right="5.0" />
-                                 </opaqueInsets>
-                              </Label>
-                              <Label text="Elevacion *" GridPane.rowIndex="5">
+                              <Label text="Elevacion *" GridPane.rowIndex="2">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
@@ -65,12 +60,10 @@
                                  </opaqueInsets>
                               </Label>
                               <TextField id="textPrecioGrano" fx:id="textPrecioFert" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-                              <TextField id="textPorcCorreccion" fx:id="textPorcCorreccion" GridPane.columnIndex="3" GridPane.rowIndex="2" />
-                              <Label text="Dosis Promedio Ajust." GridPane.columnIndex="2" GridPane.rowIndex="2" />
-                              <Label text="Costo Lab. Fert por Ha" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-                              <TextField id="textCostoCosechaHa" fx:id="textCostoLaborHa" GridPane.columnIndex="3" GridPane.rowIndex="3" />
-                              <Label text="Fertilizante" GridPane.columnIndex="2" GridPane.rowIndex="4" />
-                              <ComboBox id="comboCultivo" fx:id="comboFertilizante" prefWidth="150.0" promptText="Fertilizante" GridPane.columnIndex="3" GridPane.rowIndex="4" />
+                              <Label text="Costo Lab. Fert por Ha" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                              <TextField id="textCostoCosechaHa" fx:id="textCostoLaborHa" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+                              <Label text="Fertilizante" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                              <ComboBox id="comboCultivo" fx:id="comboFertilizante" prefWidth="150.0" promptText="Fertilizante" GridPane.columnIndex="3" GridPane.rowIndex="3" />
                               <Label text="Nombre">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
@@ -79,12 +72,6 @@
                               <TextField id="textPrecioGrano" fx:id="textNombre" prefHeight="25.0" prefWidth="147.0" GridPane.columnIndex="1" />
                               <DatePicker fx:id="datePickerFecha" GridPane.columnIndex="3" />
                               <Label text="Fecha" GridPane.columnIndex="2" />
-                              <Label text="Curso" GridPane.rowIndex="3">
-                                 <opaqueInsets>
-                                    <Insets left="5.0" right="5.0" />
-                                 </opaqueInsets>
-                              </Label>
-                              <ComboBox id="comboCurs" fx:id="comboCurso" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                            </children>
                         </GridPane>
                      </children>
@@ -114,61 +101,11 @@
                               <RowConstraints maxHeight="38.0" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
-                              <CheckBox id="chkDistancia" fx:id="chkDistancia" mnemonicParsing="false" text="Distancia" wrapText="true" GridPane.rowIndex="2" />
-                              <CheckBox id="chkAncho" fx:id="chkAncho" mnemonicParsing="false" text="Ancho" wrapText="true" GridPane.rowIndex="3" />
-                              <CheckBox id="chkOutlayers" fx:id="chkOutlayers" mnemonicParsing="false" text="Outliers" wrapText="true" GridPane.rowIndex="4" />
-                              <CheckBox id="chkDemora" fx:id="chkDemora" mnemonicParsing="false" text="Demora pesada" wrapText="true" GridPane.rowIndex="6" />
-                              <Label text="Cant. distancias tolera" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                              <TextField id="textDistTolera" fx:id="textDistTolera" GridPane.columnIndex="2" GridPane.rowIndex="2">
-                                 <GridPane.margin>
-                                    <Insets left="5.0" right="5.0" />
-                                 </GridPane.margin>
-                              </TextField>
-                              <Label text="Porc. tolerancia CV" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                              <TextField id="textToleranciaCV" fx:id="textToleranciaCV" GridPane.columnIndex="2" GridPane.rowIndex="4">
-                                 <GridPane.margin>
-                                    <Insets left="5.0" right="5.0" />
-                                 </GridPane.margin>
-                              </TextField>
-                              <Label text="Ancho filtro (m)" wrapText="true" GridPane.columnIndex="3" GridPane.rowIndex="4" />
-                              <TextField id="textAnchoFiltro" fx:id="textAnchoFiltro" GridPane.columnIndex="4" GridPane.rowIndex="4">
-                                 <GridPane.margin>
-                                    <Insets left="5.0" />
-                                 </GridPane.margin>
-                                 <tooltip>
-                                    <Tooltip autoHide="true" text="El coeficiente de variacion se calcula entre los datos que esten dentro de un rectangulo centrado sobre el dato del ancho ingresado" wrapText="true" />
-                                 </tooltip>
-                              </TextField>
-                              <Label text="Corrimiento pesada (m)" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="6" />
-                              <TextField id="textCorrimientoPesada" fx:id="textCorrimientoPesada" GridPane.columnIndex="2" GridPane.rowIndex="6">
-                                 <GridPane.margin>
-                                    <Insets right="5.0" />
-                                 </GridPane.margin>
-                              </TextField>
-                              <TextField id="textDistanciasRegimen" fx:id="textDistanciasRegimen" GridPane.columnIndex="4" GridPane.rowIndex="6">
-                                 <GridPane.margin>
-                                    <Insets left="5.0" />
-                                 </GridPane.margin>
-                              </TextField>
-                              <Label text="Cant. distancias entrada En Regimen" wrapText="true" GridPane.columnIndex="3" GridPane.rowIndex="6" />
-                              <Label text="Metros por unidad distancia" wrapText="true" GridPane.columnIndex="3" GridPane.rowIndex="2" />
-                              <TextField id="textMetrosPorUnidad" fx:id="textMetrosPorUnidad" GridPane.columnIndex="4" GridPane.rowIndex="2">
-                                 <GridPane.margin>
-                                    <Insets left="5.0" />
-                                 </GridPane.margin>
-                              </TextField>
-                              <Label text="Ancho default" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                              <TextField id="textAnchoDef" fx:id="textAnchoDef" GridPane.columnIndex="2" GridPane.rowIndex="3">
-                                 <GridPane.margin>
-                                    <Insets left="5.0" right="5.0" />
-                                 </GridPane.margin>
-                              </TextField>
                               <Label text="Corregir:" wrapText="true" />
-                              <CheckBox id="chkRinde" fx:id="chkResumirGeometrias" mnemonicParsing="false" text="Resumir Ambientes" wrapText="true" GridPane.rowIndex="5" />
-                              <Label text="Clasificador" wrapText="true" GridPane.columnIndex="3" GridPane.rowIndex="5" />
-                              <ComboBox fx:id="comboClasificador" prefWidth="150.0" GridPane.columnIndex="4" GridPane.rowIndex="5" />
-                              <Label text="Clases Clasificador" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                              <TextField id="textToleranciaCV" fx:id="textClasesClasificador" GridPane.columnIndex="2" GridPane.rowIndex="5" />
+                              <Label text="Clasificador" wrapText="true" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                              <ComboBox fx:id="comboClasificador" prefWidth="150.0" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                              <Label text="Clases Clasificador" GridPane.rowIndex="1" />
+                              <TextField id="textToleranciaCV" fx:id="textClasesClasificador" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                            </children>
                         </GridPane>
                      </children>

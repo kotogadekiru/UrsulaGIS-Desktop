@@ -3,12 +3,14 @@ package tasks;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.DoubleStream;
 
 import javafx.beans.property.Property;
 import javafx.scene.Group;
 import javafx.scene.shape.Path;
+import mmg.gui.nww.LaborLayer;
 
 import org.geotools.data.FileDataStore;
 import org.geotools.data.Query;
@@ -32,8 +34,7 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
-import dao.Suelo;
-import dao.SueloItem;
+import dao.Labor;
 import dao.config.Cultivo;
 import dao.config.Fertilizante;
 import dao.cosecha.CosechaItem;
@@ -43,10 +44,13 @@ import dao.fertilizacion.FertilizacionLabor;
 import dao.margen.MargenItem;
 import dao.pulverizacion.PulverizacionItem;
 import dao.siembra.SiembraItem;
+import dao.suelo.Suelo;
+import dao.suelo.SueloItem;
 
-public class ProcessNewSoilMapTask extends ProcessMapTask<Suelo>{
+public class ProcessNewSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 	//public Group map = new Group();
 
+	
 	double distanciaAvanceMax = 0;
 	double anchoMax = 0;
 
@@ -55,7 +59,7 @@ public class ProcessNewSoilMapTask extends ProcessMapTask<Suelo>{
 
 
 
-	private Suelo nuevoSuelo;
+	//private Suelo nuevoSuelo;
 	private List<Suelo> suelos;
 	private List<CosechaLabor> cosechas;
 	private List<FertilizacionLabor> fertilizaciones;
@@ -65,8 +69,16 @@ public class ProcessNewSoilMapTask extends ProcessMapTask<Suelo>{
 		this.suelos=suelos;
 		this.fertilizaciones=fertilizaciones;
 		this.cosechas =cosechas;
-	
-		
+
+		Suelo suelo = new Suelo();
+		suelo.setLayer(new LaborLayer());
+		StringBuilder sb = new StringBuilder();
+		sb.append("Balance P ");
+		cosechas.forEach((c)->sb.append(c.getNombreProperty().get()+" "));
+		suelo.getNombreProperty().setValue(sb.toString());
+		suelo.setLayer(new LaborLayer());
+		super.labor=suelo;
+
 	}
 
 	public void doProcess() throws IOException {
@@ -76,215 +88,253 @@ public class ProcessNewSoilMapTask extends ProcessMapTask<Suelo>{
 		//TODO crear el clasificador
 		//TODO crear los paths
 		//TODO devolver el nuevo suelo
+		featureNumber = 0;
 
+		double ancho = labor.getConfigLabor().getAnchoGrilla();
 
+		List<Labor<?>> labores = new LinkedList<Labor<?>>();
+		labores.addAll(cosechas);
+		labores.addAll(fertilizaciones);
+		labores.addAll(suelos);
+		ReferencedEnvelope unionEnvelope = labores.parallelStream().collect(
+				()->new ReferencedEnvelope(),
+				(env, labor) ->{		
+					ReferencedEnvelope b = labor.outCollection.getBounds();
+					env.expandToInclude(b);
+				},	(env1, env2) -> env1.expandToInclude(env2));
 
 
 		
+		//TODO 2 generar una grilla de ancho ="ancho" que cubra bounds
+		List<Polygon>  grilla = GrillarCosechasMapTask.construirGrilla(unionEnvelope, ancho);
 
 
-
-		featureNumber = 0;
-
-
-
-		List<Geometry> grilla = new ArrayList<Geometry>();
 		featureCount = grilla.size();
-		Suelo nuevoSuelo = new Suelo();
-		for(Geometry geometry :grilla){
-				SueloItem sueloItem = createSueloForPoly(geometry);
-			
-				SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(SueloItem.getType());
-				pathTooltips.add(0, getPathTooltip( (Polygon) geometry, sueloItem));
-				nuevoSuelo.insertFeature(sueloItem.getFeature(featureBuilder));			
-				updateProgress(featureNumber, featureCount);
+		List<SueloItem> itemsToShow = new ArrayList<SueloItem>();
+		for(Geometry geometry :grilla){//TODO usar streams paralelos
+			SueloItem sueloItem = createSueloForPoly(geometry);
+
+			//	SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(SueloItem.getType());
+			//pathTooltips.add(0, getPathTooltip( (Polygon) geometry, sueloItem));
+			//	nuevoSuelo.insertFeature(sueloItem.getFeature(featureBuilder));			
+			if(sueloItem!=null){
+				labor.insertFeature(sueloItem);
+				itemsToShow.add(sueloItem);
+			}
+			featureNumber++;
+			updateProgress(featureNumber, featureCount);
 		}
-	
 
-		//constructHistogram();
+		for(Labor<?> c:labores){
+			c.clearCache();
+		}
 
-
-
-		runLater();
-
-
+		//		List<SueloItem> itemsToShow = new ArrayList<SueloItem>();
+		//		SimpleFeatureIterator it = labor.outCollection.features();
+		//		while(it.hasNext()){
+		//			SimpleFeature f=it.next();
+		//			itemsToShow.add(labor.constructFeatureContainerStandar(f,false));
+		//		}
+		//		it.close();
+		labor.constructClasificador();
+		runLater(itemsToShow);
 		updateProgress(0, featureCount);
 
 
 	}
-
-	private SueloItem createSueloForPoly(Geometry harvestPolygon) {	
-		Double areaMargen = harvestPolygon.getArea()
-				* ProyectionConstants.A_HAS;
-		Double ppmSuelo = getPpmSuelo(harvestPolygon);
-		System.out.println("cantFertilizante en el suelo= " + ppmSuelo);
+private SueloItem createSueloForPoly(Geometry geomQuery) {	
+		Double areaQuery =ProyectionConstants.A_HAS( geomQuery.getArea());
+		//	* ProyectionConstants.A_HAS();
+		Double kgPSuelo = getKgPSuelo(geomQuery);	
+		Double kgPFert = getKgPFertilizacion(geomQuery);
+		Double 	kgPCosecha = getPpmCosecha(geomQuery);
 		
-		Double ppmFert = getPpmFertilizacion(harvestPolygon);
-		System.out.println("cantFertilizante agregada= " + ppmFert);
 
+
+		if(kgPFert==0&&kgPSuelo==0&& kgPCosecha==0)return null;//descarto los que no tienen valores
+		Double newKgHaPSuelo = (kgPFert + kgPSuelo - kgPCosecha)
+				/ areaQuery;
+
+		System.out.println("\ncantFertilizante en el suelo= " + kgPSuelo);
+		System.out.println("cantFertilizante agregada= " + kgPFert);
+		System.out.println("cantFertilizante absorvida= " + kgPCosecha);
+		System.out.println("newKgHaPSuelo = "+newKgHaPSuelo);
+		Double newPpmPsuelo=newKgHaPSuelo/labor.getDensidad();
+		System.out.println("newPpmPsuelo = "+newPpmPsuelo);
 		
-		Double 	ppmCosecha = getPpmCosecha(harvestPolygon);
-		System.out.println("cantFertilizante absorvida= " + ppmCosecha);
-
-
-
-		Double margenPorHa = (ppmFert + ppmSuelo - ppmCosecha)
-				/ areaMargen;
-
-		SueloItem objSuelo = new SueloItem();
-		objSuelo.setGeometry(harvestPolygon);
-		objSuelo.setPpmP(margenPorHa);
-
-		return objSuelo;
-	}
-
-	private double getPpmCosecha(Geometry geometry) {	
-			double ppmCosechasGeom = 0.0;
-		
-			for(CosechaLabor cosecha:this.cosechas){				
-				Cultivo producto = cosecha.producto.getValue();
-			
-				DoubleStream ppmPStream=	cosecha.outStoreQuery(geometry.getEnvelopeInternal()).stream().flatMapToDouble(cItem->{
-					double costoHa = (Double) cItem.getRindeTnHa();
-
-					Double ppmPabsorvida = costoHa * producto.getReqP();
-					Geometry cosechaGeom = cItem.getGeometry();
-					
-						Geometry inteseccionGeom = geometry
-								.intersection(cosechaGeom);// Computes a
-															// Geometry
-
-						Double area = inteseccionGeom.getArea()
-								* ProyectionConstants.A_HAS;
-						return DoubleStream.of( ppmPabsorvida * area);
-				});					
-				Double ppmCosecha = ppmPStream.sum();
-				ppmCosechasGeom+=ppmCosecha;			
-			}
-		
-		System.out.println("Las Ppm absorvidas de las cosechas"
-				+ "correspondientes a la query son = "
-						+ ppmCosechasGeom);
-		return ppmCosechasGeom;
-	}
-
-	private Double getPpmSuelo(Geometry geometry) {
-		Double importeSiembra = new Double(0);
-		if (!(geometry instanceof Point) && soilTree != null) {
-			@SuppressWarnings("rawtypes")
-			List siembras = soilTree.query(geometry.getEnvelopeInternal());
-			for (Object siembraObj : siembras) {
-				if (siembraObj instanceof SueloItem) {
-
-					SueloItem suelo = (SueloItem) siembraObj;
-					Double costoHa = (Double) suelo.getPpmP();
-
-					Object sueloGeom = suelo.getGeometry();
-					if (sueloGeom instanceof Geometry) {
-						Geometry pulvGeom = (Geometry) sueloGeom;
-						try {
-							Geometry inteseccionGeom = geometry
-									.intersection(pulvGeom);// Computes a
-															// Geometry
-
-							Double area = inteseccionGeom.getArea()
-									* ProyectionConstants.A_HAS;
-							importeSiembra += costoHa * area;
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					} else {
-						System.err
-								.println("la geometria de fert no es de tipo Geometry es: "
-										+ sueloGeom.getClass());
-					}
-				} else {
-					System.err.println("me perdi en getppmPSuelo");
-				}
-			}
+		SueloItem sueloItem = new SueloItem();
+		synchronized(labor){
+			//fi= new FertilizacionItem();					
+			sueloItem.setId(labor.getNextID());
 		}
-		System.out
-				.println("el importe de la siembra correspondiente a la cosecha es = "
-						+ importeSiembra);
-		return importeSiembra;
+		
+		sueloItem.setGeometry(geomQuery);
+		sueloItem.setPpmP(newPpmPsuelo);
+		sueloItem.setElevacion(10.0);//para que aparezca en el mapa
+
+
+		return sueloItem;
 	}
 
-	private Double getPpmFertilizacion(Geometry geometry) {
-		Double ppmPTotal = new Double(0);
-		if (!(geometry instanceof Point) && fertTree != null) {
-			@SuppressWarnings("rawtypes")
-			List ferts = fertTree.query(geometry.getEnvelopeInternal());
+	private double getPpmCosecha(Geometry geometry) {
+		Double kgPCosecha = new Double(0);
+		kgPCosecha = cosechas.parallelStream().flatMapToDouble(cosecha->{
+			List<CosechaItem> items = cosecha.cachedOutStoreQuery(geometry.getEnvelopeInternal());
+			Cultivo cultivo =cosecha.producto.getValue();
+			return items.parallelStream().flatMapToDouble(item->{
+				//double rindeItem = (Double) item.getRindeTnHa();
+				//double extraccionP = item.getRindeTnHa()*cultivo.getExtP();
+				Double kgPAbsHa = item.getRindeTnHa()*cultivo.getExtP();//rindeItem * cultivo.getExtP();//solo me interesa reponer lo que extraje
+				Geometry pulvGeom = item.getGeometry();				
+				Double area = 0.0;
+				try {
+					//XXX posible punto de error/ exceso de demora/ inneficicencia
+					Geometry inteseccionGeom = geometry.intersection(pulvGeom);// Computes a
+					area = ProyectionConstants.A_HAS(inteseccionGeom.getArea());
+					// Geometry
+				} catch (Exception e) {
+					e.printStackTrace();
+				}				
+				return DoubleStream.of( kgPAbsHa * area);				
+			});
+		}).sum();
 
-			// System.out.println("encontre " + ferts.size()
-			// + " fertilizaciones en contacto con " + geometry);
-			for (Object fertObj : ferts) {
-				if (fertObj instanceof FertilizacionItem) {
-					FertilizacionItem fert = (FertilizacionItem) fertObj;
-					Double ppmP = (Double) fert.getCantFertHa()
-							*
-							fertilizante.getPpmP();
+		//		double ppmCosechasGeom = 0.0;
+		//
+		//		for(CosechaLabor cosecha:this.cosechas){				
+		//			Cultivo producto = cosecha.producto.getValue();
+		//
+		//			DoubleStream ppmPStream=cosecha.outStoreQuery(geometry.getEnvelopeInternal()).stream().flatMapToDouble(cItem->{
+		//				double rindeItem = (Double) cItem.getRindeTnHa();
+		//
+		//				Double ppmPabsorvida = rindeItem * producto.getAbsP();
+		//				Geometry cosechaGeom = cItem.getGeometry();
+		//
+		//				Geometry inteseccionGeom = geometry
+		//						.intersection(cosechaGeom);// Computes a
+		//				// Geometry
+		//
+		//				Double area = ProyectionConstants.A_HAS(inteseccionGeom.getArea());
+		//
+		//				return DoubleStream.of( ppmPabsorvida * area);
+		//			});					
+		//			Double ppmCosecha = ppmPStream.sum();
+		//			ppmCosechasGeom+=ppmCosecha;			
+		//		}
 
-					Object pulvGeomObject = fert.getGeometry();
-					if (pulvGeomObject instanceof Geometry) {
-						// Double harvestArea = geometry.getArea();
-						Geometry pulvGeom = (Geometry) pulvGeomObject;
-						try {
-							Geometry inteseccionGeom = geometry
-									.intersection(pulvGeom);// Computes a
-															// Geometry
+//		System.out.println("Los kg P absorvidos por las cosechas"
+//				+ "correspondientes a la query son = "
+//				+ kgPCosecha);
+		return kgPCosecha;
+	}
 
-							Double area = inteseccionGeom.getArea()
-									* ProyectionConstants.A_HAS;
-							ppmPTotal += ppmP * area;
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					} else {
-						System.out
-								.println("la geometria de fert no es de tipo Geometry es: "
-										+ pulvGeomObject.getClass());
-					}
-				} else {
-					System.out.println("me perdi en getImporteFert");
-				}
-			}
-		}
-		System.out
-				.println("el importe de la fertilizacion correspondiente a la cosecha es = "
-						+ ppmPTotal);
-		return ppmPTotal;
+	//busco todos los items de los mapas de suelo
+	//calculo cuantas ppm aporta al cultivo,
+	//las sumo
+	//y devuelve la suma de las ppm existentes en el suelo para esa geometria
+	//XXX tener en cuenta que ppm es una unidad de concentracion y no creo que se puedad sumar directamente. 
+	//habria que pasar a gramos o promediar por la superficie total
+	private Double getKgPSuelo(Geometry geometry) {
+		Double kgPSuelo = new Double(0);
+		kgPSuelo=	suelos.parallelStream().flatMapToDouble(suelo->{
+			List<SueloItem> items = suelo.cachedOutStoreQuery(geometry.getEnvelopeInternal());
+			return items.parallelStream().flatMapToDouble(item->{
+				Double kgPHa= (Double) item.getPpmP()*suelo.getDensidad();//TODO multiplicar por la densidad del suelo
+				Geometry geom = item.getGeometry();				
+
+				Double area = 0.0;
+				try {
+					//XXX posible punto de error/ exceso de demora/ inneficicencia
+					Geometry inteseccionGeom = geometry.intersection(geom);// Computes a
+					area = ProyectionConstants.A_HAS(inteseccionGeom.getArea());
+					// Geometry
+				} catch (Exception e) {
+					e.printStackTrace();
+				}				
+				return DoubleStream.of( kgPHa * area);				
+			});
+		}).sum();
+//		System.out
+//		.println("la cantidad de ppmP acumulado en el suelo es = "
+//				+ kgPSuelo);
+		return kgPSuelo;
+	}
+
+	private Double getKgPFertilizacion(Geometry geometry) {
+		Double kPFert = new Double(0);
+		kPFert=	fertilizaciones.parallelStream().flatMapToDouble(fertilizacion->{
+			List<FertilizacionItem> items = fertilizacion.cachedOutStoreQuery(geometry.getEnvelopeInternal());
+			Fertilizante fertilizante = fertilizacion.fertilizante.getValue();
+			return items.parallelStream().flatMapToDouble(item->{
+				Double kgPHa = (Double) item.getCantFertHa() * fertilizante.getPorcP()/100;
+				Geometry fertGeom = item.getGeometry();				
+
+				Double area = 0.0;
+				try {
+					//XXX posible punto de error/ exceso de demora/ inneficicencia
+					Geometry inteseccionGeom = geometry.intersection(fertGeom);// Computes a
+					area = ProyectionConstants.A_HAS(inteseccionGeom.getArea());
+					// Geometry
+				} catch (Exception e) {
+					e.printStackTrace();
+				}				
+				return DoubleStream.of( kgPHa * area);				
+			});
+		}).sum();
+//		System.out.println("la cantidad de ppmP acumulado en el suelo es = "
+//				+ kPFert);
+		return kPFert;
 	}
 
 
-	private ArrayList<Object> getPathTooltip(Polygon poly, SueloItem objSuelo) {
-
-		Path path = getExrudedPolygonFromGeom(poly, objSuelo);
-
+	@Override
+	protected void getPathTooltip(Geometry poly, SueloItem si) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		DecimalFormat df = new DecimalFormat("#.00");
 		String tooltipText = new String(
+				" PpmFosforo/Ha: "+ df.format(si.getPpmP()) +"\n"
+				);
 
-		" PpmFosforo/Ha: " + df.format(objSuelo.getPpmP()) + "\n"
-		// + "Sup: "
-		// + df.format(area * ProyectionConstants.METROS2_POR_HA)
-		// + " m2\n"
-		// +"feature: " + featureNumber
-		);
-
-		if (area < 1) {
-			tooltipText = tooltipText.concat("Sup: "
-					+ df.format(area * ProyectionConstants.METROS2_POR_HA)
-					+ "m2\n");
+		if(area<1){
+			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
 		} else {
-			tooltipText = tooltipText.concat("Sup: " + df.format(area)
-					+ "Has\n");
+			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
 		}
 
-		ArrayList<Object> ret = new ArrayList<Object>();
-		ret.add(path);
-		ret.add(tooltipText);
-		return ret;
+		super.getRenderPolygonFromGeom(poly, si,tooltipText);
+
+
 	}
+
+	//	private ArrayList<Object> getPathTooltip(Polygon poly, SueloItem objSuelo) {
+	//
+	//		Path path = getExrudedPolygonFromGeom(poly, objSuelo);
+	//
+	//		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+	//		DecimalFormat df = new DecimalFormat("#.00");
+	//		String tooltipText = new String(
+	//
+	//				" PpmFosforo/Ha: " + df.format(objSuelo.getPpmP()) + "\n"
+	//				// + "Sup: "
+	//				// + df.format(area * ProyectionConstants.METROS2_POR_HA)
+	//				// + " m2\n"
+	//				// +"feature: " + featureNumber
+	//				);
+	//
+	//		if (area < 1) {
+	//			tooltipText = tooltipText.concat("Sup: "
+	//					+ df.format(area * ProyectionConstants.METROS2_POR_HA)
+	//					+ "m2\n");
+	//		} else {
+	//			tooltipText = tooltipText.concat("Sup: " + df.format(area)
+	//			+ "Has\n");
+	//		}
+	//
+	//		ArrayList<Object> ret = new ArrayList<Object>();
+	//		ret.add(path);
+	//		ret.add(tooltipText);
+	//		return ret;
+	//	}
 
 	protected int getAmountMin() {
 		return 100;

@@ -18,15 +18,20 @@ import dao.LaborItem;
  *
  */
 public class FertilizacionItem extends LaborItem {	
-	private Double cantFertHa;	
-	private Double importeHa;
-	private Double precioFert;
-	private Double precioPasada;	
+	private Double cantFertHa=0d;	
+	private Double importeHa=0d;
+	private Double precioFert=0d;
+	private Double precioPasada=0d;	
 	
 	public FertilizacionItem(SimpleFeature harvestFeature) {
 		super(harvestFeature);
 	}
 	
+
+	public FertilizacionItem() {
+		super();
+	}
+
 
 	public void setCantFertHa(Double cantFertHa) {
 		this.cantFertHa = cantFertHa;
