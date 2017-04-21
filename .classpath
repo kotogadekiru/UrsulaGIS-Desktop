@@ -38,14 +38,8 @@
 	<classpathentry kind="lib" path="libs/poi/poi-ooxml-3.11-20141221.jar"/>
 	<classpathentry kind="lib" path="libs/poi/poi-ooxml-schemas-3.11-20141221.jar"/>
 	<classpathentry kind="lib" path="libs/poi/xmlbeans-2.6.0.jar"/>
-	<classpathentry kind="lib" path="libs/jython-standalone-2.7.0.jar"/>
-	<classpathentry kind="lib" path="libs/MTJ/mtj-1.0.4.jar" sourcepath="libs/MTJ/mtj-1.0.4-sources.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="jar:platform:/resource/WorldWindMarginMap/libs/MTJ/mtj-1.0.4-javadoc.jar!/"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry kind="lib" path="libs/fxForm2core-8.0.9.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/worldWind"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/worldWind"/>
 	<classpathentry kind="lib" path="C:/Users/quero/workspaceHackaton2015/worldWind/gdal.jar"/>
 	<classpathentry kind="lib" path="libs/google-http-client/libs/httpclient-4.0.1.jar"/>
 	<classpathentry kind="lib" path="libs/google-http-client/libs/commons-logging-1.1.1.jar"/>
@@ -58,5 +52,6 @@
 	<classpathentry kind="lib" path="libs/google-http-client/libs/xpp3-1.1.4c.jar"/>
 	<classpathentry kind="lib" path="libs/google-http-client/libs/google-http-client-jackson-1.22.0.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/tsne"/>
+	<classpathentry kind="lib" path="libs/lombok-1.16.6.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

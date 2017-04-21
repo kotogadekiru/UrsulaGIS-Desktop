@@ -1,16 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.text.*?>
-<?import javafx.scene.effect.*?>
-<?import javafx.scene.*?>
-<?import javafx.geometry.*?>
-<?import java.lang.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="content" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mmg.gui.HarvestConfigDialogController">
+<VBox fx:id="content" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mmg.gui.HarvestConfigDialogController">
    <children>
-      <TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="361.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE">
+      <TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="358.0" prefWidth="711.0" tabClosingPolicy="UNAVAILABLE">
         <tabs>
           <Tab text="Columnas">
             <content>
@@ -39,7 +47,6 @@
                               <ComboBox prefWidth="150.0" promptText="Distancia" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                               <ComboBox id="comboCurs" fx:id="comboCurs" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                               <ComboBox id="comboElev" fx:id="comboElev" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                              <ComboBox id="comboVelo" fx:id="comboVelo" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
                               <ComboBox id="comboRend" fx:id="comboRend" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                               <Label text="Curso" GridPane.rowIndex="4">
                                  <opaqueInsets>
@@ -63,11 +70,6 @@
                                  </opaqueInsets>
                               </Label>
                               <Label text="Elevacion *" GridPane.rowIndex="5">
-                                 <opaqueInsets>
-                                    <Insets left="5.0" right="5.0" />
-                                 </opaqueInsets>
-                              </Label>
-                              <Label text="Velocidad *" GridPane.rowIndex="6">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
@@ -96,6 +98,8 @@
                               <TextField id="textPorcCorreccion" fx:id="textMaxRinde" promptText="Maximo rinde posible del cultivo. Sobre este valor se reemplaza por el promedio local" GridPane.columnIndex="3" GridPane.rowIndex="7" />
                               <Label text="Rinde Min." GridPane.columnIndex="2" GridPane.rowIndex="6" />
                               <TextField id="textPorcCorreccion" fx:id="textMinRinde" promptText="Minimo rinde posible del cultivo. Sobre este valor se reemplaza por el promedio local" GridPane.columnIndex="3" GridPane.rowIndex="6" />
+                              <DatePicker fx:id="datePickerFecha" GridPane.columnIndex="3" />
+                              <Label text="Fecha" GridPane.columnIndex="2" />
                            </children>
                         </GridPane>
                      </children>
@@ -170,7 +174,7 @@
                                     <Insets left="5.0" />
                                  </GridPane.margin>
                               </TextField>
-                              <Label text="Corrimiento pesada (m)" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                              <Label text="Corrimiento pesada (s)" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="6" />
                               <TextField id="textCorrimientoPesada" fx:id="textCorrimientoPesada" GridPane.columnIndex="2" GridPane.rowIndex="6">
                                  <GridPane.margin>
                                     <Insets right="5.0" />
@@ -208,7 +212,7 @@
           </Tab>
         </tabs>
       </TabPane>
-      <FlowPane alignment="CENTER_LEFT" prefHeight="35.0" prefWidth="600.0" rowValignment="TOP">
+      <FlowPane alignment="CENTER_LEFT" prefHeight="32.0" prefWidth="711.0" rowValignment="TOP">
          <children>
             <CheckBox id="chkMakeDefault" fx:id="chkMakeDefault" alignment="CENTER" mnemonicParsing="false" prefHeight="22.0" prefWidth="161.0" text="Guardar como default">
                <opaqueInsets>
