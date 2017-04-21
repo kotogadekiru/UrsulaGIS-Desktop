@@ -1,4 +1,4 @@
-package tasks;
+package tasks.procesar;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -26,6 +26,7 @@ import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 import mmg.gui.nww.LaborLayer;
+import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
 
 public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor> {
@@ -37,15 +38,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 			
 	public GrillarCosechasMapTask(List<CosechaLabor> cosechas){//RenderableLayer layer, FileDataStore store, double d, Double correccionRinde) {
 		this.cosechas=cosechas;
-	//	this.cosechas=new ArrayList<CosechaLabor>();
-//		for(CosechaLabor l:cosechas){
-//			if(l.getLayer().isEnabled()){
-//				this.cosechas.add(l);
-//			}
-//		};
-		
-		//String anchoGrilla =Configuracion.getInstance().getPropertyOrDefault(CosechaConfig.ANCHO_GRILLA,"default");
-	//	System.out.println("creando una grilla con ancho default "+anchoGrilla);
+
 		super.labor = new CosechaLabor();
 		//TODO asignar las columnas a  los valores estanar
 		labor.colAmount.set(CosechaLabor.COLUMNA_RENDIMIENTO);
@@ -92,12 +85,12 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 
 		labor.nombreProperty.set(nombre);
 		labor.setLayer(new LaborLayer());
-		//TODO 2 generar una grilla de ancho ="ancho" que cubra bounds
+		// 2 generar una grilla de ancho ="ancho" que cubra bounds
 		List<Polygon>  grilla = construirGrilla(unionEnvelope, ancho);
 		//List<Polygon>  grilla = construirGrillaTriangular(unionEnvelope, ancho);
 		double elementos = grilla.size();
 		System.out.println("creando una grilla con "+grilla.size()+" elementos");
-		//TODO 3 recorrer cada pixel de la grilla promediando los valores y generando los nuevos items de la cosecha
+		// 3 recorrer cada pixel de la grilla promediando los valores y generando los nuevos items de la cosecha
 
 		featureCount = grilla.size();
 
@@ -240,7 +233,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 			return null;
 		}
 
-		//TODO sumar todas las supferficies, y calcular el promedio ponderado de cada una de las variables por la superficie superpuesta
+		// sumar todas las supferficies, y calcular el promedio ponderado de cada una de las variables por la superficie superpuesta
 		double areaPoly = 0;
 		Map<CosechaItem,Double> intersecciones = new HashMap<CosechaItem,Double>();
 		for(CosechaItem cPoly : cosechasPoly){
@@ -298,6 +291,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 			synchronized(labor){
 				c = new CosechaItem();
 				c.setId(labor.getNextID());
+				labor.setPropiedadesLabor(c);
 			}
 //			for(Coordinate coord : poly.getCoordinates()){
 //				coord.z=elev;

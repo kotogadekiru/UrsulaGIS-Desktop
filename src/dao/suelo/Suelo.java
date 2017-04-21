@@ -25,7 +25,7 @@ import javafx.beans.property.StringProperty;
 import lombok.Data;
 @Data
 public class Suelo extends Labor<SueloItem>{
-	private static final double DENSIDAD_SUELO_APARENTE = 2.6;
+	private static final double DENSIDAD_SUELO_20CM = 2.6;
 	//los nombres de las columnas estandar
 	public static final String COLUMNA_N = "PPM N";
 	public static final String COLUMNA_P = "PPM P";
@@ -58,7 +58,6 @@ public class Suelo extends Labor<SueloItem>{
 
 	@Override
 	protected DoubleProperty initPrecioLaborHaProperty() {
-		// TODO Auto-generated method stub
 		return new SimpleDoubleProperty();
 	}
 
@@ -125,6 +124,6 @@ public class Suelo extends Labor<SueloItem>{
 	}
 
 	public Double getDensidad() {
-		return DENSIDAD_SUELO_APARENTE;
+		return DENSIDAD_SUELO_20CM;
 	}
 }

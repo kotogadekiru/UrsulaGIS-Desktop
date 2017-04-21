@@ -1,4 +1,4 @@
-package tasks;
+package tasks.procesar;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -27,6 +27,7 @@ import dao.margen.Margen;
 import dao.margen.MargenItem;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.siembra.SiembraLabor;
+import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
 
 public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
@@ -55,6 +56,8 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 		this.siembras = margen.getSiembras();
 		this.cosechas = margen.getCosechas();
 
+		if(labor.outCollection!=null)labor.outCollection.clear();
+		
 		this.costoFijoHa = margen.costoFijoHaProperty.getValue();
 		showMargen = Margen.COLUMNA_MARGEN.equals(labor.colAmount.get());
 		System.out.println("showMargen es "+showMargen);

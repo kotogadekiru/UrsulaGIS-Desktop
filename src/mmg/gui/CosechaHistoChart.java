@@ -227,7 +227,7 @@ public class CosechaHistoChart extends VBox {
 			Number superficie = superficies[j];
 			if (superficie == null)		superficie = new Double(0);
 			Number produccion = producciones[j];
-			if (produccion == null)		superficie = new Double(0);
+			if (produccion == null)		produccion = new Double(0);
 			Data<String, Number> cData = new XYChart.Data<>(label, superficie);
 			cData.setExtraValue(produccion);
 			String color = getColorString(j);

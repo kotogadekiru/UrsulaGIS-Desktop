@@ -1,4 +1,4 @@
-package tasks;
+package tasks.procesar;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -11,6 +11,7 @@ import javafx.beans.property.Property;
 import javafx.scene.Group;
 import javafx.scene.shape.Path;
 import mmg.gui.nww.LaborLayer;
+import tasks.ProcessMapTask;
 
 import org.geotools.data.FileDataStore;
 import org.geotools.data.Query;
@@ -105,18 +106,14 @@ public class ProcessNewSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 
 
 		
-		//TODO 2 generar una grilla de ancho ="ancho" que cubra bounds
+		// 2 generar una grilla de ancho ="ancho" que cubra bounds
 		List<Polygon>  grilla = GrillarCosechasMapTask.construirGrilla(unionEnvelope, ancho);
 
 
 		featureCount = grilla.size();
 		List<SueloItem> itemsToShow = new ArrayList<SueloItem>();
 		for(Geometry geometry :grilla){//TODO usar streams paralelos
-			SueloItem sueloItem = createSueloForPoly(geometry);
-
-			//	SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(SueloItem.getType());
-			//pathTooltips.add(0, getPathTooltip( (Polygon) geometry, sueloItem));
-			//	nuevoSuelo.insertFeature(sueloItem.getFeature(featureBuilder));			
+			SueloItem sueloItem = createSueloForPoly(geometry);		
 			if(sueloItem!=null){
 				labor.insertFeature(sueloItem);
 				itemsToShow.add(sueloItem);
@@ -128,14 +125,6 @@ public class ProcessNewSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		for(Labor<?> c:labores){
 			c.clearCache();
 		}
-
-		//		List<SueloItem> itemsToShow = new ArrayList<SueloItem>();
-		//		SimpleFeatureIterator it = labor.outCollection.features();
-		//		while(it.hasNext()){
-		//			SimpleFeature f=it.next();
-		//			itemsToShow.add(labor.constructFeatureContainerStandar(f,false));
-		//		}
-		//		it.close();
 		labor.constructClasificador();
 		runLater(itemsToShow);
 		updateProgress(0, featureCount);
@@ -264,9 +253,9 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 		Double kPFert = new Double(0);
 		kPFert=	fertilizaciones.parallelStream().flatMapToDouble(fertilizacion->{
 			List<FertilizacionItem> items = fertilizacion.cachedOutStoreQuery(geometry.getEnvelopeInternal());
-			Fertilizante fertilizante = fertilizacion.fertilizante.getValue();
+			Fertilizante fertilizante = fertilizacion.fertilizanteProperty.getValue();
 			return items.parallelStream().flatMapToDouble(item->{
-				Double kgPHa = (Double) item.getCantFertHa() * fertilizante.getPorcP()/100;
+				Double kgPHa = (Double) item.getDosistHa() * fertilizante.getPorcP()/100;
 				Geometry fertGeom = item.getGeometry();				
 
 				Double area = 0.0;

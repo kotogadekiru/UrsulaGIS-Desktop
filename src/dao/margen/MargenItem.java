@@ -8,7 +8,6 @@ import lombok.Data;
 
 @Data
 public class MargenItem extends LaborItem{
-	//Polygon harvestPolygon = (Polygon) geometry;
 	private Double importePulvHa =new Double(0);//= getImportePulv(harvestPolygon);
 	private Double importeFertHa =new Double(0);//= getImporteFert(harvestPolygon);
 	private Double importeSiembraHa =new Double(0);//= getImporteSiembra(harvestPolygon);
@@ -20,16 +19,13 @@ public class MargenItem extends LaborItem{
 	private Double costoFijoPorHa=new Double(0);
 	
 	private boolean showMargen = true;
-//	private Double ingresoHa=new Double(0);
-//	private Double rentabilidadHa;
-
-	
 	
 	public MargenItem(SimpleFeature feature) {
 		super(feature);
 	}	
 	
 	public MargenItem() {
+		super();
 	}
 
 	public Double getImportePulvHa() {
@@ -91,7 +87,6 @@ public class MargenItem extends LaborItem{
 		if(showMargen){
 			return getMargenPorHa();
 		}
-		//TODO cambiar esto segun lo que se haya seleccionado
 		return getRentabilidadHa();
 	}
 
@@ -110,21 +105,7 @@ public class MargenItem extends LaborItem{
 	public void setCostoFijoPorHa(Double costoFijoPorHa) {
 		this.costoFijoPorHa = costoFijoPorHa;
 	}
-	
-//	public SimpleFeature getFeature(SimpleFeatureBuilder featureBuilder){		
-//		featureBuilder.add(super.getGeometry());
-//		featureBuilder.add(getRentabilidadHa());
-//		featureBuilder.add(getMargenPorHa());
-//		featureBuilder.add(getCostoPorHa());
-//		featureBuilder.add(getIngresoHa());
-//		featureBuilder.add(getImporteFertHa());		
-//		featureBuilder.add(getImportePulvHa());
-//		featureBuilder.add(getImporteSiembraHa());		
-//				
-//		SimpleFeature feature = featureBuilder.buildFeature(null);
-//		return feature;
-//		
-//	}
+
 
 	@Override
 	public Double getImporteHa() {

@@ -176,7 +176,7 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 
 	
 		this.comboFertilizante.setItems(FXCollections.observableArrayList(Fertilizante.fertilizantes.values()));
-		this.comboFertilizante.valueProperty().bindBidirectional(labor.fertilizante);
+		this.comboFertilizante.valueProperty().bindBidirectional(labor.fertilizanteProperty);
 
 
 		StringConverter<Number> converter = new NumberStringConverter();

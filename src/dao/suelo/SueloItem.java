@@ -30,21 +30,21 @@ public class SueloItem extends LaborItem {
 	//para pasar de Ppm a kg/ha hay que multiplicar por 2.6. 
 	//es por que hay 2600tns en cada ha de 20cm de suelo.
 	//ppm=x/1.000.000 => ppm/ha=X(kg/ha)/2.600.000(kg/ha)=(1/2.6)
-	private Double ppmN;	
-	private Double ppmP;
-	private Double ppmK;
-	private Double ppmS;
-	private Double ppmMO;//puede ser labil o permanente
+	private Double ppmN=new Double(0);	
+	private Double ppmP=new Double(0);	
+	private Double ppmK=new Double(0);	
+	private Double ppmS=new Double(0);	
+	private Double ppmMO=new Double(0);	//puede ser labil o permanente
 	/*La profundidad en cm hasta la napa*/
-	private Double profNapa;
-	private Double aguaPerfil;
+	private Double profNapa=new Double(0);	
+	private Double aguaPerfil=new Double(0);	
 	
 	public SueloItem(SimpleFeature fertFeature) {
 		super(fertFeature);
 	}
 	
 	public SueloItem() {
-		// TODO Auto-generated constructor stub
+		super();
 	}
 
 	@Override

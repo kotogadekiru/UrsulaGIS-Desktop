@@ -11,45 +11,28 @@ public class PulverizacionItem extends LaborItem{
 	public static final String COLUMNA_COSTO_PAQUETE = "COLUMNA_COSTO_PAQUETE_PULVERIZACION";
 	public static final Object COLUMNA_CANT_PASADAS = "CANT_PASADAS_PULVERIZACION";
 
-
-	private Double dosis ;//= (Long) simpleFeature.getAttribute("Costo");
-	private Double precioInsumo;
-	private Double cantPasadasHa ;//= (Integer) simpleFeature.getAttribute("Pasadas");	
-	private Double costoLaborHa;
-	private Double importeHa;//es el (costo de lo agroquimicos de una pasada + el costo de labor de una pasada) por la cantidad de pasadas 
+	private Double dosisHa =new Double(0) ;//= (Long) simpleFeature.getAttribute("Costo");
+	private Double precioInsumo=new Double(0);
+	//private Double cantPasadasHa=new Double(1) ;//= (Integer) simpleFeature.getAttribute("Pasadas");	
+	private Double costoLaborHa=new Double(0);
+	private Double importeHa=new Double(0);//es el (costo de lo agroquimicos de una pasada + el costo de labor de una pasada) por la cantidad de pasadas 
 
 
 
 	public PulverizacionItem(SimpleFeature pulvFeature) {
-		super(pulvFeature);		
-		//	this.geometry = (Geometry) pulvFeature.getDefaultGeometry();	
-
-		//		Object cantObj = pulvFeature
-		//				.getAttribute(getColumn(COLUMNA_COSTO));
-		//		
-		//		this.costoPaquete = super.getDoubleFromObj(cantObj);
-		//		
-		//		 cantObj = pulvFeature
-		//				.getAttribute(getColumn(COLUMNA_PASADAS));
-		//		
-		//		this.cantPasadasHa = super.getDoubleFromObj(cantObj);
-		//	
-		//		
-		////		this.costoPaquete = new Double((Long) pulvFeature.getAttribute(getColumn(COLUMNA_COSTO)));
-		////		this.cantPasadasHa = (Integer) pulvFeature.getAttribute(getColumn(COLUMNA_PASADAS));	
-		//		this.costoLaborHa=costoLaborHa;
-		//		
-		//		this.importeHa=(costoPaquete+costoLaborHa)*cantPasadasHa;		
+		super(pulvFeature);				
 	}
 
-
+	public PulverizacionItem() {
+		super();
+	}
 
 	public Double getDosis() {
-		return dosis;
+		return dosisHa;
 	}
 
 	public void setDosis(Double costoPaquete) {
-		this.dosis = costoPaquete;
+		this.dosisHa = costoPaquete;
 	}
 	
 
@@ -71,14 +54,14 @@ public class PulverizacionItem extends LaborItem{
 
 
 
-	public Double getCantPasadasHa() {
-		return cantPasadasHa;
-	}
-
-	public void setCantPasadasHa(Double cantPasadasHa) {
-
-		this.cantPasadasHa = cantPasadasHa;
-	}
+//	public Double getCantPasadasHa() {
+//		return cantPasadasHa;
+//	}
+//
+//	public void setCantPasadasHa(Double cantPasadasHa) {
+//
+//		this.cantPasadasHa = cantPasadasHa;
+//	}
 
 
 	public Double getCostoLaborHa() {
@@ -90,7 +73,8 @@ public class PulverizacionItem extends LaborItem{
 	}
 
 	public Double getImporteHa() {
-		this.importeHa=(dosis*precioInsumo+costoLaborHa)*cantPasadasHa;		
+		this.importeHa = (dosisHa * precioInsumo + costoLaborHa);
+	//	this.importeHa=(dosisHa*precioInsumo+costoLaborHa);//*cantPasadasHa;		
 		return importeHa;
 	}
 
@@ -98,61 +82,18 @@ public class PulverizacionItem extends LaborItem{
 		this.importeHa=importeHa;
 	}
 
-	//	public static List<String> getRequieredColumns() {
-	//		List<String> requiredColumns = new ArrayList<String>();
-	//		requiredColumns.add(COLUMNA_COSTO);
-	//		requiredColumns.add(COLUMNA_PASADAS);
-	//		return requiredColumns;
-	//	}
-
-
 	@Override
 	public Double getAmount() {
 		return getDosis();
 	}
 
 
-
-	//	protected Map<String, String> getColumnsMap() {
-	//		return PulverizacionItem.columnsMap;
-	//	}
-
-
-
-	//	public static void setColumnsMap(Map<String, String> columns) {
-	//		PulverizacionItem.columnsMap.clear();
-	//		PulverizacionItem.columnsMap.putAll(columns);	
-	//		
-	//		columns.forEach(new BiConsumer<String, String>(){
-	//			@Override
-	//			public void accept(String key, String value) {
-	//				Configuracion.getInstance().setProperty(key, value);				
-	//			}
-	//			
-	//		});
-	//		
-	//	}
-
-
-	//	@Override
-	//	public SimpleFeature getFeature(SimpleFeatureBuilder featureBuilder) {
-	//		featureBuilder.addAll(new Object[]{super.getGeometry(),
-	//					getCostoPaquete(),
-	//					getCantPasadasHa(),
-	//					getCostoLaborHa(),
-	//					getImporteHa(),
-	//					getCategoria()});
-	//		
-	//	SimpleFeature feature = featureBuilder.buildFeature("\\."+this.getId().intValue());
-	//		
-	//		return feature;
-	//	}
-
 	@Override
 	public Object[] getSpecialElementsArray() {
 		Object[] elements = new Object[]{
 				getDosis(),
-				getCantPasadasHa(),
+				getPrecioInsumo(),
+				//getCantPasadasHa(),
 				getCostoLaborHa(),
 				getImporteHa()
 		};

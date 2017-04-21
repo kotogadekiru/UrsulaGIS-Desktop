@@ -18,10 +18,10 @@ import dao.LaborItem;
  *
  */
 public class FertilizacionItem extends LaborItem {	
-	private Double cantFertHa=0d;	
+	private Double dosisHa=0d;	
 	private Double importeHa=0d;
-	private Double precioFert=0d;
-	private Double precioPasada=0d;	
+	private Double precioInsumo=0d;
+	private Double costoLaborHa=0d;	
 	
 	public FertilizacionItem(SimpleFeature harvestFeature) {
 		super(harvestFeature);
@@ -33,69 +33,59 @@ public class FertilizacionItem extends LaborItem {
 	}
 
 
-	public void setCantFertHa(Double cantFertHa) {
-		this.cantFertHa = cantFertHa;
+	public void setDosistHa(Double cantFertHa) {
+		this.dosisHa = cantFertHa;
 	}
 
-	public Double getCantFertHa() {
-		return 	this.cantFertHa;
+	public Double getDosistHa() {
+		return 	this.dosisHa;
 	}
 	
-	public Double getPrecioFert() {
-		return precioFert;
+	public Double getPrecioInsumo() {
+		return precioInsumo;
 	}
 
-	public void setPrecioFert(Double precioFert) {
-		this.precioFert = precioFert;
+	public void setPrecioInsumo(Double precioFert) {
+		this.precioInsumo = precioFert;
 	}
 
-	public Double getPrecioPasada() {
-		return precioPasada;
+	public Double getCostoLaborHa() {
+		return costoLaborHa;
 	}
 
-	public void setPrecioPasada(Double precioPasada) {
-		this.precioPasada = precioPasada;
+	public void setCostoLaborHa(Double precioPasada) {
+		this.costoLaborHa = precioPasada;
 	}
 
-
+	public void setImporteHa(Double doubleFromObj) {
+		this.importeHa = doubleFromObj;
+		
+	}
+	
 	public Double getImporteHa() {
-		this.importeHa = (cantFertHa * precioFert + precioPasada);
+		this.importeHa = (dosisHa * precioInsumo + costoLaborHa);
 		return importeHa;
 	}
 
 	@Override
 	public Double getAmount() {		
-		return getCantFertHa();
+		return getDosistHa();
 	}
 
-
-
-
-
-//	@Override
-//	public SimpleFeature getFeature(SimpleFeatureBuilder featureBuilder) {
-//		featureBuilder.addAll(new Object[]{super.getGeometry(),
-//				getCantFertHa(),
-//					getPrecioFert(),
-//					getPrecioPasada(),
-//					getImporteHa(),
-//					getCategoria()});
-//		
-//	SimpleFeature feature = featureBuilder.buildFeature("\\."+this.getId().intValue());
-//		
-//		return feature;
-//	}
 	
 	@Override
 	public Object[] getSpecialElementsArray() {
 		Object[] elements = new Object[]{
-				getCantFertHa(),
-				getPrecioFert(),
-				getPrecioPasada(),
+				getDosistHa(),
+				getPrecioInsumo(),
+				getCostoLaborHa(),
 				getImporteHa()
 		};
 		return elements;
 	}
+
+
+
 	
 	
 }

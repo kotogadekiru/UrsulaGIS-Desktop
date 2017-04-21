@@ -86,6 +86,7 @@ import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.margen.Margen;
+import dao.pulverizacion.PulverizacionConfig;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.siembra.SiembraLabor;
 import dao.suelo.Suelo;
@@ -188,18 +189,22 @@ import mmg.gui.utils.DateConverter;
 import mmg.gui.utils.SmartTableView;
 import tasks.ExportHarvestMapTask;
 import tasks.GetNDVIForLaborTask;
-import tasks.GrillarCosechasMapTask;
-import tasks.JuntarShapefilesTask;
-import tasks.ProcessFertMapTask;
-import tasks.ProcessHarvestMapTask;
 import tasks.ProcessMapTask;
-import tasks.ProcessMarginMapTask;
-import tasks.ProcessNewSoilMapTask;
-import tasks.ProcessPulvMapTask;
-import tasks.ProcessSiembraMapTask;
-import tasks.RecomendFertPFromHarvestMapTask;
 import tasks.ShowNDVITifFileTask;
-import tasks.UnirCosechasMapTask;
+import tasks.crear.CrearCosechaMapTask;
+import tasks.crear.CrearFertilizacionMapTask;
+import tasks.crear.CrearPulverizacionMapTask;
+import tasks.crear.CrearSiembraMapTask;
+import tasks.importar.ProcessFertMapTask;
+import tasks.importar.ProcessHarvestMapTask;
+import tasks.importar.ProcessPulvMapTask;
+import tasks.importar.ProcessSiembraMapTask;
+import tasks.procesar.GrillarCosechasMapTask;
+import tasks.procesar.JuntarShapefilesTask;
+import tasks.procesar.ProcessMarginMapTask;
+import tasks.procesar.ProcessNewSoilMapTask;
+import tasks.procesar.RecomendFertPFromHarvestMapTask;
+import tasks.procesar.UnirCosechasMapTask;
 import utils.ProyectionConstants;
 
 public class JFXMain extends Application {
@@ -473,7 +478,8 @@ public class JFXMain extends Application {
 				Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 				if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){
 					//doConvertirASiembra((Polygon) layerObject);
-					enDesarrollo();
+					doCrearSiembra((Poligono) layerObject);
+					
 				}
 				return "converti a Siembra";
 			}});
@@ -483,8 +489,9 @@ public class JFXMain extends Application {
 				return "Convertir a Fertilizacion"; 
 			} else {
 				Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-				if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){					
-					enDesarrollo();
+				if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){	
+					doCrearFertilizacion((Poligono) layerObject);
+					
 				}
 				return "converti a Fertilizacion";
 			}});
@@ -495,7 +502,8 @@ public class JFXMain extends Application {
 			} else {
 				Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 				if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){
-					enDesarrollo();
+					doCrearPulverizacion((Poligono) layerObject);
+					
 				}
 				return "converti a Pulverizacion";
 			}});
@@ -506,9 +514,11 @@ public class JFXMain extends Application {
 			} else {
 				Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 				if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){
-					enDesarrollo();
+					doCrearCosecha((Poligono) layerObject);
+					//TODO deshabilitar layer para que el polygono no rompa la cosecha nueva
+				
 				}
-				return "converti a Pulverizacion";
+				return "converti a Cosecha";
 			}});
 
 		laboresP.add((layer)->{
@@ -537,6 +547,30 @@ public class JFXMain extends Application {
 
 			}});
 
+		
+		/**
+		 *Accion que permite editar una siembra
+		 */
+		pulverizacionesP.add((layer)-> {
+			if(layer==null){
+				return "Editar"; 
+			} else{
+				doEditPulverizacion((PulverizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+				return "pulverizacion editada" + layer.getName();
+			}});
+		
+		
+		/**
+		 *Accion que permite editar una siembra
+		 */
+		siembrasP.add((layer)-> {
+			if(layer==null){
+				return "Editar"; 
+			} else{
+				doEditSiembra((SiembraLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+				return "siembra editada" + layer.getName();
+			}});
+		
 		/**
 		 *Accion que permite editar una cosecha
 		 */
@@ -639,11 +673,11 @@ public class JFXMain extends Application {
 		/**
 		 * Accion muestra una tabla con los datos de la cosecha
 		 */
-		cosechasP.add((layer)->{
+		laboresP.add((layer)->{
 			if(layer==null){
 				return "Ver Tabla"; 
 			} else{
-				doShowDataTable((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+				doShowDataTable((Labor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 				return "Tabla mostrada" + layer.getName();
 			}});
 
@@ -734,6 +768,8 @@ public class JFXMain extends Application {
 		layerPanel.setMenuItems(predicates);
 	}
 
+
+
 	private void enDesarrollo() {
 		Alert enDesarrollo = new Alert(AlertType.INFORMATION,"funcionalidad en desarrollo");
 		enDesarrollo.show();
@@ -770,9 +806,9 @@ public class JFXMain extends Application {
 				ElevationModel currentElevationModel = globe.getElevationModel();
 
 				// Add the new elevation model to the globe.
-				if (currentElevationModel instanceof CompoundElevationModel)
-					((CompoundElevationModel) currentElevationModel).addElevationModel(elevationModel);
-				else
+//				if (currentElevationModel instanceof CompoundElevationModel)
+//					((CompoundElevationModel) currentElevationModel).addElevationModel(elevationModel);
+//				else
 					globe.setElevationModel(elevationModel);
 
 				// Set the view to look at the imported elevations, although they might be hard to detect. To
@@ -1171,20 +1207,12 @@ public class JFXMain extends Application {
 
 
 	private void showHistoCosecha(Labor<?> cosechaLabor) {	
-		Labor[] cosechasAux = new Labor[]{cosechaLabor};
-		if(cosechaLabor==null){
-			Optional<CosechaLabor> optional = HarvestSelectDialogController.select(this.cosechas);
-			if(!optional.isPresent()){
-				return;
-			}else{
-				cosechasAux[0] =optional.get();
-			}
-		}
+		
 		Task<Parent> pfMapTask = new Task<Parent>(){
 			@Override
 			protected Parent call() throws Exception {
 				try{	
-					CosechaHistoChart histoChart = new CosechaHistoChart(cosechasAux[0]);
+					CosechaHistoChart histoChart = new CosechaHistoChart(cosechaLabor);
 					return histoChart;
 				}catch(Throwable t){
 					t.printStackTrace();
@@ -1198,15 +1226,15 @@ public class JFXMain extends Application {
 		pfMapTask.setOnSucceeded(handler -> {
 			Parent	histoChart = (Parent) handler.getSource().getValue();	
 			Stage histoStage = new Stage();
-			histoStage.setTitle("Histograma Cosecha");
+		//	histoStage.setTitle("Histograma Cosecha");
 			histoStage.getIcons().add(new Image(ICON));
 
 			Scene scene = new Scene(histoChart, 800,450);
 			histoStage.setScene(scene);
-			System.out.println("termine de crear el histo chart");
+		//	System.out.println("termine de crear el histo chart");
 			histoStage.initOwner(this.stage);
 			histoStage.show();
-			System.out.println("histoChart.show();");
+		//	System.out.println("histoChart.show();");
 		});
 		executorPool.submit(pfMapTask);
 	}
@@ -1482,6 +1510,140 @@ public class JFXMain extends Application {
 			return null;
 		}
 	}
+	
+	private void doCrearPulverizacion(Poligono poli) {
+		PulverizacionLabor labor = new PulverizacionLabor();
+		LaborLayer layer = new LaborLayer();
+		labor.setLayer(layer);
+		Optional<PulverizacionLabor> cosechaConfigured= PulverizacionConfigDialogController.config(labor);
+		if(!cosechaConfigured.isPresent()){//
+			System.out.println("el dialogo termino con cancel asi que no continuo con la cosecha");
+			labor.dispose();//libero los recursos reservados
+			return;
+		}							
+
+		TextInputDialog anchoDialog = new TextInputDialog("Dosis");
+		anchoDialog.setTitle("Configure Dosis");
+		anchoDialog.setContentText("dosis");
+		Optional<String> anchoOptional = anchoDialog.showAndWait();
+		Double rinde = Double.valueOf(anchoOptional.get());
+		CrearPulverizacionMapTask umTask = new CrearPulverizacionMapTask(labor,poli,rinde);
+		umTask.installProgressBar(progressBox);
+
+		umTask.setOnSucceeded(handler -> {
+			PulverizacionLabor ret = (PulverizacionLabor)handler.getSource().getValue();
+			pulverizaciones.add(ret);
+			insertBeforeCompass(getWwd(), ret.getLayer());
+			this.getLayerPanel().update(this.getWwd());
+			umTask.uninstallProgressBar();
+			viewGoTo(ret);
+			umTask.uninstallProgressBar();
+			System.out.println("OpenHarvestMapTask succeded");
+			playSound();
+		});//fin del OnSucceeded
+		this.executorPool.execute(umTask);		
+	}
+	
+	
+	private void doCrearSiembra(Poligono poli) {
+		SiembraLabor labor = new SiembraLabor();
+		LaborLayer layer = new LaborLayer();
+		labor.setLayer(layer);
+		Optional<SiembraLabor> cosechaConfigured= SiembraConfigDialogController.config(labor);
+		if(!cosechaConfigured.isPresent()){//
+			System.out.println("el dialogo termino con cancel asi que no continuo con la cosecha");
+			labor.dispose();//libero los recursos reservados
+			return;
+		}							
+
+		TextInputDialog anchoDialog = new TextInputDialog("Bolsas por Ha");
+		anchoDialog.setTitle("Bolsas por Ha");
+		anchoDialog.setContentText("Bolsas por Ha");
+		Optional<String> anchoOptional = anchoDialog.showAndWait();
+		Double rinde = Double.valueOf(anchoOptional.get());
+		CrearSiembraMapTask umTask = new CrearSiembraMapTask(labor,poli,rinde);
+		umTask.installProgressBar(progressBox);
+
+		umTask.setOnSucceeded(handler -> {
+			SiembraLabor ret = (SiembraLabor)handler.getSource().getValue();
+			siembras.add(ret);
+			insertBeforeCompass(getWwd(), ret.getLayer());
+			this.getLayerPanel().update(this.getWwd());
+			umTask.uninstallProgressBar();
+			viewGoTo(ret);
+			umTask.uninstallProgressBar();
+			System.out.println("OpenHarvestMapTask succeded");
+			playSound();
+		});//fin del OnSucceeded
+		this.executorPool.execute(umTask);		
+	}
+	
+	private void doCrearFertilizacion(Poligono poli) {
+		FertilizacionLabor labor = new FertilizacionLabor();
+		LaborLayer layer = new LaborLayer();
+		labor.setLayer(layer);
+		Optional<FertilizacionLabor> cosechaConfigured= FertilizacionConfigDialogController.config(labor);
+		if(!cosechaConfigured.isPresent()){//
+			System.out.println("el dialogo termino con cancel asi que no continuo con la cosecha");
+			labor.dispose();//libero los recursos reservados
+			return;
+		}							
+
+		TextInputDialog anchoDialog = new TextInputDialog("Dosis");
+		anchoDialog.setTitle("Configure Dosis");
+		anchoDialog.setContentText("Dosis");
+		Optional<String> anchoOptional = anchoDialog.showAndWait();
+		Double rinde = Double.valueOf(anchoOptional.get());
+		CrearFertilizacionMapTask umTask = new CrearFertilizacionMapTask(labor,poli,rinde);
+		umTask.installProgressBar(progressBox);
+
+		umTask.setOnSucceeded(handler -> {
+			FertilizacionLabor ret = (FertilizacionLabor)handler.getSource().getValue();
+			fertilizaciones.add(ret);
+			insertBeforeCompass(getWwd(), ret.getLayer());
+			this.getLayerPanel().update(this.getWwd());
+			umTask.uninstallProgressBar();
+			viewGoTo(ret);
+			umTask.uninstallProgressBar();
+			System.out.println("OpenHarvestMapTask succeded");
+			playSound();
+		});//fin del OnSucceeded
+		this.executorPool.execute(umTask);		
+	}
+	
+	private void doCrearCosecha(Poligono poli) {
+		CosechaLabor labor = new CosechaLabor();
+		LaborLayer layer = new LaborLayer();
+		labor.setLayer(layer);
+		Optional<CosechaLabor> cosechaConfigured= HarvestConfigDialogController.config(labor);
+		if(!cosechaConfigured.isPresent()){//
+			System.out.println("el dialogo termino con cancel asi que no continuo con la cosecha");
+			labor.dispose();//libero los recursos reservados
+			return;
+		}							
+
+		TextInputDialog anchoDialog = new TextInputDialog("Rinde");
+		anchoDialog.setTitle("Configure Rinde");
+		anchoDialog.setContentText("Rinde");
+		Optional<String> anchoOptional = anchoDialog.showAndWait();
+		Double rinde = Double.valueOf(anchoOptional.get());
+		CrearCosechaMapTask umTask = new CrearCosechaMapTask(labor,poli,rinde);
+		umTask.installProgressBar(progressBox);
+
+		umTask.setOnSucceeded(handler -> {
+			CosechaLabor ret = (CosechaLabor)handler.getSource().getValue();
+			cosechas.add(ret);
+			insertBeforeCompass(getWwd(), ret.getLayer());
+			this.getLayerPanel().update(this.getWwd());
+			umTask.uninstallProgressBar();
+			viewGoTo(ret);
+			umTask.uninstallProgressBar();
+			System.out.println("OpenHarvestMapTask succeded");
+			playSound();
+		});//fin del OnSucceeded
+		this.executorPool.execute(umTask);		
+	}
+	
 
 	/**
 	 * accion ejecutada al presionar el boton openFile Despliega un file
@@ -1492,28 +1654,8 @@ public class JFXMain extends Application {
 		if (stores != null) {
 			for(FileDataStore store : stores){//abro cada store y lo dibujo en el harvestMap individualmente
 				CosechaLabor labor = new CosechaLabor(store);
-
-				//TODO sobreescribir el metodo render del layer para que solo renderee una vez y despues solo lo haga en una imagen de backup
 				LaborLayer layer = new LaborLayer();
-				//				{
-				//					Image backing =null;
-				//					@Override
-				//					public void render(DrawContext dc){
-				//						if(backing ==null){
-				//						for(Renderable r:this.renderables){
-				//						
-				//							super.render(dc);
-				//							if(r instanceof gov.nasa.worldwind.render.Polygon){
-				//								gov.nasa.worldwind.render.Polygon p = (gov.nasa.worldwind.render.Polygon) r;
-				////								Object is = p.getTexture();
-				//							}
-				//							
-				//						}}
-				//					
-				//					}
-				//				};
 				labor.setLayer(layer);
-
 				Optional<CosechaLabor> cosechaConfigured= HarvestConfigDialogController.config(labor);
 				if(!cosechaConfigured.isPresent()){//
 					System.out.println("el dialogo termino con cancel asi que no continuo con la cosecha");
@@ -1581,16 +1723,53 @@ public class JFXMain extends Application {
 		//}
 	}
 
+	
+	
+	private void doEditPulverizacion(PulverizacionLabor cConfigured ) {
+		Optional<PulverizacionLabor> cosechaConfigured=PulverizacionConfigDialogController.config(cConfigured);
+		if(cosechaConfigured.isPresent()){
+			cConfigured = cosechaConfigured.get();
+			//cConfigured.getLayer().removeAllRenderables();
+			ProcessPulvMapTask umTask = new ProcessPulvMapTask(cConfigured);
+			umTask.installProgressBar(progressBox);
+
+			umTask.setOnSucceeded(handler -> {
+				//CosechaLabor ret = (CosechaLabor)handler.getSource().getValue();
+				this.getLayerPanel().update(this.getWwd());
+				umTask.uninstallProgressBar();
+				//	viewGoTo(ret);
+				this.wwjPanel.repaint();
+				System.out.println("EditHarvestMapTask succeded");
+				playSound();
+			});//fin del OnSucceeded						
+			//umTask.start();
+			this.executorPool.execute(umTask);
+		}
+	}
+	
+	private void doEditSiembra(SiembraLabor cConfigured ) {
+		Optional<SiembraLabor> cosechaConfigured=SiembraConfigDialogController.config(cConfigured);
+		if(cosechaConfigured.isPresent()){
+			cConfigured = cosechaConfigured.get();
+			//cConfigured.getLayer().removeAllRenderables();
+			ProcessSiembraMapTask umTask = new ProcessSiembraMapTask(cConfigured);
+			umTask.installProgressBar(progressBox);
+
+			umTask.setOnSucceeded(handler -> {
+				//CosechaLabor ret = (CosechaLabor)handler.getSource().getValue();
+				this.getLayerPanel().update(this.getWwd());
+				umTask.uninstallProgressBar();
+				//	viewGoTo(ret);
+				this.wwjPanel.repaint();
+				System.out.println("EditHarvestMapTask succeded");
+				playSound();
+			});//fin del OnSucceeded						
+			//umTask.start();
+			this.executorPool.execute(umTask);
+		}
+	}
+	
 	private void doEditFertilizacion(FertilizacionLabor cConfigured ) {
-		//		if(cConfigured==null){
-		//			Optional<FertilizacionLabor> cosechaSelected = HarvestSelectDialogController.select(this.cosechas);
-		//			if(cosechaSelected.isPresent()){
-		//				cConfigured= cosechaSelected.get();
-		//			} else {
-		//				return;
-		//			}
-		//		}
-		//if(cosechaSelected.isPresent()){		
 		Optional<FertilizacionLabor> cosechaConfigured=FertilizacionConfigDialogController.config(cConfigured);
 		if(cosechaConfigured.isPresent()){
 			cConfigured = cosechaConfigured.get();
@@ -1715,9 +1894,11 @@ public class JFXMain extends Application {
 			insertBeforeCompass(getWwd(), ret.getLayer());
 			this.getLayerPanel().update(this.getWwd());
 			umTask.uninstallProgressBar();
+			
 			viewGoTo(ret);
 
 			System.out.println("RecomendFertFromHarvestPotentialMapTask succeded");
+			playSound();
 		});//fin del OnSucceeded
 		umTask.start();
 	}
@@ -2409,23 +2590,23 @@ public class JFXMain extends Application {
 	//		}
 	//	}
 
-	private void doShowDataTable(CosechaLabor labor) {		   
+	private void doShowDataTable(Labor<?> labor) {		   
 		Platform.runLater(()->{
 
-			ArrayList<CosechaItem> ciLista = new ArrayList<CosechaItem>();
+			ArrayList<LaborItem> ciLista = new ArrayList<LaborItem>();
 			System.out.println("Comenzando a cargar la los datos de la tabla");
 			Iterator<?> it = labor.outCollection.iterator();
 			while(it.hasNext()){
-				CosechaItem ci = labor.constructFeatureContainerStandar((SimpleFeature)it.next(), false);
+				LaborItem ci = labor.constructFeatureContainerStandar((SimpleFeature)it.next(), false);
 				ciLista.add(ci);
 			}
 
-			final ObservableList<CosechaItem> dataLotes =
+			final ObservableList<LaborItem> dataLotes =
 					FXCollections.observableArrayList(
 							ciLista
 							);
 
-			SmartTableView<CosechaItem> table = new SmartTableView<CosechaItem>(dataLotes,dataLotes);
+			SmartTableView<LaborItem> table = new SmartTableView<LaborItem>(dataLotes,dataLotes);
 			table.setEditable(false);
 
 			Scene scene = new Scene(table, 800, 600);
@@ -2640,9 +2821,9 @@ public class JFXMain extends Application {
 		}
 		if(lastFile != null ){
 		
-//			if(!lastFile.isDirectory()){
-//				lastFile= lastFile.getParentFile();
-//			}
+			if(!lastFile.isDirectory()){
+				lastFile= lastFile.getParentFile();
+			}
 			fileChooser.setInitialDirectory(lastFile);
 		}
 		

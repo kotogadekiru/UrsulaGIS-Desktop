@@ -1,4 +1,4 @@
-package tasks;
+package tasks.importar;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
@@ -13,6 +13,7 @@ import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
 import javafx.scene.Group;
 import javafx.scene.shape.Path;
+import tasks.ProcessMapTask;
 
 import org.geotools.data.FeatureReader;
 import org.geotools.data.FileDataStore;
@@ -202,7 +203,7 @@ public class ProcessFertMapTask extends ProcessMapTask<FertilizacionItem,Fertili
 		String tooltipText = new String(// TODO ver si se puede instalar un
 				// boton
 				// que permita editar el dato
-				"Densidad: " + df.format(fertFeature.getCantFertHa())
+				"Densidad: " + df.format(fertFeature.getDosistHa())
 				+ " Kg/Ha\n" + "Costo: "
 				+ df.format(fertFeature.getImporteHa()) + " U$S/Ha\n"
 				//+ "Sup: "

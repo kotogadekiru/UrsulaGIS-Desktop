@@ -23,18 +23,16 @@ import dao.Labor;
 import dao.LaborConfig;
 import dao.config.Configuracion;
 import dao.config.Cultivo;
+import dao.fertilizacion.FertilizacionLabor;
 import utils.ProyectionConstants;
 
 public class CosechaLabor extends Labor<CosechaItem> {
 	private static final int KG_POR_TN = 1000;
 	private static final double KG_POR_LIBRA = 0.453592;
-	// private static final int KG_POR_TN = 1000;
-	
+
 	public static final String COLUMNA_VELOCIDAD = "Velocidad";
 	public static final String COLUMNA_RENDIMIENTO = "Rendimient";
 	public static final String COLUMNA_DESVIO_REND = "DesvRendim";
-	
-	//public static final String COLUMNA_PASADA = "Num__de_pa";
 
 	public static final String COLUMNA_PRECIO = "precio_gra";
 	public static final String COLUMNA_IMPORTE_HA = "importe_ha";
@@ -49,71 +47,44 @@ public class CosechaLabor extends Labor<CosechaItem> {
 	private static final String MIN_RINDE_KEY = "MIN_RINDE";
 
 	private static final String PRODUCTO_DEFAULT = "CultivoDefault";
+	private static final String COLUMNA_COSTO_LB_HA = "CostoLbTn";
+	private static final String COLUMNA_COSTO_LB_TN = "CostoLbHa";
 
-	//public CosechaConfig config = null;
 
-	//public StringProperty colVelocidad= null;
 	public StringProperty colRendimiento= null;
-	
-	public SimpleDoubleProperty precioGranoProperty= null;
-	public SimpleDoubleProperty correccionCosechaProperty= null;
-	public SimpleDoubleProperty maxRindeProperty= null;
-	public SimpleDoubleProperty minRindeProperty= null;
-	public SimpleDoubleProperty costoCosechaTnProperty= null;
-
 
 	public Property<Cultivo> producto=null;
+	public SimpleDoubleProperty precioGranoProperty= null;
+	public SimpleDoubleProperty costoCosechaTnProperty= null;
 
+	//TODO mover a tasks separados de la cosecha
+	public SimpleDoubleProperty correccionCosechaProperty= null;//es el porcentaje de 0-100 por que que hay que multiplicar el rinde 
+	public SimpleDoubleProperty maxRindeProperty= null;
+	public SimpleDoubleProperty minRindeProperty= null;
 
-	//Double nextCosechaID =new Double(0);//XXX este id no es global sino que depende de la labor
 	/**
 	 * constructor que sirve para crear una cosecha artificial cuando no tiene
 	 * un datastore que la represente
 	 */
-
 	public CosechaLabor() {
 		super();
 		initConfig();
 	}
-	
+
 	public CosechaLabor(FileDataStore store) {
 		super(store);
 		initConfig();
 	}
-	
+
 	//XXX ver como los listeners de las propiedades me afectan el archivo de properties y 
 	//el controller de la configuracion. creo que setea las variables pero nunca las graba a menos 
 	//que las grabe el controller
 	protected void initConfig() {
-		System.out.println("inicioando la configuracion de CosechLabor");
+		System.out.println("iniciando la configuracion de CosechLabor");
 		List<String> availableColums = this.getAvailableColumns();		
-
 		Configuracion properties = getConfigLabor().getConfigProperties();
 
-//		colVelocidad = new SimpleStringProperty(
-//				properties.getPropertyOrDefault(CosechaLabor.COLUMNA_VELOCIDAD,
-//						CosechaLabor.COLUMNA_VELOCIDAD));
-//		if(!availableColums.contains(colVelocidad.get())&&availableColums.contains(CosechaLabor.COLUMNA_VELOCIDAD)){
-//			colVelocidad.setValue(CosechaLabor.COLUMNA_VELOCIDAD);
-//		}
-//		colVelocidad.addListener((obs, bool1, bool2) -> {
-//			properties.setProperty(CosechaLabor.COLUMNA_VELOCIDAD,
-//					bool2.toString());
-//		});
-
-		colRendimiento = new SimpleStringProperty(
-				properties.getPropertyOrDefault(
-						CosechaLabor.COLUMNA_RENDIMIENTO,
-						CosechaLabor.COLUMNA_RENDIMIENTO));
-		if(!availableColums.contains(colRendimiento.get())&&availableColums.contains(CosechaLabor.COLUMNA_RENDIMIENTO)){
-			colRendimiento.setValue(CosechaLabor.COLUMNA_RENDIMIENTO);
-			this.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
-		}
-		colRendimiento.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(CosechaLabor.COLUMNA_RENDIMIENTO,
-					bool2.toString());
-		});
-		
+		colRendimiento = initStringProperty(CosechaLabor.COLUMNA_RENDIMIENTO, properties, availableColums);
 		colAmount= new SimpleStringProperty(CosechaLabor.COLUMNA_RENDIMIENTO);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
 
 		correccionCosechaProperty = initDoubleProperty(CosechaLabor.CORRECCION_COSECHA, "100", properties);
@@ -121,103 +92,32 @@ public class CosechaLabor extends Labor<CosechaItem> {
 		maxRindeProperty = initDoubleProperty(CosechaLabor.MAX_RINDE_KEY, "0", properties);
 		precioGranoProperty = initDoubleProperty(CosechaLabor.PRECIO_GRANO, "0", properties);
 		costoCosechaTnProperty = initDoubleProperty(CosechaLabor.COSTO_COSECHA_TN, "0", properties);
-		
-		String productoKEY = properties.getPropertyOrDefault(
-				CosechaLabor.PRODUCTO_DEFAULT, "Maiz");
+
+		String productoKEY = properties.getPropertyOrDefault(CosechaLabor.PRODUCTO_DEFAULT, Cultivo.MAIZ);
 		producto = new SimpleObjectProperty<Cultivo>(Cultivo.cultivos.get(productoKEY));//values().iterator().next());
+		producto.addListener((obs, bool1, bool2) -> {
+			properties.setProperty(CosechaLabor.PRODUCTO_DEFAULT,bool2.getNombre());
+		});
 	}
-	
+
 	@Override
 	protected DoubleProperty initPrecioLaborHaProperty(){
 		return initDoubleProperty(CosechaLabor.COSTO_COSECHA_HA,"0",config.getConfigProperties());
 	} 
 
-
-
-	// public void setPrecioGrano(Double precioGrano) {
-	// this.precioLabor=precioGrano;//precio es el costo de la labor por ha
-	// }
-	// public void setCorreccionRinde(Double correccionRinde1) {
-	// //System.out.println("nuevo correccion rinde es "+correccionRinde1);
-	// correccionRinde = correccionRinde1;
-	// }
-
-//	public static SimpleFeatureType getFeatureType() {
-//		SimpleFeatureType type = null;
-//		try {
-//			/*
-//			 * geom tiene que ser Point, Line o Polygon. no puede ser Geometry
-//			 * porque podria ser cualquiera y solo permite un tipo por archivo
-//			 * los nombre de las columnas no pueden ser de mas de 10 char
-//			 */
-//
-//
-//
-//			type = DataUtilities.createType("Cosecha", "the_geom:MultiPolygon:srid=4326,"//"*geom:Polygon,"the_geom
-//					+ CosechaLabor.COLUMNA_DISTANCIA + ":Double,"
-//					+ CosechaLabor.COLUMNA_CURSO + ":Double,"
-//					+ CosechaLabor.COLUMNA_ANCHO + ":Double,"
-//					+ CosechaLabor.COLUMNA_RENDIMIENTO + ":Double,"
-//					+ CosechaLabor.COLUMNA_VELOCIDAD + ":Double,"
-//					+ CosechaLabor.COLUMNA_ELEVACION + ":Double,"
-//					+ CosechaLabor.COLUMNA_PRECIO + ":Double,"
-//					+ CosechaLabor.COLUMNA_IMPORTE_HA + ":Double,"
-//					+ CosechaLabor.COLUMNA_CATEGORIA + ":Integer");
-//		} catch (SchemaException e) {
-//
-//			e.printStackTrace();
-//		}
-//		return type;
-//	}
 	@Override
 	public String getTypeDescriptors() {
 		String type = CosechaLabor.COLUMNA_RENDIMIENTO + ":Double,"	
 				+CosechaLabor.COLUMNA_DESVIO_REND + ":Double,"	
-				+CosechaLabor.COLUMNA_VELOCIDAD + ":Double,"	
-					+ CosechaLabor.COLUMNA_PRECIO + ":Double,"
-					+CosechaLabor.COLUMNA_IMPORTE_HA+":Double";
+				+CosechaLabor.COLUMNA_COSTO_LB_HA + ":Double,"	
+				+CosechaLabor.COLUMNA_COSTO_LB_TN + ":Double,"	
+				//+CosechaLabor.COLUMNA_VELOCIDAD + ":Double,"	
+				+ CosechaLabor.COLUMNA_PRECIO + ":Double,"
+				+CosechaLabor.COLUMNA_IMPORTE_HA+":Double";
 		return type;
 	}
-	
 
-//	public static SimpleFeatureType getPointsFeatureType() {
-//		SimpleFeatureType type = null;
-//		try {
-//			/*
-//			 * geom tiene que ser Point, Line o Polygon. no puede ser Geometry
-//			 * porque podria ser cualquiera y solo permite un tipo por archivo
-//			 * los nombre de las columnas no pueden ser de mas de 10 char
-//			 */
-//
-//			type = DataUtilities.createType("Cosecha", "the_geom:Point:srid=4326,"//"*geom:Polygon,"the_geom
-//					+ CosechaLabor.COLUMNA_DISTANCIA + ":Double,"
-//					+ CosechaLabor.COLUMNA_CURSO + ":Double,"
-//					+ CosechaLabor.COLUMNA_ANCHO + ":Double,"
-//					+ CosechaLabor.COLUMNA_RENDIMIENTO + ":Double,"
-//					+ CosechaLabor.COLUMNA_VELOCIDAD + ":Double,"
-//					+ CosechaLabor.COLUMNA_ELEVACION + ":Double,"
-//					+ CosechaLabor.COLUMNA_PRECIO + ":Double,"
-//					+ CosechaLabor.COLUMNA_IMPORTE_HA + ":Double,"
-//					+ CosechaLabor.COLUMNA_CATEGORIA + ":Integer");
-//		} catch (SchemaException e) {
-//
-//			e.printStackTrace();
-//		}
-//		return type;
-//	}
 
-//	@Override
-//	public SimpleFeatureType getType() {
-//		return CosechaLabor.getFeatureType();
-//	}
-
-	//	public void insertFeature(CosechaItem cosechaFeature) {
-	//		// SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(
-	//		// getType());
-	//		SimpleFeature fe = cosechaFeature.getFeature(featureBuilder);
-	//		this.insertFeature(fe);
-	//
-	//	}
 
 	public void changeFeature(SimpleFeature old, CosechaItem ci) {
 		outCollection.remove(old);
@@ -229,15 +129,21 @@ public class CosechaLabor extends Labor<CosechaItem> {
 		CosechaConfig config = (CosechaConfig) super.config;
 		CosechaItem ci = new CosechaItem(harvestFeature);
 		super.constructFeatureContainer(ci,harvestFeature);
-		double correccionRinde = correccionCosechaProperty.doubleValue();// me
+
 		Double rindeDouble = LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colRendimiento.get()));
-		
+
 		if(this.getConfiguracion().correccionAnchoEnabled()){			
-		
 			ci.setAncho(this.anchoDefaultProperty.doubleValue());
 		} 
 
 		if (config.correccionFlowToRindeProperty().getValue()) {
+			//TODO si existe el campo Moisture_s tomarlo encuenta para secar el grano
+
+			/*
+			 * mass_flow[kg/s]=0.4535*lb/s ancho[m] velocidad[m/s] rinde[kg/ha] =
+			 * 10000*mass_flow/(ancho*velocidad)
+			 */
+
 			// ("Mass_Flow_" *0.453592) /((("Width" *2.54/100)*
 			// ("Distance"*2.54/100))/10000)
 			/*
@@ -247,7 +153,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 			 */
 			double constantes = ProyectionConstants.METROS2_POR_HA
 					* KG_POR_LIBRA/KG_POR_TN;// XXX asume un dato por segundo
-			//FIXME si la distancia o el ancho son cero esto da infinito
+			//si la distancia o el ancho son cero esto da infinito
 			double divisor = ci.getDistancia() * ci.getAncho();
 			if(divisor>0){
 				rindeDouble = rindeDouble * constantes / (divisor);
@@ -256,95 +162,50 @@ public class CosechaLabor extends Labor<CosechaItem> {
 			}
 		}
 
-		/*
-		 * mass_flow[kg/s]=0.4535*lb/s ancho[m] velocidad[m/s] rinde[kg/ha] =
-		 * 10000*mass_flow/(ancho*velocidad)
-		 */
-		ci.rindeTnHa = rindeDouble * (correccionRinde / 100);
-
-//		if(!colVelocidad.get().equals(Labor.NONE_SELECTED)){
-//		ci.velocidad = LaborItem.getDoubleFromObj(harvestFeature
-//				.getAttribute(colVelocidad.get()));
-//		}
-//		ci.elevacion = FeatureContainer.getDoubleFromObj(harvestFeature
-//				.getAttribute(colElevacion.get()));
-		ci.precioTnGrano = precioGranoProperty.doubleValue();//FIXME si es una grilla no se actualiza el precio del grano
-		//TODO tomar en cuenta el costo fijo por ha de la cosecha y el costo variable
-		double costoTn = this.costoCosechaTnProperty.get()*ci.precioTnGrano/100;//FIXME esto es un porcentaje del precio del grano (costo=precio*costoTn)
-		double costoHa = this.precioLaborProperty.get();
-		ci.importeHa = ci.rindeTnHa *( ci.precioTnGrano-costoTn)-costoHa;
-
+		double correccionRinde = correccionCosechaProperty.doubleValue()/100;
+		ci.rindeTnHa = rindeDouble * (correccionRinde);		
+		setPropiedadesLabor(ci);
 		return ci;
 	}
 
+	public void setPropiedadesLabor(CosechaItem ci){
+		ci.precioTnGrano =this.precioGranoProperty.get();
+		ci.costoLaborHa=this.precioLaborProperty.get();
+		ci.costoLaborTn=this.costoCosechaTnProperty.get();
+	}
+	
 	@Override
 	public  CosechaItem constructFeatureContainerStandar(
 			SimpleFeature harvestFeature,boolean newIDS) {
 		CosechaItem ci = new CosechaItem(harvestFeature);
 		super.constructFeatureContainerStandar(ci,harvestFeature,newIDS);
-
-//		ci.id = FeatureContainer.getDoubleFromObj(FeatureContainer.getID(harvestFeature));
-//		if(ci.id ==null || newIDS){// flag que me permita ignorar el id del feature y asignar uno nuevo
-//			ci.id= this.getNextID();
-//		}
-//
-//		ci.distancia = FeatureContainer.getDoubleFromObj(harvestFeature
-//				.getAttribute(CosechaLabor.COLUMNA_DISTANCIA));
-//		ci.rumbo = FeatureContainer.getDoubleFromObj(harvestFeature
-//				.getAttribute(CosechaLabor.COLUMNA_CURSO));
-		// ci.pasada
-		// =FeatureContainer.getDoubleFromObj(harvestFeature.getAttribute(CosechaLabor.COLUMNA_PASADA));//no
-		// se pudo leer
-
-		ci.velocidad = LaborItem.getDoubleFromObj(harvestFeature
-				.getAttribute(CosechaLabor.COLUMNA_VELOCIDAD));
-//		ci.ancho = FeatureContainer.getDoubleFromObj(harvestFeature
-//				.getAttribute(CosechaLabor.COLUMNA_ANCHO));
 		ci.rindeTnHa = LaborItem.getDoubleFromObj(harvestFeature
 				.getAttribute(CosechaLabor.COLUMNA_RENDIMIENTO));
 		ci.desvioRinde = LaborItem.getDoubleFromObj(harvestFeature
 				.getAttribute(CosechaLabor.COLUMNA_DESVIO_REND));
-	
-//		if(this.clasificador!=null && clasificador.isInitialized()){
-//		Integer categoria = this.clasificador.getCategoryFor(ci.rindeTnHa);
-//		if(categoria !=null)		ci.setCategoria(categoria);
-//		}	
 
+		setPropiedadesLabor(ci);//para que se actualice si se edito la labor
+//		ci.precioTnGrano = LaborItem.getDoubleFromObj(harvestFeature
+//				.getAttribute(CosechaLabor.COLUMNA_PRECIO));
+//
+//		ci.costoLaborHa=LaborItem.getDoubleFromObj(harvestFeature
+//				.getAttribute(CosechaLabor.COLUMNA_COSTO_LB_HA));
+//		ci.costoLaborTn=LaborItem.getDoubleFromObj(harvestFeature
+//				.getAttribute(CosechaLabor.COLUMNA_COSTO_LB_TN));
 
-		ci.precioTnGrano = LaborItem.getDoubleFromObj(harvestFeature
-				.getAttribute(CosechaLabor.COLUMNA_PRECIO));
-		ci.importeHa = LaborItem.getDoubleFromObj(harvestFeature
-				.getAttribute(CosechaLabor.COLUMNA_IMPORTE_HA));
-
-		//		ci.categoria = FeatureContainer.getDoubleFromObj(harvestFeature
-		//				.getAttribute(CosechaLabor.COLUMNA_CATEGORIA));
-
-		//		if(this.clasificador!=null){
-		//			ci.categoria = clasificador.getCategoryFor(ci.getRindeTnHa());
-		//		}
 		return ci;
 	}
-	
-//se usa en los tasks
+
+	//se usa en los tasks
 	public CosechaConfig getConfiguracion() {
 		if(config==null){
 			config = new CosechaConfig();
 		}
 		return (CosechaConfig) config;
-	
 	}
-
-//	public void constructClasificador() {
-//		this.constructClasificador(config.config
-//				.getPropertyOrDefault(Clasificador.TIPO_CLASIFICADOR,
-//						Clasificador.CLASIFICADOR_JENKINS));
-//
-//	}
 
 	@Override
 	public LaborConfig getConfigLabor() {
 		return getConfiguracion();
 	}
-
-
 }

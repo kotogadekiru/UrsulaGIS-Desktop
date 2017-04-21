@@ -13,6 +13,7 @@ import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.pulverizacion.PulverizacionLabor;
+import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
@@ -116,6 +117,7 @@ public class Margen extends Labor<MargenItem> {
 		ci.setShowMargen(Margen.COLUMNA_MARGEN.equals(this.colAmount.get()));
 		return ci;
 	}
+
 
 	
 	

@@ -118,7 +118,7 @@ public abstract class Labor<E extends LaborItem>  {
 	
 	public Quadtree treeCache = null;
 	
-	private CoordinateReferenceSystem targetCRS;
+//	private CoordinateReferenceSystem targetCRS;
 
 	public LaborConfig config = null;
 
@@ -671,6 +671,7 @@ public abstract class Labor<E extends LaborItem>  {
 		return type;
 	}
 
+	
 	public void constructFeatureContainerStandar(LaborItem ci, SimpleFeature harvestFeature, Boolean newIDS) {
 		ci.id = LaborItem.getDoubleFromObj(LaborItem.getID(harvestFeature));
 		if(ci.id ==null || newIDS){// flag que me permita ignorar el id del feature y asignar uno nuevo
@@ -690,10 +691,6 @@ public abstract class Labor<E extends LaborItem>  {
 			Integer categoria = this.clasificador.getCategoryFor(ci.getAmount());
 			if(categoria !=null)		ci.setCategoria(categoria);
 		}	
-
-		//		if(this.clasificador!=null){
-		//			ci.categoria = clasificador.getCategoryFor(ci.getAmount());
-		//		}
 
 	}
 
@@ -737,7 +734,4 @@ public abstract class Labor<E extends LaborItem>  {
 	}
 
 	public abstract LaborConfig getConfigLabor();
-
-
-
 }

@@ -26,13 +26,11 @@ public abstract class LaborItem implements Comparable<LaborItem>{
 
 	protected Double areaSinSup= new Double(0);
 
-
+	public LaborItem() {
+	}
+	
 	public LaborItem(SimpleFeature feature) {
 		this.geometry = (Geometry) feature.getDefaultGeometry();
-	}
-
-	public LaborItem() {
-
 	}
 
 	public void setGeometry(Geometry geom) {

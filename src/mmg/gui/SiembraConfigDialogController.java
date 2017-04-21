@@ -177,11 +177,11 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 
 		// colRendimiento;
 		this.comboDosis.setItems(FXCollections.observableArrayList(availableColums));
-		this.comboDosis.valueProperty().bindBidirectional(labor.colSemillasMetroProperty);
+		this.comboDosis.valueProperty().bindBidirectional(labor.colDosisSemilla);
 
 	
 		this.comboInsumo.setItems(FXCollections.observableArrayList(Semilla.semillas.values()));
-		this.comboInsumo.valueProperty().bindBidirectional(labor.semilla);
+		this.comboInsumo.valueProperty().bindBidirectional(labor.semillaProperty);
 
 
 		StringConverter<Number> converter = new NumberStringConverter();
@@ -192,9 +192,9 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 		//textCostoCosechaHa
 		Bindings.bindBidirectional(this.textCostoLaborHa.textProperty(), labor.precioLaborProperty, converter);
 		
-		Bindings.bindBidirectional(this.textEntresurco.textProperty(), labor.entreSurco, converter);
-		
-		Bindings.bindBidirectional(this.textSemillasBolsa.textProperty(), labor.semillasPorBolsa, converter);
+//		Bindings.bindBidirectional(this.textEntresurco.textProperty(), labor.entreSurco, converter);
+//		
+//		Bindings.bindBidirectional(this.textSemillasBolsa.textProperty(), labor.semillasPorBolsa, converter);
 
 
 		Bindings.bindBidirectional(this.textClasesClasificador.textProperty(), labor.clasificador.clasesClasificadorProperty, converter);

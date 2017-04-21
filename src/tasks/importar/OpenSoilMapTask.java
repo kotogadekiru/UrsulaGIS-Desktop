@@ -1,4 +1,4 @@
-package tasks;
+package tasks.importar;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
@@ -10,6 +10,7 @@ import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
 import javafx.scene.Group;
 import javafx.scene.shape.Path;
+import tasks.ProcessMapTask;
 
 import org.geotools.data.FeatureReader;
 import org.geotools.data.FileDataStore;

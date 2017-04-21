@@ -15,12 +15,12 @@ import lombok.Data;
 
 @Data
 public class Cultivo{
-	static final String GIRASOL = "Girasol";
-	static final String SOJA = "Soja";
-	static final String TRIGO = "Trigo";
-	static final String MAIZ = "Maiz";
-	static final String SORGO = "Sorgo";
-	static final String CEBADA = "Cebada";
+	public static final String GIRASOL = "Girasol";
+	public static final String SOJA = "Soja";
+	public static final String TRIGO = "Trigo";
+	public static final String MAIZ = "Maiz";
+	public static final String SORGO = "Sorgo";
+	public static final String CEBADA = "Cebada";
 	
 	String nombre =new String();
 	

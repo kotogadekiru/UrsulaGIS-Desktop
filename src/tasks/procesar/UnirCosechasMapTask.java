@@ -1,8 +1,9 @@
-package tasks;
+package tasks.procesar;
 
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import mmg.gui.nww.LaborLayer;
+import tasks.ProcessMapTask;
 
 import java.io.IOException;
 import java.io.Reader;

@@ -49,7 +49,7 @@ public class Configuracion{
 //					this.setProperty(GENERAR_MAPA_RENTABILIDAD_FROM_SHP, n.toString());					
 //				});		
 		
-		System.out.println("finished loading config");
+//		System.out.println("finished loading config");
 	//	modified();
 	}
 
@@ -80,10 +80,6 @@ public class Configuracion{
 			}
 		}
 	}
-	
-//	public void modified() {
-//		modified.setValue(!modified.getValue());
-//	}
 
 	// Bill Pugh Solution for singleton pattern
 //	private static class LazyHolder {
@@ -108,38 +104,25 @@ public class Configuracion{
 	}
 
 	public Set<String> getAllPropertyNames() {
-	//	loadProperties();
 		return configProp.stringPropertyNames();
 	}
 
 	public boolean containsKey(String key) {
-	//	loadProperties();
 		return configProp.containsKey(key);
 	}
 
 	public void setProperty(String key, String value) {
-		//loadProperties();
-//		if(Labor.COLUMNA_CURSO.equals(key)){
-//			System.out.println("seteando columna "+Labor.COLUMNA_CURSO+" con "+value);
-//		}
 		configProp.setProperty(key, value);
-	///	save();
+
 	}
 
-
 	public void save() {
-		//String curso = this.getPropertyOrDefault(Labor.COLUMNA_CURSO, "");
-	//	System.out.println("antes de hacer save "+Labor.COLUMNA_CURSO+" es "+curso);
 		try {
 			FileWriter writer = new FileWriter(propertiesFileUrl);
-			configProp.store(writer,"MarginMapGenerator");//Calendar.getInstance().getTime().toString());
+			configProp.store(writer,"UrsulaGIS");//Calendar.getInstance().getTime().toString());
 			writer.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-//		modified();
 	}
-	
-
 }

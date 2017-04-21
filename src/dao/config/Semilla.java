@@ -9,14 +9,17 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public class Semilla {
+	public static final String SEMILLA_DE_TRIGO = "Semilla de Trigo";
+	public static final String SEMILLA_DE_SOJA = "Semilla de Soja";
+	public static final String SEMILLA_DE_MAIZ = "Semilla de Maiz";
 	private StringProperty nombre = new SimpleStringProperty();
 	private Property<Cultivo> productoProperty=new SimpleObjectProperty<Cultivo>();//values().iterator().next());;
 
 	public static Map<String,Semilla> semillas = new HashMap<String,Semilla>();
 	static{																		
-		semillas.put("Semilla de Maiz",new Semilla("Semilla de Maiz",Cultivo.cultivos.get(Cultivo.MAIZ)));	
-		semillas.put("Semilla de Soja",new Semilla("Semilla de Soja",Cultivo.cultivos.get(Cultivo.SOJA)));
-		semillas.put("Semilla de Trigo",new Semilla("Semilla de Trigo",Cultivo.cultivos.get(Cultivo.TRIGO)));
+		semillas.put(SEMILLA_DE_MAIZ,new Semilla(SEMILLA_DE_MAIZ,Cultivo.cultivos.get(Cultivo.MAIZ)));	
+		semillas.put(SEMILLA_DE_SOJA,new Semilla(SEMILLA_DE_SOJA,Cultivo.cultivos.get(Cultivo.SOJA)));
+		semillas.put(SEMILLA_DE_TRIGO,new Semilla(SEMILLA_DE_TRIGO,Cultivo.cultivos.get(Cultivo.TRIGO)));
 
 	}
 
@@ -33,16 +36,12 @@ public class Semilla {
 		this.nombre.set(n);
 	}
 
-	public String getCultivo(){
-		return this.productoProperty.getValue().getNombre();
+	public Cultivo getCultivo(){
+		return this.productoProperty.getValue();
 	}
 
-	public void setCultivo(String nombreC){
-		Cultivo c=	Cultivo.cultivos.get(nombreC);	
-		if(c!=null){
-			this.productoProperty.setValue(c);
-		}
-
+	public void setCultivo(Cultivo cultivo){
+			this.productoProperty.setValue(cultivo);
 	}
 
 	/**

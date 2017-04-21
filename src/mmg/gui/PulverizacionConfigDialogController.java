@@ -163,8 +163,8 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 		this.comboDosis.setItems(FXCollections.observableArrayList(availableColums));
 		this.comboDosis.valueProperty().bindBidirectional(labor.colDosisProperty);
 		//pasadas
-		this.comboPasadas.setItems(FXCollections.observableArrayList(availableColums));
-		this.comboPasadas.valueProperty().bindBidirectional(labor.colCantPasadasProperty);
+//		this.comboPasadas.setItems(FXCollections.observableArrayList(availableColums));
+//		this.comboPasadas.valueProperty().bindBidirectional(labor.colCantPasadasProperty);
 
 		//insumo
 		this.comboInsumo.setItems(FXCollections.observableArrayList(Agroquimico.agroquimicos.values()));

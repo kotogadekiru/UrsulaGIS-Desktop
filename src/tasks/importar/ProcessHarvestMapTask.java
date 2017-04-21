@@ -1,4 +1,4 @@
-package tasks;
+package tasks.importar;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -14,6 +14,7 @@ import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.feature.type.AttributeType;
 import org.opengis.geometry.BoundingBox;
 
 import com.vividsolutions.jts.geom.Coordinate;
@@ -33,6 +34,7 @@ import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 import javafx.geometry.Point2D;
+import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
 
 public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLabor> {
@@ -54,14 +56,8 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 	private int puntosEliminados=0;
 
 	private List<Geometry> geomBuffer = new ArrayList<Geometry>();
-	//	double anchoMax = 0;
+	private List<Double> heightBuffer = new ArrayList<Double>();
 
-	//Quadtree geometryTree = null;
-
-	//private double precioGrano;
-	//	private Double oldPasada=null;
-	//	private MathTransform crsTransform = null;
-	//	private MathTransform crsAntiTransform =null;
 
 	public ProcessHarvestMapTask(CosechaLabor cosechaLabor){//RenderableLayer layer, FileDataStore store, double d, Double correccionRinde) {
 		super(cosechaLabor);
@@ -83,11 +79,24 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		//	System.out.println("doProcess(); "+System.currentTimeMillis());
 
 		FeatureReader<SimpleFeatureType, SimpleFeature> reader =null;
+		String mappableColumn = null;
+		String moistureColumn = null;
 		//	CoordinateReferenceSystem storeCRS =null;
 		if(labor.getInStore()!=null){
 			if(labor.outCollection!=null)labor.outCollection.clear();
 			reader = labor.getInStore().getFeatureReader();
 			featureCount=labor.getInStore().getFeatureSource().getFeatures().size();
+			
+			List<AttributeType> descriptors = labor.getInStore().getSchema().getTypes();
+			for(AttributeType att:descriptors){
+			String colName = att.getName().toString();
+				if("Mappable".equalsIgnoreCase(colName)){
+				mappableColumn=colName;	
+				} else if("Moisture_s".equalsIgnoreCase(colName)){
+					moistureColumn=colName;	
+				}
+			}
+			
 		} else{
 			if(labor.getInCollection() == null){//solo cambio la inCollection por la outCollection la primera vez
 				labor.setInCollection(labor.outCollection);
@@ -111,18 +120,25 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 
 		
 		while (reader.hasNext()) {
-
+			featureNumber++;
+			updateProgress(featureNumber/divisor, featureCount);
+			
 			SimpleFeature simpleFeature = reader.next();
+			//TODO si simpleFeature contiene la columna Mappable solo quedarme con los registros donde Mappable==1
+			//TODO al convertir de flow a rinde tomar en cuenta la columna Moisture_s 0~20
+			if(mappableColumn!=null ){
+				Object mappable = simpleFeature.getAttribute(mappableColumn);
+				Double mappableValue = new Double(1);
+				if(!mappableValue.equals(mappable)){//OK! Funciona
+					//System.out.println("descartando el registro por no ser mapeable mappable="+mappable);
+					continue;
+				}
+			}
 			CosechaItem ci = labor.constructFeatureContainer(simpleFeature);
 			//ci.getRumbo()==90 ||ci.getRumbo()==270 ||			
 			//if(ci.getAncho()==0||ci.getDistancia()==0||					ci.getAmount()==0)continue;//XXX evito ingresar puntos invalidos
 			distanciaAvanceMax = Math.max(ci.getDistancia(), distanciaAvanceMax);//TODO pasar al while
-			//		anchoMax = Math.max(ci.getAncho(), anchoMax);//TODO pasar al while	
-
-			featureNumber++;
-
-			updateProgress(featureNumber/divisor, featureCount);
-
+		
 			Double rumbo = ci.getRumbo();
 			Double ancho = ci.getAncho();
 			Double anchoOrig =ancho;
@@ -130,25 +146,6 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		//	Double pasada = ci.getPasada();
 			Double altura = ci.getElevacion();
 
-
-			//			System.out.println("rumbo ="+rumbo);
-			//			System.out.println("alfa ="+alfa);
-			//			rumbo =238.0
-			//					alfa =5.724679946541401
-
-//			if(labor.getConfiguracion().correccionAnchoEnabled()){			
-//				//				if (ancho < anchoMax) {			
-//				//					ancho = anchoMax;
-//				//				}
-//
-//				//	if (ancho < labor.anchoDefaultProperty.doubleValue()) {	
-//			
-//				ancho= labor.anchoDefaultProperty.doubleValue();
-//				//	}
-//				ci.setAncho(ancho);
-//			} 
-
-			//distanciaAvanceMax = (distancia+ distanciaAvanceMax)/2;
 
 			Object geometry = ci.getGeometry();
 
@@ -211,16 +208,6 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 				Coordinate distanciaLongLat = constructCoordinate(alfa+ Math.PI / 2,distancia);
 
 
-//				if(labor.getConfiguracion().correccionDemoraPesadaEnabled()){
-//					//TODO no mover la geometria, mover los datos que contiene
-//					Double corrimientoPesada =	labor.getConfiguracion().getCorrimientoPesada();
-//					//Coordinate corrimientoLongLat =constructCoordinate(alfa + Math.PI / 2,corrimientoPesada);
-//					// mover el punto 3.5 distancias hacia atras para compenzar el retraso de la pesada
-//
-//					longLatPoint = longLatPoint.getFactory().createPoint(new Coordinate(longLatPoint.getX()+corrimientoPesada*distanciaLongLat.x,longLatPoint.getY()+corrimientoPesada*distanciaLongLat.y));
-//					//utmPoint = utmPoint.getFactory().createPoint(new Coordinate(utmPoint.getX()-corrimientoLongLat.x,utmPoint.getY()-corrimientoLongLat.y));
-//				}
-
 				/**
 				 * creo la geometria que corresponde a la feature tomando en cuenta si esta activado el filtro de distancia y el de superposiciones
 				 */				
@@ -250,17 +237,19 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 
 					if(labor.getConfiguracion().correccionDemoraPesadaEnabled()){
 						int n=labor.getConfiguracion().getCorrimientoPesada().intValue();
-						//TODO tomar los primeros n rindes y ponerlos en el rindesBuffer
+						//tomar los primeros n rindes y ponerlos en el rindesBuffer
 						geomBuffer.add(longLatGeom);
+						heightBuffer.add(ci.getElevacion());
 						
-						
-						//TODO a partir del punto n cambiar el rinde de cosechaFeature por el rinde(0) de rindesBuffer
+						//a partir del punto n cambiar el rinde de cosechaFeature por el rinde(0) de rindesBuffer
 						longLatGeom =geomBuffer.get(0);
+						Double heightGeom= heightBuffer.get(0);
+						ci.setElevacion(heightGeom);
 						if(geomBuffer.size()>n){
 							geomBuffer.remove(0);
+							heightBuffer.remove(0);
 						}
 					}
-					
 					ci.setGeometry(longLatGeom);
 					corregirRinde(ci,anchoOrig);
 

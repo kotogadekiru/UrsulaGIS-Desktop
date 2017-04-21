@@ -7,7 +7,9 @@ import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.awt.WorldWindowGLCanvas;
 import gov.nasa.worldwind.awt.WorldWindowGLJPanel;
 import gov.nasa.worldwind.event.SelectEvent;
+import gov.nasa.worldwind.globes.ElevationModel;
 import gov.nasa.worldwind.layers.WorldMapLayer;
+import gov.nasa.worldwind.terrain.ZeroElevationModel;
 import gov.nasa.worldwind.util.StatusBar;
 import gov.nasa.worldwindx.examples.ClickAndGoSelectListener;
 import gov.nasa.worldwindx.examples.util.HighlightController;
@@ -39,6 +41,8 @@ public class WWPanel extends JPanel {
 		// properties.
 		Model m = (Model) WorldWind
 				.createConfigurationComponent(AVKey.MODEL_CLASS_NAME);
+//		final ElevationModel elevationModel = new ZeroElevationModel(){
+//		m.getGlobe().setElevationModel(elevationModel);
 		this.wwd.setModel(m);
 
 		// Setup a select listener for the worldmap click-and-go feature

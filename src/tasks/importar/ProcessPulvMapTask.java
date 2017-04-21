@@ -1,4 +1,4 @@
-package tasks;
+package tasks.importar;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -7,6 +7,7 @@ import java.util.List;
 
 import javafx.scene.Group;
 import javafx.scene.shape.Path;
+import tasks.ProcessMapTask;
 
 import org.geotools.data.FeatureReader;
 import org.geotools.data.FileDataStore;
@@ -182,8 +183,6 @@ public class ProcessPulvMapTask extends ProcessMapTask<PulverizacionItem,Pulveri
 	}
 	it.close();
 	labor.constructClasificador();
-
-
 
 	runLater(itemsToShow);
 	updateProgress(0, featureCount);

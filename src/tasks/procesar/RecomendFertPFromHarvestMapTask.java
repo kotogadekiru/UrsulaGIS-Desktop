@@ -1,4 +1,4 @@
-package tasks;
+package tasks.procesar;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -18,6 +18,7 @@ import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
+import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
 
 public class RecomendFertPFromHarvestMapTask extends ProcessMapTask<FertilizacionItem,FertilizacionLabor> {
@@ -32,27 +33,27 @@ public class RecomendFertPFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 			featureNumber=cosecha.outCollection.size();
 			List<FertilizacionItem> itemsToShow = new ArrayList<FertilizacionItem>();
 			Cultivo cultivo = cosecha.producto.getValue();
-			Fertilizante fert = this.labor.fertilizante.getValue();
+			Fertilizante fert = this.labor.fertilizanteProperty.getValue();
 			
 			while (reader.hasNext()) {
 				SimpleFeature simpleFeature = reader.next();
-				CosechaItem ci = cosecha.constructFeatureContainer(simpleFeature);
+				CosechaItem ci = cosecha.constructFeatureContainerStandar(simpleFeature,false);
 				FertilizacionItem fi =null;
 				synchronized(labor){
 					fi= new FertilizacionItem();					
 					fi.setId(labor.getNextID());
+					labor.setPropiedadesLabor(fi);
 				}
 				
 				fi.setGeometry(ci.getGeometry());
 				double extraccionP = ci.getRindeTnHa()*cultivo.getExtP();
 				double reposicionP = extraccionP/(fert.getPorcP()/100);
-				fi.setCantFertHa(reposicionP);
+				fi.setDosistHa(reposicionP);
 				fi.setElevacion(10d);
-				fi.setPrecioFert(labor.precioInsumoProperty.get());
-				fi.setPrecioPasada(labor.precioLaborProperty.get());
+				labor.setPropiedadesLabor(fi);
 				//segun el cultivo de la cosecha
 				
-				//TODO terminar de crear el FertilizacionItem
+			
 				labor.insertFeature(fi);
 				itemsToShow.add(fi);
 				featureNumber++;
@@ -77,7 +78,7 @@ public class RecomendFertPFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 			String tooltipText = new String(// TODO ver si se puede instalar un
 					// boton
 					// que permita editar el dato
-					"Densidad: " + df.format(fertFeature.getCantFertHa())
+					"Densidad: " + df.format(fertFeature.getDosistHa())
 					+ " Kg/Ha\n" + "Costo: "
 					+ df.format(fertFeature.getImporteHa()) + " U$S/Ha\n"
 					//+ "Sup: "

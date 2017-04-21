@@ -20,6 +20,7 @@ import dao.config.Semilla;
 import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
+import dao.fertilizacion.FertilizacionItem;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -30,35 +31,30 @@ import javafx.beans.property.StringProperty;
 import utils.ProyectionConstants;
 
 public class SiembraLabor extends Labor<SiembraItem> {
-	private static final String SEMILLAS_POR_BOLSA_DEFAULT = "80000";
-	private static final String ENTRE_SURCO_DEFAULT = "0.525";
-	private static final String SEMILLAS_POR_BOLSA_KEY = "SEMILLAS_POR_BOLSA";
-	private static final String ENTRE_SURCO_KEY = "ENTRE_SURCO";
-	private static Map<String, String> columnsMap= new HashMap<String, String>();
-	//esta columna es la que viene con los mapas de siembra
-	private static final String COLUMNA_SEMILLAS_METRO = "Semillas/m";
-	private static final String COLUMNA_ELEVACION = "Elevacion";
+//	private static final String SEMILLAS_POR_BOLSA_KEY = "SEMILLAS_POR_BOLSA";
+//	private static final String ENTRE_SURCO_KEY = "ENTRE_SURCO";
+
+	//esta columna es la que viene con los mapas de siembra //mentira las siembras vienen con Rate o AppIdRate o AppRate
+	private static final String COLUMNA_DOSIS_SEMILLA = "DosisSemilla";
 	
 	//esta columna es la que voy a exportar
-	public static final String COLUMNA_BOLSAS_HA = "BolsasHa";//=semillasMetro*(ProyectionConstants.METROS2_POR_HA/entreSurco)/semillasPorBolsa;
-	public static final String COLUMNA_PRECIO_BOLSA = "PrecioBolsa";
+	//public static final String COLUMNA_BOLSAS_HA = "BolsasHa";//=semillasMetro*(ProyectionConstants.METROS2_POR_HA/entreSurco)/semillasPorBolsa;
+	public static final String COLUMNA_PRECIO_SEMILLA = "PrecioSemilla";
 	public static final String COLUMNA_PRECIO_PASADA = "CostoLabor";	
-	public static final String COLUMNA_IMPORTE_HA = "importe_ha";
+	public static final String COLUMNA_IMPORTE_HA = "Importe_ha";
 	
-	private static final String PRECIO_SEMILLA = "precioSemilla";
+//keys configuracion
 	private static final String COSTO_LABOR_SIEMBRA = "costoLaborSiembra";
 	private static final String SEMILLA_DEFAULT = "SEMILLA_DEFAULT";
+//	private static final String SEMILLAS_POR_BOLSA_DEFAULT = "80000";
+//	private static final String ENTRE_SURCO_DEFAULT = "0.525";
 
-	public  SimpleDoubleProperty entreSurco =null; //new Double(Configuracion.getInstance().getPropertyOrDefault(ENTRE_SURCO_KEY, ENTRE_SURCO_DEFAULT));
-	public  SimpleDoubleProperty semillasPorBolsa=null;// new Double(Configuracion.getInstance().getPropertyOrDefault(SEMILLAS_POR_BOLSA_KEY, SEMILLAS_POR_BOLSA_DEFAULT));
+//	public  SimpleDoubleProperty entreSurco =null; 
+//	public  SimpleDoubleProperty semillasPorBolsa=null;
 
+	public StringProperty colDosisSemilla;
 
-	public StringProperty colSemillasMetroProperty;
-
-	//public SiembraConfig config=null;
-	public Property<Semilla> semilla=null;
-
-
+	public Property<Semilla> semillaProperty=null;
 
 	public SiembraLabor() {
 		initConfig();
@@ -73,139 +69,45 @@ public class SiembraLabor extends Labor<SiembraItem> {
 	private void initConfig() {
 		List<String> availableColums = this.getAvailableColumns();		
 
-		//config = new SiembraConfig();
 		Configuracion properties = getConfigLabor().getConfigProperties();
 
-		colSemillasMetroProperty = new SimpleStringProperty(
-				properties.getPropertyOrDefault(
-						SiembraLabor.COLUMNA_SEMILLAS_METRO,
-						SiembraLabor.COLUMNA_SEMILLAS_METRO));
-		if(!availableColums.contains(colSemillasMetroProperty.get())&&availableColums.contains(SiembraLabor.COLUMNA_SEMILLAS_METRO)){
-			colSemillasMetroProperty.setValue(SiembraLabor.COLUMNA_SEMILLAS_METRO);
-		}
-		colSemillasMetroProperty.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(SiembraLabor.COLUMNA_SEMILLAS_METRO,
-					bool2.toString());
-		});
-
-		colAmount= new SimpleStringProperty(SiembraLabor.COLUMNA_SEMILLAS_METRO);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
-
-		/*columnas nuevas*/
-		colElevacion = new SimpleStringProperty(
-				properties.getPropertyOrDefault(SiembraLabor.COLUMNA_ELEVACION,
-						SiembraLabor.COLUMNA_ELEVACION));
-		if(!availableColums.contains(colElevacion.get())&&availableColums.contains(SiembraLabor.COLUMNA_ELEVACION)){
-			colElevacion.setValue(SiembraLabor.COLUMNA_ELEVACION);
-		}
-		colElevacion.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(SiembraLabor.COLUMNA_ELEVACION,
-					bool2.toString());
-		});
-
-//		colAncho = new SimpleStringProperty(properties.getPropertyOrDefault(
-//				SiembraLabor.COLUMNA_ANCHO, SiembraLabor.COLUMNA_ANCHO));
-//		if(!availableColums.contains(colAncho.get())&&availableColums.contains(SiembraLabor.COLUMNA_ANCHO)){
-//			colAncho.setValue(SiembraLabor.COLUMNA_ANCHO);
-//		} 
-//		colAncho.addListener((obs, bool1, bool2) -> {
-//			properties.setProperty(SiembraLabor.COLUMNA_ANCHO, bool2);
-//		});// bool2 es un string asi que no necesito convertirlo
-//
-//		colDistancia = new SimpleStringProperty(properties.getPropertyOrDefault(
-//				SiembraLabor.COLUMNA_DISTANCIA, SiembraLabor.COLUMNA_DISTANCIA));
-//		if(!availableColums.contains(colAncho.get())&&availableColums.contains(SiembraLabor.COLUMNA_DISTANCIA)){
-//			colDistancia.setValue(SiembraLabor.COLUMNA_DISTANCIA);
-//		} 
-//		colAncho.addListener((obs, bool1, bool2) -> {
-//			properties.setProperty(SiembraLabor.COLUMNA_ANCHO, bool2);
-//		});// bool2 es un string asi que no necesito convertirlo
-//
-//		colCurso = new SimpleStringProperty(properties.getPropertyOrDefault(
-//				SiembraLabor.COLUMNA_CURSO, SiembraLabor.COLUMNA_CURSO));
-//		if(!availableColums.contains(colCurso.get())&&availableColums.contains(SiembraLabor.COLUMNA_CURSO)){
-//			colCurso.setValue(SiembraLabor.COLUMNA_CURSO);
-//		}
-//		colCurso.addListener((obs, bool1, bool2) -> {
-//			properties.setProperty(SiembraLabor.COLUMNA_CURSO, bool2.toString());
+		colDosisSemilla = initStringProperty(SiembraLabor.COLUMNA_DOSIS_SEMILLA, properties, availableColums);
+		colAmount= new SimpleStringProperty(SiembraLabor.COLUMNA_DOSIS_SEMILLA);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
+		
+//		entreSurco = new SimpleDoubleProperty(
+//				Double.parseDouble(properties.getPropertyOrDefault(
+//						SiembraLabor.ENTRE_SURCO_KEY, ENTRE_SURCO_DEFAULT))
+//				);		
+//		entreSurco.addListener((obs, bool1, bool2) -> {
+//			properties.setProperty(SiembraLabor.ENTRE_SURCO_KEY,
+//					bool2.toString());
 //		});
-//
-//		colDistancia = new SimpleStringProperty(
-//				properties.getPropertyOrDefault(SiembraLabor.COLUMNA_DISTANCIA,
-//						SiembraLabor.COLUMNA_DISTANCIA));
-//		if(!availableColums.contains(colDistancia.get())&&availableColums.contains(SiembraLabor.COLUMNA_DISTANCIA)){
-//			colDistancia.setValue(SiembraLabor.COLUMNA_DISTANCIA);
-//		}
-//		colDistancia.addListener((obs, bool1, bool2) -> {
-//			properties.setProperty(SiembraLabor.COLUMNA_DISTANCIA,
+//		
+//		semillasPorBolsa = new SimpleDoubleProperty(
+//				Double.parseDouble(properties.getPropertyOrDefault(
+//						SiembraLabor.SEMILLAS_POR_BOLSA_KEY, SEMILLAS_POR_BOLSA_DEFAULT))
+//				);		
+//		semillasPorBolsa.addListener((obs, bool1, bool2) -> {
+//			properties.setProperty(SiembraLabor.SEMILLAS_POR_BOLSA_KEY,
 //					bool2.toString());
 //		});
 
-		/**/
-		
-		entreSurco = new SimpleDoubleProperty(
-				Double.parseDouble(properties.getPropertyOrDefault(
-						SiembraLabor.ENTRE_SURCO_KEY, ENTRE_SURCO_DEFAULT))
-				);		
-		entreSurco.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(SiembraLabor.ENTRE_SURCO_KEY,
-					bool2.toString());
-		});
-		
-		semillasPorBolsa = new SimpleDoubleProperty(
-				Double.parseDouble(properties.getPropertyOrDefault(
-						SiembraLabor.SEMILLAS_POR_BOLSA_KEY, SEMILLAS_POR_BOLSA_DEFAULT))
-				);		
-		semillasPorBolsa.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(SiembraLabor.SEMILLAS_POR_BOLSA_KEY,
-					bool2.toString());
-		});
 
-		precioLaborProperty = new SimpleDoubleProperty(
-				Double.parseDouble(properties.getPropertyOrDefault(
-						SiembraLabor.COLUMNA_PRECIO_PASADA, "0")));
-		precioLaborProperty.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(SiembraLabor.COLUMNA_PRECIO_PASADA,
-					bool2.toString());
+		precioInsumoProperty = initDoubleProperty(SiembraLabor.COLUMNA_PRECIO_SEMILLA, "0", properties);
+
+		Semilla sDefault = Semilla.semillas.get(Semilla.SEMILLA_DE_MAIZ);
+		String semillaKEY = properties.getPropertyOrDefault(SiembraLabor.SEMILLA_DEFAULT, sDefault.getNombre());
+		semillaProperty = new SimpleObjectProperty<Semilla>(Semilla.semillas.get(semillaKEY));//values().iterator().next());
+		semillaProperty.addListener((obs, bool1, bool2) -> {
+			properties.setProperty(SiembraLabor.SEMILLA_DEFAULT,
+					bool2.getNombre());
 		});
-
-		precioInsumoProperty = new SimpleDoubleProperty(
-				Double.parseDouble(properties.getPropertyOrDefault(
-						SiembraLabor.COLUMNA_PRECIO_BOLSA, "0")));
-		precioInsumoProperty.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(SiembraLabor.COLUMNA_PRECIO_BOLSA,
-					bool2.toString());
-		});
-
-		clasificador.tipoClasificadorProperty = new SimpleStringProperty(
-				properties.getPropertyOrDefault(Clasificador.TIPO_CLASIFICADOR,
-						Clasificador.CLASIFICADOR_JENKINS));
-		clasificador.tipoClasificadorProperty
-		.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(Clasificador.TIPO_CLASIFICADOR,
-					bool2.toString());
-		});
-
-		clasificador.clasesClasificadorProperty = new SimpleIntegerProperty(Integer.parseInt(properties.getPropertyOrDefault(Clasificador.NUMERO_CLASES_CLASIFICACION,String.valueOf(Clasificador.colors.length))));
-		clasificador.clasesClasificadorProperty.addListener((obs,bool1,bool2)->{
-			properties.setProperty(Clasificador.NUMERO_CLASES_CLASIFICACION, bool2.toString());
-		}
-				);
-
-		String fertKEY = properties.getPropertyOrDefault(
-				SiembraLabor.SEMILLA_DEFAULT, "Semilla de Soja");
-		semilla = new SimpleObjectProperty<Semilla>(Semilla.semillas.get(fertKEY));//values().iterator().next());
 	}
 
 	@Override
 	public String getTypeDescriptors() {
-		/*
-		 * getBolsasHa(),
-				getPrecioBolsa(),
-				getPrecioPasada(),
-				getImporteHa()
-		 */
-		String type = SiembraLabor.COLUMNA_BOLSAS_HA + ":Double,"
-				+ SiembraLabor.COLUMNA_PRECIO_BOLSA + ":Double,"
+		String type = SiembraLabor.COLUMNA_DOSIS_SEMILLA + ":Double,"
+				+ SiembraLabor.COLUMNA_PRECIO_SEMILLA + ":Double,"
 				+ SiembraLabor.COLUMNA_PRECIO_PASADA + ":Double,"
 				+ SiembraLabor.COLUMNA_IMPORTE_HA + ":Double";
 		return type;
@@ -218,41 +120,29 @@ public class SiembraLabor extends Labor<SiembraItem> {
 		SiembraItem siembraItem = new SiembraItem(next);
 		super.constructFeatureContainerStandar(siembraItem,next,newIDS);
 
-
-		Double bolsasHa = LaborItem.getDoubleFromObj(next
-				.getAttribute(COLUMNA_BOLSAS_HA));
-	//	bolsasHa = bolsasHa*(ProyectionConstants.METROS2_POR_HA/ENTRE_SURCO)/SEMILLAS_POR_BOLSA;
-		siembraItem.setBolsasHa(bolsasHa);
-
-		siembraItem.setPrecioBolsa(this.precioInsumoProperty.get());
-		siembraItem.setPrecioPasada(this.precioLaborProperty.get());	
-		//ci.setImporteHa(cantFertHa * precioFert + precioPasada);//no hace falta setearlo porque se actualiza en el get
-
+		siembraItem.setDosisHa( LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DOSIS_SEMILLA)));
+//		siembraItem.setPrecioInsumo(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_PRECIO_SEMILLA)));
+//		siembraItem.setCostoLaborHa(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_PRECIO_PASADA)));	
+//		siembraItem.setImporteHa(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_IMPORTE_HA)));	
+		setPropiedadesLabor(siembraItem);
 		return siembraItem;
 	}
-
+	
+	public void setPropiedadesLabor(SiembraItem si){
+		si.setPrecioInsumo(this.precioInsumoProperty.get());
+		si.setCostoLaborHa(this.precioLaborProperty.get());	
+	}
 
 	@Override
 	public SiembraItem constructFeatureContainer(SimpleFeature next) {
-//		SiembraItem si = new SiembraItem(next);
-//		si.id=getNextID();
 		SiembraItem si = new SiembraItem(next);
 		super.constructFeatureContainer(si,next);
 		
+		//Double bolsasHa = LaborItem.getDoubleFromObj(next.getAttribute(colSemillasMetroProperty.get()));
+		//Double semillasMetro = bolsasHa*(ProyectionConstants.METROS2_POR_HA/entreSurco.get())/semillasPorBolsa.get();
 
-		Double bolsasHa = LaborItem.getDoubleFromObj(next
-				.getAttribute(colSemillasMetroProperty.get()));
-		Double semillasMetro = bolsasHa*(ProyectionConstants.METROS2_POR_HA/entreSurco.get())/semillasPorBolsa.get();
-
-		si.setBolsasHa(semillasMetro);
-		//	Object cantObj = harvestFeature.getAttribute(getColumn(KG_HA_COLUMN));
-		//	ci.cantFertHa = super.getDoubleFromObj(cantObj);
-
-
-		si.setPrecioBolsa(this.precioInsumoProperty.get());
-		si.setPrecioPasada(this.precioLaborProperty.get());	
-		//ci.setImporteHa(cantFertHa * precioFert + precioPasada);//no hace falta setearlo porque se actualiza en el get
-
+		si.setDosisHa(LaborItem.getDoubleFromObj(next.getAttribute(colDosisSemilla.get())));
+		setPropiedadesLabor(si);
 		return si;
 	}
 
@@ -265,16 +155,10 @@ public class SiembraLabor extends Labor<SiembraItem> {
 	public SiembraConfig getConfiguracion() {
 		return (SiembraConfig) config;
 	}
-
-	public void setColumnsMap(Map<String, String> columns) {
-		columnsMap=columns;
-		colSemillasMetroProperty.setValue(columnsMap.get(SiembraLabor.COLUMNA_SEMILLAS_METRO));
-
-	}
 	
 	public static List<String> getRequieredColumns() {
 		List<String> requiredColumns = new ArrayList<String>();
-		requiredColumns.add(COLUMNA_SEMILLAS_METRO);		
+		requiredColumns.add(COLUMNA_DOSIS_SEMILLA);		
 		return requiredColumns;
 	}
 
@@ -290,17 +174,4 @@ public class SiembraLabor extends Labor<SiembraItem> {
 		}
 		return config;
 	}
-
-	//	public static void setColumnsMap(Map<String, String> columns) {
-	//	columnsMap.clear();
-	//	columnsMap.putAll(columns);
-	//	
-	//	columns.forEach(new BiConsumer<String, String>(){
-	//		@Override
-	//		public void accept(String key, String value) {
-	//			Configuracion.getInstance().setProperty(key, value);				
-	//		}
-	//		
-	//	});
-	//}
 }

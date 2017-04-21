@@ -67,11 +67,13 @@ public class Clasificador {
 		} else if(clasifier != null){			
 			rangoIni = clasifier.getTitle(index);		
 		}
-
+if(rangoIni!=null){
 		String [] partesIni = rangoIni.split("\\.\\.");
 		DecimalFormat df = new DecimalFormat("0.00");
 		return df.format(new Double(partesIni[0]))+"~"+df.format(new Double(partesIni[1]));// +"-"+histograma[j+1];
-
+} else{
+	return "error";
+}
 		//		System.err.println("Error no hay un clasificador seleccionado");
 		//		return label;
 	}
@@ -198,12 +200,12 @@ public class Clasificador {
 			 desvioEstandar= desvios/(elementosItem.size());
 		}
 	
-		System.out.println("termine de ordenar los elementos en constructHistogram");
+	//	System.out.println("termine de ordenar los elementos en constructHistogram");
 		histograma=new Double[getNumClasses()];
 
 
 	
-		System.out.println("hay mas elementos que colores");
+	//	System.out.println("hay mas elementos que colores");
 
 
 		int desviosEstandar = 8;
