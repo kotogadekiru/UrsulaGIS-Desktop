@@ -85,6 +85,7 @@ public class MargenItem extends LaborItem{
 	@Override
 	public Double getAmount() {
 		if(showMargen){
+			
 			return getMargenPorHa();
 		}
 		return getRentabilidadHa();
