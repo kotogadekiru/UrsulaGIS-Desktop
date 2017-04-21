@@ -96,6 +96,7 @@ public class MargenItem extends LaborItem{
 	
 	public Double getImporteCosechaHa() {
 		return this.importeCosechaHa; 
+		
 	}
 	
 	public Double getCostoFijoPorHa() {
