@@ -25,7 +25,7 @@ import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
-import mmg.gui.nww.LaborLayer;
+import gui.nww.LaborLayer;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
 

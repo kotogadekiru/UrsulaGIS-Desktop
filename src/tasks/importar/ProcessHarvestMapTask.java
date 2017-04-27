@@ -57,6 +57,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 
 	private List<Geometry> geomBuffer = new ArrayList<Geometry>();
 	private List<Double> heightBuffer = new ArrayList<Double>();
+	private Boolean rindeEsFlow;
 
 
 	public ProcessHarvestMapTask(CosechaLabor cosechaLabor){//RenderableLayer layer, FileDataStore store, double d, Double correccionRinde) {
@@ -70,7 +71,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 
 		cantidadVarianzasTolera =cosechaLabor.getConfiguracion().nVarianzasToleraProperty().get();
 		toleranciaCoeficienteVariacion =cosechaLabor.getConfiguracion().toleranciaCVProperty().get(); //3;//9;
-
+		rindeEsFlow =cosechaLabor.getConfiguracion().correccionFlowToRindeProperty().getValue();
 		//this.precioGrano = cosechaLabor.precioGranoProperty.doubleValue();
 
 	}
@@ -80,7 +81,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 
 		FeatureReader<SimpleFeatureType, SimpleFeature> reader =null;
 		String mappableColumn = null;
-		String moistureColumn = null;
+		
 		//	CoordinateReferenceSystem storeCRS =null;
 		if(labor.getInStore()!=null){
 			if(labor.outCollection!=null)labor.outCollection.clear();
@@ -92,8 +93,6 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			String colName = att.getName().toString();
 				if("Mappable".equalsIgnoreCase(colName)){
 				mappableColumn=colName;	
-				} else if("Moisture_s".equalsIgnoreCase(colName)){
-					moistureColumn=colName;	
 				}
 			}
 			
@@ -119,12 +118,12 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 				* ProyectionConstants.metersToLat();
 
 		
-		while (reader.hasNext()) {
+		while (readerHasNext(reader)) {//reader.hasNext() tira un NegativeArrayException
 			featureNumber++;
 			updateProgress(featureNumber/divisor, featureCount);
 			
 			SimpleFeature simpleFeature = reader.next();
-			//TODO si simpleFeature contiene la columna Mappable solo quedarme con los registros donde Mappable==1
+			// si simpleFeature contiene la columna Mappable solo quedarme con los registros donde Mappable==1
 			//TODO al convertir de flow a rinde tomar en cuenta la columna Moisture_s 0~20
 			if(mappableColumn!=null ){
 				Object mappable = simpleFeature.getAttribute(mappableColumn);
@@ -135,6 +134,8 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 				}
 			}
 			CosechaItem ci = labor.constructFeatureContainer(simpleFeature);
+			
+		
 			//ci.getRumbo()==90 ||ci.getRumbo()==270 ||			
 			//if(ci.getAncho()==0||ci.getDistancia()==0||					ci.getAmount()==0)continue;//XXX evito ingresar puntos invalidos
 			distanciaAvanceMax = Math.max(ci.getDistancia(), distanciaAvanceMax);//TODO pasar al while
@@ -259,8 +260,6 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 				}
 
 			} else { // no es point. Estoy abriendo una cosecha de poligonos.
-				
-				//FIXME aunque sea de polygonos tengo que volver a calcular el importe y el precio
 						List<Polygon> mp = getPolygons(ci);
 								Polygon p = mp.get(0);
 								
@@ -268,6 +267,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 									c.z=ci.getElevacion();
 								}
 								ci.setGeometry(p);
+				
 				//	featureTree.insert(p.getEnvelopeInternal(), cosechaFeature);
 				//TODO si el filtro de superposiciones esta activado tambien sirve para los poligonos
 				
@@ -366,6 +366,15 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 	//		}
 	//	}
 
+	private boolean readerHasNext(FeatureReader<SimpleFeatureType, SimpleFeature> reader) {
+		try{
+			return reader.hasNext();
+		}catch(Exception e ){
+			e.printStackTrace();
+			return false;
+		}
+	}
+
 	private List<CosechaItem> resumirGeometrias() {
 		//TODO antes de proceder a dibujar las features
 		//agruparlas por clase y hacer un buffer cero
@@ -434,25 +443,22 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 					buffered= EnhancedPrecisionOp.buffer(colectionCat, bufer);
 				}
 
-				
 				SimpleFeature fIn = colections.get(i).get(0);
-				//FIXME si la cosecha no fue clonada o guardada este metodo falla; rinde es 0 porque no se puede leer la cantidad de null
-				CosechaItem ci=labor.constructFeatureContainerStandar(fIn,true);
-				//	ci.setId(new Double(i));//creo solo un feature por categoria
+				//TODO recorrer buffered y crear una feature por cada geometria de la geometry collection
+				for(int igeom=0;igeom<buffered.getNumGeometries();igeom++){
+					Geometry g = buffered.getGeometryN(igeom);
+				
+					CosechaItem ci=labor.constructFeatureContainerStandar(fIn,true);
+					ci.setRindeTnHa(rindeProm);
+					ci.setDesvioRinde(desvioPromedio);
+					ci.setElevacion(elevProm);
 
-				//if(rindeProm == 0.0)continue;
-				ci.setRindeTnHa(rindeProm);
-				ci.setDesvioRinde(desvioPromedio);
-				ci.setElevacion(elevProm);
+					ci.setGeometry(g);
 
-				ci.setGeometry(buffered);
-
-				itemsCategoria.add(ci);
-			//	itemsCategoria.set(i, ci);
-				SimpleFeature f = ci.getFeature(labor.featureBuilder);
-				boolean res = newOutcollection.add(f);
-
-
+					itemsCategoria.add(ci);
+					SimpleFeature f = ci.getFeature(labor.featureBuilder);
+					boolean res = newOutcollection.add(f);
+				}
 			}	
 
 		}//termino de recorrer las categorias

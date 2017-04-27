@@ -1,5 +1,6 @@
 package dao.config;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -20,6 +21,8 @@ import javafx.beans.property.SimpleBooleanProperty;
  *
  */
 public class Configuracion{
+	private static final String URSULA_GIS_APPDATA_FOLDER = "UrsulaGIS";
+	private static final String APPDATA = "APPDATA";
 	private static final String DEFAULT_CONFIG_PROPERTIES = "/dao/config/config.properties";
 	private static final String FILE_CONFIG_PROPERTIES = "config.properties";
 	private final Properties configProp = new Properties();
@@ -38,6 +41,19 @@ public class Configuracion{
 	}
 
 	private Configuracion() {		
+		String currentUsersHomeDir =System.getenv(APPDATA);
+	//	System.out.println("obtuve la direccion de appData : "+currentUsersHomeDir);
+		//obtuve la direccion de appData : C:\Users\quero\AppData\Roaming
+		String ursulaGISFolder = currentUsersHomeDir + File.separator + URSULA_GIS_APPDATA_FOLDER;
+		this.propertiesFileUrl=ursulaGISFolder+ File.separator +FILE_CONFIG_PROPERTIES;
+		File propF =new File(propertiesFileUrl);
+		try {
+			propF.getParentFile().mkdirs();
+			propF.createNewFile();
+		} catch (IOException e) {
+			System.err.println("no pude crear el config.properties");
+			e.printStackTrace();
+		}
 		loadProperties();
 	
 //		generarMapaRentabilidadFromShpProperty.setValue(
@@ -119,9 +135,10 @@ public class Configuracion{
 	public void save() {
 		try {
 			FileWriter writer = new FileWriter(propertiesFileUrl);
-			configProp.store(writer,"UrsulaGIS");//Calendar.getInstance().getTime().toString());
+			configProp.store(writer,URSULA_GIS_APPDATA_FOLDER);//Calendar.getInstance().getTime().toString());
 			writer.close();
 		} catch (IOException e) {
+			System.err.println("fallo el guardar config.properties en "+propertiesFileUrl);
 			e.printStackTrace();
 		}
 	}

@@ -80,6 +80,7 @@ import utils.ProyectionConstants;
 public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> extends Task<E>{
 
 
+	private static final String TASK_CLOSE_ICON = "/gui/event-close.png";
 	public static final String ZOOM_TO_KEY = "ZOOM_TO";
 	protected int featureCount=0;
 	protected int featureNumber=0;
@@ -496,7 +497,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	/*
 	 * metodo que toma una lista de Features y los convierte a puntos en una superficie analitica para mostrar en la pantalla
 	 */
-	public RenderableLayer createAnalyticSurface(Collection<FC> items){
+	private RenderableLayer createAnalyticSurface(Collection<FC> items){
 		/* creo los datos para el layer*/
 		double resolution = 10*ProyectionConstants.metersToLong();//si aumento la resolucion aumento los lugares sin informacion; entonces deberia hacer un interpolado para que no se vea tan feo
 
@@ -510,8 +511,9 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		Double maxElev = labor.maxElev;
 		Double minElev = labor.minElev;
 
-		int  width=(int) ((maxX-minX)/resolution);
-		int  height=(int) ((maxY-minY)/resolution);
+		int offset = 3;//para que quede un lugar a cada lado mas el desplazamiento
+		int  width=(int) ((maxX-minX)/resolution)+offset;
+		int  height=(int) ((maxY-minY)/resolution)+offset;
 		int maxIndex =  width*height;
 
 		//indexar las features de acuerdo a su ubicacion
@@ -519,43 +521,32 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			Point center = it.getGeometry().getCentroid();
 			Coordinate coord = center.getCoordinate();
 
-			int col= (int)((coord.x-minX) / resolution);//x=-61.910184747992666 x0=-61.92148090289199 
-			if(col>width){
-				System.out.println("i="+col+" es mayor que width="+width);
-				col=(int) width;
-
-			}
-
-			int fila = (int)((-coord.y+maxY) / resolution);//y-33.66938628650965 y0=-33.67828699276171
-			if(fila>height){
-				System.out.println("i="+fila+" es mayor que width="+height);
-				fila= height;
-			}
-
-			int index = (col+fila*width);//104+82*148.5=12281 12281
-			if(index >   maxIndex){			
-				System.out.println("hubo un overflow al indexar "+index+" => "+(maxIndex));
-				index =   (maxIndex);
-			}
+			int col= (int)((coord.x-minX) / resolution)+1;
+			int fila = (int)((-coord.y+maxY) / resolution)+1;
+			int index = (col+fila*width);
 
 			return index;
 		}));
 
 		AnalyticSurface.GridPointAttributes transparent  =  AnalyticSurface.createGridPointAttributes(0, new java.awt.Color(0,0,0,0));
+	
 		LinkedList<AnalyticSurface.GridPointAttributes> attributesList = new LinkedList<AnalyticSurface.GridPointAttributes>();
-
-
-
-		System.out.println("ubicando secuencialmente en su lugar los "+indexMap.size()+" elementos de indexMap");
 
 		for(int index=0;index<maxIndex;index++){
 			GridPointAttributes newGridPoint  = transparent;
 			List<FC> indexItems = indexMap.getOrDefault(index, null);		
 
+			//rellenando los huecos con el promedio de los vecinos
 			if(indexItems==null){
 				List<FC> average = new ArrayList<FC>();
-				average.addAll(indexMap.getOrDefault(index+1,  new ArrayList<FC>()));
-				average.addAll(indexMap.getOrDefault(index-1,  new ArrayList<FC>()));
+				ArrayList<FC> defaultL = new ArrayList<FC>();
+				
+				int w =1;
+				for(int ofset =-w;ofset<w+1;ofset++){
+					average.addAll(indexMap.getOrDefault(index+ofset, defaultL ));//solo promedia con los de los costados
+					average.addAll(indexMap.getOrDefault(index+ofset*width, defaultL ));//arriba y abajo
+					defaultL.clear();
+				}
 				indexItems=average;
 			}
 			if(indexItems!=null && indexItems.size()>0){
@@ -563,13 +554,8 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				float elev=0;
 				double amount=0;
 				for(FC it : indexItems){
-					//	Color color = labor.getClasificador().getColorFor(it);
-					//					r=+(float) color.getRed();//0.99607843
-					//					g=+(float) color.getGreen();
-					//					b=+(float) color.getBlue();
 					elev+= it.getElevacion()-minElev;
 					amount+=it.getAmount();
-
 				}
 
 				int n = indexItems.size();
@@ -582,7 +568,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			}
 			//	System.out.println("agregando el elemento "+index);
 			attributesList.add(index,newGridPoint);
-
+				
 		}
 		//		System.out.println("attributesList size = "+attributesList.size());
 		//		System.out.println("deberia ser "+(maxIndex+1));
@@ -1105,7 +1091,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			this.cancel();
 			this.uninstallProgressBar();
 		});
-		Image imageDecline = new Image(getClass().getResourceAsStream("/mmg/gui/event-close.png"));
+		Image imageDecline = new Image(getClass().getResourceAsStream(TASK_CLOSE_ICON));
 		cancel.setGraphic(new ImageView(imageDecline));
 
 		//progressBarLabel.setStyle("-fx-color: black");

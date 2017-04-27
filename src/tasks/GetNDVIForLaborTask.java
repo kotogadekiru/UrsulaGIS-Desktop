@@ -46,7 +46,7 @@ import utils.UnzipUtility;
 
 
 public class GetNDVIForLaborTask extends Task<List<File>>{
-	private static final String MMG_GUI_EVENT_CLOSE_PNG = "/mmg/gui/event-close.png";
+	private static final String MMG_GUI_EVENT_CLOSE_PNG = "/gui/event-close.png";
 	public static final String ZOOM_TO_KEY = "ZOOM_TO";
 	protected int featureCount=0;
 	protected int featureNumber=0;
@@ -65,7 +65,7 @@ public class GetNDVIForLaborTask extends Task<List<File>>{
 	private static final String FEATURES = "features";
 	private static final String DATA = "data";
 	private static final String END2 = "end";
-	private static final String BEGIN = "begin";
+	private static final String BEGIN = "begin"; //Data availability (time)	Jun 23, 2015 - Apr 18, 2017
 	
 	Object placementObject = null;
 	private LocalDate end;

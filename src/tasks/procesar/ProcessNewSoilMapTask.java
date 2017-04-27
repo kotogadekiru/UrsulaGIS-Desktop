@@ -10,7 +10,6 @@ import java.util.stream.DoubleStream;
 import javafx.beans.property.Property;
 import javafx.scene.Group;
 import javafx.scene.shape.Path;
-import mmg.gui.nww.LaborLayer;
 import tasks.ProcessMapTask;
 
 import org.geotools.data.FileDataStore;
@@ -47,6 +46,7 @@ import dao.pulverizacion.PulverizacionItem;
 import dao.siembra.SiembraItem;
 import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
+import gui.nww.LaborLayer;
 
 public class ProcessNewSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 	//public Group map = new Group();

@@ -25,6 +25,7 @@ public class SueloItem extends LaborItem {
 	
 	public static final String PROF_NAPA= "Prof Napa";
 	public static final String AGUA_PERFIL= "Agua Perf";
+
 	
 	//los ingenieros usan 2.6 para pasar de ppm a kg/ha. deben tomar la densidad en 1.3 en vez de 2
 	//para pasar de Ppm a kg/ha hay que multiplicar por 2.6. 
@@ -38,6 +39,7 @@ public class SueloItem extends LaborItem {
 	/*La profundidad en cm hasta la napa*/
 	private Double profNapa=new Double(0);	
 	private Double aguaPerfil=new Double(0);	
+	//private Double elevacion=new Double(0);	elevacion la hereda de LaborItem
 	
 	public SueloItem(SimpleFeature fertFeature) {
 		super(fertFeature);
@@ -61,7 +63,7 @@ public class SueloItem extends LaborItem {
 				getPpmS(),
 				getPpmMO(),
 				getProfNapa(),
-				getAguaPerfil(),
+				getAguaPerfil()				
 		};
 		return elements;
 	}

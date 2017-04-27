@@ -85,12 +85,15 @@ public class JuntarShapefilesTask {
 					if(attClassName.contains("com.vividsolutions.jts.geom")){
 						//System.out.println("ignorando el atributo "+att);
 						continue;}
-					String nAttName = i+att.getName().toString();
+					String nAttName = att.getName().toString();// i+att.getName().toString();
 					String nAtt=new String(nAttName+":"+attClassName);
 					storeAttributeMapping.put(att.getName().toString(), nAttName);
-					newDescriptors.add(nAtt);
+					System.out.println(nAtt+" en "+store.getNames().get(0));
+					if(!newDescriptors.contains(nAtt)){
+						newDescriptors.add(nAtt);
+					}
 				}
-
+				System.out.println("newDescriptors al final:\n"+newDescriptors);
 				ReferencedEnvelope b = store.getFeatureSource().getBounds();
 				if(unionEnvelope==null){
 					unionEnvelope=b;
@@ -238,11 +241,11 @@ public class JuntarShapefilesTask {
 			SimpleFeature item = construirFeaturePromedio(storeFeatures,envelope);  
 			if(item!=null){
 				//Map<String, String> storeMapping = attributeMaping.get(store);
-				for(String storeName : storeMapping.keySet()){
-					String nuStoreName = storeMapping.get(storeName);
-					Object nuStoreItemValue = item.getAttribute(storeName);
+				for(String storeAttName : storeMapping.keySet()){
+					String nuStoreAttName = storeMapping.get(storeAttName);
+					Object nuStoreItemValue = item.getAttribute(storeAttName);
 					//	System.out.println("storeName="+storeName+" nuStoreName="+nuStoreName+" value="+nuStoreItemValue);
-					fBuilder.set(nuStoreName, nuStoreItemValue);
+					fBuilder.set(nuStoreAttName, nuStoreItemValue);//por cada store se vuelve a setear cada attribute si se repiten
 				}
 			}
 		}

@@ -16,6 +16,7 @@ import org.geotools.data.FileDataStore;
 import org.geotools.feature.SchemaException;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.feature.type.AttributeType;
 
 import dao.Clasificador;
 import dao.LaborItem;
@@ -159,6 +160,22 @@ public class CosechaLabor extends Labor<CosechaItem> {
 				rindeDouble = rindeDouble * constantes / (divisor);
 			} else {
 				rindeDouble =0.0;
+			}
+			
+			List<AttributeType> descriptors = harvestFeature.getType().getTypes();
+			String moistureColumn =null;
+			for(AttributeType att:descriptors){
+			String colName = att.getName().toString();
+				 if("Moisture_s".equalsIgnoreCase(colName)){
+					moistureColumn =colName;	
+				}
+			}
+			
+			if(moistureColumn!=null){
+				Double moisture =LaborItem.getDoubleFromObj(harvestFeature.getAttribute(moistureColumn));
+				Double rindeH = ci.getRindeTnHa();
+				Double k = 100/(100+moisture);
+				ci.setRindeTnHa(rindeH*k);
 			}
 		}
 
