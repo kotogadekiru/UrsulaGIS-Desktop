@@ -1,12 +1,16 @@
 package dao.margen;
 
+import javax.persistence.Entity;
+
 import org.opengis.feature.simple.SimpleFeature;
 
 
 import dao.LaborItem;
+import dao.config.Agroquimico;
 import lombok.Data;
 
 @Data
+@Entity
 public class MargenItem extends LaborItem{
 	private Double importePulvHa =new Double(0);//= getImportePulv(harvestPolygon);
 	private Double importeFertHa =new Double(0);//= getImporteFert(harvestPolygon);
@@ -62,8 +66,13 @@ public class MargenItem extends LaborItem{
 		this.area = area;
 	}
 
+	//FIXME no toma en cuenta el costo variable por tonelada (Flete+Gastos de comercializacion)
+	//Lo paso a la cosecha?
+	//lo pongo en variables de la labor? el problema es que no tengo el dato del rinde.
 	public Double getMargenPorHa() {
-		return margenPorHa;
+		return  (getImporteCosechaHa()
+					- getImportePulvHa() - getImporteFertHa() - getImporteSiembraHa()-getCostoFijoPorHa());
+		//return margenPorHa;
 	}
 
 	public void setMargenPorHa(Double margenPorHa) {
@@ -90,22 +99,22 @@ public class MargenItem extends LaborItem{
 		return getRentabilidadHa();
 	}
 
-	public void setImporteCosechaHa(Double importeCosechaPorHa) {
-		this.importeCosechaHa =importeCosechaPorHa; 
-	}
+//	public void setImporteCosechaHa(Double importeCosechaPorHa) {
+//		this.importeCosechaHa =importeCosechaPorHa; 
+//	}
+//	
+//	public Double getImporteCosechaHa() {
+//		return this.importeCosechaHa; 
+//		
+//	}
 	
-	public Double getImporteCosechaHa() {
-		return this.importeCosechaHa; 
-		
-	}
-	
-	public Double getCostoFijoPorHa() {
-		return costoFijoPorHa;
-	}
-
-	public void setCostoFijoPorHa(Double costoFijoPorHa) {
-		this.costoFijoPorHa = costoFijoPorHa;
-	}
+//	public Double getCostoFijoPorHa() {
+//		return costoFijoPorHa;
+//	}
+//
+//	public void setCostoFijoPorHa(Double costoFijoPorHa) {
+//		this.costoFijoPorHa = costoFijoPorHa;
+//	}
 
 
 	@Override

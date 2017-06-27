@@ -2,28 +2,24 @@ package dao.suelo;
 
 import java.util.List;
 
+import javax.persistence.Entity;
+
 import org.geotools.data.FileDataStore;
 import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
 
-import dao.Clasificador;
 import dao.Labor;
 import dao.LaborConfig;
 import dao.LaborItem;
+import dao.config.Agroquimico;
 import dao.config.Configuracion;
-import dao.config.Fertilizante;
-import dao.cosecha.CosechaLabor;
-import dao.fertilizacion.FertilizacionConfig;
-import dao.fertilizacion.FertilizacionItem;
-import dao.fertilizacion.FertilizacionLabor;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Data;
+
 @Data
+@Entity
 public class Suelo extends Labor<SueloItem>{
 	private static final double DENSIDAD_SUELO_20CM = 2.6;
 	//los nombres de las columnas estandar
@@ -60,6 +56,11 @@ public class Suelo extends Labor<SueloItem>{
 	protected DoubleProperty initPrecioLaborHaProperty() {
 		return new SimpleDoubleProperty();
 	}
+	
+	@Override
+	protected DoubleProperty initPrecioInsumoProperty() {
+		return new SimpleDoubleProperty();
+	}
 
 	@Override
 	public String getTypeDescriptors() {
@@ -92,6 +93,13 @@ public class Suelo extends Labor<SueloItem>{
 	public SueloItem constructFeatureContainer(SimpleFeature next) {
 		SueloItem si = new SueloItem(next);
 		super.constructFeatureContainer(si,next);
+		si.setPpmN(LaborItem.getDoubleFromObj(next.getAttribute(this.colNProperty.get())));
+		si.setPpmP(LaborItem.getDoubleFromObj(next.getAttribute(this.colPProperty.get())));
+		si.setPpmK(LaborItem.getDoubleFromObj(next.getAttribute(this.colKProperty.get())));
+		si.setPpmS(LaborItem.getDoubleFromObj(next.getAttribute(this.colSProperty.get())));
+		si.setPpmMO(LaborItem.getDoubleFromObj(next.getAttribute(this.colMOProperty.get())));
+		si.setAguaPerfil(LaborItem.getDoubleFromObj(next.getAttribute(this.colAguaPerfProperty.get())));
+		si.setProfNapa(LaborItem.getDoubleFromObj(next.getAttribute(this.colProfNapaProperty.get())));
 		return si;
 	}
 
@@ -125,5 +133,12 @@ public class Suelo extends Labor<SueloItem>{
 
 	public Double getDensidad() {
 		return DENSIDAD_SUELO_20CM;
+	}
+
+	public void setPropiedadesLabor(SueloItem ci) {
+//		ci.precioTnGrano =this.precioGranoProperty.get();
+//		ci.costoLaborHa=this.precioLaborProperty.get();
+//		ci.costoLaborTn=this.costoCosechaTnProperty.get();
+		
 	}
 }

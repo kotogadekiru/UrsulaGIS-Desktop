@@ -1,15 +1,25 @@
 package gui.nww;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import javax.media.opengl.GLContext;
+
+import gov.nasa.worldwind.geom.Sector;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import gov.nasa.worldwind.render.DrawContext;
+import gov.nasa.worldwind.render.ExtrudedPolygon;
+import javafx.application.Platform;
 
 public class LaborLayer extends RenderableLayer {
 	private RenderableLayer analyticSurfaceLayer=null;
 	private RenderableLayer extrudedPolygonsLayer=null;
 	private int elementsCount=0;
 	private boolean showOnlyExtudedPolygons=false;
-	private int screenPixelsSectorMinSize=500;//2000 queda bueno
+	private int screenPixelsSectorMinSize=1000;//2000 queda bueno
 	private static int MAX_EXTRUDED_ELEMENTS=10000;
+	long vS =0;
 
+	private long lastRendered=System.currentTimeMillis();
 //	public void preRender(DrawContext dc){
 //		if(analyticSurfaceLayer!=null){
 //			analyticSurfaceLayer.render(dc);			
@@ -17,28 +27,76 @@ public class LaborLayer extends RenderableLayer {
 //		}
 //	}
 	
+//	public void preRender(DrawContext dc){
+//		GLContext glContext = dc.getGLContext();
+//		System.out.println("pre rendering LaborLayer");
+//		extrudedPolygonsLayer.getRenderables().forEach((r)->{
+//			if(r instanceof ExtrudedPolygon){
+//				
+//				((ExtrudedPolygon)r).render(dc);
+//			}
+//			
+//		});
+//		
+//	//	extrudedPolygonsLayer.preRender(dc);
+//		
+//		dc.setGLContext(glContext);
+//	}
+	
 	public void render(DrawContext dc){
 		if(!this.isEnabled())return;
+		long vsNow =dc.getView().getViewStateID();
+		long tNow = System.currentTimeMillis();
 		double eyeElevation = dc.getView().getCurrentEyePosition().elevation;
-		if(extrudedPolygonsLayer!=null && analyticSurfaceLayer!=null){
-			if (showOnlyExtudedPolygons || elementsCount<MAX_EXTRUDED_ELEMENTS || eyeElevation < screenPixelsSectorMinSize ){
-				//System.out.println("dibujando para screenSize = " +sectorPixelSizeInWindow);
-				extrudedPolygonsLayer.setEnabled(true);
-				analyticSurfaceLayer.setEnabled(false);
-				try{
-					extrudedPolygonsLayer.render(dc);
-				}catch(Exception e){
-					System.out.println("no se pudo dibujar el extudedPolygonsLayer");
-					e.printStackTrace();
-				}
-
-			}else{
-				analyticSurfaceLayer.setEnabled(true);
-				//extrudedPolygonsLayer.setEnabled(false);					
-				analyticSurfaceLayer.render(dc);					
-			}				
+		if( //(this.vS==vsNow  && extrudedPolygonsLayer != null)|| 
+				elementsCount<MAX_EXTRUDED_ELEMENTS || eyeElevation < screenPixelsSectorMinSize ){
+			extrudedPolygonsLayer.render(dc);
+			analyticSurfaceLayer.setEnabled(false);
+		} else {
+			this.vS=vsNow;
+			analyticSurfaceLayer.setEnabled(true);
+			analyticSurfaceLayer.render(dc);	
+			this.lastRendered=tNow;
 		}
-		super.render(dc);
+		
+//		double eyeElevation = dc.getView().getCurrentEyePosition().elevation;
+//		if(extrudedPolygonsLayer!=null && analyticSurfaceLayer!=null){
+//			if (showOnlyExtudedPolygons || elementsCount<MAX_EXTRUDED_ELEMENTS || eyeElevation < screenPixelsSectorMinSize ){
+//				//System.out.println("dibujando para screenSize = " +sectorPixelSizeInWindow);
+//				//extrudedPolygonsLayer.setEnabled(true);
+//				//analyticSurfaceLayer.setEnabled(false);
+//				try{
+//					extrudedPolygonsLayer.render(dc);
+//					//showOnlyExtudedPolygons=false;
+//				}catch(Exception e){
+//					System.out.println("no se pudo dibujar el extudedPolygonsLayer");
+//					e.printStackTrace();
+//				}
+//
+//			}else{
+//				//analyticSurfaceLayer.setEnabled(true);
+//				//extrudedPolygonsLayer.setEnabled(false);					
+//				analyticSurfaceLayer.render(dc);	
+//
+//				Timer t = new Timer();
+//				t.schedule(new TimerTask(){
+//
+//					@Override
+//					public void run() {					
+//						showOnlyExtudedPolygons=true;
+//					//	extrudedPolygonsLayer.setEnabled(true);
+//					//	analyticSurfaceLayer.setEnabled(false);
+//
+//						System.out.println("tratando de abilitar extudedPolygonsLayer");
+//					}
+//
+//				}, 1000);
+//
+//
+//			}				
+//		}
+//		
+	super.render(dc);
 	}
 
 	@Override

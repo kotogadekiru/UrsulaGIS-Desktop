@@ -3,17 +3,32 @@ package dao.config;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Data;
 @Data
-public class Fertilizante{
+@Entity
+@NamedQueries({
+	@NamedQuery(name=Fertilizante.FIND_ALL, query="SELECT o FROM Fertilizante o") ,
+	@NamedQuery(name=Fertilizante.FIND_NAME, query="SELECT o FROM Fertilizante o where o.nombre = :name") ,
+}) 
+public class Fertilizante implements Comparable<Fertilizante>{
 	public static final String SUPERFOSFATO_TRIPLE_SPT = "Superfosfato Triple (SPT)";
 	public static final String SUPERFOSFATO_SIMPLE = "Superfosfato Simple";
 	public static final String FOSFATO_MONOAMONICO_MAP = "Fosfato Monoamonico (MAP)";
 	public static final String FOSFATO_DIAMONICO_DAP = "Fosfato Diamonico (DAP)";
+	
+	
+	public static final String FIND_ALL="Fertilizante.findAll";
+	public static final String FIND_NAME="Fertilizante.findName";
 	
 	public static Map<String,Fertilizante> fertilizantes = new HashMap<String,Fertilizante>();
 	//http://semillastodoterreno.com/2013/03/concentracion-de-n-p-y-k-en-los-fertilizantes/
@@ -35,23 +50,36 @@ public class Fertilizante{
 //Nitrato de Sodio							16	
 //Urea										46	
 //Urea - Amonio Nitrato (UAN)					32				
-fertilizantes.put("Urea",new Fertilizante("Urea",46,0.0,0.0,0.0));
-fertilizantes.put("Sulfato de amonio",new Fertilizante("Sulfato de amonio",20.5,0.0,0.0,24.0));
-fertilizantes.put("Amoníaco anhidro",new Fertilizante("Amoníaco anhidro",82,0.0,0.0,0.0));
-fertilizantes.put("Fosfato diamónico",new Fertilizante("Fosfato diamónico",18,46,0.0,2));
-fertilizantes.put("Fosfato monoamónico",new Fertilizante("Fosfato monoamónico",11,52,0.0,2));
-fertilizantes.put("Nitrato de amonio",new Fertilizante("Nitrato de amonio",35,0.0,0.0,0.0));
-fertilizantes.put("Nitrato de calcio",new Fertilizante("Nitrato de calcio",15,0.0,0.0,0.0));
-fertilizantes.put("Nitrato de potasio",new Fertilizante("Nitrato de potasio",13,0.0,44,0.0));
-fertilizantes.put("Superfosfato de calcio",new Fertilizante("Superfosfato de calcio",0.0,17,0.0,0.0));
-fertilizantes.put("Superfosfato triple",new Fertilizante("Superfosfato triple",0.0,48.5,0.0,0.0));
-fertilizantes.put("Superfosfato simple",new Fertilizante("Superfosfato simple",0.0,19.5,0.0,0.0));
-fertilizantes.put("Fosfato dicálcico",new Fertilizante("Fosfato dicálcico",0.0,38,0.0,0.0));
-fertilizantes.put("Cloruro de potasio",new Fertilizante("Cloruro de potasio",0.0,0.0,60,0.0));
-fertilizantes.put("Sulfato de potasio",new Fertilizante("Sulfato de potasio",0.0,0.0,50,18));
+		
+		//Nitrogenados
+fertilizantes.put("Amoníaco anhidro",new Fertilizante("Amoníaco anhidro",82,0.0,0.0,0.0));//ok
+fertilizantes.put("Nitrato de amonio",new Fertilizante("Nitrato de amonio",35,0.0,0.0,0.0));//ok
+fertilizantes.put("Sulfato de amonio",new Fertilizante("Sulfato de amonio",20.5,0.0,0.0,24.0));//ok
+fertilizantes.put("UAN",new Fertilizante("UAN",31,0.0,0.0,0.0));//ok
+fertilizantes.put("Urea",new Fertilizante("Urea",46,0.0,0.0,0.0));//ok
+		//Fosfatados
+//acido fosforico
+fertilizantes.put("Fosfato diamónico",new Fertilizante("Fosfato diamónico",18,20,0.0,0));//ok
+fertilizantes.put("Fosfato monoamónico",new Fertilizante("Fosfato monoamónico",11,23,0.0,0));//ok
+fertilizantes.put("Fosfato monopotásico",new Fertilizante("Fosfato monopotásico",0,23,29,0));//ok
+fertilizantes.put("Superfosfato simple",new Fertilizante("Superfosfato simple",0.0,9,0.0,12));//ok
+fertilizantes.put("Superfosfato triple",new Fertilizante("Superfosfato triple",0.0,20,0.0,0.0));//ok
+		//Potasicos
+fertilizantes.put("Cloruro de potasio",new Fertilizante("Cloruro de potasio",0.0,0.0,50,0.0));//ok
+fertilizantes.put("Nitrato de potasio",new Fertilizante("Nitrato de potasio",13,0.0,36,0.0));//ok
+fertilizantes.put("Sulfato de potasio",new Fertilizante("Sulfato de potasio",0.0,0.0,42,18));//ok
+		//Azufrados
+fertilizantes.put("Yeso Agricola",new Fertilizante("Yeso Agricola",0.0,0.0,0,17));//ok S=17 Ca=22
+		//Calcicos
+//fertilizantes.put("Nitrato de calcio",new Fertilizante("Nitrato de calcio",15,0.0,0.0,0.0));19Ca 15N
+//fertilizantes.put("Superfosfato de calcio",new Fertilizante("Superfosfato de calcio",0.0,17,0.0,0.0));
 	}
 	
+	@Id @GeneratedValue
+	private long id;
+	
 	String nombre = new String();
+	
 	double porcN= 0.0;
 	double porcP= 0.0;
 	double porcK= 0.0;
@@ -76,8 +104,9 @@ fertilizantes.put("Sulfato de potasio",new Fertilizante("Sulfato de potasio",0.0
 		return nombre;
 	}
 
-
-	
-	
+	@Override
+	public int compareTo(Fertilizante o) {
+		return (int) (this.id-o.getId());
+	}
 }
 

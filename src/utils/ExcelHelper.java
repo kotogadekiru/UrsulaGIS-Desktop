@@ -285,8 +285,11 @@ public class ExcelHelper {
 			for(int i =0;i<datos.size();i++){
 				Number rinde = new Double(0);
 				Number superficie = datos.get(i).getYValue();
-				if(superficie.doubleValue() >0){
-					Number produccion = (Number) datos.get(i).getExtraValue();
+				Number produccion = (Number) datos.get(i).getExtraValue();
+				if(superficie!=null
+						&&produccion!=null 
+						&& superficie.doubleValue() > 0 
+						&& produccion.doubleValue() > 0){				
 					rinde = produccion.doubleValue()/superficie.doubleValue();
 				}
 				data.put(String.valueOf(i+1),

@@ -2,25 +2,27 @@ package dao.margen;
 
 import java.util.List;
 
+import javax.persistence.Entity;
+
 import org.geotools.data.FileDataStore;
 import org.opengis.feature.simple.SimpleFeature;
 
-import dao.LaborItem;
 import dao.Labor;
 import dao.LaborConfig;
+import dao.LaborItem;
+import dao.config.Agroquimico;
 import dao.config.Configuracion;
-import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaLabor;
+import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.pulverizacion.PulverizacionLabor;
-import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Data;
 @Data
+@Entity
 public class Margen extends Labor<MargenItem> {
 	public static final String COLUMNA_RENTABILIDAD = "RENTA";
 	public static final String COLUMNA_MARGEN = "MARGEN";
@@ -108,13 +110,14 @@ public class Margen extends Labor<MargenItem> {
 		getImporteSiembraHa()		 
 */
 		//rentabilidad
-		ci.setMargenPorHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(Margen.COLUMNA_MARGEN)));
-		ci.setCostoFijoPorHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(Margen.COLUMNA_IMPORTE_FIJO)));
+		ci.setMargenPorHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(Margen.COLUMNA_MARGEN)));//XXX este dato no importa porque se recalcula
+		//ci.setCostoFijoPorHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(Margen.COLUMNA_IMPORTE_FIJO)));
 		ci.setImporteFertHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(Margen.COLUMNA_IMPORTE_FERT)));
 		ci.setImporteCosechaHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(Margen.COLUMNA_IMPORTE_COSECHA)));
 		ci.setImportePulvHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(Margen.COLUMNA_IMPORTE_PULV)));
 		ci.setImporteSiembraHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(Margen.COLUMNA_IMPORTE_SIEMBR)));
 		ci.setShowMargen(Margen.COLUMNA_MARGEN.equals(this.colAmount.get()));
+		setPropiedadesLabor(ci);
 		return ci;
 	}
 
@@ -135,21 +138,36 @@ public class Margen extends Labor<MargenItem> {
 		getImporteSiembraHa()		 
 */
 		//rentabilidad
-		ci.setMargenPorHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colMargen.get())));
-		ci.setCostoFijoPorHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colCostoFijo.get())));
+		ci.setMargenPorHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colMargen.get())));//no importa porque se recalcula
+		//setear el costoFijo por HA de la labor de acuerdo a lo que dice el feature??
+		//ci.setCostoFijoPorHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colCostoFijo.get())));
+		//this.getCostoFijoHaProperty().set(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colCostoFijo.get())));
 		ci.setImporteFertHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colCostoFertilizacion.get())));
 		ci.setImporteCosechaHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colIngreso.get())));
 		ci.setImportePulvHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colCostoPulverizacion.get())));
 		ci.setImporteSiembraHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colCostoSiembra.get())));
 		ci.setShowMargen(Margen.COLUMNA_MARGEN.equals(this.colAmount.get()));
+		setPropiedadesLabor(ci);
 		return ci;
 	}
 
+	
+	public void setPropiedadesLabor(MargenItem mi){
+		mi.setCostoFijoPorHa(this.getCostoFijoHaProperty().get());
+//		mi.setPrecioInsumo(this.precioInsumoProperty.get());
+//		mi.setCostoLaborHa(this.precioLaborProperty.get());	
+	}
+	
 	@Override
 	protected DoubleProperty initPrecioLaborHaProperty() {
 		return initDoubleProperty(Margen.COSTO_FIJO_KEY,"0",config.getConfigProperties());
 	}
 
+	@Override
+	protected DoubleProperty initPrecioInsumoProperty() {
+		return initDoubleProperty(Margen.COSTO_TN_KEY,  "0", config.getConfigProperties());
+	//	return initDoubleProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,"0",config.getConfigProperties());
+	}
 	
 	/**
 	 * 	

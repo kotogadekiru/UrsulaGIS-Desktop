@@ -44,9 +44,7 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 //variables
 	@FXML
 	private ComboBox<String> comboDosis;//ok
-	
-	@FXML
-	private ComboBox<String> comboPasadas;//ok
+
 
 //fijos
 
@@ -187,9 +185,6 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 
 
 	}
-
-
-
 
 	public void init() {
 		this.getDialogPane().setContent(content);

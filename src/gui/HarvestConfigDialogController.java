@@ -1,8 +1,11 @@
 package gui;
 
 import java.io.IOException;
-import java.time.LocalDate;
+import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import javafx.beans.binding.Bindings;
@@ -249,7 +252,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		});
 		availableColums.add(Labor.NONE_SELECTED);
 
-		//TODO si avalilableColumns contiene las columnas estanddar seleccionarlas
+		//TODO si avalilableColumns contiene las columnas estandar seleccionarlas
 
 
 //		this.comboVelo.setItems(FXCollections.observableArrayList(availableColums));
@@ -325,7 +328,10 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		this.comboCultivo.valueProperty().bindBidirectional(labor.producto);
 
 
-		StringConverter<Number> converter = new NumberStringConverter();//FIXME corregir que el separador de miles
+		//StringConverter<Number> converter = new NumberStringConverter();//FIXME corregir que el separador de miles
+		DecimalFormat converter = new DecimalFormat("0.00");
+		converter.setGroupingUsed(true);
+		converter.setGroupingSize(3);
 
 		//textPrecioGrano
 		Bindings.bindBidirectional(this.textPrecioGrano.textProperty(), labor.precioGranoProperty, converter);
@@ -357,11 +363,27 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		//textSupMin
 		Bindings.bindBidirectional(this.textSupMin.textProperty(), labor.config.supMinimaProperty(), converter);
 
+		//TODO cambiar cbMetrosPorUnidad a ComboBox para que pueda ser editable
+		Map<String,Double> unidades = new HashMap<String,Double>();
+		unidades.put("metro",1d);
+		unidades.put("pulgada",0.0254);
 		
-		this.cbMetrosPorUnidad.setItems(FXCollections.observableArrayList(new String[]{"1","0.0254"}));
+		this.cbMetrosPorUnidad.setItems(FXCollections.observableArrayList(unidades.keySet()));
+		this.cbMetrosPorUnidad.valueProperty().addListener((ov,old,nv)->{
+			labor.config.valorMetrosPorUnidadDistanciaProperty().set(unidades.get(nv));
+		});
+
+	double configured=labor.config.valorMetrosPorUnidadDistanciaProperty().get();
+	unidades.forEach((key,value)->{
+		if(value.equals(configured)){
+			cbMetrosPorUnidad.getSelectionModel().select(key);//
+		}
+	});
 	
 		//textMetrosPorUnidad
-		Bindings.bindBidirectional(this.cbMetrosPorUnidad.valueProperty(), labor.config.valorMetrosPorUnidadDistanciaProperty(), converter);
+	//	Bindings.bindBidirectional(property1, property2);bindBidirectional(, labor.config.valorMetrosPorUnidadDistanciaProperty(), converter);
+		
+		//labor.config.valorMetrosPorUnidadDistanciaProperty().get());	
 
 		//textAnchoFiltro
 		Bindings.bindBidirectional(this.textAnchoFiltro.textProperty(), labor.config.anchoFiltroOutlayersProperty(), converter);
@@ -369,8 +391,29 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		//textCorrimientoPesada
 		Bindings.bindBidirectional(this.textCorrimientoPesada.textProperty(), labor.config.valorCorreccionPesadaProperty(), converter);
 
+		
+		StringConverter<Number> nsConverter = new NumberStringConverter(){
+			@Override
+			public Number fromString(String s){
+				Number d;
+				try {
+					d = converter.parse(s);
+					return d.doubleValue()/100;
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				return 0;
+				
+			}
+			
+			@Override 
+			public String toString(Number n){
+				return converter.format(n.doubleValue()*100);
+			}
+		};
 		//textToleranciaCV
-		Bindings.bindBidirectional(this.textToleranciaCV.textProperty(), labor.config.toleranciaCVProperty(), converter);
+		Bindings.bindBidirectional(this.textToleranciaCV.textProperty(), labor.config.toleranciaCVProperty(), nsConverter);
 
 		//textDistTolera
 		//		this.textDistTolera.textProperty().set(labor.config.cantDistanciasToleraProperty().getValue().toString());
@@ -390,7 +433,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		chkOutlayers.selectedProperty().bindBidirectional(labor.config.correccionOutlayersProperty());
 		chkAncho.selectedProperty().bindBidirectional(labor.config.correccionAnchoProperty());
 		chkDemora.selectedProperty().bindBidirectional(labor.config.correccionDemoraPesadaProperty());
-		chkDemora.setTooltip(new Tooltip("Permite adelantar o atrazar cada pesada y estirar la pesada de entrada en regimen"));
+		chkDemora.setTooltip(new Tooltip("Permite adelantar o atrasar cada pesada y estirar la pesada de entrada en regimen"));
 		chkRinde.selectedProperty().bindBidirectional(cosechaConfig.correccionRindeProperty());
 		chkSuperposicion.selectedProperty().bindBidirectional(labor.config.correccionSuperposicionProperty());
 		chkDistancia.selectedProperty().bindBidirectional(cosechaConfig.correccionDistanciaProperty());

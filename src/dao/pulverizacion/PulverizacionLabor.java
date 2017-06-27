@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.Entity;
+
 import org.geotools.data.FileDataStore;
 import org.opengis.feature.simple.SimpleFeature;
 
@@ -13,6 +15,7 @@ import dao.LaborConfig;
 import dao.LaborItem;
 import dao.config.Agroquimico;
 import dao.config.Configuracion;
+import dao.margen.Margen;
 import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
 import javafx.beans.property.DoubleProperty;
@@ -22,7 +25,10 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import lombok.Data;
 
+@Data
+@Entity
 public class PulverizacionLabor extends Labor<PulverizacionItem> {
 	private static final String COLUMNA_DOSIS = "Dosis";
 	private static final String COLUMNA_PASADAS = "CantPasada";
@@ -63,7 +69,7 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 		
 //		colCantPasadasProperty =initStringProperty(PulverizacionLabor.COLUMNA_PASADAS, properties, availableColums);
 
-		precioInsumoProperty =initDoubleProperty(PulverizacionLabor.PRECIO_INSUMO_KEY, "0", properties); 
+		
 	
 
 		String fertKEY = properties.getPropertyOrDefault(
@@ -153,6 +159,13 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 		return initDoubleProperty(PulverizacionLabor.COSTO_LABOR_PULVERIZACION,"0",config.getConfigProperties());
 	}
 
+	@Override
+	protected DoubleProperty initPrecioInsumoProperty() {
+		return initDoubleProperty(PulverizacionLabor.PRECIO_INSUMO_KEY, "0", config.getConfigProperties()); 
+		//return initDoubleProperty(Margen.COSTO_TN_KEY,  "0", );
+	//	return initDoubleProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,"0",config.getConfigProperties());
+	}
+	
 	@Override
 	public LaborConfig getConfigLabor() {
 		if(config==null){

@@ -15,6 +15,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
+import javax.persistence.Entity;
+
 import org.geotools.data.DataUtilities;
 import org.geotools.data.DefaultTransaction;
 import org.geotools.data.FileDataStore;
@@ -51,12 +53,15 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
+import dao.config.Agroquimico;
 import dao.config.Configuracion;
 import dao.config.Cultivo;
 import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
+import dao.fertilizacion.FertilizacionLabor;
 import dao.margen.Margen;
+import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import gui.nww.LaborLayer;
 import gui.utils.DateConverter;
@@ -67,6 +72,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import lombok.Data;
 import utils.ProyectionConstants;
 
 /**
@@ -75,7 +81,11 @@ import utils.ProyectionConstants;
  *
  * @param <E>
  */
+
+@Data
+@Entity
 public abstract class Labor<E extends LaborItem>  {
+	public static final double FEET_TO_METERS = 0.3048;
 	public static final String NONE_SELECTED = "Ninguna";
 	public static final String LABOR_LAYER_IDENTIFICATOR = "LABOR";
 	public FileDataStore inStore = null;
@@ -114,7 +124,7 @@ public abstract class Labor<E extends LaborItem>  {
 	public DoubleProperty precioInsumoProperty=null;
 	public SimpleDoubleProperty anchoDefaultProperty= null;
 
-	//public Map<Envelope,List<E>> cachedEnvelopes=Collections.synchronizedMap(new HashMap<Envelope,List<E>>());
+	public Map<Envelope,List<E>> cachedEnvelopes=Collections.synchronizedMap(new HashMap<Envelope,List<E>>());
 	
 	public Quadtree treeCache = null;
 	
@@ -132,10 +142,10 @@ public abstract class Labor<E extends LaborItem>  {
 	//desvio
 	
 	//TODO cambiar por un referencedEnvelope
-	public Double minX = Double.MAX_VALUE;
-	public Double minY = Double.MAX_VALUE;
-	public Double maxX = -Double.MAX_VALUE;
-	public Double maxY = -Double.MAX_VALUE;
+	public Position minX =null; //Position.fromDegrees(latitude, longitude);
+	public Position minY = null; //Double.MAX_VALUE;
+	public Position maxX =null; //-Double.MAX_VALUE;
+	public Position maxY = null;//-Double.MAX_VALUE;
 
 	public Geometry envelope = null;// no puedo cachear la geometria total porque tarda mucho
 
@@ -215,6 +225,7 @@ public abstract class Labor<E extends LaborItem>  {
 		});
 
 		precioLaborProperty = initPrecioLaborHaProperty();// initDoubleProperty(CosechaLabor.COSTO_COSECHA_HA, properties);
+		precioInsumoProperty = initPrecioInsumoProperty(); //initDoubleProperty(FertilizacionLabor.COLUMNA_PRECIO_FERT,  "0", properties);	
 
 		// anchoDefaultProperty
 		anchoDefaultProperty = initDoubleProperty(ANCHO_DEFAULT, "8", properties);
@@ -242,7 +253,12 @@ public abstract class Labor<E extends LaborItem>  {
 	 * @return DoubleProperty
 	 */
 	protected abstract DoubleProperty initPrecioLaborHaProperty() ;
-
+	
+	/**
+	 * metodo que devuelve el costo de la labor por hectarea de acuerdo a la configuracion del tipo de labor que implemente
+	 * @return DoubleProperty
+	 */
+	protected abstract DoubleProperty initPrecioInsumoProperty() ;
 
 	public static SimpleDoubleProperty initDoubleProperty(String key,String def,Configuracion properties){
 		SimpleDoubleProperty doubleProperty = new SimpleDoubleProperty(
@@ -255,6 +271,13 @@ public abstract class Labor<E extends LaborItem>  {
 		return doubleProperty;
 	}
 
+	/**
+	 * 
+	 * @param key el valor por defecto para la propiedad
+	 * @param properties un objeto Configuracion a ser modificado
+	 * @param availableColums la lista de opsiones para configurar las propiedades
+	 * @return devuelve una nueva StringProperty inicializada con el valor correspondiente de las availableColums o la key proporcionada
+	 */
 	public static SimpleStringProperty initStringProperty(String key,Configuracion properties,List<String> availableColums){
 		SimpleStringProperty sProperty = new SimpleStringProperty(
 				properties.getPropertyOrDefault(key, key));
@@ -323,6 +346,7 @@ public abstract class Labor<E extends LaborItem>  {
 //		List<E> objects = new ArrayList<E>();
 //		Envelope cachedEnvelope=null;
 //
+//		CoordinateReferenceSystem targetCRS=null;
 //		synchronized(cachedEnvelopes){//tengo que poner todo el metodo en synchro sino pierdo valores al hacer el filtro outlayers
 //			if(cachedEnvelopes.size()>0){
 //
@@ -365,11 +389,15 @@ public abstract class Labor<E extends LaborItem>  {
 		@SuppressWarnings("unchecked")
 		List<SimpleFeature> cachedObjects = treeCache.query(envelope);
 
+		FeatureType schema = this.outCollection.getSchema();			    
+		CoordinateReferenceSystem targetCRS = schema.getGeometryDescriptor().getCoordinateReferenceSystem();		
+		ReferencedEnvelope bbox = new ReferencedEnvelope(envelope,targetCRS);		
+		Geometry geoEnv = constructPolygon(bbox);
 		for(SimpleFeature sf : cachedObjects){
 			Geometry sfGeom = (Geometry) sf.getDefaultGeometry();
 			boolean intersects = false;
 			if(sfGeom!=null){
-				intersects = envelope.intersects(sfGeom.getEnvelopeInternal());
+				intersects = geoEnv.intersects(sfGeom);
 			}
 			if(intersects){
 				objects.add(constructFeatureContainerStandar(sf,false));
@@ -382,14 +410,14 @@ public abstract class Labor<E extends LaborItem>  {
 	public void clearCache(){
 		treeCache = null;
 	}
-//	private Envelope updateCachedEnvelope(Envelope envelope){
-//		Envelope cachedEnvelope = new Envelope(envelope);
-//		double height = cachedEnvelope.getHeight();
-//		double width = cachedEnvelope.getHeight();
-//		cachedEnvelope.expandBy(width*4, height*4);
-//		cachedEnvelopes.put(cachedEnvelope, outStoreQuery(cachedEnvelope));
-//		return cachedEnvelope;
-//	}
+	private Envelope updateCachedEnvelope(Envelope envelope){
+		Envelope cachedEnvelope = new Envelope(envelope);
+		double height = cachedEnvelope.getHeight();
+		double width = cachedEnvelope.getHeight();
+		cachedEnvelope.expandBy(width*4, height*4);
+		cachedEnvelopes.put(cachedEnvelope, outStoreQuery(cachedEnvelope));
+		return cachedEnvelope;
+	}
 	
 	private void updateAllCachedEnvelopes(Envelope envelope){
 		treeCache=new Quadtree();
@@ -726,6 +754,7 @@ public abstract class Labor<E extends LaborItem>  {
 		if(!colElevacion.get().equals(Labor.NONE_SELECTED)){
 			Double elevacion =  LaborItem.getDoubleFromObj(harvestFeature
 					.getAttribute(colElevacion.get()));
+
 			ci.setElevacion(elevacion);
 		} else{
 			ci.setElevacion(1.0);

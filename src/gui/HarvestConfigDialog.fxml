@@ -178,7 +178,7 @@
                                  </GridPane.margin>
                               </TextField>
                               <Label text="Cant. distancias entrada En Regimen" wrapText="true" GridPane.columnIndex="3" GridPane.rowIndex="6" />
-                              <Label text="Metros por unidad distancia" wrapText="true" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+                              <Label text="Unidad de distancia" wrapText="true" GridPane.columnIndex="3" GridPane.rowIndex="2" />
                               <Label text="Ancho default" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                               <TextField id="textAnchoDef" fx:id="textAnchoDef" GridPane.columnIndex="2" GridPane.rowIndex="3">
                                  <GridPane.margin>

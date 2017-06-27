@@ -203,22 +203,22 @@ public class LayerPanel extends VBox {
 					rootItem.getChildren().add(knownItem);
 				}
 				knownItem.getChildren().add(checkBoxTreeItem);
-				knownItem.getChildren().sort((c1,c2)->{
-					String l1Name =c1.getValue().getName();
-					String l2Name =c2.getValue().getName();
-					//TODO comparar por el valor del layer en vez del nombre del layer
-					DateFormat df =new  SimpleDateFormat("dd-mm-yyyy");
-					
-					try{
-						Date d1 = df.parse(l1Name);
-						Date d2 = df.parse(l2Name);
-						return d1.compareTo(d2);
-					} catch(Exception e){
-						//no se pudo parsear como fecha entonces lo interpreto como string.
-						//e.printStackTrace();
-					}
-					return l1Name.compareTo(l2Name);
-				});
+//				knownItem.getChildren().sort((c1,c2)->{
+//					String l1Name =c1.getValue().getName();
+//					String l2Name =c2.getValue().getName();
+//					//TODO comparar por el valor del layer en vez del nombre del layer
+//					DateFormat df =new  SimpleDateFormat("dd-MM-yyyy");
+//					
+//					try{
+//						Date d1 = df.parse(l1Name);
+//						Date d2 = df.parse(l2Name);
+//						return d1.compareTo(d2);
+//					} catch(Exception e){
+//						//no se pudo parsear como fecha entonces lo interpreto como string.
+//						//e.printStackTrace();
+//					}
+//					return l1Name.compareTo(l2Name);
+//				});
 				//TODO agregar in identificador para los layers de ndvi
 //				ndviItem.getChildren().add(checkBoxTreeItem);
 //				ndviItem.setExpanded(true);
@@ -286,8 +286,11 @@ public class LayerPanel extends VBox {
 
 			cell.setConverter(new StringConverter<TreeItem<Layer>>(){
 				@Override
-				public String toString(TreeItem<Layer> object) {					
-					return object.getValue().getName();
+				public String toString(TreeItem<Layer> object) {			
+					if(object.getValue()!=null){
+						return object.getValue().getName();
+					}
+					return "item sin layer";
 				}
 
 				@Override

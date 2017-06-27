@@ -4,23 +4,20 @@ import javafx.beans.property.ListProperty;
 import javafx.util.Callback;
 
 import com.dooapp.fxform.model.Element;
-import com.dooapp.fxform.view.FXFormNode;
 import com.dooapp.fxform.view.factory.impl.FXFormChoiceBoxNode;
 
-public class ListChoiceBoxFactory<T> implements Callback<Void, FXFormNode> {
-
+public class ListChoiceBoxFactory<T> implements Callback<Void, FXFormChoiceBoxNode> {
     private final ListProperty<T> choices;
 
     public ListChoiceBoxFactory(ListProperty<T> choices) {
         this.choices = choices;
     }
 
-    public FXFormNode call(Void aVoid) {
-
+    public FXFormChoiceBoxNode call(Void aVoid) {
         return new FXFormChoiceBoxNode() {
             @Override
             public void init(Element element) {
-                choiceBox.itemsProperty().bind(choices);
+            	choiceBox.itemsProperty().bind(choices);
                 choiceBox.getSelectionModel().select(element.getValue());
             }
 
@@ -34,10 +31,6 @@ public class ListChoiceBoxFactory<T> implements Callback<Void, FXFormNode> {
             public boolean isEditable() {
                 return true;
             }
-
         };
-
     }
-
-
 }

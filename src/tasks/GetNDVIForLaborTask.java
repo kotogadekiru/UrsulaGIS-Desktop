@@ -42,6 +42,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import utils.ProyectionConstants;
 import utils.UnzipUtility;
 
 
@@ -196,19 +197,28 @@ polygons=[[[[-64.69101905822754,-34.860017354204885],[-64.69058990478516,-34.867
 
 	private String getPolygonsFromLabor(Object labor) {
 		if(labor instanceof Labor){
-			Labor c = (Labor)labor;
-			ReferencedEnvelope bounds = c.outCollection.getBounds();
+			Labor<?> c = (Labor<?>)labor;
+			//ReferencedEnvelope bounds = c.outCollection.getBounds();
+			double witdh = c.getMaxX().longitude.degrees-c.getMinX().longitude.degrees;
+			double height = c.getMaxY().latitude.degrees-c.getMinY().latitude.degrees;
+			double bufferX=witdh*0.05;
+			double bufferY=height*0.05;
+			
 			StringBuilder sb = new StringBuilder();
 			sb.append("[[[");
-			sb.append("["+bounds.getMinX()+","+bounds.getMinY()+"],");
-			sb.append("["+bounds.getMaxX()+","+bounds.getMinY()+"],");
-			sb.append("["+bounds.getMaxX()+","+bounds.getMaxY()+"],");
-			sb.append("["+bounds.getMinX()+","+bounds.getMaxY()+"]");
+			sb.append("["+(c.getMinX().longitude.degrees-bufferX)+","+c.getMinX().latitude.degrees+"],");
+			sb.append("["+c.getMinY().longitude.degrees+","+(c.getMinY().latitude.degrees-bufferY)+"],");
+			sb.append("["+(c.getMaxX().longitude.degrees+bufferX)+","+c.getMaxX().latitude.degrees+"],");
+			sb.append("["+c.getMaxY().longitude.degrees+","+(c.getMaxY().latitude.degrees+bufferY)+"]");
+
+//			sb.append("["+bounds.getMaxX()+","+bounds.getMinY()+"],");
+//			sb.append("["+bounds.getMaxX()+","+bounds.getMaxY()+"],");
+//			sb.append("["+bounds.getMinX()+","+bounds.getMaxY()+"]");
 			sb.append("]]]");
 			String polygons=sb.toString();
 			return polygons;
 		} else if(labor instanceof Poligono){
-			ArrayList<? extends Position> positions = ((Poligono)labor).getPositions();
+			List<? extends Position> positions = ((Poligono)labor).getPositions();
 			
 			StringBuilder sb = new StringBuilder();
 			sb.append("[[[");

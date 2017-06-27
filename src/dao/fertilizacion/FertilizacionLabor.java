@@ -57,7 +57,7 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 		colKgHaProperty = initStringProperty(FertilizacionLabor.COLUMNA_KG_HA,properties,availableColums);
 		colAmount= new SimpleStringProperty(FertilizacionLabor.COLUMNA_KG_HA);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
 
-		precioInsumoProperty = initDoubleProperty(FertilizacionLabor.COLUMNA_PRECIO_FERT,  "0", properties);	
+			
 
 		String fertKEY = properties.getPropertyOrDefault(FertilizacionLabor.FERTILIZANTE_DEFAULT,
 				Fertilizante.FOSFATO_DIAMONICO_DAP);
@@ -118,6 +118,13 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 		return initDoubleProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,"0",config.getConfigProperties());
 	}
 
+	
+	@Override
+	protected DoubleProperty initPrecioInsumoProperty() {
+		return initDoubleProperty(FertilizacionLabor.COLUMNA_PRECIO_FERT,  "0", config.getConfigProperties());
+	//	return initDoubleProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,"0",config.getConfigProperties());
+	}
+	
 	@Override
 	public LaborConfig getConfigLabor() {
 		if(config==null){

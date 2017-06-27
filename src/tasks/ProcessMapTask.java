@@ -74,6 +74,7 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
+import utils.PolygonValidator;
 import utils.ProyectionConstants;
 //import org.opengis.filter.FilterFactory2;
 
@@ -503,10 +504,10 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 		//	ReferencedEnvelope bounds = labor.outCollection.getBounds();//x0=-61.92148090289199 y0=-33.67828699276171
 
-		double minX = labor.minX;
-		double minY = labor.minY;
-		double maxX = labor.maxX;
-		double maxY = labor.maxY;
+		double minX = labor.minX.getLongitude().degrees;
+		double minY = labor.minY.getLatitude().degrees;
+		double maxX = labor.maxX.getLongitude().degrees;;
+		double maxY = labor.maxY.getLatitude().degrees;
 
 		Double maxElev = labor.maxElev;
 		Double minElev = labor.minElev;
@@ -517,8 +518,8 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		int maxIndex =  width*height;
 
 		//indexar las features de acuerdo a su ubicacion
-		ConcurrentMap<Integer, List<FC>> indexMap = items.parallelStream().collect(Collectors.groupingByConcurrent((it)->{
-			Point center = it.getGeometry().getCentroid();
+		ConcurrentMap<Integer, List<FC>> indexMap = items.parallelStream().collect(Collectors.groupingByConcurrent((f)->{
+			Point center = f.getGeometry().getCentroid();
 			Coordinate coord = center.getCoordinate();
 
 			int col= (int)((coord.x-minX) / resolution)+1;
@@ -757,27 +758,29 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			//TODO aproximar el envelope con un rectangulo
 			//arribaIzq es la coordenada x,y del que tenga max y? 
 
-			Envelope envelopeInternal = g.getEnvelopeInternal();
-			labor.minX = Math.min(labor.minX, envelopeInternal.getMinX());
-			labor.minY = Math.min(labor.minY, envelopeInternal.getMinY());
-			labor.maxX = Math.max(labor.maxX, envelopeInternal.getMaxX());
-			labor.maxY = Math.max(labor.maxY, envelopeInternal.getMaxY());
+			Point envelopeInternal = g.getCentroid();
+		
+			if(labor.minX==null || labor.minX.getLongitude().degrees>envelopeInternal.getX()){
+				labor.minX=Position.fromDegrees(envelopeInternal.getY(), envelopeInternal.getX());
+			}
+			if(labor.minY==null ||labor.minY.getLatitude().degrees>envelopeInternal.getY()){
+				labor.minY=Position.fromDegrees(envelopeInternal.getY(), envelopeInternal.getX());
+			}
+			if(labor.maxX==null ||labor.maxX.getLongitude().degrees<envelopeInternal.getX()){
+				labor.maxX=Position.fromDegrees(envelopeInternal.getY(), envelopeInternal.getX());
+			}
+			if(labor.maxY==null ||labor.maxY.getLatitude().degrees<envelopeInternal.getY()){
+				labor.maxY=Position.fromDegrees(envelopeInternal.getY(), envelopeInternal.getX());
+			}
+		//	labor.minX = Math.min(labor.minX, envelopeInternal.getMinX());
+		//	labor.minY = Math.min(labor.minY, envelopeInternal.getMinY());
+		//	labor.maxX = Math.max(labor.maxX, envelopeInternal.getMaxX());
+		//	labor.maxY = Math.max(labor.maxY, envelopeInternal.getMaxY());
 		}
 
 		labor.minAmount=min;
 		labor.maxAmount=max;
 		System.out.println("(min,max) = ("+min+" , "+max+")");
-		//TODO usar el metodo de union de resumir geometrias que anda perfecto
-		//	GeometryFactory fact = geomArray[0].getFactory();
-		//fact.getPrecisionModel().makePrecise(65.6333);
-		//		GeometryCollection polygonCollection = fact.createGeometryCollection(geomArray);
-		//		System.out.println("empezando a hacer el buffer size = "+geomArray.length);
-		//		try {
-		//			//labor.envelope = polygonCollection.union();//buffer(0); 
-		//		}catch(Exception e){
-		//			//e.printStackTrace();
-		//		}
-		//		System.out.println("termine de hacer el buffer");
 	}
 
 	protected void runLater(Collection<FC> itemsToShow) {	
@@ -787,7 +790,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		//TODO crear un renderable layer que dibuje el layer de los poligonos si esta suficientemente cerca
 		//o el analyticSurface si esta lejos
 		//if(itemsToShow.size()<10000){
-		RenderableLayer extrudedPolygonsLayer = runLaterInternal(itemsToShow);//XXX ojo! si son muchos esto me puede tomar toda la memoria.
+		RenderableLayer extrudedPolygonsLayer = createExtrudedPolygonsLayer(itemsToShow);//XXX ojo! si son muchos esto me puede tomar toda la memoria.
 		//}else{
 		RenderableLayer analyticSurfaceLayer = createAnalyticSurface(itemsToShow);
 		//}
@@ -834,7 +837,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		installPlaceMark();
 	}
 
-	private RenderableLayer runLaterInternal(Collection<FC> itemsToShow) {	
+	private RenderableLayer createExtrudedPolygonsLayer(Collection<FC> itemsToShow) {	
 		//this.pathTooltips.clear();
 		//labor.getLayer().removeAllRenderables();
 		//labor.getLayer().setPickEnabled(false);//evita que se muestre el tooltip
@@ -916,10 +919,13 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	}
 
 	private void installPlaceMark() {
-		ReferencedEnvelope bounds = labor.outCollection.getBounds();//null pointer
-		Coordinate centre = bounds.centre();
-		Position pointPosition = Position.fromDegrees(centre.y, centre.x);  
-		//	Position pointPosition = Position.fromDegrees(bounds.getMinY(), bounds.getMinX());
+		if(labor.outCollection!=null){
+		//ReferencedEnvelope bounds = labor.outCollection.getBounds();//null pointer
+		//Coordinate centre = bounds.centre();
+		
+		//	Position pointPosition = Position.fromDegrees(centre.y, centre.x);  
+		
+			Position pointPosition = labor.getMinX();//Position.fromDegrees(bounds.getMinY(), bounds.getMinX());
 		PointPlacemark pmStandard = new PointPlacemark(pointPosition){
 			public void render(DrawContext dc){
 
@@ -941,6 +947,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		pmStandard.setAttributes(pointAttribute);
 		labor.getLayer().addRenderable(pmStandard);
 		labor.getLayer().setValue(ZOOM_TO_KEY, pointPosition);		
+		}
 	}
 
 	/**
@@ -1044,26 +1051,26 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 	public Geometry makeGood(Geometry g) {
 
-		if(g instanceof Polygon){
-			Polygon poly = (Polygon)g;
-			if(poly.getNumPoints()>3){
-				g = JTSUtilities.makeGoodShapePolygon(poly);
-
-			} else {
-				//System.out.println("ring has fewer than 3 points");
-				//g = null;
-			}
-
-		} else if(g instanceof MultiPolygon){
-			g = JTSUtilities.makeGoodShapeMultiPolygon((MultiPolygon)g);
-		}
+//		if(g instanceof Polygon){
+//			Polygon poly = (Polygon)g;
+//			if(poly.getNumPoints()>3){
+//				g = JTSUtilities.makeGoodShapePolygon(poly);
+//
+//			} else {
+//				//System.out.println("ring has fewer than 3 points");
+//				//g = null;
+//			}
+//
+//		} else if(g instanceof MultiPolygon){
+//			g = JTSUtilities.makeGoodShapeMultiPolygon((MultiPolygon)g);
+//		}
 
 		//		if(g instanceof Polygon){
 		//			g = JTSUtilities.makeGoodShapePolygon((Polygon)g);
 		//		} else if(g instanceof MultiPolygon){
 		//			g = JTSUtilities.makeGoodShapeMultiPolygon((MultiPolygon)g);
 		//		}
-		return g;
+		return PolygonValidator.validate(g);//g;
 	}
 
 

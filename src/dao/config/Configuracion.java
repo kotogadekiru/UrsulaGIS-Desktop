@@ -11,6 +11,7 @@ import java.util.Set;
 import dao.Labor;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
+import utils.CustomProperties;
 
 /**
  * clase util para acceder al archivo de configuracion persistente en el sistema.
@@ -20,14 +21,17 @@ import javafx.beans.property.SimpleBooleanProperty;
  * @author tomas
  *
  */
+
+
 public class Configuracion{
-	private static final String URSULA_GIS_APPDATA_FOLDER = "UrsulaGIS";
+	public static final String URSULA_GIS_APPDATA_FOLDER = "UrsulaGIS";
 	private static final String APPDATA = "APPDATA";
 	private static final String DEFAULT_CONFIG_PROPERTIES = "/dao/config/config.properties";
 	private static final String FILE_CONFIG_PROPERTIES = "config.properties";
-	private final Properties configProp = new Properties();
+	private final CustomProperties configProp = new CustomProperties();
 	
 	private String propertiesFileUrl = FILE_CONFIG_PROPERTIES;
+	public static String ursulaGISFolder;
 	//public static SimpleBooleanProperty modified = new SimpleBooleanProperty();
 
 	//private static final String GENERAR_MAPA_RENTABILIDAD_FROM_SHP = "generarMapaRentabilidadFromShp";
@@ -44,7 +48,9 @@ public class Configuracion{
 		String currentUsersHomeDir =System.getenv(APPDATA);
 	//	System.out.println("obtuve la direccion de appData : "+currentUsersHomeDir);
 		//obtuve la direccion de appData : C:\Users\quero\AppData\Roaming
-		String ursulaGISFolder = currentUsersHomeDir + File.separator + URSULA_GIS_APPDATA_FOLDER;
+		 ursulaGISFolder = currentUsersHomeDir + File.separator + URSULA_GIS_APPDATA_FOLDER;
+		 //seteo el path para el log de objectdb
+		  System.setProperty("objectdb.home", ursulaGISFolder); 
 		this.propertiesFileUrl=ursulaGISFolder+ File.separator +FILE_CONFIG_PROPERTIES;
 		File propF =new File(propertiesFileUrl);
 		try {

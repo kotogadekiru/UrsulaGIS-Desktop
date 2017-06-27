@@ -17,10 +17,10 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
  */
 public class ProyectionConstants {
 	//segun wgs84
-	public static final int RADIO_TERRESTRE_ECUATORIAL = 6378137;
-	public static final int RADIO_TERRESTRE_POLAR =  6356752;
+	public static final double RADIO_TERRESTRE_ECUATORIAL = 6378137/1.021891112380502;//para que el area del pixel de landsat sea 100m2 pero me parece que es mas grande 2%
+	public static final double RADIO_TERRESTRE_POLAR =  6356752.3;//6356752;
 	
-	private static final int LATITUD_ARGENTINA =-34;
+	private static final double LATITUD_ARGENTINA =-33.5;
 	public static final double METROS2_POR_HA = 10000;
 	
 	private static double LATITUD_CALCULO=LATITUD_ARGENTINA;
@@ -37,8 +37,12 @@ public class ProyectionConstants {
 	public static double A_HAS(){
 		return 1/(metersToLong()*metersToLat()*METROS2_POR_HA);
 	}
+	/**
+	 * 
+	 * @return la constante por la que hay que multiplicar a una longitud para convertirla en metros
+	 */
 	public static double metersToLong(){
-		return 180 / ( Math.PI * RADIO_TERRESTRE_ECUATORIAL*Math.cos(Math.toRadians(LATITUD_CALCULO)));// para
+		return 180 / ( Math.PI * RADIO_TERRESTRE_ECUATORIAL*Math.cos(Math.toRadians(LATITUD_CALCULO)));
 	}
 	
 	public static double metersToLat(){

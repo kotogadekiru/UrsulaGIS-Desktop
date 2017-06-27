@@ -12,7 +12,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
-public abstract class LaborItem implements Comparable<LaborItem>{
+public abstract class LaborItem implements Comparable<Object>{
 	protected Double id=new Double(0);
 	protected Geometry geometry=null;
 
@@ -119,8 +119,13 @@ public abstract class LaborItem implements Comparable<LaborItem>{
 		}
 	}
 
-	public int compareTo(LaborItem dao){
-		return getAmount().compareTo(dao.getAmount());
+	public int compareTo(Object dao){
+		if(dao !=null && LaborItem.class.isAssignableFrom(dao.getClass())){
+			return id.compareTo(((LaborItem)dao).id);
+		} else {
+			return 0;
+		}
+		//return getAmount().compareTo(dao.getAmount());
 
 	}
 

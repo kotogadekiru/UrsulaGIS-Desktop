@@ -23,6 +23,8 @@ import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 
+import dao.config.Cultivo;
+import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 import gui.nww.LaborLayer;
@@ -49,10 +51,25 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		labor.colElevacion.set(CosechaLabor.COLUMNA_ELEVACION);
 		//labor.colVelocidad.set(CosechaLabor.COLUMNA_VELOCIDAD);
 		//labor.colPasada.set(CosechaLabor.COLUMNA_ANCHO);
+		
+		CosechaConfig cConfig= labor.getConfiguracion();
 
-		labor.getConfiguracion().valorMetrosPorUnidadDistanciaProperty().set(1.0);
-		labor.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
-
+		cConfig.valorMetrosPorUnidadDistanciaProperty().set(1.0);
+		cConfig.correccionFlowToRindeProperty().setValue(false);
+		
+		cConfig.correccionDistanciaProperty().set(false);
+		cConfig.correccionAnchoProperty().set(false);
+		cConfig.correccionSuperposicionProperty().set(false);
+		cConfig.correccionDemoraPesadaProperty().set(false);
+		
+		cConfig.calibrarRindeProperty().set(false);
+	
+		cConfig.resumirGeometriasProperty().setValue(false);
+		
+		cConfig.correccionOutlayersProperty().set(false);
+		
+		
+		
 		labor.getNombreProperty().setValue("grilla cosechas");//este es el nombre que se muestra en el progressbar
 	}
 
@@ -68,7 +85,19 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		ReferencedEnvelope unionEnvelope = null;
 		double ancho = labor.getConfiguracion().getAnchoGrilla();
 		String nombre =null;
+		Cultivo cultivo =null;
 		for(CosechaLabor c:cosechas){
+			labor.precioGranoProperty.set(c.precioGranoProperty.get());
+			labor.costoCosechaTnProperty.set(c.costoCosechaTnProperty.get());
+			labor.fechaProperty.setValue(c.fechaProperty.getValue());
+			labor.precioInsumoProperty.set(c.precioInsumoProperty.get());
+			labor.precioLaborProperty.set(c.precioLaborProperty.get());
+			
+			labor.minRindeProperty.set(Math.min(labor.minRindeProperty.get(), c.minRindeProperty.get()));
+			labor.maxRindeProperty.set(Math.max(labor.maxRindeProperty.get(), c.maxRindeProperty.get()));
+			if(cultivo==null){
+				cultivo=c.producto.getValue();
+			}
 			if(nombre == null){
 				nombre="grilla "+c.getNombreProperty().get();	
 			}else {
@@ -82,7 +111,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 				unionEnvelope.expandToInclude(b);
 			}
 		}
-
+		labor.producto.setValue(cultivo);
 		labor.nombreProperty.set(nombre);
 		labor.setLayer(new LaborLayer());
 		// 2 generar una grilla de ancho ="ancho" que cubra bounds

@@ -72,18 +72,6 @@
                               <TextField id="textPrecioGrano" fx:id="textNombre" prefHeight="25.0" prefWidth="147.0" GridPane.columnIndex="1" />
                               <DatePicker fx:id="datePickerFecha" GridPane.columnIndex="3" />
                               <Label text="Fecha" GridPane.columnIndex="2" />
-                              <Label text="Entresurco" GridPane.columnIndex="2" GridPane.rowIndex="4">
-                                 <opaqueInsets>
-                                    <Insets left="5.0" right="5.0" />
-                                 </opaqueInsets>
-                              </Label>
-                              <TextField id="textPrecioGrano" fx:id="textEntresurco" GridPane.columnIndex="3" GridPane.rowIndex="4" />
-                              <Label text="Semillas/Bolsa" GridPane.columnIndex="2" GridPane.rowIndex="5">
-                                 <opaqueInsets>
-                                    <Insets left="5.0" right="5.0" />
-                                 </opaqueInsets>
-                              </Label>
-                              <TextField id="textPrecioGrano" fx:id="textSemillasBolsa" GridPane.columnIndex="3" GridPane.rowIndex="5" />
                            </children>
                         </GridPane>
                      </children>

@@ -13,6 +13,7 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Data;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -28,6 +29,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import dao.LaborItem;
 import dao.Labor;
 import dao.cosecha.CosechaLabor;
+import gui.utils.TooltipUtil;
 
 public class CosechaHistoChart extends VBox {
 	// VBox root = new VBox();
@@ -50,7 +52,7 @@ public class CosechaHistoChart extends VBox {
  	private	XYChart.Series<String, Number> series =null;
  	private Double superficieTotal= new Double(0);
  	private Double produccionTotal= new Double(0);
-	private Double entropia= new Double(0);
+	//private Double entropia= new Double(0);
 	private int numClasses;
 
 	public CosechaHistoChart(Labor<?> labor) {
@@ -58,7 +60,7 @@ public class CosechaHistoChart extends VBox {
 		
 
 		final CategoryAxis xAxis = new CategoryAxis();
-		xAxis.setLabel("Rinde");
+		xAxis.setLabel("Promedio/Ha");
 		final NumberAxis yAxis = new NumberAxis();
 		yAxis.setLabel("Superficie");
 		final BarChart<String, Number> chart = new BarChart<String, Number>(xAxis, yAxis);
@@ -131,9 +133,10 @@ public class CosechaHistoChart extends VBox {
 		VBox left = new VBox();
 		left.getChildren().addAll(
 				new Label("Superficie Total: "+df.format(superficieTotal)),
-				new Label("Produccion: "+df.format(produccionTotal)),
-				new Label("Rinde Promedio: "+df.format(produccionTotal/superficieTotal)),
-				new Label("Entropia: "+df.format(entropia)));
+				new Label("Cantidad: "+df.format(produccionTotal)),
+				new Label("Cantidad/Ha: "+df.format(produccionTotal/superficieTotal))
+				//,new Label("Entropia: "+df.format(entropia))
+				);
 		VBox right = new VBox();
 		Button exportButton = new Button("Exportar");
 		exportButton.setOnAction(a->{doExportarExcell();});
@@ -163,7 +166,7 @@ public class CosechaHistoChart extends VBox {
 	}
 
 
-	private XYChart.Series<String, Number> createSeries(Labor labor) {	
+	private XYChart.Series<String, Number> createSeries(Labor<?> labor) {	
 		 numClasses = labor.clasificador.getNumClasses();
 		Double[] superficies = null;
 		Double[] producciones = null;
@@ -195,14 +198,14 @@ public class CosechaHistoChart extends VBox {
 		}
 		it.close();
 		
-		this.entropia=new Double(0);
-		for(int i=0;i<superficies.length;i++){
-			Double s = superficies[i];
-			if(superficieTotal>0&&s!=null&&s>0){
-			double p = superficies[i]/this.superficieTotal;
-			entropia-=p*Math.log(p)/Math.log(2);
-			}
-		}
+//		this.entropia=new Double(0);
+//		for(int i=0;i<superficies.length;i++){
+//			Double s = superficies[i];
+//			if(superficieTotal>0&&s!=null&&s>0){
+//			double p = superficies[i]/this.superficieTotal;
+//			entropia-=p*Math.log(p)/Math.log(2);
+//			}
+//		}
 
 
 		XYChart.Series<String, Number> series = new XYChart.Series<>();
@@ -231,6 +234,7 @@ public class CosechaHistoChart extends VBox {
 			Data<String, Number> cData = new XYChart.Data<>(label, superficie);
 			cData.setExtraValue(produccion);
 			String color = getColorString(j);
+			TooltipUtil.setupCustomTooltipBehavior(50, 60000, 50);
 			cData.nodeProperty().addListener(new ChangeListener<Node>() {
 
 				@Override
@@ -238,6 +242,10 @@ public class CosechaHistoChart extends VBox {
 						Node oldNode, Node newNode) {
 					if (newNode != null) {
 						newNode.setStyle("-fx-bar-fill: " + color + ";");
+						DecimalFormat df = new DecimalFormat("0.00");
+						df.setGroupingSize(3);
+						df.setGroupingUsed(true);
+						Tooltip.install(newNode, new Tooltip(df.format(cData.getYValue())+" Has"));
 					}
 				}
 			});

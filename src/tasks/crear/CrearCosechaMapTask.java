@@ -57,7 +57,7 @@ public class CrearCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 //		ci.setCostoLaborTn(labor.costoCosechaTnProperty.get());
 		labor.setPropiedadesLabor(ci);
 		GeometryFactory fact = new GeometryFactory();
-		ArrayList<? extends Position> positions = poli.getPositions();
+		List<? extends Position> positions = poli.getPositions();
 		Coordinate[] coordinates = new Coordinate[positions.size()];
 		for(int i=0;i<positions.size();i++){
 			Position p = positions.get(i);	
@@ -65,6 +65,7 @@ public class CrearCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 			
 			coordinates[i]=c;
 		}
+		coordinates[coordinates.length-1]=coordinates[0];//en caso de que la geometria no este cerrada
 		
 		Polygon poly = fact.createPolygon(coordinates);	
 

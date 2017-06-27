@@ -201,9 +201,6 @@ public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLab
 		}
 		it.close();
 		labor.constructClasificador();
-
-
-
 		runLater(itemsToShow);
 		updateProgress(0, featureCount);
 
@@ -215,7 +212,7 @@ public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLab
 		double area = poly.getArea() *ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		DecimalFormat df = new DecimalFormat("#.00"); 
 		String tooltipText = new String(
-				"Densidad: "+ df.format(siembraFeature.getDosisHa()) + " Bolsa/Ha\n\n"
+				"Densidad: "+ df.format(siembraFeature.getDosisHa()) + " Kg/Ha\n\n"
 				+"Costo: " + df.format(siembraFeature.getImporteHa()) + " U$S/Ha\n"				
 			//	+"Sup: " +  df.format(area*ProyectionConstants.METROS2_POR_HA) + " m2\n"
 		//		+"feature: " + featureNumber						

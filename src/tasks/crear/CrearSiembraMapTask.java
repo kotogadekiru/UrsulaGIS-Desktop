@@ -58,7 +58,7 @@ public class CrearSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 		ci.setDosisHa(amount);
 		labor.setPropiedadesLabor(ci);
 		GeometryFactory fact = new GeometryFactory();
-		ArrayList<? extends Position> positions = poli.getPositions();
+		List<? extends Position> positions = poli.getPositions();
 		Coordinate[] coordinates = new Coordinate[positions.size()];
 		for(int i=0;i<positions.size();i++){
 			Position p = positions.get(i);	
@@ -66,7 +66,9 @@ public class CrearSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 			
 			coordinates[i]=c;
 		}
-		
+	//	if(coordinates[0]!=coordinates[coordinates.length-1]){
+			coordinates[coordinates.length-1]=coordinates[0];//en caso de que la geometria no este cerrada
+	//	}
 		Polygon poly = fact.createPolygon(coordinates);	
 
 		ci.setGeometry(poly);

@@ -56,7 +56,7 @@ public class OpenSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		}
 		
 		int divisor = 1;
-
+		List<SueloItem> itemsToShow = new ArrayList<SueloItem>();
 		while (reader.hasNext()) {
 
 			SimpleFeature simpleFeature = reader.next();
@@ -73,22 +73,23 @@ public class OpenSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 			 *
 			 */
 			if (geometry instanceof Point) {
-				//TODO crear una grilla e interpolar los valores con el promedio ponderado po las distancias (como se llamaba?) resumir geometrias?
+				//TODO crear una grilla e interpolar los valores con el promedio ponderado po las distancias (como se llamaba? <=kriging) resumir geometrias?
 			
 			} else { // no es point. Estoy abriendo una cosecha de poligonos.
 				labor.insertFeature(si);
+				itemsToShow.add(si);
 			}
 			
 		}// fin del for que recorre las cosechas por indice
 		reader.close();
 		
-		List<SueloItem> itemsToShow = new ArrayList<SueloItem>();
-		SimpleFeatureIterator it = labor.outCollection.features();
-		while(it.hasNext()){
-			SimpleFeature f=it.next();
-			itemsToShow.add(labor.constructFeatureContainerStandar(f,false));
-		}
-		it.close();
+	
+//		SimpleFeatureIterator it = labor.outCollection.features();
+//		while(it.hasNext()){
+//			SimpleFeature f=it.next();
+//			itemsToShow.add(labor.constructFeatureContainerStandar(f,false));
+//		}
+//		it.close();
 		labor.constructClasificador();
 		runLater(itemsToShow);
 		updateProgress(0, featureCount);

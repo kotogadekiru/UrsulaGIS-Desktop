@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.Entity;
+
 import org.geotools.data.DataUtilities;
 import org.geotools.data.FileDataStore;
 import org.geotools.feature.SchemaException;
@@ -15,12 +17,14 @@ import dao.Clasificador;
 import dao.LaborItem;
 import dao.Labor;
 import dao.LaborConfig;
+import dao.config.Agroquimico;
 import dao.config.Configuracion;
 import dao.config.Semilla;
 import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionItem;
+import dao.pulverizacion.PulverizacionLabor;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -28,8 +32,11 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import lombok.Data;
 import utils.ProyectionConstants;
 
+@Data
+@Entity
 public class SiembraLabor extends Labor<SiembraItem> {
 //	private static final String SEMILLAS_POR_BOLSA_KEY = "SEMILLAS_POR_BOLSA";
 //	private static final String ENTRE_SURCO_KEY = "ENTRE_SURCO";
@@ -93,7 +100,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 //		});
 
 
-		precioInsumoProperty = initDoubleProperty(SiembraLabor.COLUMNA_PRECIO_SEMILLA, "0", properties);
+	//	precioInsumoProperty = initDoubleProperty(SiembraLabor.COLUMNA_PRECIO_SEMILLA, "0", properties);
 
 		Semilla sDefault = Semilla.semillas.get(Semilla.SEMILLA_DE_MAIZ);
 		String semillaKEY = properties.getPropertyOrDefault(SiembraLabor.SEMILLA_DEFAULT, sDefault.getNombre());
@@ -167,6 +174,14 @@ public class SiembraLabor extends Labor<SiembraItem> {
 		return initDoubleProperty(SiembraLabor.COSTO_LABOR_SIEMBRA,"0",config.getConfigProperties());
 	}
 
+
+	@Override
+	protected DoubleProperty initPrecioInsumoProperty() {
+		return initDoubleProperty(SiembraLabor.COLUMNA_PRECIO_SEMILLA, "0", config.getConfigProperties()); 
+		//return initDoubleProperty(Margen.COSTO_TN_KEY,  "0", );
+	//	return initDoubleProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,"0",config.getConfigProperties());
+	}
+	
 	@Override
 	public LaborConfig getConfigLabor() {
 		if(config==null){

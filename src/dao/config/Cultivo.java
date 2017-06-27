@@ -2,6 +2,15 @@ package dao.config;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+
 import lombok.Data;
 
 
@@ -11,10 +20,16 @@ import lombok.Data;
 //o Duración aproximada de cada etapa fenológica
 //o Profundidad radicular en cada etapa fenológica
 //o Consumo hídrico en cada etapa fenológica
-
-
 @Data
-public class Cultivo{
+@Entity //@Access(AccessType.PROPERTY)
+@NamedQueries({
+	@NamedQuery(name=Cultivo.FIND_ALL, query="SELECT c FROM Cultivo c") ,
+	@NamedQuery(name=Cultivo.FIND_NAME, query="SELECT o FROM Cultivo o where o.name = :name") ,
+}) 
+public class Cultivo implements Comparable<Cultivo>{
+	public static final String FIND_ALL="Cultivo.findAll";
+	public static final String FIND_NAME = "Cultivo.findName";
+	
 	public static final String GIRASOL = "Girasol";
 	public static final String SOJA = "Soja";
 	public static final String TRIGO = "Trigo";
@@ -22,24 +37,27 @@ public class Cultivo{
 	public static final String SORGO = "Sorgo";
 	public static final String CEBADA = "Cebada";
 	
-	String nombre =new String();
+	@Id @GeneratedValue
+	private long id;
+	
+	private String nombre =new String();
 	
 	//es lo que absorve (kg) la planta para producir una tonelada de grano seco
-	Double absN=new Double(0);
-	Double absP=new Double(0);
-	Double absK=new Double(0);
-	Double absS=new Double(0);
+	private Double absN=new Double(0);
+	private Double absP=new Double(0);
+	private Double absK=new Double(0);
+	private Double absS=new Double(0);
 	
 	//mm absorvidos de agua por tn de grano producido
-	Double absAgua=new Double(0);
+	private Double absAgua=new Double(0);
 	
 	//es lo que se lleva el grano por cada TN 
-	Double extN=new Double(0);
-	Double extP=new Double(0);
-	Double extK=new Double(0);
-	Double extS=new Double(0);
+	private Double extN=new Double(0);
+	private Double extP=new Double(0);
+	private Double extK=new Double(0);
+	private Double extS=new Double(0);
 
-	Double rindeEsperado=new Double(0);
+	private Double rindeEsperado=new Double(0);
 	
 	public static Map<String,Cultivo> cultivos = new HashMap<String,Cultivo>();
 	static{				//String _nombre, Double _absP, Double _extP,Double rinde
@@ -56,6 +74,11 @@ public class Cultivo{
 		this.nombre=_nombre;
 	}
 
+	@Override
+	public int compareTo(Cultivo arg0) {
+		return this.nombre.compareTo(arg0.nombre);
+	}
+	
 	@Override
 	public String toString() {
 		return nombre;

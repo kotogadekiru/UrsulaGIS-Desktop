@@ -3,16 +3,41 @@ package dao.config;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.Transient;
+
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-
+import lombok.Data;
+@Data
+@Entity @Access(AccessType.PROPERTY)
+@NamedQueries({
+	@NamedQuery(name=Semilla.FIND_ALL, query="SELECT o FROM Semilla o") ,
+	@NamedQuery(name=Semilla.FIND_NAME, query="SELECT o FROM Semilla o where o.nombre = :name") ,
+}) 
 public class Semilla {
+	public static final String FIND_ALL="Semilla.findAll";
+	public static final String FIND_NAME="Semilla.findName";
+	
 	public static final String SEMILLA_DE_TRIGO = "Semilla de Trigo";
 	public static final String SEMILLA_DE_SOJA = "Semilla de Soja";
 	public static final String SEMILLA_DE_MAIZ = "Semilla de Maiz";
+	
+	@Id @GeneratedValue
+	private long id;
+	//@Transient
 	private StringProperty nombre = new SimpleStringProperty();
+	@Transient
 	private Property<Cultivo> productoProperty=new SimpleObjectProperty<Cultivo>();//values().iterator().next());;
 
 	public static Map<String,Semilla> semillas = new HashMap<String,Semilla>();
@@ -23,6 +48,9 @@ public class Semilla {
 
 	}
 
+	public Semilla(){
+	}
+	
 	public Semilla(String _nombre, Cultivo producto) {
 		nombre.set(_nombre);
 		productoProperty.setValue(producto);
@@ -36,17 +64,20 @@ public class Semilla {
 		this.nombre.set(n);
 	}
 
+	@ManyToOne(cascade=CascadeType.PERSIST)
 	public Cultivo getCultivo(){
 		return this.productoProperty.getValue();
 	}
 
 	public void setCultivo(Cultivo cultivo){
+		if(cultivo != null)
 			this.productoProperty.setValue(cultivo);
 	}
 
 	/**
 	 * @return the nombre
 	 */
+	@Transient
 	public StringProperty getNombreProperty() {
 		return nombre;
 	}
@@ -54,8 +85,14 @@ public class Semilla {
 	/**
 	 * @param nombre the nombre to set
 	 */
+
 	public void setNombreProperty(StringProperty nombre) {
 		this.nombre = nombre;
+	}
+	
+	@Transient
+	public Property<Cultivo> getProductoPorperty(){
+		return this.productoProperty;
 	}
 
 	@Override

@@ -27,22 +27,22 @@ public class Clasificador {
 	public static final String NUMERO_CLASES_CLASIFICACION = "NUMERO_CLASES_CLASIFICACION";
 	public static final String CLASIFICADOR_JENKINS = "JENKINS";
 	public static final String TIPO_CLASIFICADOR = "CLASIFICADOR";
-	
+
 	public static final  String[] clasficicadores = {"Jenkins","Desvio Standar"};
 	public static Color[] colors = {
-		//Color.rgb(158,1,66),//0
-		//Color.rgb(213,62,79),//1
-		Color. rgb(244,109,67),//2
-		Color. rgb(253,174,97),//3
-		Color. rgb(254,224,139),//4
-		Color. rgb(255,255,191),//5
-		Color. rgb(230,245,152)	,//6
-		Color. rgb(171,221,164),//7
-		Color.rgb(102,194,165),//8
-		Color.rgb(50,136,189),//9
-		Color.DARKBLUE};//10
-//		Color.rgb(94,79,162)
-//		};
+			//Color.rgb(158,1,66),//0
+			//Color.rgb(213,62,79),//1
+			Color. rgb(244,109,67),//2
+			Color. rgb(253,174,97),//3
+			Color. rgb(254,224,139),//4
+			Color. rgb(255,255,191),//5
+			Color. rgb(230,245,152)	,//6
+			Color. rgb(171,221,164),//7
+			Color.rgb(102,194,165),//8
+			Color.rgb(50,136,189),//9
+			Color.DARKBLUE};//10
+	//		Color.rgb(94,79,162)
+	//		};
 	private  Double[] histograma=null;// es static para poder hacer constructHistograma static para usarlo en el grafico de Histograma
 	private  Classifier clasifier=null;
 	public StringProperty tipoClasificadorProperty;
@@ -51,53 +51,61 @@ public class Clasificador {
 
 	public Clasificador(){
 		tipoClasificadorProperty = new SimpleStringProperty();		
-	
+
 	}
-	
+
 	public String getCategoryNameFor(int index) {		
 		String rangoIni = null;
-		if(histograma != null){
-			Double delta = histograma[1]-histograma[0];
-
-			if(index<histograma.length){
-				rangoIni = (histograma[index]-delta)+".."+histograma[index];
-			}else {
-				rangoIni = histograma[index]+".."+(histograma[index]+delta);
-			}
-		} else if(clasifier != null){			
-			rangoIni = clasifier.getTitle(index);		
-		}
-if(rangoIni!=null){
-		String [] partesIni = rangoIni.split("\\.\\.");
 		DecimalFormat df = new DecimalFormat("0.00");
-		return df.format(new Double(partesIni[0]))+"~"+df.format(new Double(partesIni[1]));// +"-"+histograma[j+1];
-} else{
-	return "error";
-}
+
+		df.setGroupingSize(3);
+		df.setGroupingUsed(true);
+		if(histograma != null){
+		//	Double delta = histograma[1]-histograma[0];
+
+			if(index == 0){
+				rangoIni = "-inf ~ "+ df.format(histograma[index]);
+			}else if(index<histograma.length){
+				rangoIni = df.format(histograma[index-1])+" ~ "+ df.format(histograma[index]);
+			}else {
+				rangoIni = df.format(histograma[index-1])+" ~ +inf";//+(histograma[index]+delta);
+			}
+			return rangoIni;
+		} else if(clasifier != null){			
+			rangoIni = clasifier.getTitle(index);	
+			String [] partesIni = rangoIni.split("\\.\\.");			
+			return df.format(new Double(partesIni[0]))+" ~ "+df.format(new Double(partesIni[1]));// +"-"+histograma[j+1];
+		}
+		return "error";
+//		if(rangoIni!=null){
+//		
+//		} else{
+//			return "error";
+//		}
 		//		System.err.println("Error no hay un clasificador seleccionado");
 		//		return label;
 	}
-	
+
 	public  Integer getCategoryFor(Double rinde) {				
-		
+
 		if(histograma != null){
 			int absColor = getColorByHistogram(rinde, histograma);
 			return absColor;
-//			System.out.println("obteniendo la clase para el ");
-//			return absColor*(colors.length-1)/clasesClasificadorProperty.get();
-			
+			//			System.out.println("obteniendo la clase para el ");
+			//			return absColor*(colors.length-1)/clasesClasificadorProperty.get();
+
 		} else if(clasifier != null){
 			int absColor = getColorByJenks(rinde);
 			return absColor;
-		//	return absColor*(colors.length-1)/clasesClasificadorProperty.get();
+			//	return absColor*(colors.length-1)/clasesClasificadorProperty.get();
 		}
 		//System.err.println("Error no hay un clasificador seleccionado");
 		return 0;
 		//return getColorByHue(rinde, rindeMin, rindeMax, porcent);
 	}
-	
 
-	private  int getColorByHistogram(Double rinde, Double[] histo) {
+
+	public static int getColorByHistogram(Double rinde, Double[] histo) {
 		int colorIndex = histo.length-1;
 		try {
 			BigDecimal bd = new BigDecimal(rinde);//java.lang.NumberFormatException: Infinite or NaN
@@ -111,7 +119,7 @@ if(rangoIni!=null){
 			}
 
 			//	 System.out.println("Histograma color Index for rinde "+rinde+" is "+colorIndex);
-		
+
 			return colorIndex;
 		} catch (Exception e) {
 			System.err.println("getColorsByHistogram "+rinde);
@@ -119,7 +127,7 @@ if(rangoIni!=null){
 			return 0;
 		}
 	}
-	
+
 	public  Classifier constructJenksClasifier(SimpleFeatureCollection collection,String amountColumn){
 		//JenksFunctionTest test = new JenksFunctionTest("jenksTest");
 		histograma = null;
@@ -144,7 +152,7 @@ if(rangoIni!=null){
 		//  int clase =   clasifier.classify(arg0)
 		return clasifier;
 	}
-	
+
 	private  int getColorByJenks(Double double1) {
 		try{
 			int colorIndex = clasifier.classify(double1);
@@ -159,7 +167,7 @@ if(rangoIni!=null){
 			return 0;
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @param elementos Lista de FeatureContainer
@@ -173,7 +181,7 @@ if(rangoIni!=null){
 		//		List<Dao> elementos = new LinkedList<Dao>(elementosItem);
 		//		elementos.sort((e1, e2) -> e1.getAmount().compareTo(e2.getAmount()));//sort ascending
 
-	
+
 
 		Double average = new Double(0);
 		Double sup= new Double(0);
@@ -183,58 +191,54 @@ if(rangoIni!=null){
 			sup +=area;
 			amount+=dao.getAmount()*area;		
 		}
-		average=amount/(sup);
-		
-//		average = elementosItem
-//				.stream().mapToDouble( FeatureContainer::getAmount)
-//				.average().getAsDouble();//no such value???
-		
+		average=sup>0?amount/(sup):0.0;
+
+		//		average = elementosItem
+		//				.stream().mapToDouble( FeatureContainer::getAmount)
+		//				.average().getAsDouble();//no such value???
+
 		Double desvioEstandar =new Double(0);
 		if(elementosItem.size()>0){
-			
+
 			double desvios = new Double(0);
 			for(LaborItem dao: elementosItem){
 				//Double area = dao.getGeometry().getArea()*ProyectionConstants.A_HAS;
 				desvios += Math.abs(dao.getAmount()-average);
 			}
-			 desvioEstandar= desvios/(elementosItem.size());
+			desvioEstandar= desvios/(elementosItem.size());
 		}
-	
-	//	System.out.println("termine de ordenar los elementos en constructHistogram");
-		histograma=new Double[getNumClasses()];
 
+		//	System.out.println("termine de ordenar los elementos en constructHistogram");
+		int numClases = getNumClasses()-1;//esto es porque el histograma se extiende hacia el infinito por lo que gana una clase
+		histograma=new Double[numClases];
 
-	
-	//	System.out.println("hay mas elementos que colores");
+		int desviosEstandar =numClases;// 8;//es la cantidad de desvios que voy a dibujar
+		Double deltaForColour =(desviosEstandar*desvioEstandar)/numClases;
 
-
-		int desviosEstandar = 8;
-		Double deltaForColour =(desviosEstandar*desvioEstandar)/this.getNumClasses();
-
-		for(int i = 0;i<this.getNumClasses();i++){	
+		for(int i = 0;i<numClases;i++){	
 			histograma[i]=(average-(desviosEstandar/2)*desvioEstandar)+deltaForColour*(i+1);
 		}
 
 		this.initialized=true;
 		return histograma;
 	}
-	
+
 	public Color getColorFor(double amount) {
 		int absCat = getCategoryFor(amount);//entre 0 y numClases-1
 		int length =colors.length-1;
 		int clases =getNumClasses()-1;
 		int colorIndex = absCat*(length/clases);
-	//	System.out.println(absCat+"*"+length+"/"+clases+" = "+colorIndex+" colorIndex");
+		//	System.out.println(absCat+"*"+length+"/"+clases+" = "+colorIndex+" colorIndex");
 		return colors[colorIndex];
 	}
-	
+
 	public Color getColorFor(LaborItem dao) {	
 		return getColorFor(dao.getAmount());
-	
+
 	}
 
 	public int getNumClasses() {
-		
+
 		int numClases = clasesClasificadorProperty.intValue();
 		//return 3;
 		if(numClases>colors.length|| numClases<1){
@@ -243,42 +247,42 @@ if(rangoIni!=null){
 		}
 		return numClases;
 		// TODO Auto-generated method stub
-		
+
 	}
 	public boolean isInitialized(){return initialized;}
 
-//	public Clasificador clone(){
-//		Clasificador cn = new Clasificador();
-//		cn.setClasesClasificadorProperty(new SimpleIntegerProperty(this.getClasesClasificadorProperty().get()));
-//		cn.getTipoClasificadorProperty().set(this.getTipoClasificadorProperty().get());
-//		//XXX si el tipo de clasificador es jenkins hay que volver a constriur el clasificador
-//		cn.setHistograma(this.getHistograma().clone());
-//		cn.setInitialized(this.isInitialized());
-//		return cn;
-//	}
-	
-//	/**
-//	 * Metodo que busca los limites de las alturas despues hay que buscar los elementos que estan dentro de un entorno y agregarlos a una lista para dibujarlos
-//	 * @param elementos Lista de Dao ordenados por Elevacion de menor a mayor
-//	 * @return 
-//	 */
-//	public static Double[] constructHeightstogram(List<? extends CosechaItem> elementosItem){
-//		double average = elementosItem
-//				.stream().mapToDouble( CosechaItem::getElevacion)
-//				.average().getAsDouble();
-//		double desvios = new Double(0);
-//		for(CosechaItem dao: elementosItem){
-//			desvios += Math.abs(dao.getElevacion()-average);
-//		}
-//		double desvioEstandar= desvios/elementosItem.size();
-//		heightstogram=new Double[colors.length];
-//
-//		int desviosEstandar = 8;
-//		Double deltaForColour =(desviosEstandar*desvioEstandar)/colors.length;
-//
-//		for(int i = 0;i<colors.length;i++){	
-//			heightstogram[i]=(average-(desviosEstandar/2)*desvioEstandar)+deltaForColour*(i+1);
-//		}
-//		return heightstogram;
-//	}
+	//	public Clasificador clone(){
+	//		Clasificador cn = new Clasificador();
+	//		cn.setClasesClasificadorProperty(new SimpleIntegerProperty(this.getClasesClasificadorProperty().get()));
+	//		cn.getTipoClasificadorProperty().set(this.getTipoClasificadorProperty().get());
+	//		//XXX si el tipo de clasificador es jenkins hay que volver a constriur el clasificador
+	//		cn.setHistograma(this.getHistograma().clone());
+	//		cn.setInitialized(this.isInitialized());
+	//		return cn;
+	//	}
+
+	//	/**
+	//	 * Metodo que busca los limites de las alturas despues hay que buscar los elementos que estan dentro de un entorno y agregarlos a una lista para dibujarlos
+	//	 * @param elementos Lista de Dao ordenados por Elevacion de menor a mayor
+	//	 * @return 
+	//	 */
+	//	public static Double[] constructHeightstogram(List<? extends CosechaItem> elementosItem){
+	//		double average = elementosItem
+	//				.stream().mapToDouble( CosechaItem::getElevacion)
+	//				.average().getAsDouble();
+	//		double desvios = new Double(0);
+	//		for(CosechaItem dao: elementosItem){
+	//			desvios += Math.abs(dao.getElevacion()-average);
+	//		}
+	//		double desvioEstandar= desvios/elementosItem.size();
+	//		heightstogram=new Double[colors.length];
+	//
+	//		int desviosEstandar = 8;
+	//		Double deltaForColour =(desviosEstandar*desvioEstandar)/colors.length;
+	//
+	//		for(int i = 0;i<colors.length;i++){	
+	//			heightstogram[i]=(average-(desviosEstandar/2)*desvioEstandar)+deltaForColour*(i+1);
+	//		}
+	//		return heightstogram;
+	//	}
 }

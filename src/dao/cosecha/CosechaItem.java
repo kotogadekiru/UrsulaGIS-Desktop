@@ -3,11 +3,18 @@ package dao.cosecha;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+import javax.persistence.Entity;
+
 import org.opengis.feature.simple.SimpleFeature;
 
 import dao.LaborItem;
+import dao.config.Agroquimico;
+import dao.config.Campania;
+import lombok.Data;
 
-public class CosechaItem extends LaborItem{	
+@Data
+@Entity
+public class CosechaItem extends LaborItem {	
 	Double rindeTnHa=new Double(0);
 	Double desvioRinde=new Double(0);
 	Double precioTnGrano=new Double(0);

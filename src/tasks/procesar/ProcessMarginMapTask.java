@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.geometry.BoundingBox;
@@ -15,7 +16,10 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.PrecisionModel;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
+import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
+import com.vividsolutions.jts.precision.SimpleGeometryPrecisionReducer;
 
 import dao.LaborItem;
 import dao.Labor;
@@ -73,8 +77,7 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 
 		
 		featureCount = geometryList.size();
-	//	List<MargenItem> itemsToShow = new ArrayList<MargenItem>();
-		
+	//	List<MargenItem> itemsToShow = new ArrayList<MargenItem>();)
 		List<MargenItem> itemsToShow = 	geometryList.parallelStream().collect(	
 				() -> new  LinkedList<MargenItem>(),
 				(list, polygon) -> {//	).forEach(polygon->{	
@@ -91,10 +94,22 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 		},
 		(list1, list2) -> list1.addAll(list2));
 
-		pulverizaciones.forEach((l)->l.clearCache());
-		fertilizaciones.forEach((l)->l.clearCache());
-		cosechas.forEach((l)->l.clearCache());
-		siembras.forEach((l)->l.clearCache());
+		pulverizaciones.forEach((l)->{
+			l.clearCache();
+			l.getLayer().setEnabled(false);
+		});
+		fertilizaciones.forEach((l)->{
+			l.clearCache();
+			l.getLayer().setEnabled(false);
+		});
+		cosechas.forEach((l)->{
+			l.clearCache();
+			l.getLayer().setEnabled(false);
+		});
+		siembras.forEach((l)->{
+			l.clearCache();
+			l.getLayer().setEnabled(false);
+		});
 		System.out.println("clasificador antes de constructClasificador es "+labor.clasificador.tipoClasificadorProperty.get());
 		labor.constructClasificador();//labor.clasificador.tipoClasificadorProperty.get());
 		runLater(itemsToShow);
@@ -300,27 +315,56 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 		Double ret =  labores.stream().filter((l)->l.getLayer().isEnabled())
 				.mapToDouble((labor)->{
 					List<? extends LaborItem> lItems = labor.cachedOutStoreQuery(geometry.getEnvelopeInternal());
-
+					//List<? extends LaborItem> lItems = labor.cachedOutStoreQueryOLD(geometry.getEnvelopeInternal());
+					
 					Double importeLabor =	lItems.stream().mapToDouble((li)->{
+						Geometry query = geometry;
 						
 						Double costoHa = (Double) li.getImporteHa();
 						Geometry liGeom = li.getGeometry();
 						//getAmount es el amount/ha
 						Double costoVariableHa = costoVariable!=null?li.getAmount()*costoVariable:0.0;
-						Geometry interseccionGeom = geometry.intersection(liGeom);// Computes a
+						Geometry interseccionGeom =getIntersection(liGeom,query);// geometry.intersection(liGeom);// Computes a
+						if(interseccionGeom == null)return 0;
 						Double area = interseccionGeom.getArea() * ProyectionConstants.A_HAS();
+						if(area>0){
+							return (costoHa+costoVariableHa)*area;
+						}
 						//importeCosecha+=costoHa*area;
 //						System.out.println("importeHa:"+costoHa
 //								+"\ncantHa:"+li.getAmount()
 //								+"\ncostoVariable:"+costoVariable
 //								+"\ncantHa*costoVariable:"+costoVariableHa
 //								+"\nimporteHa+importeVariable:"+(costoHa+costoVariableHa));
-						return (costoHa+costoVariableHa)*area;
+						return 0.0;
 					}).sum();
 
 					return importeLabor;
 				}).sum();
 		return ret;
+	}
+	
+	private Geometry getIntersection(Geometry g, Geometry g2){
+	g=makeGood(g);
+	g2=makeGood(g2);
+		Geometry intersection =g;
+		try {			
+			if (g2 != null //&& g2.isValid()
+					){
+				Geometry polyG =g;
+				intersection = polyG.intersection(g2);// Computes a Geometry//found non-noded intersection between LINESTRING ( -61.9893807883
+			}
+			intersection = makeGood(intersection);
+			// .out.println("tarde "+(fin-init)+" milisegundos en insertar");
+		} catch (Exception te) {//com.vividsolutions.jts.geom.TopologyException: found non-noded intersection between LINESTRING ( -62.008963817544945 -33.872771283412874, -62.0089897286684 -33.87272023486772 ) and LINESTRING ( -62.00902014621838 -33.87282073965304, -62.00893906917324 -33.872626066467696 ) [ (-62.008983444498256, -33.87273261556376, NaN) ]
+			try{//
+				intersection = EnhancedPrecisionOp.difference(g, g2);
+			}catch(Exception e){
+			//	e.printStackTrace();
+				intersection=null;
+			}
+		}
+		return intersection;
 	}
 	
 	private Double getCantidadLabores(Geometry geometry, List<? extends Labor<?>> labores){

@@ -42,14 +42,8 @@
                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
-                              <ComboBox id="comboElev" fx:id="comboPasadas" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                               <ComboBox id="comboRend" fx:id="comboDosis" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                               <Label text="Precio Insumo" GridPane.columnIndex="2" GridPane.rowIndex="1">
-                                 <opaqueInsets>
-                                    <Insets left="5.0" right="5.0" />
-                                 </opaqueInsets>
-                              </Label>
-                              <Label text="Pasadas *" GridPane.rowIndex="2">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>

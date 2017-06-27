@@ -2,31 +2,28 @@ package dao.cosecha;
 
 import java.util.List;
 
+import javax.persistence.Entity;
+
+import org.geotools.data.FileDataStore;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.type.AttributeType;
+
+import dao.Labor;
+import dao.LaborConfig;
+import dao.LaborItem;
+import dao.config.Configuracion;
+import dao.config.Cultivo;
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-
-import org.geotools.data.DataUtilities;
-import org.geotools.data.FileDataStore;
-import org.geotools.feature.SchemaException;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.feature.type.AttributeType;
-
-import dao.Clasificador;
-import dao.LaborItem;
-import dao.Labor;
-import dao.LaborConfig;
-import dao.config.Configuracion;
-import dao.config.Cultivo;
-import dao.fertilizacion.FertilizacionLabor;
+import lombok.Data;
 import utils.ProyectionConstants;
 
+@Data
+@Entity
 public class CosechaLabor extends Labor<CosechaItem> {
 	private static final int KG_POR_TN = 1000;
 	private static final double KG_POR_LIBRA = 0.453592;
@@ -86,6 +83,12 @@ public class CosechaLabor extends Labor<CosechaItem> {
 		Configuracion properties = getConfigLabor().getConfigProperties();
 
 		colRendimiento = initStringProperty(CosechaLabor.COLUMNA_RENDIMIENTO, properties, availableColums);
+		//como detecto que es una cosecha default evito hacer correcciones de flow y de distancia
+		if(CosechaLabor.COLUMNA_RENDIMIENTO.equals(colRendimiento.get())){
+			this.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
+			this.getConfiguracion().correccionRindeProperty().setValue(false);
+			this.getConfiguracion().valorMetrosPorUnidadDistanciaProperty().set(1);
+		}
 		colAmount= new SimpleStringProperty(CosechaLabor.COLUMNA_RENDIMIENTO);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
 
 		correccionCosechaProperty = initDoubleProperty(CosechaLabor.CORRECCION_COSECHA, "100", properties);
@@ -105,6 +108,12 @@ public class CosechaLabor extends Labor<CosechaItem> {
 	protected DoubleProperty initPrecioLaborHaProperty(){
 		return initDoubleProperty(CosechaLabor.COSTO_COSECHA_HA,"0",config.getConfigProperties());
 	} 
+	
+	@Override
+	protected DoubleProperty initPrecioInsumoProperty() {
+		return initDoubleProperty(CosechaLabor.PRECIO_GRANO,  "0", config.getConfigProperties());
+	//	return initDoubleProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,"0",config.getConfigProperties());
+	}
 
 	@Override
 	public String getTypeDescriptors() {
@@ -158,9 +167,10 @@ public class CosechaLabor extends Labor<CosechaItem> {
 			double divisor = ci.getDistancia() * ci.getAncho();
 			if(divisor>0){
 				rindeDouble = rindeDouble * constantes / (divisor);
-			} else {
-				rindeDouble =0.0;
-			}
+			} 
+//			else {
+//				rindeDouble =rindeDouble;
+//			}
 			
 			List<AttributeType> descriptors = harvestFeature.getType().getTypes();
 			String moistureColumn =null;
@@ -176,6 +186,14 @@ public class CosechaLabor extends Labor<CosechaItem> {
 				Double rindeH = ci.getRindeTnHa();
 				Double k = 100/(100+moisture);
 				ci.setRindeTnHa(rindeH*k);
+			}
+			
+			//CAMBIO LA ELEVACION DE PIES A METROS
+			String convertir =this.config.getConfigProperties().getPropertyOrDefault("ConvertirElevacionPiesAMetros", "true");
+			if("true".equals(convertir)){
+				//double feetToMeters =;
+				ci.setElevacion(ci.getElevacion()*FEET_TO_METERS);
+				
 			}
 		}
 

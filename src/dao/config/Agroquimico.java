@@ -3,12 +3,32 @@ package dao.config;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import lombok.Data;
 
-public class Agroquimico {
+@Data
+@Entity
+@NamedQueries({
+	@NamedQuery(name=Agroquimico.FIND_ALL, query="SELECT o FROM Agroquimico o") ,
+	@NamedQuery(name=Agroquimico.FIND_NAME, query="SELECT o FROM Agroquimico o where o.nombre = :name") ,
+}) 
+public class Agroquimico implements Comparable<Agroquimico>{
+	public static final String FIND_ALL="Agroquimico.findAll";
+	public static final String FIND_NAME="Agroquimico.findName";
+	
+	
+	@Id @GeneratedValue
+	private long id;
+	
 	private StringProperty nombre = new SimpleStringProperty();
 	//private Property<Cultivo> productoProperty=new SimpleObjectProperty<Cultivo>();//values().iterator().next());;
 
@@ -33,11 +53,6 @@ public class Agroquimico {
 		this.nombre.set(n);
 	}
 
-
-
-
-
-
 	/**
 	 * @return the nombre
 	 */
@@ -55,5 +70,10 @@ public class Agroquimico {
 	@Override
 	public String toString() {
 		return nombre.getValue();
+	}
+
+	@Override
+	public int compareTo(Agroquimico o) {
+		return (int) (this.id-o.getId());
 	}
 }

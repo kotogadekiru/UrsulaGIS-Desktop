@@ -41,7 +41,7 @@ public class DateTableCell<T> extends TableCell<T, Date> {
 			if (event.getCode() == KeyCode.ENTER || event.getCode() == KeyCode.TAB) {
 				datePicker.setValue(datePicker.getConverter().fromString(datePicker.getEditor().getText()));
 				Date date = Date.from(datePicker.getValue().atStartOfDay(ZoneId.systemDefault()).toInstant());
-				commitEdit(  date);
+				commitEdit(date);
 			}
 			if (event.getCode() == KeyCode.ESCAPE) {
 				cancelEdit();
@@ -81,6 +81,7 @@ public class DateTableCell<T> extends TableCell<T, Date> {
 		}
 		
 	});
+	
 		datePicker.setDayCellFactory(picker -> {
 			DateCell dateCell = new DateCell();
 			
@@ -88,9 +89,9 @@ public class DateTableCell<T> extends TableCell<T, Date> {
 
 				LocalDate res = getLocalDate();
 				
-				datePicker.setValue(res);
+				picker.setValue(res);
 				if (event.getClickCount() == 2) {
-					datePicker.hide();
+					picker.hide();
 					LocalDate date = dateCell.getItem();//.atStartOfDay(ZoneId.systemDefault()).toInstant());
 
 					Instant instant = date.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
@@ -101,7 +102,7 @@ public class DateTableCell<T> extends TableCell<T, Date> {
 			});
 			dateCell.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
 				if (event.getCode() == KeyCode.ENTER) {
-					Date date = Date.from(datePicker.getValue().atStartOfDay(ZoneId.systemDefault()).toInstant());
+					Date date = Date.from(picker.getValue().atStartOfDay(ZoneId.systemDefault()).toInstant());
 					commitEdit(date);//Date.from(datePicker.getValue()));
 				}
 			});
