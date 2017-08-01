@@ -158,7 +158,7 @@ public class Clasificador {
 			int colorIndex = clasifier.classify(double1);
 
 			if(colorIndex<0||colorIndex>colors.length){
-				System.out.println("el color de jenks es: "+colorIndex+" para el rinde "+double1);
+				//System.out.println("el color de jenks es: "+colorIndex+" para el rinde "+double1);//rinde es 0.0
 				colorIndex=0;
 			}
 			return colorIndex;

@@ -21,6 +21,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.CheckBox;
@@ -202,31 +203,12 @@ public class LayerPanel extends VBox {
 					knownItem.setExpanded(true);
 					rootItem.getChildren().add(knownItem);
 				}
+				
 				knownItem.getChildren().add(checkBoxTreeItem);
-//				knownItem.getChildren().sort((c1,c2)->{
-//					String l1Name =c1.getValue().getName();
-//					String l2Name =c2.getValue().getName();
-//					//TODO comparar por el valor del layer en vez del nombre del layer
-//					DateFormat df =new  SimpleDateFormat("dd-MM-yyyy");
-//					
-//					try{
-//						Date d1 = df.parse(l1Name);
-//						Date d2 = df.parse(l2Name);
-//						return d1.compareTo(d2);
-//					} catch(Exception e){
-//						//no se pudo parsear como fecha entonces lo interpreto como string.
-//						//e.printStackTrace();
-//					}
-//					return l1Name.compareTo(l2Name);
-//				});
-				//TODO agregar in identificador para los layers de ndvi
-//				ndviItem.getChildren().add(checkBoxTreeItem);
-//				ndviItem.setExpanded(true);
+				
+				
+
 			}
-
-			//jcb.setText(layer.getName());
-
-
 			checkBoxTreeItem.setSelected(layer.isEnabled());
 			checkBoxTreeItem.selectedProperty().addListener((ob,old,nu)->{
 				layer.setEnabled(nu);
@@ -234,6 +216,30 @@ public class LayerPanel extends VBox {
 
 
 			//this.layersPanel.getChildren().add(jcb);
+		}
+		for(TreeItem<Layer> item : rootItem.getChildren()){
+		
+		
+		try{ item.getChildren().sort((c1,c2)->{
+			String l1Name =c1.getValue().getName();
+			String l2Name =c2.getValue().getName();
+			//TODO comparar por el valor del layer en vez del nombre del layer
+			DateFormat df =new  SimpleDateFormat("dd-MM-yyyy");
+			
+			try{
+				Date d1 = df.parse(l1Name);
+				Date d2 = df.parse(l2Name);
+				return d1.compareTo(d2);
+			} catch(Exception e){
+				//no se pudo parsear como fecha entonces lo interpreto como string.
+				//e.printStackTrace();
+			}
+			return l1Name.compareTo(l2Name);
+		});
+		}catch(Exception e){
+			e.printStackTrace();
+			System.out.println("no se pudo ordenar");
+		}
 		}
 		if(tree==null){
 			tree = constructTreeView( rootItem);
@@ -373,7 +379,9 @@ public class LayerPanel extends VBox {
 	 */
 	public void update(WorldWindow wwd) {
 		//	this.layersPanel.getChildren().clear();
-		this.fill(wwd);
+		Platform.runLater(()->		this.fill(wwd));
+		
+		
 	}
 
 

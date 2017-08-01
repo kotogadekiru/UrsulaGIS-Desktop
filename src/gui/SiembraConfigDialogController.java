@@ -25,6 +25,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
+import utils.DAH;
 import dao.Clasificador;
 import dao.Labor;
 import dao.config.Cultivo;
@@ -180,7 +181,7 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 		this.comboDosis.valueProperty().bindBidirectional(labor.colDosisSemilla);
 
 	
-		this.comboInsumo.setItems(FXCollections.observableArrayList(Semilla.semillas.values()));
+		this.comboInsumo.setItems(FXCollections.observableArrayList(DAH.getAllSemillas()));//Semilla.semillas.values()));
 		this.comboInsumo.valueProperty().bindBidirectional(labor.semillaProperty);
 
 

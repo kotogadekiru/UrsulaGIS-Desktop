@@ -23,7 +23,7 @@ public class DAH {
 	private static final String APPDATA = "APPDATA";
 	private static final String OBJECTDB_DB_MONITORES_ODB = "$ursulaGIS.odb";
 	private static EntityManager em = null;
-	static EntityTransaction transaction;
+	static EntityTransaction transaction=null;
 
 	public static EntityManager em(){
 		if(em == null){
@@ -48,12 +48,18 @@ public class DAH {
 		EntityManager em = em();
 		if(DAH.transaction == null){
 			//	DAH.transaction = em.getTransaction();
+			try{
 			em.getTransaction().begin();		
 			em.persist(entidad);			
 			em.getTransaction().commit();
+			}catch(javax.persistence.RollbackException rbe){
+				em.getTransaction().begin();		
+				em.merge(entidad);
+				em.getTransaction().commit();
+				
+			}
 		} else{
 			em.persist(entidad);	
-
 		}
 
 	}
@@ -66,8 +72,7 @@ public class DAH {
 			em.remove(entidad);			
 			em.getTransaction().commit();
 		} else{
-			em.persist(entidad);	
-
+			em.remove(entidad);	
 		}
 
 	}
@@ -164,7 +169,15 @@ public class DAH {
 		  TypedQuery<Poligono> query =
 				  em().createNamedQuery(Poligono.FIND_ALL, Poligono.class);
 			  List<Poligono> results = query.getResultList();
+			//  closeEm();
 		return results;
+	}
+
+
+
+	private static void closeEm() {
+		em.close();
+		  em=null;
 	}
 	
 	public static List<Cultivo> getAllCultivos() {

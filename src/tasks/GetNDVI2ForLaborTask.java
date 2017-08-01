@@ -32,8 +32,11 @@ import dao.Labor;
 import dao.Poligono;
 import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
@@ -46,7 +49,7 @@ import utils.ProyectionConstants;
 import utils.UnzipUtility;
 
 
-public class GetNDWIForLaborTask extends Task<List<File>>{
+public class GetNDVI2ForLaborTask extends Task<List<File>>{
 	private static final String MMG_GUI_EVENT_CLOSE_PNG = "/gui/event-close.png";
 	public static final String ZOOM_TO_KEY = "ZOOM_TO";
 	protected int featureCount=0;
@@ -74,7 +77,7 @@ public class GetNDWIForLaborTask extends Task<List<File>>{
 	private LocalDate end;
 	private File downloadDir=null;
 	private List<File> observableList =null;
-	public GetNDWIForLaborTask(Object labor, File downloadDirectory,List<File> _observableList ) {
+	public GetNDVI2ForLaborTask(Object labor, File downloadDirectory,List<File> _observableList ) {
 		this.placementObject=labor;
 		downloadDir=downloadDirectory;
 		observableList=_observableList;
@@ -298,6 +301,7 @@ polygons=[[[[-64.69101905822754,-34.860017354204885],[-64.69058990478516,-34.867
 	 * @return HttResponse
 	 */
 	private HttpResponse makeRequest(GenericUrl url){
+		HttpResponse response = null;
 		HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 		JsonFactory JSON_FACTORY = new JacksonFactory();
 		HttpRequestFactory requestFactory =
@@ -310,11 +314,20 @@ polygons=[[[[-64.69101905822754,-34.860017354204885],[-64.69058990478516,-34.867
 
 		try {
 			HttpRequest request = requestFactory.buildGetRequest(url);
-			return request.execute();
-		} catch (IOException e) {
+			response= request.execute();
+		} catch (Exception e) {
+			Platform.runLater(()->{
+				Alert a = new Alert(AlertType.INFORMATION);
+				a.setTitle("Info");
+				a.setContentText("No hay imagenes disponibles para el periodo en la zona seleccionada");
+				a.show();
+				uninstallProgressBar();
+			});
+		
 			e.printStackTrace();
 			return null;
 		}	
+		return response;
 	}
 
 

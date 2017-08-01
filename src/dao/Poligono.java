@@ -65,12 +65,23 @@ public class Poligono {
 			String p = parts[i];
 			if(p.contains(",")){
 			String[] latlon = p.substring(0,p.length()-2).split(",");
-			Position pos = Position.fromDegrees(new Double(latlon[0]), new Double(latlon[1]));
+			String lat = latlon[0];
+			String lon = latlon[1];
+			try{
+			Position pos = Position.fromDegrees(new Double(lat), new Double(lon));
 			positions.add(pos);
+			}catch(Exception e){
+				System.out.println("error al desserializar el poligono");
+				e.printStackTrace();
+			}
 			}
 		}
-		positions.remove(positions.size()-1);
-		positions.add(positions.get(0));
+	//	positions.remove(positions.size()-1);
+		Position p0 = positions.get(0);
+		Position pn = positions.get(positions.size()-1);
+		if(!p0.equals(pn)){
+			positions.add(positions.get(0));
+		}
 		}catch(Exception e){
 			e.printStackTrace();
 		}

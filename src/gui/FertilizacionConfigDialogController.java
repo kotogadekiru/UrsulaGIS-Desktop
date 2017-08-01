@@ -25,6 +25,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
+import utils.DAH;
 import dao.Clasificador;
 import dao.Labor;
 import dao.config.Cultivo;
@@ -175,7 +176,7 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 		this.comboDosis.valueProperty().bindBidirectional(labor.colKgHaProperty);
 
 	
-		this.comboFertilizante.setItems(FXCollections.observableArrayList(Fertilizante.fertilizantes.values()));
+		this.comboFertilizante.setItems(FXCollections.observableArrayList(DAH.getAllFertilizantes()));
 		this.comboFertilizante.valueProperty().bindBidirectional(labor.fertilizanteProperty);
 
 

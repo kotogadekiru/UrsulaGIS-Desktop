@@ -28,6 +28,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
+import utils.DAH;
 
 
 /**
@@ -165,7 +166,7 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 //		this.comboPasadas.valueProperty().bindBidirectional(labor.colCantPasadasProperty);
 
 		//insumo
-		this.comboInsumo.setItems(FXCollections.observableArrayList(Agroquimico.agroquimicos.values()));
+		this.comboInsumo.setItems(FXCollections.observableArrayList(DAH.getAllAgroquimicos()));//Agroquimico.agroquimicos.values()));
 		this.comboInsumo.valueProperty().bindBidirectional(labor.agroquimico);
 
 

@@ -227,7 +227,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 				 */
 				boolean empty = longLatGeom.isEmpty();
 				boolean valid = longLatGeom.isValid();
-				boolean big = (longLatGeom.getArea()*ProyectionConstants.A_HAS()>supMinimaHas);
+				boolean big = (ProyectionConstants.A_HAS(longLatGeom.getArea())>supMinimaHas);
 				if(!empty
 						&&valid
 						&&big//esta fallando por aca
@@ -270,18 +270,24 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 				}
 
 			} else { // no es point. Estoy abriendo una cosecha de poligonos.
-						List<Polygon> mp = getPolygons(ci);
-								Polygon p = mp.get(0);
-								
-								for(Coordinate c :p.getCoordinates()){
-									c.z=ci.getElevacion();
-								}
-								ci.setGeometry(p);
+				List<Polygon> mp = getPolygons(ci);
+			//	for(Polygon p : mp){
+					Polygon p = mp.get(0);
+
+					for(Coordinate c :p.getCoordinates()){
+						c.z=ci.getElevacion();
+					}
+					ci.setGeometry(p);
+
+					//	featureTree.insert(p.getEnvelopeInternal(), cosechaFeature);
+					//TODO si el filtro de superposiciones esta activado tambien sirve para los poligonos
+					double area = ci.getGeometry().getArea();
+					double has = ProyectionConstants.A_HAS(area);
 				
-				//	featureTree.insert(p.getEnvelopeInternal(), cosechaFeature);
-				//TODO si el filtro de superposiciones esta activado tambien sirve para los poligonos
-				
-				labor.insertFeature(ci);
+					if(has>supMinimaHas){
+						labor.insertFeature(ci);//XXX es posible que no se inserte si ya existe el id
+					}
+			//	}
 			}
 			
 		}// fin del while que recorre las features

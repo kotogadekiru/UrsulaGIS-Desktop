@@ -35,6 +35,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import org.geotools.data.DataUtilities;
 import org.geotools.data.DefaultTransaction;
 import org.geotools.data.FileDataStore;
 import org.geotools.data.FileDataStoreFinder;
@@ -45,6 +46,7 @@ import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.data.simple.SimpleFeatureStore;
 import org.geotools.feature.DefaultFeatureCollection;
+import org.geotools.feature.SchemaException;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.feature.simple.SimpleFeature;
@@ -70,6 +72,7 @@ import dao.config.Lote;
 import dao.config.Semilla;
 import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaLabor;
+import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.margen.Margen;
 import dao.pulverizacion.PulverizacionLabor;
@@ -121,7 +124,9 @@ import gui.utils.DateConverter;
 import gui.utils.SmartTableView;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -165,7 +170,7 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import tasks.ExportLaborMapTask;
 import tasks.GetNDVIForLaborTask;
-import tasks.GetNDWIForLaborTask;
+import tasks.GetNDVI2ForLaborTask;
 import tasks.GoogleGeocodingHelper;
 import tasks.ProcessMapTask;
 import tasks.ShowNDVITifFileTask;
@@ -182,6 +187,7 @@ import tasks.importar.ProcessFertMapTask;
 import tasks.importar.ProcessHarvestMapTask;
 import tasks.importar.ProcessPulvMapTask;
 import tasks.importar.ProcessSiembraMapTask;
+import tasks.procesar.ExtraerPoligonosDeCosechaTask;
 import tasks.procesar.GrillarCosechasMapTask;
 import tasks.procesar.JuntarShapefilesTask;
 import tasks.procesar.ProcessMarginMapTask;
@@ -201,9 +207,9 @@ public class JFXMain extends Application {
 	private static final String GOV_NASA_WORLDWIND_AVKEY_INITIAL_LATITUDE = "gov.nasa.worldwind.avkey.InitialLatitude";
 	//	private static final double MAX_VALUE = 1.0;
 	//	private static final double MIN_VALUE = 0.2;
-	public static final String VERSION = "0.2.21";
+	public static final String VERSION = "0.2.22 dev";
 	private static final String TITLE_VERSION = "Ursula GIS "+VERSION;
-	private static final String BUILD_INFO="Esta aplicacion fue compilada el 22 de Junio de 2017."
+	private static final String BUILD_INFO="Esta aplicacion fue compilada el 01 de Agosto de 2017."
 			+"<br>Ursula GIS es de uso libre y gratutito provista sin ninguna garantia."
 			+"<br>Se encuentra en estado de desarrollo y se provee a modo de prueba."
 			+"<br>Desarrollada por Tomas Lund Petersen, cualquier consulta enviar un mail a kotogadekiru@gmail.com"
@@ -267,6 +273,8 @@ public class JFXMain extends Application {
 
 		primaryStage.setOnHiding((e)-> {
 			Platform.runLater(()->{
+				DAH.em().close();
+				System.out.println("em Closed");
 				System.out.println("Application Closed by click to Close Button(X)");
 				System.exit(0); 
 			});
@@ -417,6 +425,7 @@ public class JFXMain extends Application {
 
 		//XXX descomentar esto para cargar los poligonos de la base de datos. bloquea la interface
 		executorPool.execute(()->{loadPoligonos();});
+		//loadPoligonos();
 
 		return sp;
 	}
@@ -665,6 +674,18 @@ public class JFXMain extends Application {
 				showAmountVsElevacionChart((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 				return "grafico mostrado " + layer.getName();
 			}});
+		
+//		/**
+//		 * Accion que permite extraer los poligonos de una cosecha para guardar
+//		 */
+//		cosechasP.add((layer)-> {
+//			if(layer==null){
+//				return "Extraer poligonos"; 
+//			} else{
+//				doExtraerPoligonos((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+//				return "poligonos Extraidos " + layer.getName();
+//			}});
+
 
 		/**
 		 * Accion permite generar una ferilizacion a partir de los poligonos de una cosecha
@@ -690,6 +711,17 @@ public class JFXMain extends Application {
 				return "Exportar"; 
 			} else{
 				doExportLabor((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+				return "labor Exportada" + layer.getName();
+			}});
+		
+		/**
+		 * Accion permite exportar la labor como shp
+		 */
+		fertilizacionesP.add((layer)->{
+			if(layer==null){
+				return "Exportar Prescripcion"; 
+			} else{
+				doExportPrescripcion((FertilizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 				return "labor Exportada" + layer.getName();
 			}});
 
@@ -843,6 +875,8 @@ public class JFXMain extends Application {
 
 		layerPanel.setMenuItems(predicates);
 	}
+
+
 
 
 
@@ -1060,6 +1094,7 @@ public class JFXMain extends Application {
 		MenuItem actualizarMI=addMenuItem("Actualizar !",null,menuConfiguracion);
 		actualizarMI.setOnAction((a)->doUpdate(actualizarMI));
 		actualizarMI.setVisible(false);
+		
 		executorPool.submit(()->{
 			if(UpdateTask.isUpdateAvailable()){
 				actualizarMI.setVisible(true);
@@ -1078,6 +1113,7 @@ public class JFXMain extends Application {
 
 			}
 		});
+		
 		addMenuItem("Acerca De",(a)->doShowAcercaDe(),menuConfiguracion);
 
 		MenuBar menuBar = new MenuBar();
@@ -1192,9 +1228,15 @@ public class JFXMain extends Application {
 	
 	private void loadPoligonos(){
 		List<Poligono> poligonos = DAH.getAllPoligonos();
+		showPoligonos(poligonos);
+	}
+
+	private void showPoligonos(List<Poligono> poligonos) {
+		//boolean armed = false;
+		BooleanProperty armed = new SimpleBooleanProperty(false);
 		for(Poligono poli : poligonos){
-			
 			RenderableLayer surfaceLayer = new RenderableLayer();
+			
 			MeasureTool measureTool = new MeasureTool(getWwd(),surfaceLayer);
 			measureTool.setController(new MeasureToolController());
 			measureTool.setMeasureShapeType(MeasureTool.SHAPE_POLYGON);
@@ -1207,23 +1249,12 @@ public class JFXMain extends Application {
 			measureTool.setPositions((ArrayList<? extends Position>) poli.getPositions());
 			measureTool.setArmed(false);
 
-			//			DecimalFormat dc = new DecimalFormat("0.00");
-			//			dc.setGroupingSize(3);
-			//			dc.setGroupingUsed(true);
-
-			double	value = poli.getArea();
-			//			String formated = dc.format(value/ProyectionConstants.METROS2_POR_HA)+" Ha";
-
-			//surfaceLayer.setName(formated);
-			//	surfaceLayer.setName(poli.getNombre()+" "+formated);
-
-			//	measureTool.setArmed(false);
-			poli.setLayer(surfaceLayer);
-			//ArrayList<? extends Position> positions = measureTool.getPositions();
+			poli.setLayer(surfaceLayer);		
 			surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, poli);
-			//surfaceLayer.setValue("POSITIONS", poli.getPositions());
+			
 			DoubleProperty valueProperty= new SimpleDoubleProperty();
-			valueProperty.setValue(value);
+			valueProperty.setValue( poli.getArea());
+	
 
 			measureTool.addPropertyChangeListener((event)->{
 				//System.out.println(event.getPropertyName());
@@ -1240,33 +1271,23 @@ public class JFXMain extends Application {
 					double value2 = measureTool.getArea();
 					if(valueProperty.get()!=value2 && value2 > 0){
 						double area = value2/ProyectionConstants.METROS2_POR_HA;
-						//String formated2 = dc.format(area)+" Ha";		
 						poli.setPositions( (List<Position>) measureTool.getPositions());
 						//TODO construir una geometria de la lista de posiciones y validarla con PolygonValidator
-						poli.setArea(area);
-						//poli.setNombre(formated2);
-						//surfaceLayer.setName(poli.getNombre()+" "+formated);
-						//surfaceLayer.setName(poli.getNombre());
-						//poli.setLayer(surfaceLayer);
-						//ArrayList<? extends Position> positions = measureTool.getPositions();
+						poli.setArea(area);					
 						surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, poli);
-						//surfaceLayer.setValue("POSITIONS", poli.getPositions());
-
 						valueProperty.setValue(value2);
-						this.getLayerPanel().update(this.getWwd());
-						//  System.out.println("lengh="+measureTool.getLength());
+						if(armed.get()){
+							this.getLayerPanel().update(this.getWwd());
+						}
 					}                	                  
-					//updateMetric();
 				}
 			});
+			armed.set(true);
 			Platform.runLater(()->{
 			insertBeforeCompass(this.getWwd(), surfaceLayer);
 			this.getLayerPanel().update(this.getWwd());
 			});
-
 		}
-
-
 	}
 
 	@SuppressWarnings("unchecked")
@@ -1696,7 +1717,7 @@ public class JFXMain extends Application {
 				}			
 			});
 
-			GetNDWIForLaborTask task = new GetNDWIForLaborTask(labor,downloadLocation,observableList);
+			GetNDVI2ForLaborTask task = new GetNDVI2ForLaborTask(labor,downloadLocation,observableList);
 			task.setDate(ini);
 			task.installProgressBar(progressBox);
 			task.setOnSucceeded(handler -> {
@@ -2171,7 +2192,24 @@ public class JFXMain extends Application {
 		//}
 	}
 
+	private void doExtraerPoligonos(Labor<?> labor ) {		
+			ExtraerPoligonosDeCosechaTask umTask = new ExtraerPoligonosDeCosechaTask(labor);
+			umTask.installProgressBar(progressBox);
 
+			umTask.setOnSucceeded(handler -> {
+			
+				List<Poligono> poligonos = (List<Poligono>)handler.getSource().getValue();
+				this.showPoligonos(poligonos);
+				umTask.uninstallProgressBar();
+			
+				this.wwjPanel.repaint();
+				System.out.println("poligonos Extraidos succeded");
+				playSound();
+			});//fin del OnSucceeded						
+			//umTask.start();
+			this.executorPool.execute(umTask);
+	
+	}
 
 	private void doEditPulverizacion(PulverizacionLabor cConfigured ) {
 		Optional<PulverizacionLabor> cosechaConfigured=PulverizacionConfigDialogController.config(cConfigured);
@@ -2989,6 +3027,88 @@ public class JFXMain extends Application {
 		ExportLaborMapTask ehTask = new ExportLaborMapTask(cosechaLabor,shapeFile);
 		executorPool.execute(ehTask);
 	}
+	
+	private void doExportPrescripcion(FertilizacionLabor laborToExport) {
+		String nombre = laborToExport.getNombreProperty().get();
+		File shapeFile =  getNewShapeFile(nombre);
+		executorPool.execute(()->{//esto me introduce un error al grabar en el que se pierderon features
+
+			
+			
+			SimpleFeatureType type = null;
+			String typeDescriptor = "the_geom:MultiPolygon:srid=4326,"//"*geom:Polygon,"the_geom
+					+ "Rate" + ":Integer";
+
+			try {
+				type = DataUtilities.createType("PrescripcionFertilizacion", typeDescriptor);
+			} catch (SchemaException e) {
+
+				e.printStackTrace();
+			}
+		
+
+			ShapefileDataStore newDataStore = createShapefileDataStore(shapeFile,type);
+
+			SimpleFeatureIterator it = laborToExport.outCollection.features();
+			DefaultFeatureCollection pointFeatureCollection =  new DefaultFeatureCollection("internal",type);
+			SimpleFeatureBuilder fb = new SimpleFeatureBuilder(type);
+			while(it.hasNext()){
+				FertilizacionItem fi = laborToExport.constructFeatureContainer(it.next());
+				fb.add(fi.getGeometry());
+				fb.add(fi.getDosistHa().intValue());
+			
+				SimpleFeature pointFeature = fb.buildFeature(fi.getId().toString());
+				pointFeatureCollection.add(pointFeature);
+
+			}
+			it.close();
+
+			SimpleFeatureSource featureSource = null;
+			try {
+				String typeName = newDataStore.getTypeNames()[0];
+				featureSource = newDataStore.getFeatureSource(typeName);
+			} catch (IOException e) {
+
+				e.printStackTrace();
+			}
+
+
+			if (featureSource instanceof SimpleFeatureStore) {
+				SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
+				Transaction transaction = new DefaultTransaction("create");
+				featureStore.setTransaction(transaction);
+
+				/*
+				 * SimpleFeatureStore has a method to add features from a
+				 * SimpleFeatureCollection object, so we use the
+				 * ListFeatureCollection class to wrap our list of features.
+				 */
+
+				try {
+					featureStore.setFeatures(pointFeatureCollection.reader());
+					try {
+						transaction.commit();
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					}finally {
+						try {
+							transaction.close();
+							//System.out.println("closing transaction");
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			}		
+
+			Configuracion config = Configuracion.getInstance();
+			config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
+			config.save();
+		});//fin del run later
+		
+	}
 
 	private void doExportHarvestDePuntos(CosechaLabor cosechaLabor) {
 		if(cosechaLabor==null){
@@ -3235,12 +3355,12 @@ public class JFXMain extends Application {
 	 */
 	private void doShowAcercaDe() {
 		Alert acercaDe = new Alert(AlertType.INFORMATION);
-		acercaDe.titleProperty().set("Acerca de "+this.TITLE_VERSION);
+		acercaDe.titleProperty().set("Acerca de "+JFXMain.TITLE_VERSION);
 		acercaDe.initOwner(this.stage);
 		//acercaDe.setHeaderText(this.TITLE_VERSION+"\n"+this.BUILD_INFO+"\nVisitar www.ursulagis.com");
 		//acercaDe.contentTextProperty().set();
-		String content =   "<b>"+this.TITLE_VERSION+"</b><br>"
-				+this.BUILD_INFO
+		String content =   "<b>"+JFXMain.TITLE_VERSION+"</b><br>"
+				+JFXMain.BUILD_INFO
 				+ "<br><b>"+"Visitar <a href=\"http://www.ursulagis.com\">www.ursulagis.com</a>"+"</b>";
 
 		WebView webView = new WebView();
@@ -3260,7 +3380,6 @@ public class JFXMain extends Application {
 
 	private void doConfigCultivo() {
 		Platform.runLater(()->{
-			ArrayList<Cultivo> ciLista = new ArrayList<Cultivo>();
 			final ObservableList<Cultivo> dataLotes =
 					FXCollections.observableArrayList(
 							DAH.getAllCultivos()
@@ -3268,6 +3387,7 @@ public class JFXMain extends Application {
 
 			SmartTableView<Cultivo> table = new SmartTableView<Cultivo>(dataLotes,dataLotes);
 			table.setEditable(true);
+			table.setOnDoubleClick(()->new Cultivo("Nuevo Cultivo"));
 
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
@@ -3298,6 +3418,9 @@ public class JFXMain extends Application {
 
 			SmartTableView<Fertilizante> table = new SmartTableView<Fertilizante>(dataLotes,dataLotes);
 			table.setEditable(true);
+			
+			table.setOnDoubleClick(()->new Fertilizante("Nuevo Fertilizante"));
+
 
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
@@ -3341,6 +3464,9 @@ public class JFXMain extends Application {
 
 			SmartTableView<Poligono> table = new SmartTableView<Poligono>(data,data);
 			table.setEditable(true);
+			table.setOnDoubleClick(()->new Poligono());
+
+			
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));

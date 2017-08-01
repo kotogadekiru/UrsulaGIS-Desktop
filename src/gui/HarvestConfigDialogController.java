@@ -29,6 +29,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
+import utils.DAH;
 import dao.Clasificador;
 import dao.Labor;
 import dao.config.Cultivo;
@@ -324,7 +325,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		//		this.comboPasa.valueProperty().bindBidirectional(labor.colPasada);
 
 		//colPasada ;
-		this.comboCultivo.setItems(FXCollections.observableArrayList(Cultivo.cultivos.values()));
+		this.comboCultivo.setItems(FXCollections.observableArrayList(DAH.getAllCultivos()));
 		this.comboCultivo.valueProperty().bindBidirectional(labor.producto);
 
 

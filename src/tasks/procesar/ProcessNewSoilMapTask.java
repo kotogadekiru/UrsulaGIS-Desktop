@@ -157,7 +157,7 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 //		System.out.println("cantFertilizante agregada= " + kgPFert);
 //		System.out.println("cantFertilizante absorvida= " + kgPCosecha);
 //		System.out.println("newKgHaPSuelo = "+newKgHaPSuelo);
-		Double newPpmPsuelo=newKgHaPSuelo/labor.getDensidad()/2;
+		Double newPpmPsuelo=newKgHaPSuelo/(labor.getDensidad()/2);
 	//	System.out.println("newPpmPsuelo = "+newPpmPsuelo);
 		Double newPpmNsuelo=newKgHaNSuelo/labor.getDensidad();
 		SueloItem sueloItem = new SueloItem();

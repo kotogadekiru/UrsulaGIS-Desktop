@@ -714,11 +714,11 @@ public abstract class Labor<E extends LaborItem>  {
 				.getAttribute(COLUMNA_ANCHO));
 		ci.elevacion = LaborItem.getDoubleFromObj(harvestFeature
 				.getAttribute(COLUMNA_ELEVACION));
-
-		if(this.clasificador!=null && clasificador.isInitialized()){
-			Integer categoria = this.clasificador.getCategoryFor(ci.getAmount());
-			if(categoria !=null)		ci.setCategoria(categoria);
-		}	
+//FIXME el clasificador se esta llamando sin haber inicializado el histograma y entra por jenkins. corregir antes de descomentar
+//		if(this.clasificador!=null && clasificador.isInitialized()){
+//			Integer categoria = this.clasificador.getCategoryFor(ci.getAmount());
+//			if(categoria !=null)		ci.setCategoria(categoria);
+//		}	
 
 	}
 
