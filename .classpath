@@ -39,6 +39,12 @@
 	<classpathentry kind="lib" path="libs/poi/poi-ooxml-schemas-3.11-20141221.jar"/>
 	<classpathentry kind="lib" path="libs/poi/xmlbeans-2.6.0.jar"/>
 	<classpathentry kind="lib" path="libs/fxForm2core-8.0.9.jar"/>
+	<classpathentry kind="lib" path="libs/objectDB/validation-api-1.1.0.Final.jar"/>
+	<classpathentry kind="lib" path="libs/javax.persistence_2.1.1.v201509150925.jar" sourcepath="C:/Users/quero/.m2/repository/org/eclipse/persistence/javax.persistence/2.1.1/javax.persistence-2.1.1-sources.jar"/>
+	<classpathentry kind="lib" path="libs/eclipselink.jar"/>
+	<classpathentry kind="lib" path="libs/org.eclipse.persistence.jpa.modelgen_2.6.4.v20160829-44060b6.jar"/>
+	<classpathentry kind="lib" path="libs/org.eclipse.persistence.jpars_2.6.4.v20160829-44060b6.jar"/>
+	<classpathentry kind="lib" path="libs/h2-1.4.196.jar"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/worldWind"/>
 	<classpathentry kind="lib" path="C:/Users/quero/workspaceHackaton2015/worldWind/gdal.jar"/>
 	<classpathentry kind="lib" path="libs/google-http-client/libs/httpclient-4.0.1.jar"/>
@@ -51,7 +57,8 @@
 	<classpathentry kind="lib" path="libs/google-http-client/libs/protobuf-java-2.6.1.jar"/>
 	<classpathentry kind="lib" path="libs/google-http-client/libs/xpp3-1.1.4c.jar"/>
 	<classpathentry kind="lib" path="libs/google-http-client/libs/google-http-client-jackson-1.22.0.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/tsne"/>
 	<classpathentry kind="lib" path="libs/lombok-1.16.6.jar"/>
+	<classpathentry kind="lib" path="libs/google-http-client/google-maps-services-0.1.20.jar"/>
+	<classpathentry kind="lib" path="libs/controlsfx-8.40.13.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

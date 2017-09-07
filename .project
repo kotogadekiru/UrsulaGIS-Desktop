@@ -3,6 +3,7 @@
 	<name>UrsulaGIS-Desktop</name>
 	<comment></comment>
 	<projects>
+		<project>google-maps-services-java-master</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
