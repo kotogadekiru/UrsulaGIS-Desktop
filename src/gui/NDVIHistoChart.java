@@ -8,11 +8,7 @@ import dao.Clasificador;
 import dao.Ndvi;
 import gov.nasa.worldwindx.examples.analytics.AnalyticSurface.GridPointAttributes;
 import gui.utils.TooltipUtil;
-import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
-import javafx.scene.Node;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
@@ -22,7 +18,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import tasks.ShowNDVITifFileTask;
 import utils.ExcelHelper;
 
 public class NDVIHistoChart extends VBox {
@@ -44,6 +42,10 @@ public class NDVIHistoChart extends VBox {
 	@SuppressWarnings("unchecked")
 	private	XYChart.Series<String, Number> series =null;
 	private Double superficieTotal= new Double(0);
+	
+	private Double superficieAgua= new Double(0);
+	private Double superficieNube= new Double(0);
+	private Double ndviPromedio= new Double(0);
 //	private Double produccionTotal= new Double(0);
 //	private Double entropia= new Double(0);
 	private int numClasses;
@@ -66,11 +68,20 @@ public class NDVIHistoChart extends VBox {
 		this.getChildren().add(chart);
 		DecimalFormat df = new DecimalFormat("0.00");
 		BorderPane bottom = new BorderPane();
+		
+		double superficieCultivo = superficieTotal-superficieAgua-superficieNube;
+		
 		VBox left = new VBox();
 		left.getChildren().addAll(
-				new Label("Superficie Total: "+df.format(superficieTotal))
-				//TODO ver de agregar ndvi promedio
+				new Label("NDVI Promedio: "+df.format(ndviPromedio)),
+				new Label("Superficie Cultivo: "+df.format(superficieCultivo)+"Has "+df.format(superficieCultivo/superficieTotal*100)+"%"),
+				new Label("Superficie Nubes: "+df.format(superficieNube)+"Has "+df.format(superficieNube/superficieTotal*100)+"%"),
+				new Label("Superficie Agua: "+df.format(superficieAgua)+"Has "+df.format(superficieAgua/superficieTotal*100)+"%"),
+				new Label("Superficie Total: "+df.format(superficieTotal)+"Has")
 				);
+		
+	
+		
 		VBox right = new VBox();
 		Button exportButton = new Button("Exportar");
 		exportButton.setOnAction(a->{doExportarExcell();});
@@ -115,46 +126,54 @@ public class NDVIHistoChart extends VBox {
 //			histograma[i]=(0.25-(nDesvios/2)*desvioEstandar)+deltaForColour*(i+1);
 //		}
 
-		System.out.println("pixel area = "+ndvi.getPixelArea());
+		//System.out.println("pixel area = "+ndvi.getPixelArea());
 		Clasificador clasi = new Clasificador();
 		clasi.setHistograma(histograma);
 		Iterable<? extends GridPointAttributes> values = ndvi.getSurfaceLayer().getValues();
 		Iterator<? extends GridPointAttributes> it = values.iterator();
 
-		//int size = 0;
+		int size = 0;
 		while(it.hasNext()){
-		//	size++;
+			
 			GridPointAttributes f = it.next();
 //			Color color = f.getColor();
 			double value = f.getValue();
-			if(value <-1||value>1 || value ==0){
+			if(value < ShowNDVITifFileTask.MIN_VALUE || value > ShowNDVITifFileTask.MAX_VALUE || value == 0 ){
+				if(value==ShowNDVITifFileTask.CLOUD_RENDER_VALUE){
+					this.superficieNube+=ndvi.getPixelArea();
+					this.superficieTotal+=ndvi.getPixelArea();
+				} else if(value == ShowNDVITifFileTask.WATER_RENDER_VALUE){//me esta sumando todos los valores nulos
+					//System.out.println("sumando un valor de agua "+value);
+					this.superficieAgua+=ndvi.getPixelArea();
+					this.superficieTotal+=ndvi.getPixelArea();
+				}
 			//	System.out.println("continuando por ndvi fuera de rango "+value);
 				continue;
+			} else if(value >= ShowNDVITifFileTask.MIN_VALUE && value <= ShowNDVITifFileTask.MAX_VALUE) {
+				size++;
+				int categoria = clasi.getCategoryFor(value);
+				String colorString = colorStrings[categoria];
+			//	if(colorString == null){
+					Color color = f.getColor();
+					colorString = " rgb("+color.getRed()
+					+","+color.getGreen()
+					+","+color.getBlue()+")";
+					colorStrings[categoria]=colorString;
+			//	}
+				Double sup = superficies[categoria];		
+				
+				//System.out.println("value: "+value+" categoria: "+categoria+" sup:"+sup);
+
+				if (sup == null) sup = new Double(0);		
+				superficies[categoria] = sup + ndvi.getPixelArea();	
+
+				this.superficieTotal+=ndvi.getPixelArea();
+				this.ndviPromedio+=value;
 			}
 			
-//			color.getRed()
-//			color.getGreen()
-//			color.getBlue()
-
-			int categoria = clasi.getCategoryFor(value);
-			String colorString = colorStrings[categoria];
-		//	if(colorString == null){
-				Color color = f.getColor();
-				colorString = " rgb("+color.getRed()
-				+","+color.getGreen()
-				+","+color.getBlue()+")";
-				colorStrings[categoria]=colorString;
-		//	}
-			Double sup = superficies[categoria];		
-			
-			//System.out.println("value: "+value+" categoria: "+categoria+" sup:"+sup);
-
-			if (sup == null) sup = new Double(0);		
-			superficies[categoria] = sup + ndvi.getPixelArea();	
-
-			this.superficieTotal+=ndvi.getPixelArea();
 			
 		}
+		ndviPromedio = ndviPromedio/size;
 		//System.out.println("la cantidad de valores del ndvi es "+size);
 
 		XYChart.Series<String, Number> series = new XYChart.Series<>();

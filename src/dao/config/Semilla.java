@@ -33,9 +33,9 @@ public class Semilla {
 	public static final String SEMILLA_DE_SOJA = "Semilla de Soja";
 	public static final String SEMILLA_DE_MAIZ = "Semilla de Maiz";
 	
-	@Id @GeneratedValue
+	
 	private long id;
-	//@Transient
+	@Transient
 	private StringProperty nombre = new SimpleStringProperty();
 	@Transient
 	private Property<Cultivo> productoProperty=new SimpleObjectProperty<Cultivo>();//values().iterator().next());;
@@ -56,6 +56,21 @@ public class Semilla {
 		productoProperty.setValue(producto);
 	}
 
+	/**
+	 * @return the id
+	 */
+	@Id @GeneratedValue
+	public long getId() {
+		return id;
+	}
+
+	/**
+	 * @param id the id to set
+	 */
+	public void setId(long id) {
+		this.id = id;
+	}
+	
 	public String getNombre(){
 		return this.nombre.get();
 	}

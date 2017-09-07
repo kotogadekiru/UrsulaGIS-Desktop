@@ -38,6 +38,7 @@ import dao.fertilizacion.FertilizacionLabor;
 import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.render.ExtrudedPolygon;
 import javafx.geometry.Point2D;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
@@ -86,7 +87,7 @@ public class CrearSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 
 
 	@Override
-	public  void  getPathTooltip( Geometry poly,SiembraItem siembraFeature) {
+	public  ExtrudedPolygon  getPathTooltip( Geometry poly,SiembraItem siembraFeature) {
 	//	Path path = getPathFromGeom(poly,siembraFeature);		
 		
 		double area = poly.getArea() *ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
@@ -105,7 +106,7 @@ public class CrearSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 		}
 
 		
-		super.getRenderPolygonFromGeom(poly, siembraFeature,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, siembraFeature,tooltipText);
 	//	return ret;		
 	}
 

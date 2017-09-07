@@ -1,46 +1,36 @@
 package dao;
-import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
-import java.net.MalformedURLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
 
+import javax.persistence.Access;
+import javax.persistence.AccessType;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.Transient;
 
 import org.geotools.data.DataUtilities;
-import org.geotools.data.DefaultTransaction;
 import org.geotools.data.FileDataStore;
-import org.geotools.data.Transaction;
-import org.geotools.data.shapefile.ShapefileDataStore;
-import org.geotools.data.shapefile.ShapefileDataStoreFactory;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
-import org.geotools.data.simple.SimpleFeatureStore;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.factory.GeoTools;
 import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.feature.SchemaException;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
-import org.geotools.filter.identity.FeatureIdImpl;
 import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.geotools.index.quadtree.QuadTree;
-import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeType;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.filter.FilterFactory2;
-import org.opengis.filter.Id;
 import org.opengis.filter.spatial.BBOX;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -49,20 +39,12 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
-import dao.config.Agroquimico;
 import dao.config.Configuracion;
-import dao.config.Cultivo;
-import dao.cosecha.CosechaConfig;
-import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
-import dao.fertilizacion.FertilizacionLabor;
-import dao.margen.Margen;
 import gov.nasa.worldwind.geom.Position;
-import gov.nasa.worldwind.layers.RenderableLayer;
 import gui.nww.LaborLayer;
 import gui.utils.DateConverter;
 import javafx.beans.property.DoubleProperty;
@@ -83,16 +65,27 @@ import utils.ProyectionConstants;
  */
 
 @Data
-@Entity
+@Entity @Access(AccessType.FIELD)//variable (el default depende de donde pongas el @Id)
+//@Entity @Access(AccessType.PROPERTY)//getter
+@Inheritance(strategy=javax.persistence.InheritanceType.TABLE_PER_CLASS)
 public abstract class Labor<E extends LaborItem>  {
 	public static final double FEET_TO_METERS = 0.3048;
 	public static final String NONE_SELECTED = "Ninguna";
 	public static final String LABOR_LAYER_IDENTIFICATOR = "LABOR";
+	
+	@javax.persistence.Id @GeneratedValue
+	private long id;
+	
+	@Transient
 	public FileDataStore inStore = null;
 	//public ShapefileDataStore outStore = null;
+	@Transient
 	public DefaultFeatureCollection outCollection=null;
+	@Transient
 	public DefaultFeatureCollection inCollection=null;
+	@Transient
 	public StringProperty nombreProperty = new SimpleStringProperty();
+	@Transient
 	public LaborLayer layer;//realmente quiero guardar esto aca?? o me conviene ponerlo en un mapa en otro lado para evitar la vinculacion de objetos
 
 	protected static final String COLUMNA_CATEGORIA = "Categoria";
@@ -104,50 +97,73 @@ public abstract class Labor<E extends LaborItem>  {
 	private static final String ANCHO_DEFAULT = "ANCHO_DEFAULT";
 	private static final String FECHA_KEY = "FECHA_KEY";
 
+	@Transient
 	public Clasificador clasificador=null;
+	@Transient
 	public SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(getType());
+	@Transient
 	public StringProperty colAmount=null; //usada por el clasificador para leer el outstore tiene que ser parte de TYPE
 	//columnas configuradas para leer el instore
+	@Transient
 	public StringProperty colElevacion=null;
+	@Transient
 	public StringProperty colAncho=null;
+	@Transient
 	public StringProperty colCurso=null;
+	@Transient
 	public StringProperty colDistancia=null;// = new
 	// SimpleStringProperty(CosechaLabor.COLUMNA_DISTANCIA);
-
+	@Transient
 	private Double nextID =new Double(0);//XXX este id no es global sino que depende de la labor
 
 	/**
 	 * precio es el costo por hectarea de la labor
 	 */
+	@Transient
 	public Property<LocalDate> fechaProperty=null;
+	@Transient
 	public DoubleProperty precioLaborProperty=null;
+	@Transient
 	public DoubleProperty precioInsumoProperty=null;
+	@Transient
 	public SimpleDoubleProperty anchoDefaultProperty= null;
-
+	@Transient
 	public Map<Envelope,List<E>> cachedEnvelopes=Collections.synchronizedMap(new HashMap<Envelope,List<E>>());
 	
+	@Transient
 	public Quadtree treeCache = null;
 	
 //	private CoordinateReferenceSystem targetCRS;
-
+	@Transient
 	public LaborConfig config = null;
-
+	@Transient
 	public Double minElev=Double.MAX_VALUE;
+	@Transient
 	public Double maxElev=-Double.MAX_VALUE;
 	//average 
 	//desvio
+	@Transient
 	public Double minAmount=Double.MAX_VALUE;
+	@Transient
 	public Double maxAmount=-Double.MAX_VALUE;
 	//average
 	//desvio
 	
 	//TODO cambiar por un referencedEnvelope
-	public Position minX =null; //Position.fromDegrees(latitude, longitude);
-	public Position minY = null; //Double.MAX_VALUE;
-	public Position maxX =null; //-Double.MAX_VALUE;
-	public Position maxY = null;//-Double.MAX_VALUE;
+	@Transient
+	public Position minX = null;//Position.fromDegrees(Double.MAX_VALUE, Double.MAX_VALUE);
+	@Transient
+	public Position minY = null;//Position.fromDegrees(Double.MAX_VALUE, Double.MAX_VALUE);// null; //Double.MAX_VALUE;
+	@Transient
+	public Position maxX = null;//Position.fromDegrees(Double.MIN_VALUE, Double.MIN_VALUE);//null; //-Double.MAX_VALUE;
+	@Transient
+	public Position maxY = null;//Position.fromDegrees(-Double.MIN_VALUE, Double.MIN_VALUE);// null;//-Double.MAX_VALUE;
+	//CoordinateReferenceSystem targetCRS = schema.getGeometryDescriptor().getCoordinateReferenceSystem();
 
-	public Geometry envelope = null;// no puedo cachear la geometria total porque tarda mucho
+	//public ReferencedEnvelope envelope = null;//new ReferencedEnvelope(envelope,targetCRS);
+	
+	//@Transient
+	//public Geometry envelope = null;// no puedo cachear la geometria total porque tarda mucho
 
 	public Labor(){
 		clasificador=new Clasificador();
@@ -246,18 +262,29 @@ public abstract class Labor<E extends LaborItem>  {
 
 
 	}
+	
+
+	public Long getId(){
+		return this.id;
+	}
+	
+	public void setId(Long id){
+		this.id=id;
+	}
 
 
 	/**
 	 * metodo que devuelve el costo de la labor por hectarea de acuerdo a la configuracion del tipo de labor que implemente
 	 * @return DoubleProperty
 	 */
+	@Transient
 	protected abstract DoubleProperty initPrecioLaborHaProperty() ;
 	
 	/**
 	 * metodo que devuelve el costo de la labor por hectarea de acuerdo a la configuracion del tipo de labor que implemente
 	 * @return DoubleProperty
 	 */
+	@Transient
 	protected abstract DoubleProperty initPrecioInsumoProperty() ;
 
 	public static SimpleDoubleProperty initDoubleProperty(String key,String def,Configuracion properties){
@@ -292,8 +319,10 @@ public abstract class Labor<E extends LaborItem>  {
 		return sProperty;
 	}
 
+	@Transient
 	public abstract  String getTypeDescriptors();
 
+	@Transient
 	public FileDataStore getInStore() {
 		return inStore;
 	}
@@ -312,10 +341,12 @@ public abstract class Labor<E extends LaborItem>  {
 		}
 	}
 
+	
 	public Clasificador getClasificador() {
 		return clasificador;
 	}
 
+	@Transient
 	public LaborLayer getLayer() {
 		return layer;
 	}
@@ -328,6 +359,7 @@ public abstract class Labor<E extends LaborItem>  {
 		renderableLayer.setName(this.nombreProperty.get());
 	}
 
+	@Transient
 	public StringProperty getNombreProperty(){
 		return nombreProperty;
 	}
@@ -565,7 +597,7 @@ public abstract class Labor<E extends LaborItem>  {
 	public void constructClasificador(String nombreClasif) {
 		System.out.println("constructClasificador "+nombreClasif);
 		if (Clasificador.CLASIFICADOR_JENKINS.equalsIgnoreCase(nombreClasif)) {
-			System.out.println("construyendo clasificador jenkins");
+			System.out.println("construyendo clasificador jenkins "+this.colAmount.get());
 			this.clasificador.constructJenksClasifier(this.outCollection,this.colAmount.get());
 		} else {
 			System.out
@@ -581,6 +613,7 @@ public abstract class Labor<E extends LaborItem>  {
 		}
 	}
 
+	@Transient
 	public List<String> getAvailableColumns() {
 		List<String> availableColumns = new ArrayList<String>();
 		SimpleFeatureType sch=null;
@@ -648,6 +681,7 @@ public abstract class Labor<E extends LaborItem>  {
 	/**
 	 * @return the inCollection
 	 */
+	@Transient
 	public DefaultFeatureCollection getInCollection() {
 		return inCollection;
 	}
@@ -661,6 +695,7 @@ public abstract class Labor<E extends LaborItem>  {
 	}
 
 
+	@Transient
 	public SimpleFeatureType getType() {
 		SimpleFeatureType type = null;
 		String typeDescriptor = "the_geom:MultiPolygon:srid=4326,"//"*geom:Polygon,"the_geom
@@ -680,6 +715,7 @@ public abstract class Labor<E extends LaborItem>  {
 		return type;
 	}
 
+	@Transient
 	public SimpleFeatureType getPointType() {
 		SimpleFeatureType type = null;
 		String typeDescriptor = "the_geom:Point:srid=4326,"//"*geom:Polygon,"the_geom

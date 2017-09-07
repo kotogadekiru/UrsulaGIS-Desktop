@@ -3,6 +3,7 @@ package dao.suelo;
 import java.util.List;
 
 import javax.persistence.Entity;
+import javax.persistence.Transient;
 
 import org.geotools.data.FileDataStore;
 import org.opengis.feature.simple.SimpleFeature;
@@ -10,7 +11,6 @@ import org.opengis.feature.simple.SimpleFeature;
 import dao.Labor;
 import dao.LaborConfig;
 import dao.LaborItem;
-import dao.config.Agroquimico;
 import dao.config.Configuracion;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -33,13 +33,19 @@ public class Suelo extends Labor<SueloItem>{
 	public static final String COLUMNA_AGUA_PERFIL= "Agua Perf";
 
 	//las propiedades que le permiten al usuario definir el nombre de sus columnas
+	@Transient
 	public StringProperty colNProperty;
+	@Transient
 	public StringProperty colPProperty;
+	@Transient
 	public StringProperty colKProperty;
+	@Transient
 	public StringProperty colSProperty;
-	
+	@Transient
 	public StringProperty colMOProperty;
+	@Transient
 	public StringProperty colProfNapaProperty;
+	@Transient
 	public StringProperty colAguaPerfProperty;
 	
 	public Suelo() {

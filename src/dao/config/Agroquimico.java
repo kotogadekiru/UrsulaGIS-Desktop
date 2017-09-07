@@ -3,20 +3,21 @@ package dao.config;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.persistence.Access;
+import javax.persistence.AccessType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.Transient;
 
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Data;
 
 @Data
-@Entity
+@Entity @Access(AccessType.PROPERTY)
 @NamedQueries({
 	@NamedQuery(name=Agroquimico.FIND_ALL, query="SELECT o FROM Agroquimico o") ,
 	@NamedQuery(name=Agroquimico.FIND_NAME, query="SELECT o FROM Agroquimico o where o.nombre = :name") ,
@@ -26,7 +27,7 @@ public class Agroquimico implements Comparable<Agroquimico>{
 	public static final String FIND_NAME="Agroquimico.findName";
 	
 	
-	@Id @GeneratedValue
+	//@Id @GeneratedValue
 	private long id;
 	
 	private StringProperty nombre = new SimpleStringProperty();
@@ -37,25 +38,42 @@ public class Agroquimico implements Comparable<Agroquimico>{
 		agroquimicos.put("RoundUp",new Agroquimico("RoundUp"));	
 		agroquimicos.put("Superwet",new Agroquimico("Superwet"));
 		agroquimicos.put("Atrazina",new Agroquimico("Atrazina"));
-
 	}
 
+
+	
+	public Agroquimico() {
+	}
+
+	
 	public Agroquimico(String _nombre) {
 		nombre.set(_nombre);
-	
 	}
 
+	@Id @GeneratedValue
+	public Long getId(){
+		return this.id;
+	}
+	
+	public void setId(Long id){
+		this.id=id;
+	}
+	
 	public String getNombre(){
 		return this.nombre.get();
 	}
 
 	public void setNombre(String n){
+		if(this.nombre==null){
+			 nombre = new SimpleStringProperty();
+		}
 		this.nombre.set(n);
 	}
 
 	/**
 	 * @return the nombre
 	 */
+	@Transient
 	public StringProperty getNombreProperty() {
 		return nombre;
 	}

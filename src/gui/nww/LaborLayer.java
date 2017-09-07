@@ -48,11 +48,14 @@ public class LaborLayer extends RenderableLayer {
 		long vsNow =dc.getView().getViewStateID();
 		long tNow = System.currentTimeMillis();
 		double eyeElevation = dc.getView().getCurrentEyePosition().elevation;
-		if( //(this.vS==vsNow  && extrudedPolygonsLayer != null)|| 
+		if( //(this.vS==vsNow  &&
+				//extrudedPolygonsLayer != null && (
 				elementsCount<MAX_EXTRUDED_ELEMENTS || eyeElevation < screenPixelsSectorMinSize ){
+			
 			extrudedPolygonsLayer.render(dc);
 			analyticSurfaceLayer.setEnabled(false);
-		} else {
+		} else //if(analyticSurfaceLayer!=null)
+		{
 			this.vS=vsNow;
 			analyticSurfaceLayer.setEnabled(true);
 			analyticSurfaceLayer.render(dc);	

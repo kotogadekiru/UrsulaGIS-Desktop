@@ -40,6 +40,7 @@ import dao.pulverizacion.PulverizacionLabor;
 import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.render.ExtrudedPolygon;
 import javafx.geometry.Point2D;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
@@ -86,7 +87,7 @@ public class CrearPulverizacionMapTask extends ProcessMapTask<PulverizacionItem,
 
 
 	@Override
-	protected void getPathTooltip(Geometry poly, PulverizacionItem pulv) {
+	protected ExtrudedPolygon getPathTooltip(Geometry poly, PulverizacionItem pulv) {
 	//	Path path = getPathFromGeom(poly, pulv);
 
 		double area = poly.getArea() * ProyectionConstants.A_HAS();
@@ -105,7 +106,7 @@ public class CrearPulverizacionMapTask extends ProcessMapTask<PulverizacionItem,
 			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
 		}
 
-		super.getRenderPolygonFromGeom(poly, pulv,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, pulv,tooltipText);
 	}
 
 	protected int getAmountMin() {

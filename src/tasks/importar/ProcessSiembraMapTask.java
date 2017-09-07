@@ -27,6 +27,7 @@ import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
+import gov.nasa.worldwind.render.ExtrudedPolygon;
 
 public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLabor> {	
 //	private int featureCount;
@@ -206,7 +207,7 @@ public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLab
 
 	}
 	
-	public  void  getPathTooltip( Geometry poly,SiembraItem siembraFeature) {
+	public  ExtrudedPolygon  getPathTooltip( Geometry poly,SiembraItem siembraFeature) {
 	//	Path path = getPathFromGeom(poly,siembraFeature);		
 		
 		double area = poly.getArea() *ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
@@ -225,7 +226,7 @@ public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLab
 		}
 
 		
-		super.getRenderPolygonFromGeom(poly, siembraFeature,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, siembraFeature,tooltipText);
 	//	return ret;		
 	}
 	

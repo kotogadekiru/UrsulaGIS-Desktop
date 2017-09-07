@@ -8,8 +8,6 @@ import javax.persistence.Entity;
 import org.opengis.feature.simple.SimpleFeature;
 
 import dao.LaborItem;
-import dao.config.Agroquimico;
-import dao.config.Campania;
 import lombok.Data;
 
 @Data

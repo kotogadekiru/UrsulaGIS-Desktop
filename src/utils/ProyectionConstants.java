@@ -49,8 +49,8 @@ public class ProyectionConstants {
 		return 180 / ( Math.PI * RADIO_TERRESTRE_POLAR);
 	}
 	public static double metersToLongLat(double meters){
-		GeometryFactory factory = new GeometryFactory(new PrecisionModel(
-				PrecisionModel.FLOATING), SRID.WGS84_SRID.getSRID());
+//		GeometryFactory factory = new GeometryFactory(new PrecisionModel(
+//				PrecisionModel.FLOATING), SRID.WGS84_SRID.getSRID());
 		
 //		CoordinateReferenceSystem utmArg = factory.createCoordinateReferenceSystem("EPSG:28880");
 //		CoordinateReferenceSystem defaultcrs = factory.createCoordinateReferenceSystem("EPSG:4326");

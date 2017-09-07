@@ -9,10 +9,6 @@ import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import lombok.Data;
 @Data
 @Entity
@@ -85,6 +81,8 @@ fertilizantes.put("Yeso Agricola",new Fertilizante("Yeso Agricola",0.0,0.0,0,17)
 	double porcK= 0.0;
 	double porcS= 0.0;
 	
+	
+	public Fertilizante() {}
 	
 	public Fertilizante(String nom) {
 		super();

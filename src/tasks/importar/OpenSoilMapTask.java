@@ -8,6 +8,7 @@ import com.vividsolutions.jts.index.quadtree.Quadtree;
 import dao.fertilizacion.FertilizacionItem;
 import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
+import gov.nasa.worldwind.render.ExtrudedPolygon;
 import javafx.scene.Group;
 import javafx.scene.shape.Path;
 import tasks.ProcessMapTask;
@@ -98,7 +99,7 @@ public class OpenSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 
 	
 	@Override
-	protected void getPathTooltip(Geometry poly, SueloItem si) {
+	protected ExtrudedPolygon getPathTooltip(Geometry poly, SueloItem si) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		DecimalFormat df = new DecimalFormat("#.00");
 		String tooltipText = new String(
@@ -111,7 +112,7 @@ public class OpenSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
 		}
 
-		super.getRenderPolygonFromGeom(poly, si,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, si,tooltipText);
 
 		
 	}

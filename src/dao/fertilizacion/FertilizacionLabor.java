@@ -28,7 +28,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public class FertilizacionLabor extends Labor<FertilizacionItem> {
-	public static final String COLUMNA_KG_HA = "Kg Fert/Ha";
+	public static final String COLUMNA_KG_HA = "Kg_FertHa";
 	public static final String COLUMNA_PRECIO_FERT = "Precio Kg Fert";
 	public static final String COLUMNA_PRECIO_PASADA = "Precio labor/Ha";	
 	public static final String COLUMNA_IMPORTE_HA = "importe_ha";

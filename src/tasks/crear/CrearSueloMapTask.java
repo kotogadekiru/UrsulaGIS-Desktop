@@ -40,6 +40,7 @@ import dao.siembra.SiembraLabor;
 import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
 import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.render.ExtrudedPolygon;
 import javafx.geometry.Point2D;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
@@ -90,7 +91,7 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 
 
 	@Override
-	public  void  getPathTooltip( Geometry poly,SueloItem si) {
+	public  ExtrudedPolygon  getPathTooltip( Geometry poly,SueloItem si) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		DecimalFormat df = new DecimalFormat("#.00");
 		String tooltipText = new String(
@@ -104,7 +105,7 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
 		}
 
-		super.getRenderPolygonFromGeom(poly, si,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, si,tooltipText);
 	}
 
 	protected int getAmountMin() {

@@ -122,7 +122,7 @@ public class Clasificador {
 
 			return colorIndex;
 		} catch (Exception e) {
-			System.err.println("getColorsByHistogram "+rinde);
+		//	System.err.println("getColorsByHistogram "+rinde);
 			//e.printStackTrace();
 			return 0;
 		}

@@ -330,7 +330,16 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 
 
 		//StringConverter<Number> converter = new NumberStringConverter();//FIXME corregir que el separador de miles
-		DecimalFormat converter = new DecimalFormat("0.00");
+		DecimalFormat converter = new DecimalFormat("0.00"){
+	            @Override
+	            public Object parseObject(String source) throws ParseException {
+	            	if("".equals(source)||source==null){
+	            		source="0.00";
+	            	}
+	            	return super.parseObject(source);
+	            }
+		};
+		
 		converter.setGroupingUsed(true);
 		converter.setGroupingSize(3);
 

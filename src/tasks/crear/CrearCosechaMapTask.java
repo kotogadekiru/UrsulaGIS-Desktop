@@ -34,6 +34,7 @@ import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.render.ExtrudedPolygon;
 import javafx.geometry.Point2D;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
@@ -84,7 +85,7 @@ public class CrearCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 
 
 	@Override
-	protected void getPathTooltip(Geometry poly,	CosechaItem cosechaItem) {
+	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
 		DecimalFormat df = new DecimalFormat("#.00");
@@ -107,7 +108,7 @@ public class CrearCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
 		}
 		//super.getRenderPolygonFromGeom(poly, cosechaItem,tooltipText);
-		super.getExrudedPolygonFromGeom(poly, cosechaItem,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText);
 
 	}
 

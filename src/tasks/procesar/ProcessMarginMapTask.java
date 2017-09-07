@@ -31,6 +31,7 @@ import dao.margen.Margen;
 import dao.margen.MargenItem;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.siembra.SiembraLabor;
+import gov.nasa.worldwind.render.ExtrudedPolygon;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
 
@@ -390,7 +391,7 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 	// getPathFromGeom(importeFert/areaCosecha,importePulv/areaCosecha,importeSiembra/areaCosecha,importeCosechaPorHa,margenPorHa,
 	// harvestPolygon);
 	@Override
-	protected void getPathTooltip( Geometry poly,MargenItem renta) {
+	protected ExtrudedPolygon getPathTooltip( Geometry poly,MargenItem renta) {
 
 	//	gov.nasa.worldwind.render.Polygon path = getPathFromGeom2D(poly, renta);
 
@@ -425,7 +426,7 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 //		ret.add(path);
 //		ret.add(tooltipText);
 		//return ret;
-		super.getRenderPolygonFromGeom(poly, renta,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, renta,tooltipText);
 	}
 
 

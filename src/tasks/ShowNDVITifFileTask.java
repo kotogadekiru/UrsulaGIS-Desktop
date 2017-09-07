@@ -5,15 +5,11 @@ import java.io.File;
 import java.text.DecimalFormat;
 import java.text.Format;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-
-import com.vividsolutions.jts.geom.Geometry;
 
 import dao.Clasificador;
 import dao.Labor;
 import dao.Ndvi;
+import dao.Poligono;
 import gov.nasa.worldwind.WorldWind;
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.avlist.AVList;
@@ -49,9 +45,14 @@ import javafx.scene.control.Alert;
 import javafx.stage.Modality;
 import utils.ProyectionConstants;
 public class ShowNDVITifFileTask extends Task<Layer>{
-	private static final double MAX_VALUE = 0.9;//1.0;
-private static final double MIN_VALUE =0.2;// 0.2;
+	public static final double WATER_RENDER_VALUE = 0.19; //para que quede sobre el nivel del suelo
+	public static final double CLOUD_RENDER_VALUE = 2.2;
+	private static final int WATER_VALUE = -2;
+	private static final int CLOUD_VALUE = 2;
+	public static final double MAX_VALUE = 0.9;//1.0;
+	public static final double MIN_VALUE =0.2;// 0.2;
 	private File file=null;
+	private Poligono ownerPoli = null;
 	public ShowNDVITifFileTask(File f){
 		file =f;
 	}
@@ -72,6 +73,9 @@ private static final double MIN_VALUE =0.2;// 0.2;
 						+"-"+fileName.substring(0, "2017".length());
 			}
 
+			if(ownerPoli !=null){
+				fileName = ownerPoli.getNombre() +" "+ fileName;
+			}
 			final ExportableAnalyticSurface surface = new ExportableAnalyticSurface();
 			surface.setSector(raster.getSector());
 			surface.setDimensions(raster.getWidth(), raster.getHeight());
@@ -110,16 +114,17 @@ private static final double MIN_VALUE =0.2;// 0.2;
 				  buffer.putDouble(i, value);
 			}
 			
-			 ArrayList<AnalyticSurface.GridPointAttributes> attributesList
+			 @SuppressWarnings("unchecked")
+			ArrayList<AnalyticSurface.GridPointAttributes> attributesList
 	            = (ArrayList<GridPointAttributes>) AnalyticSurface.createColorGradientValues(raster.getBuffer(), transparentValue, MIN_VALUE, MAX_VALUE, HUE_MIN, HUE_MAX);
 			 if(attributesList.size()==0)return null;
 			 attributesList.replaceAll((gpa)->{
 				 double value = gpa.getValue();
-					if(value == 2) {
-						GridPointAttributes cloud = AnalyticSurface.createGridPointAttributes(2.2,Color.white);
+					if(value == CLOUD_VALUE) {
+						GridPointAttributes cloud = AnalyticSurface.createGridPointAttributes(CLOUD_RENDER_VALUE,Color.white);
 						return cloud;
-					} else if (value == -2){
-						GridPointAttributes water = AnalyticSurface.createGridPointAttributes(0.19,Color.CYAN);
+					} else if (value == WATER_VALUE){
+						GridPointAttributes water = AnalyticSurface.createGridPointAttributes(WATER_RENDER_VALUE,Color.CYAN);
 						return water;
 					} else {
 						return gpa;
@@ -298,6 +303,10 @@ private static final double MIN_VALUE =0.2;// 0.2;
 			e.printStackTrace();
 			return null;
 		}
+	}
+	
+	public void setPoligono(Poligono p){
+		this.ownerPoli=p;
 	}
 	
 }

@@ -27,6 +27,7 @@ import dao.config.Cultivo;
 import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
+import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.nww.LaborLayer;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
@@ -451,7 +452,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 	
 	
 	@Override
-	protected void getPathTooltip(Geometry poly,	CosechaItem cosechaItem) {
+	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem) {
 		//	System.out.println("getPathTooltip(); "+System.currentTimeMillis());
 		//List<SurfacePolygon>  paths = getSurfacePolygons(poly, cosechaFeature);//
 		//	List<gov.nasa.worldwind.render.Polygon>  paths = super.getPathFromGeom2D(poly, cosechaFeature);
@@ -479,7 +480,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
 		}
 		//super.getRenderPolygonFromGeom(poly, cosechaItem,tooltipText);
-		super.getExrudedPolygonFromGeom(poly, cosechaItem,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText);
 
 	}
 	

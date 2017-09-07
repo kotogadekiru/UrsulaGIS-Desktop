@@ -47,6 +47,7 @@ import dao.pulverizacion.PulverizacionItem;
 import dao.siembra.SiembraItem;
 import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
+import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.nww.LaborLayer;
 
 public class ProcessNewSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
@@ -389,7 +390,7 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 
 
 	@Override
-	protected void getPathTooltip(Geometry poly, SueloItem si) {
+	protected ExtrudedPolygon getPathTooltip(Geometry poly, SueloItem si) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		DecimalFormat df = new DecimalFormat("#.00");
 		String tooltipText = new String(
@@ -402,7 +403,7 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 		} else {
 			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
 		}
-		super.getRenderPolygonFromGeom(poly, si,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, si,tooltipText);
 	}
 
 	protected int getAmountMin() {

@@ -31,6 +31,7 @@ import dao.LaborItem;
 import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
+import gov.nasa.worldwind.render.ExtrudedPolygon;
 import javafx.geometry.Point2D;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
@@ -263,10 +264,10 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 					}					
 					ci.setGeometry(longLatGeom);
 					corregirRinde(ci,anchoOrig);
-
 					labor.insertFeature(ci);//featureTree.insert(geom.getEnvelopeInternal(), cosechaFeature);
 				} else{
-					//	System.out.println("no inserto el feature "+featureNumber+" porque tiene una geometria invalida empty="+empty+" valid ="+valid+" area="+big+" "+geom);
+					//System.out.println("no inserto la feature "+ci+" "+empty+" "+valid+" "+big );
+					System.out.println("no inserto el feature "+featureNumber+" porque tiene una geometria empty="+empty+" valid ="+valid+" big="+big);
 				}
 
 			} else { // no es point. Estoy abriendo una cosecha de poligonos.
@@ -972,7 +973,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 	}
 
 	@Override
-	protected void getPathTooltip(Geometry poly,	CosechaItem cosechaItem) {
+	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem) {
 		//	System.out.println("getPathTooltip(); "+System.currentTimeMillis());
 		//List<SurfacePolygon>  paths = getSurfacePolygons(poly, cosechaFeature);//
 		//	List<gov.nasa.worldwind.render.Polygon>  paths = super.getPathFromGeom2D(poly, cosechaFeature);
@@ -1000,7 +1001,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
 		}
 		//super.getRenderPolygonFromGeom(poly, cosechaItem,tooltipText);
-		super.getExrudedPolygonFromGeom(poly, cosechaItem,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText);
 
 	}
 

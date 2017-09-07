@@ -1,37 +1,54 @@
 package utils;
 
 import java.io.File;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
-
-import javafx.collections.ObservableList;
-import javafx.concurrent.WorkerStateEvent;
-import javafx.event.EventHandler;
-import javafx.util.Callback;
+import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
-import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import javax.persistence.spi.PersistenceUnitTransactionType;
+
+import org.eclipse.persistence.config.TargetServer;
+
+import static org.eclipse.persistence.config.PersistenceUnitProperties.*;
 
 import dao.Poligono;
-import dao.config.*;
+import dao.config.Agroquimico;
+import dao.config.Campania;
+import dao.config.Configuracion;
+import dao.config.Cultivo;
+import dao.config.Empresa;
+import dao.config.Establecimiento;
+import dao.config.Fertilizante;
+import dao.config.Lote;
+import dao.config.Semilla;
 
 public class DAH {
 	private static final String APPDATA = "APPDATA";
-	private static final String OBJECTDB_DB_MONITORES_ODB = "$ursulaGIS.odb";
+	private static final String OBJECTDB_DB_URSULAGIS_ODB = "$ursulaGIS.odb";
+	private static final String SQLITE_DB_URSULAGIS_DB = "ursulaGIS";//mv.db
+	//private static final String OBJECTDB_DB_MONITORES_H2 = "$ursulaGIS.odb";
+//	private static final String SQLLITE_PU = "UrsulaGIS";
 	private static EntityManager em = null;
+	private static EntityManager emLite = null;
 	static EntityTransaction transaction=null;
 
+	
 	public static EntityManager em(){
+		return emLite();
+	}
+	
+	public static EntityManager emODB(){
 		if(em == null){
 			String currentUsersHomeDir =System.getenv(APPDATA);
 			//	System.out.println("obtuve la direccion de appData : "+currentUsersHomeDir);
 				//obtuve la direccion de appData : C:\Users\quero\AppData\Roaming
 			String ursulaGISFolder = currentUsersHomeDir + File.separator + Configuracion.URSULA_GIS_APPDATA_FOLDER;
-			String  db_url = ursulaGISFolder + File.separator + OBJECTDB_DB_MONITORES_ODB;		
+			String  db_url = ursulaGISFolder + File.separator + OBJECTDB_DB_URSULAGIS_ODB;		
 			System.out.println("abriendo la base de datos de: "+db_url);
 			EntityManagerFactory emf =
 					Persistence.createEntityManagerFactory(db_url);		     
@@ -40,11 +57,80 @@ public class DAH {
 		}
 		return em;
 	}
-
-
-
-	public static void save(Object entidad) {
 	
+	/**
+	 * obtener un acceso a la db de sqllite
+	 * @return
+	 */
+	public static EntityManager emLite(){
+		if(emLite == null){
+			/*
+   <property name="javax.persistence.jdbc.driver" value="org.sqlite.JDBC" />
+  <property name="javax.persistence.jdbc.url" value="jdbc:sqlite:ursulaGIS.db" />
+  <property name="eclipselink.ddl-generation" value="drop-and-create-tables" />
+  <property name="eclipselink.ddl-generation.output-mode" value="database" />
+			 */
+			String currentUsersHomeDir =System.getenv(APPDATA);
+			String ursulaGISFolder = currentUsersHomeDir + File.separator + Configuracion.URSULA_GIS_APPDATA_FOLDER;
+			String  db_url = ursulaGISFolder + File.separator + SQLITE_DB_URSULAGIS_DB;		
+			
+			File sqliteDBFile=new File(db_url);
+			if(!sqliteDBFile.exists()){
+				System.out.println("need to migrate from ObjectDB");
+			}
+			
+			  Map<String,String> properties = new HashMap<>();
+
+			  properties.put(ECLIPSELINK_PERSISTENCE_UNITS,"UrsulaGIS");//  persistence-unit name="UrsulaGIS" transaction-type="RESOURCE_LOCAL">, value)
+			  properties.put(TARGET_DATABASE,"auto");//  eclipselink.target-database
+			  // Ensure RESOURCE_LOCAL transactions is used.
+			  properties.put(TRANSACTION_TYPE,    PersistenceUnitTransactionType.RESOURCE_LOCAL.name());
+			  
+			  // Configure the internal connection pool
+			  properties.put(JDBC_DRIVER, "org.h2.Driver");
+			  //properties.put(JDBC_URL, "jdbc:h2:~/test");
+			  
+			  properties.put(JDBC_URL, "jdbc:h2:"+db_url);
+			  properties.put(DDL_GENERATION, CREATE_OR_EXTEND);
+			  properties.put(DDL_GENERATION_MODE, "database");
+			//  properties.put(JDBC_USER, "scott");
+			 // properties.put(JDBC_PASSWORD, "tiger");
+
+			  // Configure logging. FINE ensures all SQL is shown
+			 // properties.put(LOGGING_LEVEL, "FINE");
+			//  properties.put(LOGGING_TIMESTAMP, "false");
+			 // properties.put(LOGGING_THREAD, "false");
+			 // properties.put(LOGGING_SESSION, "false");
+
+			  // Ensure that no server-platform is configured
+			  properties.put(TARGET_SERVER, TargetServer.None);
+			  EntityManagerFactory factory =  Persistence.createEntityManagerFactory("UrsulaGIS", properties);
+		//step 2
+		emLite = factory.createEntityManager();
+		}
+		return emLite;
+	}
+
+
+//	public static EntityManager em(){
+//		if(em == null){
+//			String currentUsersHomeDir =System.getenv(APPDATA);
+//			//	System.out.println("obtuve la direccion de appData : "+currentUsersHomeDir);
+//				//obtuve la direccion de appData : C:\Users\quero\AppData\Roaming
+//			String ursulaGISFolder = currentUsersHomeDir + File.separator + Configuracion.URSULA_GIS_APPDATA_FOLDER;
+//			String  db_url = ursulaGISFolder + File.separator + OBJECTDB_DB_MONITORES_ODB;		
+//			System.out.println("abriendo la base de datos de: "+db_url);
+//			EntityManagerFactory emf =
+//					Persistence.createEntityManagerFactory(db_url);		     
+//		emf.
+//			em = emf.createEntityManager();
+//		}
+//		return em;
+//	}
+
+
+	public static void save(Object entidad) {	
+		
 		EntityManager em = em();
 		if(DAH.transaction == null){
 			//	DAH.transaction = em.getTransaction();
@@ -55,13 +141,11 @@ public class DAH {
 			}catch(javax.persistence.RollbackException rbe){
 				em.getTransaction().begin();		
 				em.merge(entidad);
-				em.getTransaction().commit();
-				
+				em.getTransaction().commit();			
 			}
 		} else{
 			em.persist(entidad);	
 		}
-
 	}
 	
 	public static void remove(Object entidad) {
@@ -174,10 +258,22 @@ public class DAH {
 	}
 
 
+public static List<Poligono> getPoligonosActivos() {
+	  TypedQuery<Poligono> query =
+			  em().createNamedQuery(Poligono.FIND_ACTIVOS, Poligono.class);
+		  List<Poligono> results = query.getResultList();
+		//  closeEm();
+	return results;
+	}
 
-	private static void closeEm() {
-		em.close();
-		  em=null;
+
+
+	//se llama al cerrar la aplicacion
+	public static void closeEm() {
+		if(em!=null){
+			em.close();
+			 em=null;
+		}	 
 	}
 	
 	public static List<Cultivo> getAllCultivos() {

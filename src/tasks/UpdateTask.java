@@ -3,13 +3,12 @@ package tasks;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.List;
-
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
@@ -36,7 +35,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import utils.CustomProperties;
 
 
 public class UpdateTask  extends Task<File>{
@@ -151,6 +149,8 @@ public class UpdateTask  extends Task<File>{
 //		String uninstall = "msiexec.exe /x ";// UrsulaGIS-0.2.18.msi;
 //			String executar = uninstall+fout.getPath()+" /q";
 			System.out.println("ejecutando: "+bat.getAbsolutePath());
+			//XXX parece que no se instala bien sobre otras versiones o no tiene permiso por que no copia los exe
+			//TODO probar ejecutar con "Elevate.exe "+bat.getAbsolutePath();
 		 Runtime.getRuntime().exec(bat.getAbsolutePath());
 	
 		} catch (IOException e) {
@@ -277,6 +277,14 @@ public class UpdateTask  extends Task<File>{
 	public static boolean isUpdateAvailable() {
 		GenericUrl url = new GenericUrl(UPDATE_URL);//"http://www.ursulagis.com/update");// "http://www.lanacion.com.ar");
 		url.put("VERSION", JFXMain.VERSION);
+		
+		
+		DecimalFormat dc = new DecimalFormat("0,000");
+		String userString = dc.format(Math.random()*1000000);
+		Configuracion conf = Configuracion.getInstance();
+		String usr = conf.getPropertyOrDefault("USER", userString);//si no existia la clave se crea una nueva
+		conf.save();
+		url.put("USER", usr);
 		//http://www.ursulagis.com/update?VERSION=0.2.20
 		HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 		JsonFactory JSON_FACTORY = new JacksonFactory();
@@ -310,6 +318,7 @@ public class UpdateTask  extends Task<File>{
 	}
 
 	public static Double versionToDouble(String ver){
+		ver= ver.replace(" dev", "");
 		String[] v =ver.split("\\.");
 		String ret = v[0]+".";
 		for(int i=1;i<v.length;i++){

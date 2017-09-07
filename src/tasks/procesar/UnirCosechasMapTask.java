@@ -2,6 +2,7 @@ package tasks.procesar;
 
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.layers.RenderableLayer;
+import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.nww.LaborLayer;
 import tasks.ProcessMapTask;
 
@@ -163,7 +164,7 @@ public class UnirCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 		System.out.println("tarde "+time+" milisegundos en unir las cosechas.");
 	}
 
-	protected void getPathTooltip(Geometry poly,
+	protected ExtrudedPolygon getPathTooltip(Geometry poly,
 			CosechaItem cosechaFeature) {
 		//	System.out.println("getPathTooltip(); "+System.currentTimeMillis());
 		//	List<gov.nasa.worldwind.render.Polygon>  paths = super.getPathFromGeom2D(poly, cosechaFeature);
@@ -189,7 +190,7 @@ public class UnirCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 		//tooltipText=tooltipText.concat("Pasada: "+df.format(cosechaFeature.getPasada() ) + "\n");
 		tooltipText=tooltipText.concat("feature: "+cosechaFeature.getId() + "\n");
 
-		 super.getRenderPolygonFromGeom(poly, cosechaFeature,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, cosechaFeature,tooltipText);
 	}
 
 	@Override

@@ -11,10 +11,12 @@ import dao.LaborItem;
 import dao.cosecha.CosechaItem;
 import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
+import gov.nasa.worldwind.render.ExtrudedPolygon;
 import javafx.scene.Group;
 import javafx.scene.shape.Path;
 import tasks.ProcessMapTask;
 
+import org.geotools.data.DataUtilities;
 import org.geotools.data.FeatureReader;
 import org.geotools.data.FileDataStore;
 import org.geotools.data.simple.SimpleFeatureCollection;
@@ -58,7 +60,8 @@ public class ProcessFertMapTask extends ProcessMapTask<FertilizacionItem,Fertili
 			//convierto los features en cosechas
 			featureCount=labor.outCollection.size();
 		}
-
+		
+		System.out.println("Fertilizacion Type: "+DataUtilities.spec(reader.getFeatureType()));
 
 		//initCrsTransform(storeCRS);
 
@@ -194,7 +197,7 @@ public class ProcessFertMapTask extends ProcessMapTask<FertilizacionItem,Fertili
 	}
 
 	@Override
-	protected void getPathTooltip(Geometry poly, FertilizacionItem fertFeature) {
+	protected ExtrudedPolygon getPathTooltip(Geometry poly, FertilizacionItem fertFeature) {
 
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
@@ -219,7 +222,7 @@ public class ProcessFertMapTask extends ProcessMapTask<FertilizacionItem,Fertili
 		}
 
 		//List  paths = 
-		super.getRenderPolygonFromGeom(poly, fertFeature,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, fertFeature,tooltipText);
 
 		//return null;
 	}

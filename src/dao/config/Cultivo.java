@@ -3,8 +3,6 @@ package dao.config;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.Access;
-import javax.persistence.AccessType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -24,7 +22,7 @@ import lombok.Data;
 @Entity //@Access(AccessType.PROPERTY)
 @NamedQueries({
 	@NamedQuery(name=Cultivo.FIND_ALL, query="SELECT c FROM Cultivo c") ,
-	@NamedQuery(name=Cultivo.FIND_NAME, query="SELECT o FROM Cultivo o where o.name = :name") ,
+	@NamedQuery(name=Cultivo.FIND_NAME, query="SELECT o FROM Cultivo o where o.nombre = :name") ,
 }) 
 public class Cultivo implements Comparable<Cultivo>{
 	public static final String FIND_ALL="Cultivo.findAll";
@@ -67,6 +65,9 @@ public class Cultivo implements Comparable<Cultivo>{
 		cultivos.put(CEBADA,getCebada());
 		cultivos.put(SORGO,getSorgo());
 		cultivos.put(GIRASOL,getGirasol());
+	}
+	
+	public Cultivo() {
 	}
 	
 	public Cultivo(String _nombre) {

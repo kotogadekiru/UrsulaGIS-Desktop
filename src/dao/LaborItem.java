@@ -2,8 +2,15 @@ package dao;
 
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
+import lombok.Data;
 
 import java.util.Arrays;
+
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Inheritance;
 
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.opengis.feature.simple.SimpleFeature;
@@ -12,7 +19,12 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
+@Data
+@Entity @Access(AccessType.FIELD)//variable (el default depende de donde pongas el @Id)
+//@Entity @Access(AccessType.PROPERTY)//getter
+@Inheritance(strategy=javax.persistence.InheritanceType.TABLE_PER_CLASS)
 public abstract class LaborItem implements Comparable<Object>{
+	@javax.persistence.Id @GeneratedValue
 	protected Double id=new Double(0);
 	protected Geometry geometry=null;
 
@@ -160,6 +172,7 @@ public abstract class LaborItem implements Comparable<Object>{
 		} else  if(o instanceof Integer){
 			d = new Double((Integer) o);
 		} else  if(o instanceof Long){
+			
 			d = new Double((Long) o);
 		} else if(o instanceof String){
 			StringConverter<Number> converter = new NumberStringConverter();

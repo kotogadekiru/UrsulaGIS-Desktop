@@ -1,39 +1,26 @@
 package dao.siembra;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.persistence.Entity;
+import javax.persistence.Transient;
 
-import org.geotools.data.DataUtilities;
 import org.geotools.data.FileDataStore;
-import org.geotools.feature.SchemaException;
 import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
 
 import dao.Clasificador;
-import dao.LaborItem;
 import dao.Labor;
 import dao.LaborConfig;
-import dao.config.Agroquimico;
+import dao.LaborItem;
 import dao.config.Configuracion;
 import dao.config.Semilla;
-import dao.cosecha.CosechaConfig;
-import dao.cosecha.CosechaItem;
-import dao.cosecha.CosechaLabor;
-import dao.fertilizacion.FertilizacionItem;
-import dao.pulverizacion.PulverizacionLabor;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Data;
-import utils.ProyectionConstants;
 
 @Data
 @Entity
@@ -58,9 +45,9 @@ public class SiembraLabor extends Labor<SiembraItem> {
 
 //	public  SimpleDoubleProperty entreSurco =null; 
 //	public  SimpleDoubleProperty semillasPorBolsa=null;
-
+	@Transient
 	public StringProperty colDosisSemilla;
-
+	@Transient
 	public Property<Semilla> semillaProperty=null;
 
 	public SiembraLabor() {

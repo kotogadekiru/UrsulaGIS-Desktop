@@ -1,10 +1,9 @@
 package dao.pulverizacion;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.persistence.Entity;
+import javax.persistence.Transient;
 
 import org.geotools.data.FileDataStore;
 import org.opengis.feature.simple.SimpleFeature;
@@ -15,13 +14,8 @@ import dao.LaborConfig;
 import dao.LaborItem;
 import dao.config.Agroquimico;
 import dao.config.Configuracion;
-import dao.margen.Margen;
-import dao.siembra.SiembraItem;
-import dao.siembra.SiembraLabor;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -40,10 +34,10 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 	private static final String AGROQUIMICO_DEFAULT = "AGROQUIMICO_DEFAULT_KEY";
 	private static final String PRECIO_INSUMO_KEY = "PRECIO_INSUMO";
 
-
+@Transient
 	public StringProperty colDosisProperty;
 	//public StringProperty colCantPasadasProperty;
-
+@Transient
 	public Property<Agroquimico> agroquimico=null;
 
 	public PulverizacionLabor() {

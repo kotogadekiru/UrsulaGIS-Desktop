@@ -10,6 +10,7 @@ import dao.margen.Margen;
 import dao.margen.MargenItem;
 import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
+import gov.nasa.worldwind.render.ExtrudedPolygon;
 import javafx.scene.Group;
 import javafx.scene.shape.Path;
 import tasks.ProcessMapTask;
@@ -92,7 +93,7 @@ public class OpenMargenMapTask extends ProcessMapTask<MargenItem,Margen> {
 	}
 
 	
-	protected void getPathTooltip( Geometry poly,MargenItem renta) {
+	protected ExtrudedPolygon getPathTooltip( Geometry poly,MargenItem renta) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 
 
@@ -119,8 +120,8 @@ public class OpenMargenMapTask extends ProcessMapTask<MargenItem,Margen> {
 		} else {
 			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
 		}
-
-		super.getRenderPolygonFromGeom(poly, renta,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, renta,tooltipText);
+	//	super.getRenderPolygonFromGeom(poly, renta,tooltipText);
 	}
 
 	

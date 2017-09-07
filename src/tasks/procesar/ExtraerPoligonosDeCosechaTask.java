@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.geotools.data.simple.SimpleFeatureIterator;
+import org.geotools.geometry.jts.JTS;
 import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.geom.Coordinate;
@@ -16,6 +17,8 @@ import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.operation.buffer.BufferOp;
+import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 
 import dao.Poligono;
 import gov.nasa.worldwind.avlist.AVKey;
@@ -65,10 +68,11 @@ public class ExtraerPoligonosDeCosechaTask extends Task<List<Poligono>> {
 			SimpleFeature next = it.next();
 
 			List<Polygon> mp = getPolygons(next.getDefaultGeometry());
-
+			
 		//	for(Polygon p : mp){
 			Polygon p =null;
 			Geometry boundary =  mp.get(0);//.getBoundary();// com.vividsolutions.jts.geom.MultiLineString
+			
 			if(boundary.getNumGeometries()>1){
 				System.out.println("boundary tiene dim >1");
 			
@@ -76,17 +80,38 @@ public class ExtraerPoligonosDeCosechaTask extends Task<List<Poligono>> {
 			} else{
 				p=(Polygon) boundary;
 			}
-			
-				p = (Polygon) PolygonValidator.validate((Geometry)p);
+				p =getPolygons(PolygonValidator.validate((Geometry)p)).get(0); 
 				Poligono poli =new Poligono();
 				poli.setNombre(labor.getNombreProperty().get()+" "+index);
 
 			//	p =(Polygon) p.buffer(ProyectionConstants.metersToLongLat(10));
-				p=(Polygon) p.convexHull();
-				for(Coordinate c :p.getBoundary().getCoordinates()){//las coordenadas no estan ordenadas o tienen huecos
+			//	p=(Polygon) p.convexHull();
+				 p = (Polygon) JTS.smooth( p,1 );
+			//	BufferOp op = new BufferOp(p);
+			//	p=(Polygon) op.getResultGeometry(ProyectionConstants.metersToLongLat(20));
+			
+				try{	
+					TopologyPreservingSimplifier ts =new TopologyPreservingSimplifier(p);
+					ts.setDistanceTolerance(ProyectionConstants.metersToLongLat(10));
+					p=	getPolygons(ts.getResultGeometry()).get(0);
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+				
+				Geometry bp = p.getBoundary();
+				double has = ProyectionConstants.A_HAS(p.getArea());
+				poli.setArea(has);
+				Coordinate[] coordinates = bp.getCoordinates();
+				for(Coordinate c :coordinates){//las coordenadas no estan ordenadas o tienen huecos
 					poli.getPositions().add(Position.fromDegrees(c.y,c.x));
 				}
-				poligonos.add(poli);
+				poli.getPositions().add(Position.fromDegrees(coordinates[0].y,coordinates[0].x));//cierro el poligono
+			//	double has = poli.getArea();
+				if(has>0.2){//cada poli mayor a 10m2
+					poligonos.add(poli);
+				} else{
+					System.out.println("el poligono es chico "+has);
+				}
 			//}
 			index++;
 		}

@@ -2,6 +2,7 @@ package dao.config;
 
 import java.util.Calendar;
 
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -10,13 +11,14 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import dao.utils.JPAStringProperty;
 import lombok.Data;
 
 @Data
 @Entity
 @NamedQueries({
 	@NamedQuery(name=Campania.FIND_ALL, query="SELECT o FROM Campania o") ,
-	@NamedQuery(name=Campania.FIND_NAME, query="SELECT o FROM Campania o where o.name = :name") ,
+	@NamedQuery(name=Campania.FIND_NAME, query="SELECT o FROM Campania o where o.nombre = :name") ,
 }) 
 
 public class Campania implements Comparable<Campania>{
@@ -26,13 +28,21 @@ public class Campania implements Comparable<Campania>{
 	private long id;
 
 	public String nombre=new String();
+	
+	@Embedded
+	public JPAStringProperty jpaSP= new JPAStringProperty();
+	
 	@Temporal(TemporalType.DATE)
 	private Calendar inicio = Calendar.getInstance();
 	@Temporal(TemporalType.DATE)
 	private Calendar fin=Calendar.getInstance();
 
+	public Campania() {
+	}
+	
 	public Campania(String periodoName) {
 		this.nombre=(periodoName);
+		jpaSP.setString("defautl");
 	}
 
 	/**
@@ -90,6 +100,8 @@ public class Campania implements Comparable<Campania>{
 	public void setFin(Calendar fin) {
 		this.fin = fin;
 	}
+	
+	
 
 	@Override
 	public int compareTo(Campania arg0) {
@@ -104,5 +116,6 @@ public class Campania implements Comparable<Campania>{
 		return nombre ;
 	}
 
+	
 
 }

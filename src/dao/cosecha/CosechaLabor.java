@@ -3,6 +3,7 @@ package dao.cosecha;
 import java.util.List;
 
 import javax.persistence.Entity;
+import javax.persistence.Transient;
 
 import org.geotools.data.FileDataStore;
 import org.opengis.feature.simple.SimpleFeature;
@@ -48,16 +49,21 @@ public class CosechaLabor extends Labor<CosechaItem> {
 	private static final String COLUMNA_COSTO_LB_HA = "CostoLbTn";
 	private static final String COLUMNA_COSTO_LB_TN = "CostoLbHa";
 
-
+	@Transient 
 	public StringProperty colRendimiento= null;
 
 	public Property<Cultivo> producto=null;
+	@Transient 
 	public SimpleDoubleProperty precioGranoProperty= null;
+	@Transient 
 	public SimpleDoubleProperty costoCosechaTnProperty= null;
 
 	//TODO mover a tasks separados de la cosecha
+	@Transient 
 	public SimpleDoubleProperty correccionCosechaProperty= null;//es el porcentaje de 0-100 por que que hay que multiplicar el rinde 
+	@Transient 
 	public SimpleDoubleProperty maxRindeProperty= null;
+	@Transient 
 	public SimpleDoubleProperty minRindeProperty= null;
 
 	/**
@@ -157,7 +163,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 			// ("Mass_Flow_" *0.453592) /((("Width" *2.54/100)*
 			// ("Distance"*2.54/100))/10000)
 			/*
-			 * convertir el rinde que es un flow en libras por segundo a kg por
+			 * convertir el rinde que es un flow en libras por segundo a kg por //o es en bushel??
 			 * ha. para eso hay que usar la formula rinde = flow*[kg por
 			 * libra]*[1 segundo]*[m2 por Ha]/(width*distance)
 			 */

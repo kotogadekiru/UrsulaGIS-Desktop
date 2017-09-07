@@ -5,15 +5,19 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -46,24 +50,22 @@ import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.data.simple.SimpleFeatureStore;
 import org.geotools.feature.DefaultFeatureCollection;
-import org.geotools.feature.SchemaException;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeType;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.MultiPolygon;
 
 import dao.Labor;
 import dao.LaborItem;
 import dao.Ndvi;
 import dao.Poligono;
+import dao.config.Agroquimico;
 import dao.config.Campania;
 import dao.config.Configuracion;
-
 import dao.config.Cultivo;
 import dao.config.Empresa;
 import dao.config.Establecimiento;
@@ -78,7 +80,6 @@ import dao.margen.Margen;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.siembra.SiembraLabor;
 import dao.suelo.Suelo;
-
 import gov.nasa.worldwind.Configuration;
 import gov.nasa.worldwind.View;
 import gov.nasa.worldwind.WorldWind;
@@ -106,7 +107,6 @@ import gov.nasa.worldwind.layers.SurfaceImageLayer;
 import gov.nasa.worldwind.layers.ViewControlsLayer;
 import gov.nasa.worldwind.layers.ViewControlsSelectListener;
 import gov.nasa.worldwind.render.SurfaceImage;
-import gov.nasa.worldwind.render.SurfacePolygon;
 import gov.nasa.worldwind.terrain.ZeroElevationModel;
 import gov.nasa.worldwind.util.Logging;
 import gov.nasa.worldwind.util.StatusBar;
@@ -115,11 +115,9 @@ import gov.nasa.worldwind.util.WWIO;
 import gov.nasa.worldwind.util.measure.MeasureTool;
 import gov.nasa.worldwind.util.measure.MeasureToolController;
 import gov.nasa.worldwindx.examples.util.ExampleUtil;
-
 import gui.nww.LaborLayer;
 import gui.nww.LayerPanel;
 import gui.nww.WWPanel;
-
 import gui.utils.DateConverter;
 import gui.utils.SmartTableView;
 import javafx.application.Application;
@@ -169,10 +167,10 @@ import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import tasks.ExportLaborMapTask;
-import tasks.GetNDVIForLaborTask;
 import tasks.GetNDVI2ForLaborTask;
 import tasks.GoogleGeocodingHelper;
 import tasks.ProcessMapTask;
+import tasks.ReadJDHarvestLog;
 import tasks.ShowNDVITifFileTask;
 import tasks.UpdateTask;
 import tasks.crear.ConvertirNdviACosechaTask;
@@ -196,7 +194,6 @@ import tasks.procesar.RecomendFertNFromHarvestMapTask;
 import tasks.procesar.RecomendFertPFromHarvestMapTask;
 import tasks.procesar.UnirCosechasMapTask;
 import utils.DAH;
-import utils.PolygonValidator;
 import utils.ProyectionConstants;
 
 public class JFXMain extends Application {
@@ -207,15 +204,15 @@ public class JFXMain extends Application {
 	private static final String GOV_NASA_WORLDWIND_AVKEY_INITIAL_LATITUDE = "gov.nasa.worldwind.avkey.InitialLatitude";
 	//	private static final double MAX_VALUE = 1.0;
 	//	private static final double MIN_VALUE = 0.2;
-	public static final String VERSION = "0.2.22 dev";
+	public static final String VERSION = "0.2.23 dev";
 	private static final String TITLE_VERSION = "Ursula GIS "+VERSION;
-	private static final String BUILD_INFO="Esta aplicacion fue compilada el 01 de Agosto de 2017."
+	private static final String BUILD_INFO="Esta aplicacion fue compilada el 29 de Agosto de 2017."
 			+"<br>Ursula GIS es de uso libre y gratutito provista sin ninguna garantia."
 			+"<br>Se encuentra en estado de desarrollo y se provee a modo de prueba."
 			+"<br>Desarrollada por Tomas Lund Petersen, cualquier consulta enviar un mail a kotogadekiru@gmail.com"
 			+"<br>Twitter: @redbaron_ar";
 	public static final String ICON = "gui/1-512.png";
-	private static final String SOUND_FILENAME = "Alarm08.wav";//TODO cortar este wav porque suena 2 veces
+	private static final String SOUND_FILENAME = "gui/Alarm08.wav";//"Alarm08.wav" funciona desde eclipse pero no desde el jar 
 	private Stage stage=null;
 	private Scene scene=null;
 
@@ -273,9 +270,10 @@ public class JFXMain extends Application {
 
 		primaryStage.setOnHiding((e)-> {
 			Platform.runLater(()->{
-				DAH.em().close();
+				DAH.closeEm();
 				System.out.println("em Closed");
 				System.out.println("Application Closed by click to Close Button(X)");
+				
 				System.exit(0); 
 			});
 		});
@@ -543,10 +541,8 @@ public class JFXMain extends Application {
 				Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 				if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){
 					doGuardarPoligono((Poligono) layerObject);
-					//TODO deshabilitar layer para que el polygono no rompa la cosecha nueva
-
 				}
-				return "converti a Cosecha";
+				return "Guarde poligono";
 			}});
 
 		poligonosP.add((layer)->{
@@ -563,6 +559,16 @@ public class JFXMain extends Application {
 				return "went to " + layer.getName();
 			}});
 
+		poligonosP.add((layer)->{
+			if(layer==null){
+				return "Obtener NDVI"; 
+			} else{
+				Object o =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);			
+				if(o instanceof Poligono){
+					doGetNdviTiffFile(o);
+				}
+				return "ndvi obtenido" + layer.getName();	
+			}});
 		
 		laboresP.add((layer)->{
 			if(layer==null){
@@ -575,6 +581,20 @@ public class JFXMain extends Application {
 				}
 				return "went to " + layer.getName();
 			}});
+		laboresP.add((layer)->{
+		
+				if(layer==null){
+					return "Guardar"; 
+				} else {		
+					enDesarrollo();
+				Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+				if (layerObject==null){
+				}else if(Labor.class.isAssignableFrom(layerObject.getClass())){
+					doGuardarLabor((Labor) layerObject);
+				}
+				return "guarde labor " + layer.getName();
+			}});
+	
 
 
 
@@ -675,16 +695,28 @@ public class JFXMain extends Application {
 				return "grafico mostrado " + layer.getName();
 			}});
 		
-//		/**
-//		 * Accion que permite extraer los poligonos de una cosecha para guardar
-//		 */
-//		cosechasP.add((layer)-> {
-//			if(layer==null){
-//				return "Extraer poligonos"; 
-//			} else{
-//				doExtraerPoligonos((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-//				return "poligonos Extraidos " + layer.getName();
-//			}});
+		/**
+		 * Accion que permite generar un muestreo dirigido para los poligonos de la cosecha
+		 */
+		cosechasP.add((layer)-> {
+			if(layer==null){
+				return "Generar Muestreo Dirigido"; 
+			} else{
+				
+				doGenerarMuestreoDirigido((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+				return "muestreo dirigido " + layer.getName();
+			}});
+		
+		/**
+		 * Accion que permite extraer los poligonos de una cosecha para guardar
+		 */
+		laboresP.add((layer)-> {
+			if(layer==null){
+				return "Extraer poligonos"; 
+			} else{
+				doExtraerPoligonos((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+				return "poligonos Extraidos " + layer.getName();
+			}});
 
 
 		/**
@@ -769,6 +801,17 @@ public class JFXMain extends Application {
 				return "cosecha exportada como puntos: " + layer.getName();
 			}});
 
+		
+		/**
+		 * Accion permite exportar la cosecha como shp de puntos
+		 */
+		cosechasP.add((layer)->{
+			if(layer==null){
+				return "Generar Muestreo Dirigido"; 
+			} else{
+				doGenerarMuestreoDirigido((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+				return "muestreo dirigido generado: " + layer.getName();
+			}});
 
 		ndviP.add((layer)->{
 			if(layer==null){//TODO implementar estimar Rinde desde ndvi
@@ -823,27 +866,18 @@ public class JFXMain extends Application {
 				return "ndvi obtenido" + layer.getName();	
 			}});
 
-		poligonosP.add((layer)->{
-			if(layer==null){
-				return "Obtener NDVI"; 
-			} else{
-				Object o =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);			
-				if(o instanceof Poligono){
-					doGetNdviTiffFile(o);
-				}
-				return "ndvi obtenido" + layer.getName();	
-			}});
+	
 
-		poligonosP.add((layer)->{
-			if(layer==null){
-				return "Obtener NDVI2"; 
-			} else{
-				Object o =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);			
-				if(o instanceof Poligono){
-					doGetNdwiTiffFile(o);
-				}
-				return "ndwi obtenido" + layer.getName();	
-			}});
+//		poligonosP.add((layer)->{
+//			if(layer==null){
+//				return "Obtener NDVI2"; 
+//			} else{
+//				Object o =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);			
+//				if(o instanceof Poligono){
+//					doGetNdviTiffFile(o);
+//				}
+//				return "ndwi obtenido" + layer.getName();	
+//			}});
 
 
 		/**
@@ -864,9 +898,13 @@ public class JFXMain extends Application {
 					suelos.remove(l);
 					l.dispose();
 				}
-				//				if(layerObject instanceof Poligono){
-				//					DAH.remove(layerObject);
-				//				}
+				if(layerObject instanceof Poligono){
+					Poligono poli = (Poligono) layerObject;
+					poli.setActivo(false);
+					if(poli.getId()!=null){
+						DAH.save(poli);
+					}
+				}
 				layer.dispose();
 				getLayerPanel().update(getWwd());
 				return "layer removido" + layer.getName();
@@ -875,6 +913,21 @@ public class JFXMain extends Application {
 
 		layerPanel.setMenuItems(predicates);
 	}
+
+	/**
+	 * metodo que toma los poligonos de la labor y genera un mapa de puntos con las densidades configuradas
+	 * @param l una Labor
+	 */
+	private void doGenerarMuestreoDirigido(Labor<?> l) {		 
+		//TODO preguntar si desea generar el muestreo por cantidad de muestras por poligono o densidad de muestras por poligono
+		//permitir configurar cantidad max y min de muestras
+		//permitir configurar superficie minima relevante
+		enDesarrollo();
+	}
+
+
+
+
 
 
 
@@ -1044,14 +1097,15 @@ public class JFXMain extends Application {
 		addMenuItem("Suelo",(a)->doOpenSoilMap(null),menuImportar);
 		addMenuItem("Margen",(a)->doOpenMarginlMap(),menuImportar);
 
-		final Menu menuCalcular = new Menu("Calcular");
+		final Menu menuHerramientas = new Menu("Herramientas");
+		addMenuItem("CosechaJD",(a)->doLeerCosechaJD(),menuHerramientas);
 		//insertMenuItem(menuCalcular,"Retabilidades",a->doProcessMargin());
-		addMenuItem("Distancia",(a)->doMedirDistancia(),menuCalcular);
-		addMenuItem("Superficie",(a)->doMedirSuperfice(),menuCalcular);
-		addMenuItem("Unir Shapefiles",(a)->JuntarShapefilesTask.process(),menuCalcular);
-		addMenuItem("Rentabilidades",(a)->doProcessMargin(),menuCalcular);
-		addMenuItem("Unir Cosechas",(a)->doUnirCosechas(null),menuCalcular);
-		addMenuItem("Balance De Fosforo",(a)->doProcesarBalanceFosforo(),menuCalcular);
+		addMenuItem("Distancia",(a)->doMedirDistancia(),menuHerramientas);
+		addMenuItem("Superficie",(a)->doMedirSuperfice(),menuHerramientas);
+		addMenuItem("Unir Shapefiles",(a)->JuntarShapefilesTask.process(),menuHerramientas);
+		addMenuItem("Rentabilidades",(a)->doProcessMargin(),menuHerramientas);
+		addMenuItem("Unir Cosechas",(a)->doUnirCosechas(null),menuHerramientas);
+		addMenuItem("Balance De Fosforo",(a)->doProcesarBalanceFosforo(),menuHerramientas);
 		addMenuItem("Ir a",(a)->{
 			TextInputDialog anchoDialog = new TextInputDialog("Pehuajo");
 			anchoDialog.setTitle("Buscar Ubicacion");
@@ -1068,10 +1122,10 @@ public class JFXMain extends Application {
 			}
 			
 		
-		},menuCalcular);
+		},menuHerramientas);
 		addMenuItem("Evolucion NDVI",(a)->{
 			doShowNDVIEvolution();
-		},menuCalcular);
+		},menuHerramientas);
 
 
 		/*Menu Exportar*/
@@ -1083,6 +1137,7 @@ public class JFXMain extends Application {
 		final Menu menuConfiguracion = new Menu("Configuracion");
 		addMenuItem("Cultivos",(a)->doConfigCultivo(),menuConfiguracion);
 		addMenuItem("Fertilizantes",(a)->doConfigFertilizantes(),menuConfiguracion);
+		addMenuItem("Agroquimicos",(a)->doConfigAgroquimicos(),menuConfiguracion);
 		addMenuItem("Semillas",(a)->doConfigSemillas(),menuConfiguracion);
 
 		addMenuItem("Empresa",(a)->doConfigEmpresa(),menuConfiguracion);
@@ -1117,9 +1172,37 @@ public class JFXMain extends Application {
 		addMenuItem("Acerca De",(a)->doShowAcercaDe(),menuConfiguracion);
 
 		MenuBar menuBar = new MenuBar();
-		menuBar.getMenus().addAll(menuImportar,menuCalcular, menuExportar,menuConfiguracion);
+		menuBar.getMenus().addAll(menuImportar,menuHerramientas, menuExportar,menuConfiguracion);
 		menuBar.setPrefWidth(scene.getWidth());
 		return menuBar;
+	}
+
+	private void doLeerCosechaJD() {
+		//TODO empezar por el fdl y leer el nombre del archivo y el formato del archivo fdd
+		/**
+		 <LogDataBlock logDataProcessor="EvenByteDelta">
+			<EvenByteDelta filePathName="50b2706b-0000-1000-7fdb-e1e1e114c450.fdd"
+				xmlns="urn:schemas-johndeere-com:LogDataBlock:EvenByteDelta"
+				filePosition="0" />
+		</LogDataBlock>
+		 */
+	 List<File> files =chooseFiles("FDL", "*.fdl");
+	 ReadJDHarvestLog task = new ReadJDHarvestLog(files.get(0));
+	 task.installProgressBar(progressBox);
+
+	 task.setOnSucceeded(handler -> {
+			File ret = (File)handler.getSource().getValue();
+	
+			task.uninstallProgressBar();
+			
+
+			System.out.println("ReadJDHarvestLog succeded");
+			playSound();
+		});//fin del OnSucceeded						
+		//umTask.start();					
+		//this.executorPool.execute(task);
+		
+	 executorPool.submit(task);
 	}
 
 	private void doShowNDVIEvolution() {
@@ -1227,7 +1310,8 @@ public class JFXMain extends Application {
 
 	
 	private void loadPoligonos(){
-		List<Poligono> poligonos = DAH.getAllPoligonos();
+		List<Poligono> poligonos = DAH.getPoligonosActivos();
+		System.out.println("termine de cargar los poligonos Activos");
 		showPoligonos(poligonos);
 	}
 
@@ -1246,11 +1330,14 @@ public class JFXMain extends Application {
 			measureTool.getUnitsFormat().setShowDMS(false);
 			measureTool.setFollowTerrain(true);
 			measureTool.setShowControlPoints(true);
-			measureTool.setPositions((ArrayList<? extends Position>) poli.getPositions());
+			List<Position> positions = poli.getPositions();
+		//	positions.remove(positions.size()-1);
+			measureTool.setPositions((ArrayList<? extends Position>) positions);
 			measureTool.setArmed(false);
 
 			poli.setLayer(surfaceLayer);		
 			surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, poli);
+			
 			
 			DoubleProperty valueProperty= new SimpleDoubleProperty();
 			valueProperty.setValue( poli.getArea());
@@ -1271,7 +1358,9 @@ public class JFXMain extends Application {
 					double value2 = measureTool.getArea();
 					if(valueProperty.get()!=value2 && value2 > 0){
 						double area = value2/ProyectionConstants.METROS2_POR_HA;
-						poli.setPositions( (List<Position>) measureTool.getPositions());
+						List< Position> newPositions =  (List<Position>) measureTool.getPositions();
+						//newPositions.add(newPositions.get(0));
+						poli.setPositions( newPositions);
 						//TODO construir una geometria de la lista de posiciones y validarla con PolygonValidator
 						poli.setArea(area);					
 						surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, poli);
@@ -1486,7 +1575,7 @@ public class JFXMain extends Application {
 		}
 	}
 	public void viewGoTo(Position position) {
-
+		if(position==null) return;
 		Configuracion config =Configuracion.getInstance();
 		config.setProperty(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LATITUDE, String.valueOf(position.getLatitude().degrees));
 		config.setProperty(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LONGITUDE,String.valueOf(position.getLongitude().degrees));
@@ -1664,10 +1753,43 @@ public class JFXMain extends Application {
 		}
 	}
 
-	private void doGetNdviTiffFile(Object labor) {
+//	private void doGetNdviTiffFile(Object labor) {
+//		LocalDate ini =null;
+//		if(labor instanceof Labor){
+//			ini= (LocalDate)((Labor<?>)labor).fechaProperty.getValue();
+//		} 
+//		 ini = dateChooser(ini);
+//		
+//		if(ini!=null){
+//			File downloadLocation = directoryChooser();
+//			if(downloadLocation==null)return;
+//			ObservableList<File> observableList = FXCollections.observableArrayList(new ArrayList<File>());
+//			observableList.addListener((ListChangeListener<File>) c -> {
+//				System.out.println("mostrando los archivos agregados");
+//				if(c.next()){
+//					c.getAddedSubList().forEach((file)->{
+//						showNdviTiffFile(file);
+//					});//fin del foreach
+//				}			
+//			});
+//
+//			GetNDVIForLaborTask task = new GetNDVIForLaborTask(labor,downloadLocation,observableList);
+//			task.setDate(ini);
+//			task.installProgressBar(progressBox);
+//			task.setOnSucceeded(handler -> {
+//				if(labor instanceof Poligono){
+//					((Poligono)labor).getLayer().setEnabled(false);
+//				}
+//				task.uninstallProgressBar();
+//			});
+//			executorPool.submit(task);
+//		}
+//	}
+
+	private void doGetNdviTiffFile(Object placementObject) {//ndvi2
 		LocalDate ini =null;
-		if(labor instanceof Labor){
-			ini= (LocalDate)((Labor<?>)labor).fechaProperty.getValue();
+		if(placementObject !=null && Labor.class.isAssignableFrom(placementObject.getClass())){
+			ini= (LocalDate)((Labor<?>)placementObject).fechaProperty.getValue();
 		} 
 		 ini = dateChooser(ini);
 		
@@ -1679,50 +1801,17 @@ public class JFXMain extends Application {
 				System.out.println("mostrando los archivos agregados");
 				if(c.next()){
 					c.getAddedSubList().forEach((file)->{
-						showNdviTiffFile(file);
+						showNdviTiffFile(file, placementObject);
 					});//fin del foreach
 				}			
 			});
 
-			GetNDVIForLaborTask task = new GetNDVIForLaborTask(labor,downloadLocation,observableList);
+			GetNDVI2ForLaborTask task = new GetNDVI2ForLaborTask(placementObject,downloadLocation,observableList);
 			task.setDate(ini);
 			task.installProgressBar(progressBox);
 			task.setOnSucceeded(handler -> {
-				if(labor instanceof Poligono){
-					((Poligono)labor).getLayer().setEnabled(false);
-				}
-				task.uninstallProgressBar();
-			});
-			executorPool.submit(task);
-		}
-	}
-
-	private void doGetNdwiTiffFile(Object labor) {
-		LocalDate ini =null;
-		if(labor instanceof Labor){
-			ini= (LocalDate)((Labor<?>)labor).fechaProperty.getValue();
-		} 
-		 ini = dateChooser(ini);
-		
-		if(ini!=null){
-			File downloadLocation = directoryChooser();
-			if(downloadLocation==null)return;
-			ObservableList<File> observableList = FXCollections.observableArrayList(new ArrayList<File>());
-			observableList.addListener((ListChangeListener<File>) c -> {
-				System.out.println("mostrando los archivos agregados");
-				if(c.next()){
-					c.getAddedSubList().forEach((file)->{
-						showNdviTiffFile(file);
-					});//fin del foreach
-				}			
-			});
-
-			GetNDVI2ForLaborTask task = new GetNDVI2ForLaborTask(labor,downloadLocation,observableList);
-			task.setDate(ini);
-			task.installProgressBar(progressBox);
-			task.setOnSucceeded(handler -> {
-				if(labor instanceof Poligono){
-					((Poligono)labor).getLayer().setEnabled(false);
+				if(placementObject instanceof Poligono){
+					((Poligono)placementObject).getLayer().setEnabled(false);
 				}
 				task.uninstallProgressBar();
 			});
@@ -1733,12 +1822,15 @@ public class JFXMain extends Application {
 	private void doOpenNDVITiffFiles() {
 		List<File>	files =chooseFiles("TIF", "*.tif");
 		if(files!=null)	files.forEach((file)->{
-			showNdviTiffFile(file);
+			showNdviTiffFile(file,null);
 			});//fin del foreach
 	}
 
-	private void showNdviTiffFile(File file) {
+	private void showNdviTiffFile(File file, Object placementObject) {
 		ShowNDVITifFileTask task = new ShowNDVITifFileTask(file);
+		if( placementObject!=null && Poligono.class.isAssignableFrom(placementObject.getClass())){
+			task.setPoligono((Poligono) placementObject);
+		}
 		task.setOnSucceeded(handler -> {
 			Layer ndviLayer = (Layer) handler.getSource().getValue();	
 			insertBeforeCompass(getWwd(), ndviLayer);
@@ -2192,7 +2284,8 @@ public class JFXMain extends Application {
 		//}
 	}
 
-	private void doExtraerPoligonos(Labor<?> labor ) {		
+	private void doExtraerPoligonos(Labor<?> labor ) {	
+		enDesarrollo();
 			ExtraerPoligonosDeCosechaTask umTask = new ExtraerPoligonosDeCosechaTask(labor);
 			umTask.installProgressBar(progressBox);
 
@@ -2365,6 +2458,11 @@ public class JFXMain extends Application {
 		DAH.save(layerObject);
 	}
 
+	
+	private void doGuardarLabor(Labor layerObject) {
+		DAH.save(layerObject);		
+	}
+	
 	private void doRecomendFertPFromHarvest(CosechaLabor value) {
 		// TODO generar un layer de fertilizacion a partir de una cosecha
 		//el proceso consiste el levantar las geometrias de la cosecha y preguntarle la usuario
@@ -3037,25 +3135,44 @@ public class JFXMain extends Application {
 			
 			SimpleFeatureType type = null;
 			String typeDescriptor = "the_geom:MultiPolygon:srid=4326,"//"*geom:Polygon,"the_geom
-					+ "Rate" + ":Integer";
+					+ "Rate" + ":Long";
+			
+			SimpleFeatureTypeBuilder b = new SimpleFeatureTypeBuilder();
+			b.setName("PrescType");
+			//b.setSRS("4326");
+			b.setCRS( DefaultGeographicCRS.WGS84 ); // set crs first
+			b.add( "the_geom", MultiPolygon.class); // then add geometry
+			
+			b.add("Rate", Long.class);
+			b.setDefaultGeometry( "the_geom" );
+			
+			
 
-			try {
-				type = DataUtilities.createType("PrescripcionFertilizacion", typeDescriptor);
-			} catch (SchemaException e) {
+			//build the type
+			type= b.buildFeatureType();
 
-				e.printStackTrace();
-			}
+//			try {
+//				DataUtilities.createType("Long", Long.class);
+//				type = DataUtilities.createType("PrescripcionFertilizacion", typeDescriptor);
+//			} catch (SchemaException e) {
+//
+//				e.printStackTrace();
+//			}
 		
 
 			ShapefileDataStore newDataStore = createShapefileDataStore(shapeFile,type);
 
 			SimpleFeatureIterator it = laborToExport.outCollection.features();
 			DefaultFeatureCollection pointFeatureCollection =  new DefaultFeatureCollection("internal",type);
+			System.out.println("Prescription Type: "+DataUtilities.spec(type));
 			SimpleFeatureBuilder fb = new SimpleFeatureBuilder(type);
 			while(it.hasNext()){
-				FertilizacionItem fi = laborToExport.constructFeatureContainer(it.next());
+				FertilizacionItem fi = laborToExport.constructFeatureContainerStandar(it.next(),false);
 				fb.add(fi.getGeometry());
-				fb.add(fi.getDosistHa().intValue());
+				Double dosisHa = fi.getDosistHa();
+				
+				System.out.println("presc Dosis = "+dosisHa);
+				fb.add(new Long(dosisHa.longValue()));
 			
 				SimpleFeature pointFeature = fb.buildFeature(fi.getId().toString());
 				pointFeatureCollection.add(pointFeature);
@@ -3107,6 +3224,16 @@ public class JFXMain extends Application {
 			config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
 			config.save();
 		});//fin del run later
+		
+	}
+	
+	private void doGenerarMuestreoDirigido(CosechaLabor value) {
+		// TODO Auto-generated method stub
+		//superficie minima poligono
+		//densidad de puntos
+		//puntos por poligono
+		//puntos totales
+		enDesarrollo();
 		
 	}
 
@@ -3337,7 +3464,7 @@ public class JFXMain extends Application {
 							ciLista
 							);
 
-			SmartTableView<LaborItem> table = new SmartTableView<LaborItem>(dataLotes,dataLotes);
+			SmartTableView<LaborItem> table = new SmartTableView<LaborItem>(dataLotes);
 			table.setEditable(false);
 
 			Scene scene = new Scene(table, 800, 600);
@@ -3385,7 +3512,7 @@ public class JFXMain extends Application {
 							DAH.getAllCultivos()
 							);
 
-			SmartTableView<Cultivo> table = new SmartTableView<Cultivo>(dataLotes,dataLotes);
+			SmartTableView<Cultivo> table = new SmartTableView<Cultivo>(dataLotes);//,dataLotes);
 			table.setEditable(true);
 			table.setOnDoubleClick(()->new Cultivo("Nuevo Cultivo"));
 
@@ -3416,7 +3543,7 @@ public class JFXMain extends Application {
 							DAH.getAllFertilizantes()
 							);
 
-			SmartTableView<Fertilizante> table = new SmartTableView<Fertilizante>(dataLotes,dataLotes);
+			SmartTableView<Fertilizante> table = new SmartTableView<Fertilizante>(dataLotes);//,dataLotes);
 			table.setEditable(true);
 			
 			table.setOnDoubleClick(()->new Fertilizante("Nuevo Fertilizante"));
@@ -3432,6 +3559,38 @@ public class JFXMain extends Application {
 
 	}
 
+	private void doConfigAgroquimicos() {
+		Platform.runLater(()->{
+
+			//			ArrayList<Fertilizante> ciLista = new ArrayList<Fertilizante>();
+			//			System.out.println("Comenzando a cargar la los datos de la tabla");
+			//
+			//			ciLista.addAll(Fertilizante.fertilizantes.values());
+			//			final ObservableList<Fertilizante> dataLotes =
+			//					FXCollections.observableArrayList(
+			//							ciLista
+			//							);
+
+			final ObservableList<Agroquimico> dataLotes =
+					FXCollections.observableArrayList(
+							DAH.getAllAgroquimicos()
+							);
+
+			SmartTableView<Agroquimico> table = new SmartTableView<Agroquimico>(dataLotes);//,dataLotes);
+			table.setEditable(true);
+			
+			table.setOnDoubleClick(()->new Agroquimico("Nuevo"));
+
+
+			Scene scene = new Scene(table, 800, 600);
+			Stage tablaStage = new Stage();
+			tablaStage.getIcons().add(new Image(JFXMain.ICON));
+			tablaStage.setTitle("Agroquimicos");
+			tablaStage.setScene(scene);
+			tablaStage.show();	 
+		});
+
+	}
 
 	private void doConfigCampania() {
 		Platform.runLater(()->{
@@ -3442,7 +3601,7 @@ public class JFXMain extends Application {
 			if(data.size()==0){
 				data.add(new Campania("Nueva Campaña"));
 			}
-			SmartTableView<Campania> table = new SmartTableView<Campania>(data,data);
+			SmartTableView<Campania> table = new SmartTableView<Campania>(data);//,data);
 			table.setEditable(true);
 			table.setOnDoubleClick(()->new Campania("Nueva Campaña"));
 			Scene scene = new Scene(table, 800, 600);
@@ -3462,21 +3621,32 @@ public class JFXMain extends Application {
 							DAH.getAllPoligonos()
 							);
 
-			SmartTableView<Poligono> table = new SmartTableView<Poligono>(data,data);
+			SmartTableView<Poligono> table = new SmartTableView<Poligono>(data);
 			table.setEditable(true);
 			table.setOnDoubleClick(()->new Poligono());
+			table.setOnShowClick((poli)->{
+				poli.setActivo(true);
+				showPoligonos(Collections.singletonList(poli));
+				Position pos =poli.getPositions().get(0);
+				viewGoTo(pos);
+				Platform.runLater(()->{
+					DAH.save(poli);
+				});
+			});
+		
 
-			
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
 			tablaStage.setTitle("Poligonos");
 			tablaStage.setScene(scene);
-			tablaStage.show();	 
+			
 			tablaStage.onHiddenProperty().addListener((o,old,n)->{
 				this.getLayerPanel().update(this.getWwd());
 				//getWwd().redraw();
 			});
+		
+			tablaStage.show();	 
 		});	
 	}
 
@@ -3487,7 +3657,7 @@ public class JFXMain extends Application {
 					FXCollections.observableArrayList(
 							DAH.getAllEstablecimientos()
 							);
-			SmartTableView<Establecimiento> table = new SmartTableView<Establecimiento>(data,data);
+			SmartTableView<Establecimiento> table = new SmartTableView<Establecimiento>(data);//,data);
 			table.setEditable(true);
 			table.setOnDoubleClick(()->new Establecimiento("Nuevo Establecimiento"));
 
@@ -3508,7 +3678,7 @@ public class JFXMain extends Application {
 					FXCollections.observableArrayList(
 							DAH.getAllLotes()
 							);
-			SmartTableView<Lote> table = new SmartTableView<Lote>(data,data);
+			SmartTableView<Lote> table = new SmartTableView<Lote>(data);//,data);
 			table.setEditable(true);
 			table.setOnDoubleClick(()->new Lote("Nuevo Lote"));
 
@@ -3529,7 +3699,7 @@ public class JFXMain extends Application {
 					FXCollections.observableArrayList(
 							DAH.getAllEmpresas()
 							);
-			SmartTableView<Empresa> table = new SmartTableView<Empresa>(data,data);
+			SmartTableView<Empresa> table = new SmartTableView<Empresa>(data);//,data);
 			table.setEditable(true);
 			table.setOnDoubleClick(()->new Empresa("Nueva Empresa"));
 
@@ -3553,7 +3723,7 @@ public class JFXMain extends Application {
 			final ObservableList<Semilla> dataLotes =
 					FXCollections.observableArrayList(	DAH.getAllSemillas());
 			//System.out.println("mostrando la tabla de las semillas con "+dataLotes);
-			SmartTableView<Semilla> table = new SmartTableView<Semilla>(dataLotes,dataLotes);
+			SmartTableView<Semilla> table = new SmartTableView<Semilla>(dataLotes);//,dataLotes);
 			table.setEditable(true);
 			table.setOnDoubleClick(()->new Semilla("Nueva Semilla",DAH.getAllCultivos().get(0)));
 			Scene scene = new Scene(table, 800, 600);
@@ -3629,7 +3799,7 @@ public class JFXMain extends Application {
 	private List<FileDataStore> chooseShapeFileAndGetMultipleStores(List<File> files) {
 		if(files==null){
 			//	List<File> 
-			files =chooseFiles("SHP", "*.shp");;
+			files =chooseFiles("SHP", "*.shp");
 		}
 		List<FileDataStore> stores = new ArrayList<FileDataStore>();
 		if (files != null) {
@@ -3767,10 +3937,14 @@ public class JFXMain extends Application {
 	private void playSound() {
 		executorPool.execute(()->{
 			try	{
-				AudioInputStream inputStream = AudioSystem
-						.getAudioInputStream(getClass().getResourceAsStream(SOUND_FILENAME));
+				URL url = JFXMain.class.getClassLoader().getResource(SOUND_FILENAME); //ok en el jar!!
+				AudioInputStream ais =  AudioSystem.getAudioInputStream(url); 
+				
+//				InputStream bufferedIn = new BufferedInputStream(getClass().getResourceAsStream(SOUND_FILENAME));
+//				AudioInputStream inputStream = AudioSystem
+//						.getAudioInputStream(bufferedIn);
 				Clip clip = AudioSystem.getClip();
-				clip.open(inputStream);
+				clip.open(ais);
 				clip.start();
 			}catch (Exception e){
 				e.printStackTrace();
@@ -3826,7 +4000,7 @@ public class JFXMain extends Application {
 						Configuracion config = Configuracion.getInstance();
 						config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
 						config.save();
-						tifFiles.stream().forEach((f)->showNdviTiffFile(f));
+						tifFiles.stream().forEach((f)->showNdviTiffFile(f,null));
 					}
 
 					//ok!

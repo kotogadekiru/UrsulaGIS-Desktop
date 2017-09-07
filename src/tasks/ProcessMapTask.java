@@ -18,6 +18,7 @@ import javax.media.opengl.GL2;
 
 import org.geotools.data.shapefile.shp.JTSUtilities;
 import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.jogamp.common.nio.Buffers;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -37,6 +38,7 @@ import dao.LaborItem;
 import gov.nasa.worldwind.WorldWind;
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Extent;
+import gov.nasa.worldwind.geom.Frustum;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Sector;
 import gov.nasa.worldwind.layers.RenderableLayer;
@@ -79,8 +81,6 @@ import utils.ProyectionConstants;
 //import org.opengis.filter.FilterFactory2;
 
 public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> extends Task<E>{
-
-
 	private static final String TASK_CLOSE_ICON = "/gui/event-close.png";
 	public static final String ZOOM_TO_KEY = "ZOOM_TO";
 	protected int featureCount=0;
@@ -120,7 +120,8 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	protected abstract int gerAmountMax() ;
 
 	//@Deprecated
-	protected void  getExrudedPolygonFromGeom(Geometry poly, FC dao,String tooltipText) {	
+	protected gov.nasa.worldwind.render.ExtrudedPolygon  getExtrudedPolygonFromGeom(Geometry poly, FC dao,String tooltipText) {	
+		gov.nasa.worldwind.render.ExtrudedPolygon  renderablePolygon = new gov.nasa.worldwind.render.ExtrudedPolygon ();
 		// Set the coordinates (in degrees) to draw your polygon
 		// To radians just change the method the class Position
 		// to fromRadians().
@@ -164,7 +165,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				 */
 				if(forPolygon.getNumPoints()==0){
 					System.err.println("dibujando un path con cero puntos "+ forPolygon);
-					return ;
+					return null;
 				}
 				//				for (int i = 0; i < forPolygon.getNumPoints(); i++) {
 				//					Coordinate coord = forPolygon.getCoordinates()[i];
@@ -184,17 +185,17 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				}
 				for(Coordinate c:coordinates){
 
-				//	if(c.z<=labor.minElev){
-						c.z=(dao.getElevacion()-labor.minElev)*scale;
-				//	} else{
-						/*al quitar las superposiciones
-						 * 2017-04-10T18:42:33.681-0300  SEVERE  Matrix is not symmetric (NaN, NaN, NaN, 0.0, 
+					//	if(c.z<=labor.minElev){
+					c.z=(dao.getElevacion()-labor.minElev)*scale;
+					//	} else{
+					/*al quitar las superposiciones
+					 * 2017-04-10T18:42:33.681-0300  SEVERE  Matrix is not symmetric (NaN, NaN, NaN, 0.0, 
 							NaN, NaN, NaN, 0.0, 
 							NaN, NaN, NaN, 0.0, 
 							0.0, 0.0, 0.0, 0.0)
-						 */
-				//		c.z=(c.z-labor.minElev)*scale;
-				//	}
+					 */
+					//		c.z=(c.z-labor.minElev)*scale;
+					//	}
 
 					if(c.z<1){
 						//System.out.println("corrigiendo la elevacion porque era menor a 1 elev="+c.z);
@@ -205,7 +206,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				}
 				List<Position> exteriorPositions = coordinatesToPositions(coordinates);
 
-				gov.nasa.worldwind.render.ExtrudedPolygon  renderablePolygon = new gov.nasa.worldwind.render.ExtrudedPolygon ();
+				
 				renderablePolygon.setOuterBoundary(exteriorPositions);
 				//	forPolygon= (Polygon) makeGood(forPolygon);
 				//XXX si no pongo esto se superponene los poligonos.
@@ -224,7 +225,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 						}
 					}
 					List<Position> interiorPositions = coordinatesToPositions(interiorCoordinates);
-					
+
 					//List<Position> interiorPositions = coordinatesToPositions(forPolygon.getInteriorRingN(interiorN).getCoordinates());
 					renderablePolygon.addInnerBoundary(interiorPositions);
 				}
@@ -234,7 +235,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				renderablePolygon.setAltitudeMode(WorldWind.ABSOLUTE);
 				renderablePolygon.setValue(AVKey.DISPLAY_NAME, tooltipText);// el tooltip se muestra con el nww.ToolTipAnnotation
 				renderablePolygon.setEnableBatchRendering(true);//XXX saco esto para ver si causa el problema del rendering
-				labor.getLayer().addRenderable(renderablePolygon);
+			//	labor.getLayer().addRenderable(renderablePolygon);
 
 
 
@@ -253,7 +254,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			}				
 		}//termine de recorrer el multipoligono
 
-		//return renderablePolygon;
+		return renderablePolygon;
 	}
 
 	/**
@@ -264,7 +265,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	 * @return devuelve el objeto rendereable que se agrega en la coleccion de pathaTooltips y se muestra en runlater()
 	 */
 	protected List<gov.nasa.worldwind.render.AbstractShape>  getRenderPolygonFromGeom(Geometry inputGeom, FC dao, String tooltipText) {
-		getExrudedPolygonFromGeom(inputGeom, dao, tooltipText);
+		getExtrudedPolygonFromGeom(inputGeom, dao, tooltipText);
 		return  new ArrayList<>();
 		//				if(inputGeom.getNumPoints()==0){
 		//					System.err.println("dibujando un path con cero puntos "+ inputGeom);
@@ -502,12 +503,14 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		/* creo los datos para el layer*/
 		double resolution = 10*ProyectionConstants.metersToLong();//si aumento la resolucion aumento los lugares sin informacion; entonces deberia hacer un interpolado para que no se vea tan feo
 
-		//	ReferencedEnvelope bounds = labor.outCollection.getBounds();//x0=-61.92148090289199 y0=-33.67828699276171
-
 		double minX = labor.minX.getLongitude().degrees;
 		double minY = labor.minY.getLatitude().degrees;
 		double maxX = labor.maxX.getLongitude().degrees;;
 		double maxY = labor.maxY.getLatitude().degrees;
+
+		System.out.println("creando analyticSurface con minX="+minX+
+				" minY="+minY+" maxX="+maxX+" maxY="+maxY);
+		//creando analyticSurface con minX=0.0 minY=0.0 maxX=-1.0 maxY=-1.0
 
 		Double maxElev = labor.maxElev;
 		Double minElev = labor.minElev;
@@ -520,7 +523,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		//indexar las features de acuerdo a su ubicacion
 		ConcurrentMap<Integer, List<FC>> indexMap = items.parallelStream().collect(Collectors.groupingByConcurrent((f)->{
 			Point center = f.getGeometry().getCentroid();
-			Coordinate coord = center.getCoordinate();
+			Coordinate coord = center.getCoordinate();// si la geometria es grande esto es insuficiente
 
 			int col= (int)((coord.x-minX) / resolution)+1;
 			int fila = (int)((-coord.y+maxY) / resolution)+1;
@@ -530,7 +533,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		}));
 
 		AnalyticSurface.GridPointAttributes transparent  =  AnalyticSurface.createGridPointAttributes(0, new java.awt.Color(0,0,0,0));
-	
+
 		LinkedList<AnalyticSurface.GridPointAttributes> attributesList = new LinkedList<AnalyticSurface.GridPointAttributes>();
 
 		for(int index=0;index<maxIndex;index++){
@@ -541,7 +544,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			if(indexItems==null){
 				List<FC> average = new ArrayList<FC>();
 				ArrayList<FC> defaultL = new ArrayList<FC>();
-				
+
 				int w =1;
 				for(int ofset =-w;ofset<w+1;ofset++){
 					average.addAll(indexMap.getOrDefault(index+ofset, defaultL ));//solo promedia con los de los costados
@@ -569,7 +572,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			}
 			//	System.out.println("agregando el elemento "+index);
 			attributesList.add(index,newGridPoint);
-				
+
 		}
 		//		System.out.println("attributesList size = "+attributesList.size());
 		//		System.out.println("deberia ser "+(maxIndex+1));
@@ -585,10 +588,10 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				minY,maxY,minX,maxX);//+/- 90 degrees latitude
 		surface.setSector(sector);
 		surface.setDimensions((int)width ,(int)  height );
-		
 
-//		Material material = new Material(java.awt.Color.blue);		
-//		surface.getSurfaceAttributes().setInteriorMaterial(material);
+
+		//		Material material = new Material(java.awt.Color.blue);		
+		//		surface.getSurfaceAttributes().setInteriorMaterial(material);
 
 		surface.setValues(attributesList);//.subList(0, width*height));
 		double scale = 	(maxElev)/minElev;
@@ -736,12 +739,10 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		//System.out.println("devolviendo los polygons "+polygons);
 		return polygons;
 	}
-	protected abstract void getPathTooltip(Geometry p, FC  fc);
+	protected abstract gov.nasa.worldwind.render.ExtrudedPolygon getPathTooltip(Geometry p, FC  fc);
 
 
 	private void updateStatsLabor(Collection<FC> itemsToShow){
-		//Geometry[] geomArray = new Geometry[itemsToShow.size()];
-
 		double min = Double.MAX_VALUE;
 		double max = -Double.MAX_VALUE;
 		Iterator<FC> it = itemsToShow.iterator();
@@ -758,25 +759,28 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			//TODO aproximar el envelope con un rectangulo
 			//arribaIzq es la coordenada x,y del que tenga max y? 
 
-			Point envelopeInternal = g.getCentroid();
-		
-			if(labor.minX==null || labor.minX.getLongitude().degrees>envelopeInternal.getX()){
-				labor.minX=Position.fromDegrees(envelopeInternal.getY(), envelopeInternal.getX());
+			Point centroid = g.getCentroid();//si la geometria es grande esto falla?
+
+
+			if(labor.minX==null || labor.minX.getLongitude().degrees>centroid.getX()){
+				labor.minX=Position.fromDegrees(centroid.getY(), centroid.getX());
 			}
-			if(labor.minY==null ||labor.minY.getLatitude().degrees>envelopeInternal.getY()){
-				labor.minY=Position.fromDegrees(envelopeInternal.getY(), envelopeInternal.getX());
+			if(labor.minY==null ||labor.minY.getLatitude().degrees>centroid.getY()){
+				labor.minY=Position.fromDegrees(centroid.getY(), centroid.getX());
 			}
-			if(labor.maxX==null ||labor.maxX.getLongitude().degrees<envelopeInternal.getX()){
-				labor.maxX=Position.fromDegrees(envelopeInternal.getY(), envelopeInternal.getX());
+			if(labor.maxX==null ||labor.maxX.getLongitude().degrees<centroid.getX()){
+				labor.maxX=Position.fromDegrees(centroid.getY(), centroid.getX());
 			}
-			if(labor.maxY==null ||labor.maxY.getLatitude().degrees<envelopeInternal.getY()){
-				labor.maxY=Position.fromDegrees(envelopeInternal.getY(), envelopeInternal.getX());
+			if(labor.maxY==null ||labor.maxY.getLatitude().degrees<centroid.getY()){
+				labor.maxY=Position.fromDegrees(centroid.getY(), centroid.getX());
 			}
-		//	labor.minX = Math.min(labor.minX, envelopeInternal.getMinX());
-		//	labor.minY = Math.min(labor.minY, envelopeInternal.getMinY());
-		//	labor.maxX = Math.max(labor.maxX, envelopeInternal.getMaxX());
-		//	labor.maxY = Math.max(labor.maxY, envelopeInternal.getMaxY());
+
+			//	labor.minX = Math.min(labor.minX, envelopeInternal.getMinX());
+			//	labor.minY = Math.min(labor.minY, envelopeInternal.getMinY());
+			//	labor.maxX = Math.max(labor.maxX, envelopeInternal.getMaxX());
+			//	labor.maxY = Math.max(labor.maxY, envelopeInternal.getMaxY());
 		}
+
 
 		labor.minAmount=min;
 		labor.maxAmount=max;
@@ -784,8 +788,9 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	}
 
 	protected void runLater(Collection<FC> itemsToShow) {	
-
+		//System.out.println("runlater "+itemsToShow.size());
 		updateStatsLabor(itemsToShow);
+
 		labor.getLayer().removeAllRenderables();//tiene que estar antes de runLaterInternall para que no se propagen los poligonos viejos
 		//TODO crear un renderable layer que dibuje el layer de los poligonos si esta suficientemente cerca
 		//o el analyticSurface si esta lejos
@@ -851,35 +856,35 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		Color colorMax =labor.getClasificador().getColorFor(max);// Clasificador.colors[Clasificador.colors.length-1];
 
 
-		int workDone = 0;
-		for(FC c:itemsToShow){
-			this.updateProgress(workDone, itemsToShow.size());
-			workDone++;
-//			double amount = c.getAmount();
-//			if( min>amount){
-//				min=amount;
-//				colorMin = labor.getClasificador().getColorFor(c);
+//		int workDone = 0;
+//		for(FC c:itemsToShow){
+//			this.updateProgress(workDone, itemsToShow.size());
+//			workDone++;
+//			//			double amount = c.getAmount();
+//			//			if( min>amount){
+//			//				min=amount;
+//			//				colorMin = labor.getClasificador().getColorFor(c);
+//			//			}
+//			//			if( max<amount){
+//			//				max=amount;
+//			//				colorMax = labor.getClasificador().getColorFor(c);
+//			//			}
+//
+//			Geometry g = c.getGeometry();
+//			if(g instanceof Polygon){
+//				//	pathTooltips.add(
+//				getPathTooltip((Polygon)g,c);
+//				//		);	
+//			} else if(g instanceof MultiPolygon){
+//				MultiPolygon mp = (MultiPolygon)g;			
+//				for(int i=0;i<mp.getNumGeometries();i++){
+//					Polygon p = (Polygon) (mp).getGeometryN(i);
+//					getPathTooltip(p,c);//se construye el poligono y se agrega al layer
+//					//	pathTooltips.add(getPathTooltip(p,c));	
+//				}
+//
 //			}
-//			if( max<amount){
-//				max=amount;
-//				colorMax = labor.getClasificador().getColorFor(c);
-//			}
-
-			Geometry g = c.getGeometry();
-			if(g instanceof Polygon){
-				//	pathTooltips.add(
-				getPathTooltip((Polygon)g,c);
-				//		);	
-			} else if(g instanceof MultiPolygon){
-				MultiPolygon mp = (MultiPolygon)g;			
-				for(int i=0;i<mp.getNumGeometries();i++){
-					Polygon p = (Polygon) (mp).getGeometryN(i);
-					getPathTooltip(p,c);//se construye el poligono y se agrega al layer
-					//	pathTooltips.add(getPathTooltip(p,c));	
-				}
-
-			}
-		}
+//		}
 
 		double HUE_MIN = colorMin.getHue()/ 360d; //0d / 360d;
 		double HUE_MAX = colorMax.getHue()/ 360d;//240d / 360d;
@@ -910,43 +915,79 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			}
 		};
 
-		labor.getLayer().addRenderable(analiticLegendrenderable);
-		RenderableLayer layer = new RenderableLayer();
-		layer.addRenderables(labor.getLayer().getRenderables());
-		layer.addRenderable(analiticLegendrenderable);		
+		//labor.getLayer().addRenderable(analiticLegendrenderable);
+		RenderableLayer layer = new RenderableLayer(){
+			private Sector s = null;
+			public void render(DrawContext dc){
+
+//				Position p1 = dc.getView().computePositionFromScreenPoint(0, 0);
+//				Position p2 = dc.getView().computePositionFromScreenPoint(-1920, -1080);
+				Sector visibleSector = dc.getVisibleSector();
+				if(s==null || !s.equals(visibleSector)){
+					s=visibleSector;
+				this.clearRenderables();
+				//	System.out.println("dibujando entre p1= "+p1+" y p2="+p2);
+				Envelope env = new Envelope(visibleSector.getMinLongitude().degrees,visibleSector.getMinLatitude().degrees,visibleSector.getMaxLongitude().degrees,visibleSector.getMaxLatitude().degrees);//p1.getLongitude().degrees, p1.getLatitude().degrees,p2.getLongitude().degrees, p2.getLatitude().degrees);
+
+				List<FC> features = labor.cachedOutStoreQuery(env);
+				//System.out.println("los features en vista son "+features.size());
+				features.stream().forEach((c)->{
+					Geometry g = c.getGeometry();
+					if(g instanceof Polygon){
+
+						gov.nasa.worldwind.render.ExtrudedPolygon extPoly=	getPathTooltip((Polygon)g,c);
+					//	System.out.println("dibujando "+extPoly);
+						if(extPoly!=null)this.addRenderable(extPoly);//extPoly.render(dc);
+
+					} else if(g instanceof MultiPolygon){
+						MultiPolygon mp = (MultiPolygon)g;			
+						for(int i=0;i<mp.getNumGeometries();i++){
+							Polygon p = (Polygon) (mp).getGeometryN(i);
+
+							gov.nasa.worldwind.render.ExtrudedPolygon extPoly=	getPathTooltip(p,c);
+					//		System.out.println("dibujando "+extPoly);
+							if(extPoly!=null)this.addRenderable(extPoly);
+
+						}
+					}
+				});//for each feature create renderable
+				
+				}
+				analiticLegendrenderable.render(dc);
+				this.getRenderables().forEach((r)->r.render(dc));
+				}};
+	
+			
+		//layer.addRenderables(labor.getLayer().getRenderables());
+	//	layer.addRenderable(analiticLegendrenderable);		
 		layer.setPickEnabled(false);
 		return layer;
 	}
 
 	private void installPlaceMark() {
 		if(labor.outCollection!=null){
-		//ReferencedEnvelope bounds = labor.outCollection.getBounds();//null pointer
-		//Coordinate centre = bounds.centre();
-		
-		//	Position pointPosition = Position.fromDegrees(centre.y, centre.x);  
-		
-			Position pointPosition = labor.getMinX();//Position.fromDegrees(bounds.getMinY(), bounds.getMinX());
-		PointPlacemark pmStandard = new PointPlacemark(pointPosition){
-			public void render(DrawContext dc){
-
-				double eyeElevation = dc.getView().getCurrentEyePosition().elevation;
-				if (  eyeElevation > 1000 ){
-					super.render(dc);
-
+			Position pointPosition = Position.fromDegrees(
+					labor.minY.getLatitude().getDegrees(),
+					labor.minY.getLongitude().getDegrees());
+			PointPlacemark pmStandard = new PointPlacemark(pointPosition){
+				public void render(DrawContext dc){
+					double eyeElevation = dc.getView().getCurrentEyePosition().elevation;
+					if (  eyeElevation > 1000 ){
+						super.render(dc);
+					}
 				}
-			}
-		};
-		PointPlacemarkAttributes pointAttribute = new PointPlacemarkAttributes();
-		pointAttribute.setImageColor(java.awt.Color.red);
-		//		if(HiDPIHelper.isHiDPI()){
-		//			pointAttribute.setLabelFont(java.awt.Font.decode("Verdana-Bold-50"));
-		//		}
+			};
+			PointPlacemarkAttributes pointAttribute = new PointPlacemarkAttributes();
+			pointAttribute.setImageColor(java.awt.Color.red);
+			//		if(HiDPIHelper.isHiDPI()){
+			//			pointAttribute.setLabelFont(java.awt.Font.decode("Verdana-Bold-50"));
+			//		}
 
-		pointAttribute.setLabelMaterial(Material.DARK_GRAY);
-		pmStandard.setLabelText(labor.nombreProperty.get());
-		pmStandard.setAttributes(pointAttribute);
-		labor.getLayer().addRenderable(pmStandard);
-		labor.getLayer().setValue(ZOOM_TO_KEY, pointPosition);		
+			pointAttribute.setLabelMaterial(Material.DARK_GRAY);
+			pmStandard.setLabelText(labor.nombreProperty.get());
+			pmStandard.setAttributes(pointAttribute);
+			labor.getLayer().addRenderable(pmStandard);
+			labor.getLayer().setValue(ZOOM_TO_KEY, pointPosition);		
 		}
 	}
 
@@ -1051,19 +1092,19 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 	public Geometry makeGood(Geometry g) {
 
-//		if(g instanceof Polygon){
-//			Polygon poly = (Polygon)g;
-//			if(poly.getNumPoints()>3){
-//				g = JTSUtilities.makeGoodShapePolygon(poly);
-//
-//			} else {
-//				//System.out.println("ring has fewer than 3 points");
-//				//g = null;
-//			}
-//
-//		} else if(g instanceof MultiPolygon){
-//			g = JTSUtilities.makeGoodShapeMultiPolygon((MultiPolygon)g);
-//		}
+		//		if(g instanceof Polygon){
+		//			Polygon poly = (Polygon)g;
+		//			if(poly.getNumPoints()>3){
+		//				g = JTSUtilities.makeGoodShapePolygon(poly);
+		//
+		//			} else {
+		//				//System.out.println("ring has fewer than 3 points");
+		//				//g = null;
+		//			}
+		//
+		//		} else if(g instanceof MultiPolygon){
+		//			g = JTSUtilities.makeGoodShapeMultiPolygon((MultiPolygon)g);
+		//		}
 
 		//		if(g instanceof Polygon){
 		//			g = JTSUtilities.makeGoodShapePolygon((Polygon)g);

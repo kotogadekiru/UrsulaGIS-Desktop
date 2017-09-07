@@ -2,6 +2,7 @@ package gui.nww;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,9 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.CheckBoxTreeItem;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.MultipleSelectionModel;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.cell.CheckBoxTreeCell;
@@ -137,7 +140,6 @@ public class LayerPanel extends VBox {
 		if(rootItem==null){
 			constructRootItem();  
 		} else{
-
 			for(TreeItem<?> item : rootItem.getChildren()){
 				item.getChildren().clear();
 			}
@@ -217,9 +219,16 @@ public class LayerPanel extends VBox {
 
 			//this.layersPanel.getChildren().add(jcb);
 		}
+		
+//		List<TreeItem<Layer>> aQuitar = new ArrayList<>();
+//		for(TreeItem<Layer> item :rootItem.getChildren()){
+//			if(item.getChildren().size()==0){
+//				aQuitar.add(item);
+//			}
+//		}
+//		rootItem.getChildren().removeAll(aQuitar);
+		
 		for(TreeItem<Layer> item : rootItem.getChildren()){
-		
-		
 		try{ item.getChildren().sort((c1,c2)->{
 			String l1Name =c1.getValue().getName();
 			String l2Name =c2.getValue().getName();
@@ -279,7 +288,10 @@ public class LayerPanel extends VBox {
 
 	private TreeView<Layer> constructTreeView(CheckBoxTreeItem<Layer> rootItem) {
 		final TreeView<Layer> tree = new TreeView<Layer>(rootItem);  
-
+		//tree.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+		//los puedo seleccionar pero no puedo actuar sobre mas de uno  a la vez por que set on action es del item en foco.
+		//tendria que poner acciones en los nodos y buscar los subitems seleccionados y ahi aplicar
+		
 		tree.setEditable(false);
 		tree.setStyle("-fx-background-color:transparent;");//-fx-focus-color: -fx-control-inner-background ; -fx-faint-focus-color: -fx-control-inner-background ;
 		//tree.setShowRoot(false);

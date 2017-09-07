@@ -21,6 +21,7 @@ import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
+import gov.nasa.worldwind.render.ExtrudedPolygon;
 import tasks.ProcessMapTask;
 import utils.PolygonValidator;
 import utils.ProyectionConstants;
@@ -139,7 +140,7 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 		}
 		
 		@Override
-		protected void getPathTooltip(Geometry poly, FertilizacionItem fertFeature) {
+		protected ExtrudedPolygon getPathTooltip(Geometry poly, FertilizacionItem fertFeature) {
 
 			double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 			//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
@@ -164,7 +165,7 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 			}
 
 			//List  paths = 
-			super.getRenderPolygonFromGeom(poly, fertFeature,tooltipText);
+		return	super.getExtrudedPolygonFromGeom(poly, fertFeature,tooltipText);
 
 			//return null;
 		}

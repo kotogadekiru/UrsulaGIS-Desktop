@@ -3,6 +3,7 @@ package dao.margen;
 import java.util.List;
 
 import javax.persistence.Entity;
+import javax.persistence.Transient;
 
 import org.geotools.data.FileDataStore;
 import org.opengis.feature.simple.SimpleFeature;
@@ -10,10 +11,8 @@ import org.opengis.feature.simple.SimpleFeature;
 import dao.Labor;
 import dao.LaborConfig;
 import dao.LaborItem;
-import dao.config.Agroquimico;
 import dao.config.Configuracion;
 import dao.cosecha.CosechaLabor;
-import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.siembra.SiembraLabor;
@@ -39,25 +38,35 @@ public class Margen extends Labor<MargenItem> {
 	public static final String AMOUNT_COLUMN_KEY = COLUMNA_RENTABILIDAD;//"AMOUNT_COLUMN_KEY";//define si se calcula la rentabilidad o el margen
 	
 	
-	public StringProperty colRentabilidad= null;
-	public StringProperty colMargen= null;
-	public StringProperty colCostoTotal= null;
-	public StringProperty colIngreso= null;
-	public StringProperty colCostoFertilizacion= null;
+	@Transient public StringProperty colRentabilidad= null;
+	@Transient public StringProperty colMargen= null;
+	@Transient public StringProperty colCostoTotal= null;
+	@Transient public StringProperty colIngreso= null;
+	@Transient public StringProperty colCostoFertilizacion= null;
+	@Transient 
 	public StringProperty colCostoPulverizacion= null;
+	@Transient 
 	public StringProperty colCostoSiembra= null;
+	@Transient 
 	public StringProperty colCostoFijo= null;
 
+	@Transient 
 	public DoubleProperty costoFijoHaProperty = null;
-	
+	@Transient 
 	private LaborConfig config=null;
+	@Transient 
 	public Property<Number> costoTnProperty= null;
+	@Transient 
 	public Property<Number> costoFleteProperty= null;
 //	public Property<String> amountProperty= null;//segun si es rentabilidad o margen se dibuja uno o el otro.
 	
+	@Transient 
 	private List<FertilizacionLabor> fertilizaciones;
+	@Transient 
 	private List<SiembraLabor> siembras;
+	@Transient 
 	private List<CosechaLabor> cosechas;
+	@Transient 
 	private List<PulverizacionLabor> pulverizaciones;
 	
 	public Margen() {
@@ -121,6 +130,8 @@ public class Margen extends Labor<MargenItem> {
 		return ci;
 	}
 
+	
+	
 
 	
 	

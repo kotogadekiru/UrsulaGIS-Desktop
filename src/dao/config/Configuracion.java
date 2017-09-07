@@ -5,12 +5,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Properties;
 import java.util.Set;
 
-import dao.Labor;
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleBooleanProperty;
 import utils.CustomProperties;
 
 /**

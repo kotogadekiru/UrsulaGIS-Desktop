@@ -36,6 +36,7 @@ import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
 import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.render.ExtrudedPolygon;
 import javafx.geometry.Point2D;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
@@ -84,7 +85,7 @@ public class CrearFertilizacionMapTask extends ProcessMapTask<FertilizacionItem,
 
 
 	@Override
-	protected void getPathTooltip(Geometry poly, FertilizacionItem fertFeature) {
+	protected ExtrudedPolygon getPathTooltip(Geometry poly, FertilizacionItem fertFeature) {
 
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
@@ -109,7 +110,7 @@ public class CrearFertilizacionMapTask extends ProcessMapTask<FertilizacionItem,
 		}
 
 		//List  paths = 
-		super.getRenderPolygonFromGeom(poly, fertFeature,tooltipText);
+	 return	getExtrudedPolygonFromGeom(poly, fertFeature,tooltipText);
 
 		//return null;
 	}
