@@ -43,6 +43,18 @@ public class UnzipUtility {
 			String filePath = destDirectoryPath.toString() + File.separator + entry.getName();
 			if (!entry.isDirectory()) {
 				// if the entry is a file, extracts it
+				File fout = new File(filePath); 
+				int i =1;
+				while(fout.isFile()){
+			//		System.out.println(filePath + " ya existe!");
+					int dotIndex = filePath.lastIndexOf('.');
+					//modifico el nombre del archivo para que no pise al anterior.
+					String filePath2 = filePath.substring(0,dotIndex)+"("+i+")"+filePath.substring(dotIndex);
+					i++;
+			//		System.out.println("creando el archivo "+filePath2);
+					fout = new File(filePath2);
+				}
+				filePath = fout.getAbsolutePath();
 				extractFile(zipIn, filePath);
 				files.add(filePath);
 			} else {
@@ -64,6 +76,8 @@ public class UnzipUtility {
 	 */
 	private static void extractFile(ZipInputStream zipIn, String filePath) throws IOException {
 		File fout = new File(filePath);
+	//	System.out.println("creando el archivo "+filePath);
+
 
 		BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(fout));
 		byte[] bytesIn = new byte[BUFFER_SIZE];

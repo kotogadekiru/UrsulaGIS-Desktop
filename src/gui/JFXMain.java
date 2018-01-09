@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
@@ -50,14 +51,23 @@ import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.data.simple.SimpleFeatureStore;
 import org.geotools.feature.DefaultFeatureCollection;
+import org.geotools.feature.SchemaException;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
+import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
+
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.feature.type.AttributeDescriptor;
 import org.opengis.feature.type.AttributeType;
+import org.opengis.feature.type.GeometryType;
 
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
 
 import dao.Labor;
 import dao.LaborItem;
@@ -186,6 +196,7 @@ import tasks.importar.ProcessHarvestMapTask;
 import tasks.importar.ProcessPulvMapTask;
 import tasks.importar.ProcessSiembraMapTask;
 import tasks.procesar.ExtraerPoligonosDeCosechaTask;
+import tasks.procesar.GenerarMuestreoDirigidoTask;
 import tasks.procesar.GrillarCosechasMapTask;
 import tasks.procesar.JuntarShapefilesTask;
 import tasks.procesar.ProcessMarginMapTask;
@@ -801,18 +812,6 @@ public class JFXMain extends Application {
 				return "cosecha exportada como puntos: " + layer.getName();
 			}});
 
-		
-		/**
-		 * Accion permite exportar la cosecha como shp de puntos
-		 */
-		cosechasP.add((layer)->{
-			if(layer==null){
-				return "Generar Muestreo Dirigido"; 
-			} else{
-				doGenerarMuestreoDirigido((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-				return "muestreo dirigido generado: " + layer.getName();
-			}});
-
 		ndviP.add((layer)->{
 			if(layer==null){//TODO implementar estimar Rinde desde ndvi
 				return "Convertir a cosecha"; 
@@ -850,6 +849,21 @@ public class JFXMain extends Application {
 					viewGoTo(pos);
 				}
 				return "went to " + layer.getName();
+			}});
+		
+		ndviP.add((layer)->{
+			if(layer==null){
+				return "Guardar"; 
+			} else{
+				Object o =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+				if(o instanceof Ndvi){
+					Ndvi ndvi = (Ndvi)o;
+					ndvi.updateContent();
+					DAH.save(ndvi);
+					//doConvertirNdviACosecha((Ndvi) o);
+				}
+
+				return "guarde" + layer.getName();
 			}});
 
 		/**
@@ -914,16 +928,7 @@ public class JFXMain extends Application {
 		layerPanel.setMenuItems(predicates);
 	}
 
-	/**
-	 * metodo que toma los poligonos de la labor y genera un mapa de puntos con las densidades configuradas
-	 * @param l una Labor
-	 */
-	private void doGenerarMuestreoDirigido(Labor<?> l) {		 
-		//TODO preguntar si desea generar el muestreo por cantidad de muestras por poligono o densidad de muestras por poligono
-		//permitir configurar cantidad max y min de muestras
-		//permitir configurar superficie minima relevante
-		enDesarrollo();
-	}
+
 
 
 
@@ -935,7 +940,7 @@ public class JFXMain extends Application {
 
 	private void enDesarrollo() {
 		Alert enDesarrollo = new Alert(AlertType.INFORMATION,"funcionalidad en desarrollo");
-		enDesarrollo.show();
+		enDesarrollo.showAndWait();
 	}
 
 
@@ -1101,7 +1106,7 @@ public class JFXMain extends Application {
 		addMenuItem("CosechaJD",(a)->doLeerCosechaJD(),menuHerramientas);
 		//insertMenuItem(menuCalcular,"Retabilidades",a->doProcessMargin());
 		addMenuItem("Distancia",(a)->doMedirDistancia(),menuHerramientas);
-		addMenuItem("Superficie",(a)->doMedirSuperfice(),menuHerramientas);
+		addMenuItem("Superficie",(a)->doMedirSuperficie(),menuHerramientas);
 		addMenuItem("Unir Shapefiles",(a)->JuntarShapefilesTask.process(),menuHerramientas);
 		addMenuItem("Rentabilidades",(a)->doProcessMargin(),menuHerramientas);
 		addMenuItem("Unir Cosechas",(a)->doUnirCosechas(null),menuHerramientas);
@@ -1145,6 +1150,7 @@ public class JFXMain extends Application {
 		addMenuItem("Lote",(a)->doConfigLote(),menuConfiguracion);
 		addMenuItem("Campaña",(a)->doConfigCampania(),menuConfiguracion);
 		addMenuItem("Poligonos",(a)->doConfigPoligonos(),menuConfiguracion);
+		addMenuItem("Ndvi",(a)->doConfigNdvi(),menuConfiguracion);
 
 		MenuItem actualizarMI=addMenuItem("Actualizar !",null,menuConfiguracion);
 		actualizarMI.setOnAction((a)->doUpdate(actualizarMI));
@@ -1219,12 +1225,19 @@ public class JFXMain extends Application {
 		ndviLayers.sort((c1,c2)->{
 			String l1Name =c1.getName();
 			String l2Name =c2.getName();
+			Ndvi ndvi1 = (Ndvi)c1.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			Ndvi ndvi2 = (Ndvi)c2.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			try{
+				return ndvi1.getFecha().compareTo(ndvi2.getFecha());
+			} catch(Exception e){
+				System.err.println("no se pudo comparar las fechas de los ndvi. comparando nombres");
+			}
 			//TODO comparar por el valor del layer en vez del nombre del layer
 			DateFormat df =new  SimpleDateFormat("dd-MM-yyyy");
 			
 			try{
-				Date d1 = df.parse(l1Name);
-				Date d2 = df.parse(l2Name);
+				Date d1 = df.parse(l1Name.substring(l1Name.length()-"dd-MM-yyyy".length()));
+				Date d2 = df.parse(l2Name.substring(l2Name.length()-"dd-MM-yyyy".length()));
 				return d1.compareTo(d2);
 			} catch(Exception e){
 				//no se pudo parsear como fecha entonces lo interpreto como string.
@@ -1237,29 +1250,46 @@ public class JFXMain extends Application {
 			getWwd().redraw();
 			});
 
-
-		for(Layer l: ndviLayers){
-			l.setEnabled(true);
-			Platform.runLater(()->{
-			this.layerPanel.update(getWwd());
-			getWwd().redraw();
-			});
-
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-			
-				e.printStackTrace();
+		
+		Map<Date, List<Layer>>  fechaMap = ndviLayers.stream().collect(Collectors.groupingBy((l2)->{
+			Ndvi lNdvi = (Ndvi)l2.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			return lNdvi.getFecha();}));
+		
+		fechaMap.keySet().stream().sorted().forEach((date)->{
+			List<Layer> layerList = fechaMap.get(date);
+			for(Layer l: layerList){				
+				l.setEnabled(true);
 			}
-
-			l.setEnabled(false);
-
-			Platform.runLater(()->{
+				Platform.runLater(()->{
 				this.layerPanel.update(getWwd());
 				getWwd().redraw();
 				});
 
-		}		
+				try {
+					Thread.sleep(2000);//idea: se puede hacer proporcional el tiempo de espera con el delta de tiempo entre imagenes
+				} catch (InterruptedException e) {
+				
+					e.printStackTrace();
+				}
+				for(Layer l: layerList){				
+					l.setEnabled(false);
+				}
+
+				Platform.runLater(()->{
+					this.layerPanel.update(getWwd());
+					getWwd().redraw();
+					});
+		});
+		
+		for(Layer l: ndviLayers){
+			l.setEnabled(true);
+		}
+		Platform.runLater(()->{
+			this.layerPanel.update(getWwd());
+			getWwd().redraw();
+			});
+
+		
 		});
 	}
 
@@ -1310,101 +1340,36 @@ public class JFXMain extends Application {
 
 	
 	private void loadPoligonos(){
-		List<Poligono> poligonos = DAH.getPoligonosActivos();
+	//	List<Poligono> poligonos = DAH.getPoligonosActivos();
 		System.out.println("termine de cargar los poligonos Activos");
-		showPoligonos(poligonos);
+	//	showPoligonos(poligonos);
 	}
-
-	private void showPoligonos(List<Poligono> poligonos) {
-		//boolean armed = false;
-		BooleanProperty armed = new SimpleBooleanProperty(false);
-		for(Poligono poli : poligonos){
-			RenderableLayer surfaceLayer = new RenderableLayer();
-			
-			MeasureTool measureTool = new MeasureTool(getWwd(),surfaceLayer);
-			measureTool.setController(new MeasureToolController());
-			measureTool.setMeasureShapeType(MeasureTool.SHAPE_POLYGON);
-			measureTool.setPathType(AVKey.GREAT_CIRCLE);
-			measureTool.getUnitsFormat().setLengthUnits(UnitsFormat.METERS);
-			measureTool.getUnitsFormat().setAreaUnits(UnitsFormat.HECTARE);
-			measureTool.getUnitsFormat().setShowDMS(false);
-			measureTool.setFollowTerrain(true);
-			measureTool.setShowControlPoints(true);
-			List<Position> positions = poli.getPositions();
-		//	positions.remove(positions.size()-1);
-			measureTool.setPositions((ArrayList<? extends Position>) positions);
-			measureTool.setArmed(false);
-
-			poli.setLayer(surfaceLayer);		
-			surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, poli);
-			
-			
-			DoubleProperty valueProperty= new SimpleDoubleProperty();
-			valueProperty.setValue( poli.getArea());
 	
-
-			measureTool.addPropertyChangeListener((event)->{
-				//System.out.println(event.getPropertyName());
-				// Add, remove or change positions
-				if(event.getPropertyName().equals(MeasureTool.EVENT_ARMED)){
-					if (measureTool.isArmed()) {
-						((Component) getWwd()).setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
-					} else {                    //al cerrar el alert se hace un setArmed(false);
-						((Component) getWwd()).setCursor(Cursor.getDefaultCursor());
-					}
-				}
-				// Metric changed - sent after each render frame
-				else if(event.getPropertyName().equals(MeasureTool.EVENT_METRIC_CHANGED)){
-					double value2 = measureTool.getArea();
-					if(valueProperty.get()!=value2 && value2 > 0){
-						double area = value2/ProyectionConstants.METROS2_POR_HA;
-						List< Position> newPositions =  (List<Position>) measureTool.getPositions();
-						//newPositions.add(newPositions.get(0));
-						poli.setPositions( newPositions);
-						//TODO construir una geometria de la lista de posiciones y validarla con PolygonValidator
-						poli.setArea(area);					
-						surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, poli);
-						valueProperty.setValue(value2);
-						if(armed.get()){
-							this.getLayerPanel().update(this.getWwd());
-						}
-					}                	                  
-				}
-			});
-			armed.set(true);
+	private void showPoligonos(List<Poligono> poligonos) {
+		for(Poligono poli : poligonos){
+			MeasureTool measureTool = PoligonLayerFactory.createPoligonLayer(poli, this.getWwd(), this.getLayerPanel());
 			Platform.runLater(()->{
-			insertBeforeCompass(this.getWwd(), surfaceLayer);
-			this.getLayerPanel().update(this.getWwd());
-			});
+				insertBeforeCompass(this.getWwd(), measureTool.getApplicationLayer());
+				this.getLayerPanel().update(this.getWwd());
+				});
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	private void doMedirSuperfice() {
-		RenderableLayer surfaceLayer = new RenderableLayer();
 
-		MeasureTool measureTool = new MeasureTool(getWwd(),surfaceLayer);
-		measureTool.setController(new MeasureToolController());
-		// MeasureToolPanel  measurePanel=  new MeasureToolPanel(getWwd(), measureTool);
-
-		measureTool.setMeasureShapeType(MeasureTool.SHAPE_POLYGON);
-		measureTool.setPathType(AVKey.GREAT_CIRCLE);
-		measureTool.getUnitsFormat().setLengthUnits(UnitsFormat.METERS);
-		measureTool.getUnitsFormat().setAreaUnits(UnitsFormat.HECTARE);
-		measureTool.getUnitsFormat().setShowDMS(false);
-		measureTool.setFollowTerrain(true);
-		measureTool.setShowControlPoints(true);
-		// measureTool.setMeasureShape(new SurfacePolygon());
-		measureTool.clear();
+	private void doMedirSuperficie(){
+		Poligono poli = new Poligono();
+		MeasureTool measureTool = PoligonLayerFactory.createPoligonLayer(poli, this.getWwd(), this.getLayerPanel());
 		measureTool.setArmed(true);
+		
+		insertBeforeCompass(this.getWwd(), measureTool.getApplicationLayer());
+		this.getLayerPanel().update(this.getWwd());
 
-		insertBeforeCompass(this.getWwd(), surfaceLayer);
-		Poligono poli =new Poligono();
-
+		
 		Alert supDialog = new Alert(Alert.AlertType.INFORMATION);
 		supDialog.initOwner(this.stage);
 		supDialog.setTitle("Medir Superficie");
 		supDialog.setHeaderText("Superficie");
+		
 		Text t = new Text();
 		TextField nombreTF = new TextField();
 		nombreTF.setPromptText("Nombre");
@@ -1414,62 +1379,17 @@ public class JFXMain extends Application {
 		supDialog.initModality(Modality.NONE);
 		nombreTF.textProperty().addListener((o,old,n)->{
 			poli.setNombre(n);
-			//surfaceLayer.setName(n);
+			// es importante para que se modifique el layerPanel con el nombre actualizado
+			this.getLayerPanel().update(this.getWwd());
 		});
-
-		DoubleProperty valueProperty = new SimpleDoubleProperty();
-		measureTool.addPropertyChangeListener((event)->{
-			//System.out.println(event.getPropertyName());
-			// Add, remove or change positions
-			if(event.getPropertyName().equals(MeasureTool.EVENT_ARMED)){
-				if (measureTool.isArmed()) {
-					((Component) getWwd()).setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
-				} else {                    //al cerrar el alert se hace un setArmed(false);
-					((Component) getWwd()).setCursor(Cursor.getDefaultCursor());
-				}
-			}
-			// Metric changed - sent after each render frame
-			else if(event.getPropertyName().equals(MeasureTool.EVENT_METRIC_CHANGED)){
-				DecimalFormat dc = new DecimalFormat("0.00");
-				dc.setGroupingSize(3);
-				dc.setGroupingUsed(true);
-				double	value = measureTool.getArea()/ProyectionConstants.METROS2_POR_HA;
-				if(value != valueProperty.doubleValue() && value > 0){
-					String formated = dc.format(value)+" Ha";
-					t.textProperty().set(formated);
-
-
-					poli.setPositions( (List<Position>) measureTool.getPositions());
-					poli.setArea(value);
-					//poli.setNombre(dc.format(value/ProyectionConstants.METROS2_POR_HA));
-
-					//System.out.println("nombre poli :"+poli.getNombre());
-					poli.setLayer(surfaceLayer);
-					surfaceLayer.setName(poli.getNombre()+" "+formated);
-					//ArrayList<? extends Position> positions = measureTool.getPositions();
-					surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, poli);
-					//surfaceLayer.setValue("POSITIONS", poli.getPositions());
-
-					valueProperty.setValue(value);
-					this.getLayerPanel().update(this.getWwd());
-					//  System.out.println("lengh="+measureTool.getLength());
-				}                	                  
-				//updateMetric();
-			}
-		});
-
-
+		
 		supDialog.show();
 		supDialog.setOnHidden((event)->{			
 			measureTool.setArmed(false);
-			//surfaceLayer.setName(poli.getNombre()+" "+	t.textProperty().get());
-			//((Component) getWwd()).setCursor(Cursor.getDefaultCursor());
-			this.getLayerPanel().update(this.getWwd());
 		});
-
-		//supDialog.getResult();      
-
 	}
+	
+
 
 	private void doMedirDistancia() {		 
 		RenderableLayer layer = new RenderableLayer();
@@ -1509,7 +1429,9 @@ public class JFXMain extends Application {
 				}
 			}
 			// Metric changed - sent after each render frame
-			else if(event.getPropertyName().equals(MeasureTool.EVENT_METRIC_CHANGED)){
+			else if(event.getPropertyName().equals(MeasureTool.EVENT_POSITION_REPLACE) ||
+					event.getPropertyName().equals(MeasureTool.EVENT_POSITION_ADD) ||
+					event.getPropertyName().equals(MeasureTool.EVENT_POSITION_REMOVE)){
 				double	value = measureTool.getLength();
 				DecimalFormat dc = new DecimalFormat("0.00");
 				dc.setGroupingSize(3);
@@ -1521,17 +1443,7 @@ public class JFXMain extends Application {
 					measureTool.getLayer().setValue(Labor.LABOR_LAYER_IDENTIFICATOR, "Medicion");
 					valueProperty.setValue(value);
 					this.getLayerPanel().update(this.getWwd());
-
-
-					//                		t.textProperty().set(dc.format(value));
-					//                		measureTool.getLayer().setName("Distancia "+dc.format(value));
-					//                		measureTool.getLayer().setValue(Labor.LABOR_LAYER_IDENTIFICATOR, "Medicion");
-					//                		valueProperty.setValue(value);
-					//                		this.getLayerPanel().update(this.getWwd());
-
-					//  System.out.println("lengh="+measureTool.getLength());
 				}                	                  
-				//updateMetric();
 			}
 		});
 
@@ -1589,6 +1501,7 @@ public class JFXMain extends Application {
 		TextInputDialog anchoDialog = new TextInputDialog("20");
 		anchoDialog.setTitle("Configure la cantidad de grupos deseados");
 		anchoDialog.setContentText("Max grupos");
+		anchoDialog.initOwner(this.stage);
 		Optional<String> oGrupos = anchoDialog.showAndWait();
 		int grupos=Integer.parseInt(oGrupos.get());
 		Labor<?>[] cosechasAux = new Labor[]{cosechaLabor};
@@ -1679,37 +1592,6 @@ public class JFXMain extends Application {
 	}
 
 	private void showHistoLabor(Labor<?> cosechaLabor) {	
-
-		//		Task<Parent> pfMapTask = new Task<Parent>(){
-		//			@Override
-		//			protected Parent call() throws Exception {
-		//				try{	
-		//					CosechaHistoChart histoChart = new CosechaHistoChart(cosechaLabor);
-		//					return histoChart;
-		//				}catch(Throwable t){
-		//					t.printStackTrace();
-		//					System.out.println("no hay ninguna labor para mostrar");
-		//					return new VBox(new Label("Upps!!"));
-		//				}
-		//			}			
-		//		};
-		//
-		//
-		//		pfMapTask.setOnSucceeded(handler -> {
-		//			Parent	histoChart = (Parent) handler.getSource().getValue();	
-		//			Stage histoStage = new Stage();
-		//			//	histoStage.setTitle("Histograma Cosecha");
-		//			histoStage.getIcons().add(new Image(ICON));
-		//
-		//			Scene scene = new Scene(histoChart, 800,450);
-		//			histoStage.setScene(scene);
-		//			//	System.out.println("termine de crear el histo chart");
-		//			histoStage.initOwner(this.stage);
-		//			histoStage.show();
-		//			//	System.out.println("histoChart.show();");
-		//		});
-		//		executorPool.submit(pfMapTask);
-
 		Platform.runLater(()->{
 			CosechaHistoChart histoChart = new CosechaHistoChart(cosechaLabor);
 			Stage histoStage = new Stage();
@@ -1819,6 +1701,13 @@ public class JFXMain extends Application {
 		}
 	}
 	
+	private void doShowNDVI(Ndvi ndvi) {
+		executorPool.submit(()->{
+			ndvi.loadFileFromContent();
+			showNdviTiffFile(ndvi.getF(),null);
+		});
+		
+	}
 	private void doOpenNDVITiffFiles() {
 		List<File>	files =chooseFiles("TIF", "*.tif");
 		if(files!=null)	files.forEach((file)->{
@@ -2081,6 +1970,56 @@ public class JFXMain extends Application {
 		this.executorPool.execute(umTask);		
 	}
 
+	/**
+	 * metodo que toma los poligonos de la labor y genera un mapa de puntos con las densidades configuradas
+	 * @param l una Labor
+	 */
+	private void doGenerarMuestreoDirigido(Labor<?> l) {		 
+		//TODO preguntar si desea generar el muestreo por cantidad de muestras por poligono o densidad de muestras por poligono
+		//permitir configurar cantidad max y min de muestras
+		//permitir configurar superficie minima relevante
+		enDesarrollo();
+		
+		 double superficieMinimaAMuestrear=0;
+		 double densidadDeMuestrasDeseada=0;
+		 double cantidadMinimaDeMuestrasPoligonoAMuestrear=0;
+		
+		TextInputDialog supMinDialog = new TextInputDialog("Superficie Minima");
+		supMinDialog.setTitle("Superficie Minima requerida para generar muestreo");
+		supMinDialog.setContentText("Sup Minima (Has)");
+		Optional<String> ppmPOptional = supMinDialog.showAndWait();
+		 superficieMinimaAMuestrear = Double.valueOf(ppmPOptional.get());
+
+		TextInputDialog densidadDialog = new TextInputDialog("Cantidad de muestras por Ha");
+		densidadDialog.setTitle("Cantidad de muestras por hectarea deseada");
+		densidadDialog.setContentText("Cantidad por Ha");
+		Optional<String> densidadOptional = densidadDialog.showAndWait();
+		 densidadDeMuestrasDeseada = Double.valueOf(densidadOptional.get());
+
+		TextInputDialog ppmNDialog = new TextInputDialog("Cantidad Minima de muestras por poligono");
+		ppmNDialog.setTitle("Configure la cantidad minima de muestras a generar por poligono");
+		ppmNDialog.setContentText("Cantidad Minima");
+		Optional<String> cantOptional = ppmNDialog.showAndWait();
+		cantidadMinimaDeMuestrasPoligonoAMuestrear = Double.valueOf(cantOptional.get());
+
+		GenerarMuestreoDirigidoTask umTask = new GenerarMuestreoDirigidoTask(Collections.singletonList(l),superficieMinimaAMuestrear,densidadDeMuestrasDeseada,cantidadMinimaDeMuestrasPoligonoAMuestrear);
+		umTask.installProgressBar(progressBox);
+
+		umTask.setOnSucceeded(handler -> {
+			Suelo ret = (Suelo)handler.getSource().getValue();
+			System.out.println("termine de generar el muestreo dirigido");
+			suelos.add(ret);
+			insertBeforeCompass(getWwd(), ret.getLayer());
+			this.getLayerPanel().update(this.getWwd());
+			umTask.uninstallProgressBar();
+			viewGoTo(ret);
+			umTask.uninstallProgressBar();
+			System.out.println("Muestreo Dirigido");
+			playSound();
+		});//fin del OnSucceeded
+		this.executorPool.execute(umTask);		
+	}
+	
 	private void doCrearPulverizacion(Poligono poli) {
 		PulverizacionLabor labor = new PulverizacionLabor();
 		LaborLayer layer = new LaborLayer();
@@ -2260,28 +2199,22 @@ public class JFXMain extends Application {
 				return;
 			}
 		}
-		//if(cosechaSelected.isPresent()){		
+		
 		Optional<CosechaLabor> cosechaConfigured=HarvestConfigDialogController.config(cConfigured);
 		if(cosechaConfigured.isPresent()){
 			cConfigured = cosechaConfigured.get();
-			//cConfigured.getLayer().removeAllRenderables();
 			ProcessHarvestMapTask umTask = new ProcessHarvestMapTask(cConfigured);
 			umTask.installProgressBar(progressBox);
-
 			umTask.setOnSucceeded(handler -> {
-				//CosechaLabor ret = (CosechaLabor)handler.getSource().getValue();
-				//insertBeforeCompass(getWwd(), ret.getLayer());
 				this.getLayerPanel().update(this.getWwd());
 				umTask.uninstallProgressBar();
-				//	viewGoTo(ret);
+			
 				this.wwjPanel.repaint();
 				System.out.println("EditHarvestMapTask succeded");
 				playSound();
 			});//fin del OnSucceeded						
-			//umTask.start();
 			this.executorPool.execute(umTask);
 		}
-		//}
 	}
 
 	private void doExtraerPoligonos(Labor<?> labor ) {	
@@ -3126,6 +3059,8 @@ public class JFXMain extends Application {
 		executorPool.execute(ehTask);
 	}
 	
+
+	
 	private void doExportPrescripcion(FertilizacionLabor laborToExport) {
 		String nombre = laborToExport.getNombreProperty().get();
 		File shapeFile =  getNewShapeFile(nombre);
@@ -3133,24 +3068,40 @@ public class JFXMain extends Application {
 
 			
 			
+//			SimpleFeatureType type = null;
+//			//String typeDescriptor = "the_geom:Polygon:srid=4326,"//"*geom:Polygon,"the_geom
+//			//		+ "Rate" + ":java.lang.Long";
+//			
+//			SimpleFeatureTypeBuilder b = new SimpleFeatureTypeBuilder();
+//			b.setName("PrescType");
+//			//b.setSRS("4326");
+//			//b.setCRS( DefaultGeographicCRS.WGS84 ); // set crs first
+//			b.add( "the_geom", Polygon.class); // then add geometry  //el tipo de shape en byte 32 del header tiene que ser 0500 en vez de 0f00 es decir polygon en vez de PolygonZ
+//			
+//			b.add("Rate", Long.class);
+//			b.setDefaultGeometry( "the_geom" );
+//			
+//			
+//
+//			//build the type
+//			type= b.buildFeatureType();
+//			
+//			
+			//Polygon.class
 			SimpleFeatureType type = null;
-			String typeDescriptor = "the_geom:MultiPolygon:srid=4326,"//"*geom:Polygon,"the_geom
-					+ "Rate" + ":Long";
-			
-			SimpleFeatureTypeBuilder b = new SimpleFeatureTypeBuilder();
-			b.setName("PrescType");
-			//b.setSRS("4326");
-			b.setCRS( DefaultGeographicCRS.WGS84 ); // set crs first
-			b.add( "the_geom", MultiPolygon.class); // then add geometry
-			
-			b.add("Rate", Long.class);
-			b.setDefaultGeometry( "the_geom" );
-			
-			
+			String typeDescriptor = "*the_geom:"+Polygon.class.getCanonicalName()+":srid=4326,"//"*geom:Polygon,"the_geom
+					+ "Rate" + ":java.lang.Long";
+			System.out.println("creando type con: "+typeDescriptor);
+			System.out.println("Long.SIZE="+Long.SIZE);//64bits=16bytes. ok!!
+			try {
+				type = DataUtilities.createType("PrescType", typeDescriptor);
+			} catch (SchemaException e) {
 
-			//build the type
-			type= b.buildFeatureType();
-
+				e.printStackTrace();
+			}
+			//DataUtilities.typeEncode.put(Date.class, "Date");
+			//DataUtilities.typeMap.put("Date", Date.class);
+			System.out.println("PrescType: "+DataUtilities.spec(type));//PrescType: the_geom:Polygon,Rate:java.lang.Long
 //			try {
 //				DataUtilities.createType("Long", Long.class);
 //				type = DataUtilities.createType("PrescripcionFertilizacion", typeDescriptor);
@@ -3158,28 +3109,60 @@ public class JFXMain extends Application {
 //
 //				e.printStackTrace();
 //			}
-		
+		/*
+			SimpleFeatureTypeBuilder builder2 = new SimpleFeatureTypeBuilder();
+	        builder2.setName("PrescType");
+	        builder2.setNamespaceURI("no namespace");
+	        AttributeDescriptor attributeType = DataUtilities.createAttribute("Rate:java.lang.Long");
+            builder2.add(attributeType);
 
-			ShapefileDataStore newDataStore = createShapefileDataStore(shapeFile,type);
-
+           
+            builder2.setDefaultGeometry("the_geom");
+      
+			
+			 GeometryType at = new GeometryTypeImpl(new NameImpl(name), clazz, CRS.decode("EPSG:" + 4326), false,
+                     false, Collections.EMPTY_LIST, null, null);
+             return new GeometryDescriptorImpl(at, new NameImpl(name), 0, 1, nillable, null);
+             
+             */
 			SimpleFeatureIterator it = laborToExport.outCollection.features();
-			DefaultFeatureCollection pointFeatureCollection =  new DefaultFeatureCollection("internal",type);
-			System.out.println("Prescription Type: "+DataUtilities.spec(type));
-			SimpleFeatureBuilder fb = new SimpleFeatureBuilder(type);
+			DefaultFeatureCollection exportFeatureCollection =  new DefaultFeatureCollection("PrescType",type);
+			System.out.println("PrescType DefaultFeatureCollection: "+DataUtilities.spec(exportFeatureCollection.getSchema()));//ok!!
+			SimpleFeatureBuilder fb = new SimpleFeatureBuilder(type);//ok
 			while(it.hasNext()){
 				FertilizacionItem fi = laborToExport.constructFeatureContainerStandar(it.next(),false);
-				fb.add(fi.getGeometry());
+				Geometry g=fi.getGeometry();
+				if(g instanceof MultiPolygon){
+					System.out.println("convirtiendo un multipolygon en poligon " +g);
+					MultiPolygon mp = (MultiPolygon)g;
+					Geometry boundary = mp.getBoundary();
+				//	GeometryFactory gf = new GeometryFactory();
+				//	Coordinate[] coords ={new Coordinate(0,0),new Coordinate(0,1),new Coordinate(1,1),new Coordinate(0,0)};
+				//	gf.createPolygon(coords);
+					Polygon p = g.getFactory().createPolygon(boundary.getCoordinates());
+					
+					
+					//Polygon p= (Polygon) mp.getGeometryN(0);
+					System.out.println("result "+p);
+				
+				g=p;
+				} else {
+					System.out.println("no es multipoligon "+g);
+					continue;
+				}
+				fb.add(g);
 				Double dosisHa = fi.getDosistHa();
 				
 				System.out.println("presc Dosis = "+dosisHa);
-				fb.add(new Long(dosisHa.longValue()));
+				fb.add(dosisHa.longValue());
 			
-				SimpleFeature pointFeature = fb.buildFeature(fi.getId().toString());
-				pointFeatureCollection.add(pointFeature);
+				SimpleFeature exportFeature = fb.buildFeature(fi.getId().toString());
+				exportFeatureCollection.add(exportFeature);
 
 			}
 			it.close();
 
+			ShapefileDataStore newDataStore = createShapefileDataStore(shapeFile,type);//aca el type es GeometryDescriptorImpl the_geom <MultiPolygon:MultiPolygon> nillable 0:1 
 			SimpleFeatureSource featureSource = null;
 			try {
 				String typeName = newDataStore.getTypeNames()[0];
@@ -3191,7 +3174,7 @@ public class JFXMain extends Application {
 
 
 			if (featureSource instanceof SimpleFeatureStore) {
-				SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
+				SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;//aca es de tipo polygonFeature(the_geom:MultiPolygon,Rate:Rate)
 				Transaction transaction = new DefaultTransaction("create");
 				featureStore.setTransaction(transaction);
 
@@ -3202,7 +3185,7 @@ public class JFXMain extends Application {
 				 */
 
 				try {
-					featureStore.setFeatures(pointFeatureCollection.reader());
+					featureStore.setFeatures(exportFeatureCollection.reader());
 					try {
 						transaction.commit();
 					} catch (Exception e1) {
@@ -3220,20 +3203,11 @@ public class JFXMain extends Application {
 				}
 			}		
 
+			System.out.println("despues de guardar el shp el schema es: "+ shapeFile);
 			Configuracion config = Configuracion.getInstance();
 			config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
 			config.save();
 		});//fin del run later
-		
-	}
-	
-	private void doGenerarMuestreoDirigido(CosechaLabor value) {
-		// TODO Auto-generated method stub
-		//superficie minima poligono
-		//densidad de puntos
-		//puntos por poligono
-		//puntos totales
-		enDesarrollo();
 		
 	}
 
@@ -3326,8 +3300,7 @@ public class JFXMain extends Application {
 	}
 
 
-	private ShapefileDataStore createShapefileDataStore(File shapeFile,
-			SimpleFeatureType type) {
+	private ShapefileDataStore createShapefileDataStore(File shapeFile,	SimpleFeatureType type) {
 		Map<String, Serializable> params = new HashMap<String, Serializable>();
 		try {
 			params.put("url", shapeFile.toURI().toURL());
@@ -3342,7 +3315,7 @@ public class JFXMain extends Application {
 			ShapefileDataStoreFactory dataStoreFactory = new ShapefileDataStoreFactory();
 			newDataStore = (ShapefileDataStore) dataStoreFactory.createNewDataStore(params);
 			newDataStore.createSchema(type);
-			newDataStore.forceSchemaCRS(DefaultGeographicCRS.WGS84);
+			//newDataStore.forceSchemaCRS(DefaultGeographicCRS.WGS84);
 			//		System.out.println("forzando dataStore WGS84");
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -3599,7 +3572,7 @@ public class JFXMain extends Application {
 							DAH.getAllCampanias()
 							);
 			if(data.size()==0){
-				data.add(new Campania("Nueva Campaña"));
+				data.add(new Campania("17/18"));//TODO obtener el anio actual y armar 16/17
 			}
 			SmartTableView<Campania> table = new SmartTableView<Campania>(data);//,data);
 			table.setEditable(true);
@@ -3649,6 +3622,38 @@ public class JFXMain extends Application {
 			tablaStage.show();	 
 		});	
 	}
+	
+	private void doConfigNdvi() {
+		Platform.runLater(()->{
+			final ObservableList<Ndvi> data =
+					FXCollections.observableArrayList(
+							DAH.getAllNdvi()
+							);
+
+			SmartTableView<Ndvi> table = new SmartTableView<Ndvi>(data);
+			table.setEditable(true);
+//			table.setOnDoubleClick(()->new Poligono());
+			table.setOnShowClick((ndvi)->{
+				//poli.setActivo(true);
+				doShowNDVI(ndvi);
+		
+			});
+		
+
+			Scene scene = new Scene(table, 800, 600);
+			Stage tablaStage = new Stage();
+			tablaStage.getIcons().add(new Image(JFXMain.ICON));
+			tablaStage.setTitle("Ndvi");
+			tablaStage.setScene(scene);
+			
+			tablaStage.onHiddenProperty().addListener((o,old,n)->{
+				this.getLayerPanel().update(this.getWwd());
+				//getWwd().redraw();
+			});
+		
+			tablaStage.show();	 
+		});	
+	}
 
 	private void doConfigEstablecimiento() {
 		Platform.runLater(()->{
@@ -3657,6 +3662,10 @@ public class JFXMain extends Application {
 					FXCollections.observableArrayList(
 							DAH.getAllEstablecimientos()
 							);
+			if(data.size()<1){
+				data.add(new Establecimiento());
+			}
+			
 			SmartTableView<Establecimiento> table = new SmartTableView<Establecimiento>(data);//,data);
 			table.setEditable(true);
 			table.setOnDoubleClick(()->new Establecimiento("Nuevo Establecimiento"));
@@ -3678,6 +3687,9 @@ public class JFXMain extends Application {
 					FXCollections.observableArrayList(
 							DAH.getAllLotes()
 							);
+			if(data.size()<1){
+				data.add(new Lote());
+			}
 			SmartTableView<Lote> table = new SmartTableView<Lote>(data);//,data);
 			table.setEditable(true);
 			table.setOnDoubleClick(()->new Lote("Nuevo Lote"));
@@ -3699,6 +3711,9 @@ public class JFXMain extends Application {
 					FXCollections.observableArrayList(
 							DAH.getAllEmpresas()
 							);
+			if(data.size()<1){
+				data.add(new Empresa());
+			}
 			SmartTableView<Empresa> table = new SmartTableView<Empresa>(data);//,data);
 			table.setEditable(true);
 			table.setOnDoubleClick(()->new Empresa("Nueva Empresa"));

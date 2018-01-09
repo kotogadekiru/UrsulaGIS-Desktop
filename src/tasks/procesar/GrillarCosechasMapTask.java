@@ -71,7 +71,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		
 		
 		
-		labor.getNombreProperty().setValue("grilla cosechas");//este es el nombre que se muestra en el progressbar
+		labor.getNombreProperty().setValue("Grilla cosechas");//este es el nombre que se muestra en el progressbar
 	}
 
 	/**
@@ -100,7 +100,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 				cultivo=c.producto.getValue();
 			}
 			if(nombre == null){
-				nombre="grilla "+c.getNombreProperty().get();	
+				nombre=labor.getNombreProperty()+" "+c.getNombreProperty().get();	
 			}else {
 				nombre+=" - "+c.getNombreProperty().get();
 			}
@@ -271,7 +271,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 			//XXX si es una cosecha de ambientes el area es importante
 						try{
 							g= EnhancedPrecisionOp.intersection(poly,g);
-			//g= poly.intersection(g);
+
 						}catch(Exception e){
 							System.err.println("no se pudo hacer la interseccion entre\n"+poly+"\n y\n"+g);
 						}
@@ -280,12 +280,10 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 			intersecciones.put(cPoly,areaPoly2);
 		
 		}
-		//	System.out.println("area superpuesta = "+areaPoly);
-		//SimpleFeature simpleFeature=null;
+
 		CosechaItem c = null;
-		//		SimpleFeatureBuilder fBuilder = new SimpleFeatureBuilder(
-		//					labor.getType());
-		if(areaPoly>getAreaMinima()){
+
+		if(areaPoly>getAreaMinimaLongLat()){
 			double rindeProm=0,desvioPromedio=0,ancho=0,distancia=0,elev=0,rumbo=0;// , pesos=0;
 			ancho=labor.getConfiguracion().getAnchoGrilla();
 			distancia=ancho;
@@ -342,8 +340,8 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		return Math.pow(cantidad-promedio,2);
 
 	}
-	private double getAreaMinima() {
-		return labor.config.supMinimaProperty().doubleValue()*(ProyectionConstants.metersToLong()*ProyectionConstants.metersToLat());
+	private double getAreaMinimaLongLat() {
+		return labor.config.supMinimaProperty().doubleValue()*ProyectionConstants.metersToLong()*ProyectionConstants.metersToLat();
 	}
 
 	/**

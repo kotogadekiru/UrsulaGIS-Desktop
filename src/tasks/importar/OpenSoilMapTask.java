@@ -103,7 +103,8 @@ public class OpenSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		DecimalFormat df = new DecimalFormat("#.00");
 		String tooltipText = new String(
-				 " PpmFosforo/Ha: "+ df.format(si.getPpmP()) +"\n"
+				" Fosforo: "+ df.format(si.getPpmP()) +"Ppm\n"
+				+"Nitrogeno: "+ df.format(si.getPpmN()) +"Ppm\n"
 		);
 
 		if(area<1){

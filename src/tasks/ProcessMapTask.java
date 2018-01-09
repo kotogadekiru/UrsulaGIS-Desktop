@@ -251,7 +251,9 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 
 
-			}				
+			} else {
+				System.err.println("tratando de crear un extruded poligon sin un poligono");
+			}
 		}//termine de recorrer el multipoligono
 
 		return renderablePolygon;
@@ -715,7 +717,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			//si es una capa de puntos lo cambio por una capa de cuadrados de lado 5mts
 			Point p = (Point) geometry;
 			GeometryFactory fact = p.getFactory();
-			Double r = 5*ProyectionConstants.metersToLat();
+			Double r = 100*ProyectionConstants.metersToLat();
 
 			Coordinate D = new Coordinate(p.getX() - r , p.getY() + r ); // x-l-d
 			Coordinate C = new Coordinate(p.getX() + r , p.getY()+ r);// X+l-d
@@ -758,9 +760,14 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 			//TODO aproximar el envelope con un rectangulo
 			//arribaIzq es la coordenada x,y del que tenga max y? 
-
-			Point centroid = g.getCentroid();//si la geometria es grande esto falla?
-
+			Point centroid =null;
+			if(g instanceof Point){
+				centroid =(Point) g;
+			}else{
+				centroid = g.getCentroid();//si la geometria es grande esto falla?
+			}
+			
+System.out.println("actializando las estadisticas con "+centroid);
 
 			if(labor.minX==null || labor.minX.getLongitude().degrees>centroid.getX()){
 				labor.minX=Position.fromDegrees(centroid.getY(), centroid.getX());
@@ -843,6 +850,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	}
 
 	private RenderableLayer createExtrudedPolygonsLayer(Collection<FC> itemsToShow) {	
+		System.out.println("createExtrudedPolygonsLayer "+itemsToShow );
 		//this.pathTooltips.clear();
 		//labor.getLayer().removeAllRenderables();
 		//labor.getLayer().setPickEnabled(false);//evita que se muestre el tooltip
@@ -931,9 +939,37 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 				List<FC> features = labor.cachedOutStoreQuery(env);
 				//System.out.println("los features en vista son "+features.size());
+				System.out.println("analizando las features en render create extruded polygon");
 				features.stream().forEach((c)->{
 					Geometry g = c.getGeometry();
-					if(g instanceof Polygon){
+					if(g instanceof Point){
+						System.out.println("creando un marker para "+g);
+						Point center =(Point)g;
+//						double d = ProyectionConstants.metersToLongLat(5);//construyo un rectangulo de 10x10 al rededor del punto
+//						Coordinate D = new Coordinate(center.getX()-d, center.getX()+d); 
+//						Coordinate C = new Coordinate(center.getX()+d, center.getX()+d); 
+//						Coordinate B = new Coordinate(center.getX()+d, center.getX()-d); 
+//						Coordinate A = new Coordinate(center.getX()-d, center.getX()-d); 
+//
+//						
+//				System.out.println("creando un poligono para un punto de ProcessMapTask");
+//						Coordinate[] coordinates = { A, B, C, D, A };// Tiene que ser cerrado.		
+						try{
+					//	Polygon p = g.getFactory().createPolygon(coordinates);
+						
+						//gov.nasa.worldwind.render.ExtrudedPolygon extPoly=	getPathTooltip(p,c);
+						Position pointPosition = Position.fromDegrees(
+								center.getY(),center.getX());
+						
+						PointPlacemark pmStandard = new PointPlacemark(pointPosition);
+						labor.getLayer().addRenderable(pmStandard);
+						//	System.out.println("dibujando "+extPoly);
+						//if(extPoly!=null)this.addRenderable(extPoly);//extPoly.render(dc);
+						}catch(Exception e){
+							System.out.println("error al tratar de contruir un poligono desde un punto");
+							e.printStackTrace();
+						}
+					} else if(g instanceof Polygon){
 
 						gov.nasa.worldwind.render.ExtrudedPolygon extPoly=	getPathTooltip((Polygon)g,c);
 					//	System.out.println("dibujando "+extPoly);

@@ -16,7 +16,7 @@ import lombok.Data;
 //o Profundidad máxima de exploración radicular
 
 @Data
-public class SueloItem extends LaborItem {
+public class SueloItem extends LaborItem { //suelo item no es labor item. le sobra: rumbo, ancho y distancia
 	public static final String PPM_N = "PPM N";
 	public static final String PPM_FOSFORO = "PPM P";
 	public static final String PPM_POTASIO= "PPM K";
@@ -39,7 +39,7 @@ public class SueloItem extends LaborItem {
 	/*La profundidad en cm hasta la napa*/
 	private Double profNapa=new Double(0);	
 	private Double aguaPerfil=new Double(0);	
-	//private Double elevacion=new Double(0);	elevacion la hereda de LaborItem
+
 	
 	public SueloItem(SimpleFeature fertFeature) {
 		super(fertFeature);

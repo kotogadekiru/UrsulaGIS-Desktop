@@ -2,8 +2,11 @@ package dao;
 
 
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
+//import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import javax.persistence.Access;
 import javax.persistence.Entity;
@@ -27,6 +30,9 @@ import lombok.Data;
 	@NamedQuery(name=Poligono.FIND_ACTIVOS, query="SELECT o FROM Poligono o where o.activo = true") ,
 }) 
 public class Poligono {
+	private static final String COORDINATE_CLOSE = "}";
+	private static final String COORDINATE_OPEN = "{";
+	private static final String COORDITANTE_SEPARATOR = ",";
 	public static final String FIND_ALL="Poligono.findAll";
 	public static final String FIND_NAME = "Poligono.findName";
 	public static final String FIND_ACTIVOS = "Poligono.findActivos";
@@ -46,9 +52,19 @@ public class Poligono {
 	private Layer layer =null;
 	
 
-	private static DecimalFormat lonLatFormat = new DecimalFormat("0.00000000");
+	private static DecimalFormat lonLatFormat = null;
+	static {
+		NumberFormat nf = NumberFormat.getNumberInstance(Locale.ENGLISH);
+		lonLatFormat = (DecimalFormat)nf;
+		//lonLatFormat = new DecimalFormat("#0.00000000;-#0.00000000");
+		System.out.println("inicializando lonLanFormat");
+		lonLatFormat.getDecimalFormatSymbols().setDecimalSeparator('.');
+		lonLatFormat.getDecimalFormatSymbols().setGroupingSeparator(',');
+		lonLatFormat.setMinimumFractionDigits(8);
+	}
 	
 	public Poligono(){
+	
 		//this.setPositionsString("{{-35.462175934426305,-61.5357421901391}{-35.462175934426305,-61.5357421901391}{-35.5221036194563,-61.54692846191018}{-35.51801142905433,-61.48036800329617}{-35.462175934426305,-61.5357421901391}}");
 	}
 	
@@ -59,7 +75,7 @@ public class Poligono {
 	
 	public String getPositionsString(){
 		StringBuilder sb = new StringBuilder();
-		sb.append("{");
+		sb.append(COORDINATE_OPEN);
 		for(Position p:positions){
 			Double dLat = p.getLatitude().degrees;
 			Double dLon= p.getLongitude().degrees;
@@ -69,10 +85,13 @@ public class Poligono {
 //			if(!sLon.equals(dLon.toString())){
 //				System.out.println("hubo un error al serializar el poligono! "+sLon+ " != "+dLon);
 //			}
-			sb.append("{"+sLat+","+sLon+"}");
+			String s = COORDINATE_OPEN+sLat+COORDITANTE_SEPARATOR+sLon+COORDINATE_CLOSE;
+			sb.append(s);// {-33,00000000,91375176,00000000}
+		//	System.out.println("agregando al double de positions => "+ COORDINATE_OPEN+dLat+COORDITANTE_SEPARATOR+dLon+COORDINATE_CLOSE);
+		//	System.out.println("agregando al string de positions => "+ s);
 			
 		}
-		sb.append("}");
+		sb.append(COORDINATE_CLOSE);
 		positionsString=sb.toString();
 		//System.out.println(positionsString);
 		return positionsString;
@@ -81,12 +100,12 @@ public class Poligono {
 	public void setPositionsString(String s){
 		positions.clear();
 		try{
-		positionsString=s.substring(1, s.length()-2);//descarto el primer { y el ultimo }
+		positionsString=s.substring(1, s.length()-2);//descarto el primer "{" y el ultimo "}"
 		String[] parts = s.split("\\{");
 		for (int i = 0; i < parts.length; i++) {
 			String p = parts[i];
-			if(p.contains(",")){
-			String[] latlon = p.substring(0,p.length()-2).split(",");
+			if(p.contains(COORDITANTE_SEPARATOR)){
+			String[] latlon = p.substring(0,p.length()-2).split(COORDITANTE_SEPARATOR);
 			String lat = latlon[0];
 			String lon = latlon[1];
 			try{
@@ -100,7 +119,7 @@ public class Poligono {
 			Position pos = Position.fromDegrees(dLat,dLon);
 			positions.add(pos);
 			}catch(Exception e){
-				System.out.println("error al desserializar el poligono");
+				System.out.println("error al des serializar el poligono");
 				e.printStackTrace();
 			}
 			}

@@ -18,6 +18,7 @@ import javax.persistence.Transient;
 
 import org.geotools.data.DataUtilities;
 import org.geotools.data.FileDataStore;
+import org.geotools.data.ServiceInfo;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.factory.CommonFactoryFinder;
@@ -333,6 +334,16 @@ public abstract class Labor<E extends LaborItem>  {
 		}
 		if(inStore !=null){
 			this.inStore = inStore;
+			ServiceInfo info = inStore.getInfo();
+			System.out.println("labor inStore.info = "+info );
+			try {
+				SimpleFeatureType schema = inStore.getSchema();
+				System.out.println("Prescription Type: "+DataUtilities.spec(schema));
+				System.out.println(schema);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
 			//	if(nombreProperty.getValue() == null){
 			nombreProperty.set(inStore.getInfo().getTitle().replaceAll("%20", " "));

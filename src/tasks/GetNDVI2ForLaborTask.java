@@ -117,7 +117,7 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 //			cal.roll(Calendar.YEAR, -1);
 //		}
 		cal.add(Calendar.MONTH, -1);//busco la fecha de un mes atras no usar roll porque no me cambia el anio
-		
+		//cal.add(Calendar.WEEK_OF_MONTH, -1);
 		String sBegin = format1.format(cal.getTime());//cal.get(Calendar.YEAR)+"-"+cal.get(Calendar.MONTH)+"-"+cal.get(Calendar.DAY_OF_MONTH);
 		System.out.println("buscando los ndvi entre "+sBegin+" y "+sEnd);
 
@@ -146,6 +146,7 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 
 	private String parseAssetsData(GenericJson content){//data.get("features")
 		List<String> assets = new ArrayList<String>();
+		List<String> assetDates = new ArrayList<String>();
 		StringBuilder sb = new StringBuilder();
 		sb.append("[");
 	
@@ -156,8 +157,15 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 			for(Object featureMap:(List)features ){
 				if(featureMap instanceof Map){
 					String asset = (String)((Map)featureMap).get(ID);
+					String assetDate =  getAssetDate(asset);
+					System.out.println("agregando el asset id para el date "+assetDate);
+					if(assetDates.contains(assetDate)) continue;
+					//TODO eliminar los assets con fechas que ya tengo
+					//XXX tengo la fecha pero no tengo esa posicion
+					assetDates.add(assetDate);
 					assets.add(asset);
 					sb.append("\""+asset+"\",");
+					
 				}
 			}
 		}
@@ -167,13 +175,23 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 		return sb.toString();
 
 	}
+	
+	public String getAssetDate(String assetID){
+		String assetDate=assetID;
+		if(assetID.contains("COPERNICUS/S2/")){
+			assetID=assetID.replace("COPERNICUS/S2/", "");
+			assetDate=assetID.substring(0, "20170328".length());
+			
+		}
+		return assetDate;
+	}
 
 
 	private List<File> getNdwiTiffFiles(Object labor){
 		updateProgress(0, 3);
 		String polygons = getPolygonsFromLabor(labor);		
 		String assets = getSentinellAssets(labor);
-		
+		//FIXME si hay muchos assets se cuelga heroku?
 		System.out.println("asset obtenido ="+assets);
 		System.out.println("llamando geeHelper con polygons= "+polygons);
 		GenericUrl url = new GenericUrl(HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDWI);// "http://www.lanacion.com.ar");
@@ -186,7 +204,7 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 assets=["COPERNICUS/S2/20161221T141042_20161221T142209_T20HLG"]
 polygons=[[[[-64.69101905822754,-34.860017354204885],[-64.69058990478516,-34.86705989785682],[-64.67016220092773,-34.86515847050267],[-64.67265129089355,-34.86198932721536]]]]
 		 */
-
+ System.out.println("calling url: "+url);
 		HttpResponse response = makeRequest(url);
 
 		try {
@@ -309,11 +327,13 @@ polygons=[[[[-64.69101905822754,-34.860017354204885],[-64.69058990478516,-34.867
 					@Override
 					public void initialize(HttpRequest request) {
 						request.setParser(new JsonObjectParser(JSON_FACTORY));
+						request.setReadTimeout(0);
 					}
 				});
 
 		try {
 			HttpRequest request = requestFactory.buildGetRequest(url);
+			
 			response= request.execute();
 		} catch (Exception e) {
 			Platform.runLater(()->{

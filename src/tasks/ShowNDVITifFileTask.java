@@ -4,7 +4,9 @@ import java.awt.Point;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.Format;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import dao.Clasificador;
 import dao.Labor;
@@ -72,6 +74,8 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 						+"-"+fileName.substring("2017".length(), "201703".length())
 						+"-"+fileName.substring(0, "2017".length());
 			}
+			//en este punto fileName tiene la fecha en formato 20170328 es decir YYMMdd
+			String fechaString = new String (fileName);
 
 			if(ownerPoli !=null){
 				fileName = ownerPoli.getNombre() +" "+ fileName;
@@ -193,7 +197,17 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 			Ndvi ndvi = new Ndvi();
 			ndvi.setNombre(fileName);
 			ndvi.setSurfaceLayer(surface);
+			ndvi.setF(file);
 			ndvi.setPixelArea(pixelArea);//pixelArea);
+			//04-01-2018
+			SimpleDateFormat format1 = new SimpleDateFormat("dd-MM-yyyy");
+			//System.out.println("convirtiendo fechaString "+fechaString);
+			//convirtiendo fechaString 04-01-2018
+			Date fecha = format1.parse(fechaString);
+			// creando un ndvi con fecha
+			//System.out.println("creando un ndvi con fecha "+fecha);
+			//creando un ndvi con fecha Thu Jan 04 00:00:00 ART 2018
+			ndvi.setFecha(fecha);
 			layer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, ndvi);
 			layer.setValue(ProcessMapTask.ZOOM_TO_KEY, pointPosition);		
 			
@@ -248,6 +262,7 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 		try{
 			// Before reading the raster, verify that the file contains elevations.
 			AVList metadata = reader.readMetadata(file, null);
+			//metadata.setValue(AVKE, value)
 			if (metadata == null || !AVKey.ELEVATION.equals(metadata.getStringValue(AVKey.PIXEL_FORMAT)))
 			{
 				Platform.runLater(()->{

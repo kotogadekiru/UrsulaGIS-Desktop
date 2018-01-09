@@ -2,44 +2,33 @@ package gui.nww;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
 import dao.Labor;
+import dao.Ndvi;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
-import dao.margen.Margen;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.WorldWindow;
 import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import javafx.application.Platform;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.Property;
 import javafx.beans.property.ReadOnlyDoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.CheckBoxTreeItem;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.MultipleSelectionModel;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.cell.CheckBoxTreeCell;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.Border;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.BorderStroke;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -163,18 +152,19 @@ public class LayerPanel extends VBox {
 			final CheckBoxTreeItem<Layer> checkBoxTreeItem = new CheckBoxTreeItem<Layer>(layer);
 
 			Object value = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			//TODO crear un map que mantenga la configuracion del usuario respecto de que ramas estan expandidas
 			if(value != null && value instanceof CosechaLabor){				
 				cosechasItem.getChildren().add(checkBoxTreeItem);
-				cosechasItem.setExpanded(true);
+			//	cosechasItem.setExpanded(true);
 			}else if(value != null && value instanceof SiembraLabor){				
 				siembrasItem.getChildren().add(checkBoxTreeItem);
-				siembrasItem.setExpanded(true);
+			//	siembrasItem.setExpanded(true);
 			}else if(value != null && value instanceof PulverizacionLabor){				
 				pulverizacionesItem.getChildren().add(checkBoxTreeItem);
-				pulverizacionesItem.setExpanded(true);
+			//	pulverizacionesItem.setExpanded(true);
 			}else if(value != null && value instanceof FertilizacionLabor){				
 				fertilizacionestItem.getChildren().add(checkBoxTreeItem);
-				fertilizacionestItem.setExpanded(true);
+			//	fertilizacionestItem.setExpanded(true);
 //			}else if(value != null && value instanceof Margen){				
 //					margenesItem.getChildren().add(checkBoxTreeItem);
 //					margenesItem.setExpanded(true);
@@ -202,7 +192,7 @@ public class LayerPanel extends VBox {
 					RenderableLayer rootLayer = new RenderableLayer();
 					rootLayer.setName(rootItemName);
 					knownItem = new CheckBoxTreeItem<Layer>(rootLayer);
-					knownItem.setExpanded(true);
+				//	knownItem.setExpanded(true);
 					rootItem.getChildren().add(knownItem);
 				}
 				
@@ -230,20 +220,37 @@ public class LayerPanel extends VBox {
 		
 		for(TreeItem<Layer> item : rootItem.getChildren()){
 		try{ item.getChildren().sort((c1,c2)->{
+			//fijarse si es de tipo ndvi
+			Object labor1 = c1.getValue().getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			Object labor2 = c2.getValue().getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+
 			String l1Name =c1.getValue().getName();
 			String l2Name =c2.getValue().getName();
-			//TODO comparar por el valor del layer en vez del nombre del layer
-			DateFormat df =new  SimpleDateFormat("dd-MM-yyyy");
 			
-			try{
-				Date d1 = df.parse(l1Name);
-				Date d2 = df.parse(l2Name);
-				return d1.compareTo(d2);
-			} catch(Exception e){
-				//no se pudo parsear como fecha entonces lo interpreto como string.
-				//e.printStackTrace();
-			}
+			if(labor1 != null && labor1 instanceof Ndvi && 
+					labor2 != null && labor2 instanceof Ndvi &&
+					l1Name.startsWith(l2Name.substring(0, l2Name.length()-"02-01-2018".length()))){
+				Date fecha1 = ((Ndvi)labor1).getFecha();
+				Date fecha2 = ((Ndvi)labor2).getFecha();
+				return fecha1.compareTo(fecha2);
+				
+			} else {
+			
+			
+			
+//			//TODO comparar por el valor del layer en vez del nombre del layer
+//			DateFormat df =new  SimpleDateFormat("dd-MM-yyyy");
+//			
+//			try{
+//				Date d1 = df.parse(l1Name);
+//				Date d2 = df.parse(l2Name);
+//				return d1.compareTo(d2);
+//			} catch(Exception e){
+//				//no se pudo parsear como fecha entonces lo interpreto como string.
+//				//e.printStackTrace();
+//			}
 			return l1Name.compareTo(l2Name);
+			}
 		});
 		}catch(Exception e){
 			e.printStackTrace();

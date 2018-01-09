@@ -16,6 +16,7 @@ import org.eclipse.persistence.config.TargetServer;
 
 import static org.eclipse.persistence.config.PersistenceUnitProperties.*;
 
+import dao.Ndvi;
 import dao.Poligono;
 import dao.config.Agroquimico;
 import dao.config.Campania;
@@ -30,7 +31,7 @@ import dao.config.Semilla;
 public class DAH {
 	private static final String APPDATA = "APPDATA";
 	private static final String OBJECTDB_DB_URSULAGIS_ODB = "$ursulaGIS.odb";
-	private static final String SQLITE_DB_URSULAGIS_DB = "ursulaGIS";//mv.db
+	private static final String H2_URSULAGIS_DB = "ursulaGIS.h2";//mv.db
 	//private static final String OBJECTDB_DB_MONITORES_H2 = "$ursulaGIS.odb";
 //	private static final String SQLLITE_PU = "UrsulaGIS";
 	private static EntityManager em = null;
@@ -72,7 +73,7 @@ public class DAH {
 			 */
 			String currentUsersHomeDir =System.getenv(APPDATA);
 			String ursulaGISFolder = currentUsersHomeDir + File.separator + Configuracion.URSULA_GIS_APPDATA_FOLDER;
-			String  db_url = ursulaGISFolder + File.separator + SQLITE_DB_URSULAGIS_DB;		
+			String  db_url = ursulaGISFolder + File.separator + H2_URSULAGIS_DB;		
 			
 			File sqliteDBFile=new File(db_url);
 			if(!sqliteDBFile.exists()){
@@ -253,6 +254,14 @@ public class DAH {
 		  TypedQuery<Poligono> query =
 				  em().createNamedQuery(Poligono.FIND_ALL, Poligono.class);
 			  List<Poligono> results = query.getResultList();
+			//  closeEm();
+		return results;
+	}
+	
+	public static List<Ndvi> getAllNdvi() {
+		  TypedQuery<Ndvi> query =
+				  em().createNamedQuery(Ndvi.FIND_ALL, Ndvi.class);
+			  List<Ndvi> results = query.getResultList();
 			//  closeEm();
 		return results;
 	}

@@ -20,7 +20,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Data;
 @Data
-@Entity @Access(AccessType.PROPERTY)
+@Entity //@Access(AccessType.PROPERTY)
 @NamedQueries({
 	@NamedQuery(name=Semilla.FIND_ALL, query="SELECT o FROM Semilla o") ,
 	@NamedQuery(name=Semilla.FIND_NAME, query="SELECT o FROM Semilla o where o.nombre = :name") ,
@@ -33,12 +33,15 @@ public class Semilla {
 	public static final String SEMILLA_DE_SOJA = "Semilla de Soja";
 	public static final String SEMILLA_DE_MAIZ = "Semilla de Maiz";
 	
-	
+	@Id @GeneratedValue
 	private long id;
-	@Transient
-	private StringProperty nombre = new SimpleStringProperty();
-	@Transient
-	private Property<Cultivo> productoProperty=new SimpleObjectProperty<Cultivo>();//values().iterator().next());;
+	private String nombre = new String();
+	
+	@ManyToOne(cascade=CascadeType.PERSIST)
+	private Cultivo cultivo = null;
+	
+	//@Transient
+	//private Property<Cultivo> productoProperty=new SimpleObjectProperty<Cultivo>();//values().iterator().next());;
 
 	public static Map<String,Semilla> semillas = new HashMap<String,Semilla>();
 	static{																		
@@ -52,14 +55,15 @@ public class Semilla {
 	}
 	
 	public Semilla(String _nombre, Cultivo producto) {
-		nombre.set(_nombre);
-		productoProperty.setValue(producto);
+		nombre=_nombre;
+		cultivo=producto;
+		//productoProperty.setValue(producto);
 	}
 
 	/**
 	 * @return the id
 	 */
-	@Id @GeneratedValue
+	
 	public long getId() {
 		return id;
 	}
@@ -71,47 +75,47 @@ public class Semilla {
 		this.id = id;
 	}
 	
-	public String getNombre(){
-		return this.nombre.get();
-	}
+//	public String getNombre(){
+//		return this.nombre.get();
+//	}
+//
+//	public void setNombre(String n){
+//		this.nombre.set(n);
+//	}
 
-	public void setNombre(String n){
-		this.nombre.set(n);
-	}
-
-	@ManyToOne(cascade=CascadeType.PERSIST)
-	public Cultivo getCultivo(){
+	
+/*	public Cultivo getCultivo(){
 		return this.productoProperty.getValue();
 	}
 
 	public void setCultivo(Cultivo cultivo){
 		if(cultivo != null)
 			this.productoProperty.setValue(cultivo);
-	}
+	}*/
 
 	/**
 	 * @return the nombre
 	 */
-	@Transient
-	public StringProperty getNombreProperty() {
-		return nombre;
-	}
-
-	/**
-	 * @param nombre the nombre to set
-	 */
-
-	public void setNombreProperty(StringProperty nombre) {
-		this.nombre = nombre;
-	}
+//	@Transient
+//	public StringProperty getNombreProperty() {
+//		return nombre;
+//	}
+//
+//	/**
+//	 * @param nombre the nombre to set
+//	 */
+//
+//	public void setNombreProperty(StringProperty nombre) {
+//		this.nombre = nombre;
+//	}
 	
-	@Transient
-	public Property<Cultivo> getProductoPorperty(){
-		return this.productoProperty;
-	}
+//	@Transient
+//	public Property<Cultivo> getProductoPorperty(){
+//		return this.productoProperty;
+//	}
 
 	@Override
 	public String toString() {
-		return nombre.getValue();
+		return nombre;
 	}
 }

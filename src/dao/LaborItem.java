@@ -54,6 +54,7 @@ public abstract class LaborItem implements Comparable<Object>{
 				return;
 			}
 		}
+		//System.out.println("seteando una geometria en LaborItem "+geom);
 		this.geometry = geom;
 
 	}
@@ -239,6 +240,8 @@ public abstract class LaborItem implements Comparable<Object>{
 			completeElements[i+basicElements.length]=
 					specialElements[i];
 		}
+		
+		
 		synchronized(featureBuilder){
 			try{
 				featureBuilder.addAll(completeElements);
