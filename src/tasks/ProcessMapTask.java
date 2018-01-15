@@ -12,12 +12,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.media.opengl.GL2;
 
 import org.geotools.data.shapefile.shp.JTSUtilities;
 import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.opengis.geometry.BoundingBox;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.jogamp.common.nio.Buffers;
@@ -62,6 +67,7 @@ import gov.nasa.worldwindx.examples.analytics.AnalyticSurface.GridPointAttribute
 import gov.nasa.worldwindx.examples.analytics.AnalyticSurfaceAttributes;
 import gov.nasa.worldwindx.examples.analytics.AnalyticSurfaceLegend;
 import gov.nasa.worldwindx.examples.analytics.ExportableAnalyticSurface;
+import gui.JFXMain;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.scene.control.Button;
@@ -76,6 +82,7 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
+import tasks.procesar.GrillarCosechasMapTask;
 import utils.PolygonValidator;
 import utils.ProyectionConstants;
 //import org.opengis.filter.FilterFactory2;
@@ -566,7 +573,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 				int n = indexItems.size();
 				Color color = labor.getClasificador().getColorFor(amount/n);
-				float 	r=(float) color.getRed();//0.99607843
+				float r=(float) color.getRed();//0.99607843
 				float g=(float) color.getGreen();
 				float b=(float) color.getBlue();
 				java.awt.Color rgbaColor = new java.awt.Color(r,g,b,1);//IllegalArgumentException - if r, g b or a are outside of the range 0.0 to 1.0, inclusive
@@ -640,6 +647,222 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		return layer;
 	}
 
+	
+	/*
+	 * metodo que toma una lista de Features y los convierte a puntos en una superficie analitica para mostrar en la pantalla
+	 */
+	private RenderableLayer createAnalyticSurfaceFromQuery(int segs){		
+		ReferencedEnvelope bounds = labor.outCollection.getBounds();
+		double res=  Math.sqrt(bounds.getArea()/(segs*10000));
+		double	resolution =res;// Math.sqrt(bounds.getArea()/40000)>1?;//como el tiempo por item es 0.1 limito el tiempo de rendering a 2seg
+		double	ancho = resolution / ProyectionConstants.metersToLong();
+	//	System.out.println("ancho "+ancho);
+		double minX = bounds.getMinX();
+		double minY = bounds.getMinY();
+		double maxX = bounds.getMaxX();
+		double maxY = bounds.getMaxY();
+
+		System.out.println("creando analyticSurface con segs="+segs);
+
+		Double maxElev = labor.maxElev;
+		Double minElev = labor.minElev;
+
+		int offset = 3;//para que quede un lugar a cada lado mas el desplazamiento
+		int width=(int) ((maxX-minX)/resolution)+offset;
+		int height=(int) ((maxY-minY)/resolution)+offset;
+		int maxIndex =  width*height;
+		
+		AnalyticSurface.GridPointAttributes transparent  =  AnalyticSurface.createGridPointAttributes(0, new java.awt.Color(0,0,0,0));
+		LinkedList<AnalyticSurface.GridPointAttributes> attributesList = new LinkedList<AnalyticSurface.GridPointAttributes>();
+		for(int i = 0;i<maxIndex;i++){
+			attributesList.add(transparent);
+		}
+		
+		ReferencedEnvelope unionEnvelope = labor.outCollection.getBounds();
+		
+		Consumer<Polygon> polygonConsumer = new Consumer<Polygon>(){
+
+			@Override
+			public void accept(Polygon p) {
+				Point center = p.getCentroid();
+				Coordinate coord = center.getCoordinate();
+				//calculo el indice en el que tiene que ir el nuevo dato
+				int col= (int)((coord.x-minX) / resolution)+1;
+				int fila = (int)((-coord.y+maxY) / resolution)+1;
+				int index = (col+fila*width);//index me da negativo
+				
+				//if(index>=maxIndex)return;
+				 Envelope envelope = p.getEnvelopeInternal();
+				//envelope.expandBy(2*resolution);//esto me trae algunos problemas 
+				List<FC> fueaturesToAdd = labor.cachedOutStoreQuery(envelope);
+				//promediar
+				GridPointAttributes newGridPoint  = transparent;
+				if(fueaturesToAdd!=null && fueaturesToAdd.size()>0){
+					//float r =0,g = 0,b=0,
+					float elev=0;
+					double amount=0;
+					for(FC it : fueaturesToAdd){
+						elev+= it.getElevacion()-minElev;
+						amount+=it.getAmount();
+					}
+
+					int n = fueaturesToAdd.size();
+					Color color = labor.getClasificador().getColorFor(amount/n);
+					float r=(float) color.getRed();//0.99607843
+					float g=(float) color.getGreen();
+					float b=(float) color.getBlue();
+					java.awt.Color rgbaColor = new java.awt.Color(r,g,b,1);//IllegalArgumentException - if r, g b or a are outside of the range 0.0 to 1.0, inclusive
+					newGridPoint  =  AnalyticSurface.createGridPointAttributes(elev/n, rgbaColor);
+				} else {
+					//System.out.println("no hay features para fila,columna= "+fila+","+col);
+				}
+				//	System.out.println("agregando el elemento "+index);
+//				if(index>=attributesList.size()){
+//					System.out.println("index="+index+" es mas grande que size="+attributesList.size());
+//					for(int i = attributesList.size();index>=i;i++){
+//						attributesList.add(i,transparent);
+//					}
+//				}
+				
+				
+				try{
+					attributesList.set(index,newGridPoint);				
+				}catch(Exception e){
+					System.out.println("excepcion tratando de agregar el index "+index+" size="+attributesList.size());
+					//e.printStackTrace();
+				}
+			}
+			
+		};
+		//long time = System.currentTimeMillis();
+		construirGrilla(unionEnvelope, ancho,polygonConsumer);
+		
+		//System.out.println("columnas sin datos: "+cols.toString());
+		//System.out.println("tarde "+(System.currentTimeMillis()-time)+" en crear la grilla");
+
+		//System.out.println("termine de crear attributesList con size = "+attributesList.size());
+		/*   creo la superficie  */
+		AnalyticSurfaceAttributes attr = new AnalyticSurfaceAttributes();
+		attr.setDrawOutline(false);
+		attr.setDrawShadow(false);
+		attr.setInteriorOpacity(1);
+
+		final ExportableAnalyticSurface surface = new ExportableAnalyticSurface();
+		Sector sector = Sector.fromDegrees(
+				minY,maxY,minX,maxX);//+/- 90 degrees latitude
+		surface.setSector(sector);
+		surface.setDimensions((int)width ,(int)  height );
+
+
+		//		Material material = new Material(java.awt.Color.blue);		
+		//		surface.getSurfaceAttributes().setInteriorMaterial(material);
+
+		surface.setValues(attributesList);//.subList(0, width*height));
+		double scale = 	(maxElev)/minElev;
+		surface.setVerticalScale(5/scale);		
+		surface.setSurfaceAttributes(attr);
+		surface.setAltitude(1);
+
+
+		/*   Creo la leyenda   */
+		//	Format legendLabelFormat = new DecimalFormat() ;
+		DecimalFormat legendLabelFormat = new DecimalFormat("0.00");
+		Color colorMin = labor.getClasificador().getColorFor(labor.minAmount);// Clasificador.colors[0];
+		Color colorMax =labor.getClasificador().getColorFor(labor.maxAmount);// Clasificador.colors[Clasificador.colors.length-1];
+		double HUE_MIN = colorMin.getHue()/360d;//0d / 360d;
+		double HUE_MAX = colorMax.getHue()/360d;//240d / 360d;
+
+		final AnalyticSurfaceLegend legend = AnalyticSurfaceLegend.fromColorGradient(
+				labor.minAmount,labor.maxAmount,
+				HUE_MIN, HUE_MAX,
+				AnalyticSurfaceLegend.createDefaultColorGradientLabels(labor.minAmount, labor.maxAmount, legendLabelFormat),
+				AnalyticSurfaceLegend.createDefaultTitle(labor.getNombreProperty().get()));
+		legend.setOpacity(1);
+		legend.setScreenLocation(new java.awt.Point(100, 400));
+
+		Renderable legendRenderable =  new Renderable()	{
+			public void render(DrawContext dc){
+				Extent extent = surface.getExtent(dc);
+				if (!extent.intersects(dc.getView().getFrustumInModelCoordinates()))
+					return;
+				//TODO usar esto para cambiar entre el rendering de analitic surface y Polygons
+				if (WWMath.computeSizeInWindowCoordinates(dc, extent) < 300)//limite de elevacion
+					return;
+				legend.render(dc);
+			}
+		};
+
+
+		//RenderableLayer layer = new RenderableLayer();
+		SurfaceImageLayer layer = new SurfaceImageLayer();
+		layer.addRenderable(surface);
+		layer.addRenderable(legendRenderable);
+		layer.setPickEnabled(false);
+
+		return layer;
+	}
+	
+	/**
+	 * 
+	 * @param bounds en long/lat
+	 * @param ancho en metros
+	 * @return una lista de poligonos que representa una grilla con un 100% de superposiocion
+	 */
+	public static void construirGrilla(BoundingBox bounds,double ancho,Consumer<Polygon> lambda) {
+		System.out.println("construyendo grilla");
+		//List<Polygon> polygons = new ArrayList<Polygon>();
+		//convierte los bounds de longlat a metros
+		Double minX = bounds.getMinX()/ProyectionConstants.metersToLong();
+		Double minY = bounds.getMinY()/ProyectionConstants.metersToLat();
+		Double maxX = bounds.getMaxX()/ProyectionConstants.metersToLong();
+		Double maxY = bounds.getMaxY()/ProyectionConstants.metersToLat();
+		Double x0=minX;
+		
+		ExecutorService executorPool = Executors.newCachedThreadPool();
+		
+		for(int x=0;(x0)<maxX;x++){
+			x0=minX+x*ancho;
+			Double x1=minX+(x+1)*ancho;
+			for(int y=0;(minY+y*ancho)<maxY;y++){
+				Double y0=minY+y*ancho;
+				Double y1=minY+(y+1)*ancho;
+
+
+				Coordinate D = new Coordinate(x0*ProyectionConstants.metersToLong(), y0*ProyectionConstants.metersToLat()); 
+				Coordinate C = new Coordinate(x1*ProyectionConstants.metersToLong(), y0*ProyectionConstants.metersToLat());
+				Coordinate B = new Coordinate(x1*ProyectionConstants.metersToLong(), y1*ProyectionConstants.metersToLat());
+				Coordinate A =  new Coordinate(x0*ProyectionConstants.metersToLong(), y1*ProyectionConstants.metersToLat());
+
+				/**
+				 * D-- ancho de carro--C ^ ^ | | avance ^^^^^^^^ avance | | A-- ancho de
+				 * carro--B
+				 * 
+				 */
+				Coordinate[] coordinates = { A, B, C, D, A };// Tiene que ser cerrado.
+				// Empezar y terminar en
+				// el mismo punto.
+				// sentido antihorario
+
+				//			GeometryFactory fact = X.getFactory();
+				GeometryFactory fact = new GeometryFactory();
+
+
+				//				DirectPosition upper = positionFactory.createDirectPosition(new double[]{-180,-90});
+				//				DirectPosition lower = positionFactory.createDirectPosition(new double[]{180,90});
+				//	Envelope envelope = geometryFactory.createEnvelope( upper, lower );
+
+				LinearRing shell = fact.createLinearRing(coordinates);
+				LinearRing[] holes = null;
+				Polygon poly = new Polygon(shell, holes, fact);	
+				//executorPool.execute(()->lambda.accept(poly));
+				lambda.accept(poly);
+				
+				//polygons.add(poly);
+			}
+		}
+		
+	}
+	
 	private List<Position> coordinatesToPositions(Coordinate[] coordinates){
 		ArrayList<Position> positions = new ArrayList<Position>();     
 		for (int i = 0; i < coordinates.length; i++) {
@@ -767,7 +990,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				centroid = g.getCentroid();//si la geometria es grande esto falla?
 			}
 			
-System.out.println("actializando las estadisticas con "+centroid);
+			//System.out.println("actualizando las estadisticas con "+centroid);
 
 			if(labor.minX==null || labor.minX.getLongitude().degrees>centroid.getX()){
 				labor.minX=Position.fromDegrees(centroid.getY(), centroid.getX());
@@ -802,40 +1025,13 @@ System.out.println("actializando las estadisticas con "+centroid);
 		//TODO crear un renderable layer que dibuje el layer de los poligonos si esta suficientemente cerca
 		//o el analyticSurface si esta lejos
 		//if(itemsToShow.size()<10000){
+		//long time = System.currentTimeMillis();
 		RenderableLayer extrudedPolygonsLayer = createExtrudedPolygonsLayer(itemsToShow);//XXX ojo! si son muchos esto me puede tomar toda la memoria.
+		//System.out.println("demora en crear extrudedPolygonsLayer: "+(System.currentTimeMillis()-time));
 		//}else{
-		RenderableLayer analyticSurfaceLayer = createAnalyticSurface(itemsToShow);
-		//}
-
+		//RenderableLayer analyticSurfaceLayer = createAnalyticSurface(itemsToShow);
+		RenderableLayer analyticSurfaceLayer = createAnalyticSurfaceFromQuery(2);
 		analyticSurfaceLayer.setPickEnabled(false);//ya es false de fabrica
-
-		//		RenderableLayer altitudeDependingLayer =  new RenderableLayer(){
-		//			public void render(DrawContext dc){
-		//				if(!this.isEnabled())return;
-		//			//	Extent extent =  Sector.computeBoundingBox(dc.getGlobe(), dc.getVerticalExaggeration(), sector );
-		//				//if (extent.intersects(dc.getView().getCurrentEyePosition().elevation.getFrustumInModelCoordinates()))
-		//				//	return;
-		//
-		//				int screenPixelsSectorMinSize=500;
-		//				double eyeElevation = dc.getView().getCurrentEyePosition().elevation;
-		//				if ( itemsToShow.size()<10000 || eyeElevation < screenPixelsSectorMinSize ){
-		//					//System.out.println("dibujando para screenSize = " +sectorPixelSizeInWindow);
-		//					extrudedPolygonsLayer.setEnabled(true);
-		//					analyticSurfaceLayer.setEnabled(false);
-		//					extrudedPolygonsLayer.render(dc);
-		//					
-		//				}else{
-		//					analyticSurfaceLayer.setEnabled(true);
-		//					//extrudedPolygonsLayer.setEnabled(false);					
-		//					analyticSurfaceLayer.render(dc);					
-		//				}				
-		//			}
-		//			
-		//			@Override
-		//			public void pick(DrawContext dc, java.awt.Point point) {//pick(DrawContext dc, Point p){
-		//				extrudedPolygonsLayer.pick(dc, point);
-		//			}
-		//		};
 
 		labor.getLayer().removeAllRenderables();
 		labor.getLayer().setAnalyticSurfaceLayer(analyticSurfaceLayer);
@@ -847,10 +1043,21 @@ System.out.println("actializando las estadisticas con "+centroid);
 		//labor.getLayer().setPickEnabled(false);//si hago esto no puedo pasar el pick a extrudedPolygonsLayers
 
 		installPlaceMark();
+		JFXMain.executorPool.execute(()->{
+			RenderableLayer analyticSurfaceLayerHD = createAnalyticSurfaceFromQuery(10);
+			analyticSurfaceLayerHD.setPickEnabled(false);//ya es false de fabrica
+			labor.getLayer().setAnalyticSurfaceLayer(analyticSurfaceLayerHD);
+		});
+		JFXMain.executorPool.execute(()->{
+			RenderableLayer analyticSurfaceLayerHD = createAnalyticSurfaceFromQuery(30);
+			analyticSurfaceLayerHD.setPickEnabled(false);//ya es false de fabrica
+			labor.getLayer().setAnalyticSurfaceLayer(analyticSurfaceLayerHD);
+		});
 	}
 
 	private RenderableLayer createExtrudedPolygonsLayer(Collection<FC> itemsToShow) {	
-		System.out.println("createExtrudedPolygonsLayer "+itemsToShow );
+		//long time = System.currentTimeMillis();
+		//System.out.println("createExtrudedPolygonsLayer "+itemsToShow );
 		//this.pathTooltips.clear();
 		//labor.getLayer().removeAllRenderables();
 		//labor.getLayer().setPickEnabled(false);//evita que se muestre el tooltip
@@ -859,10 +1066,11 @@ System.out.println("actializando las estadisticas con "+centroid);
 
 		//		double min=0;
 		//		double max=10000;
-
+		//System.out.println("antes de buscar los colores "+(System.currentTimeMillis()-time));
 		Color colorMin = labor.getClasificador().getColorFor(min);// Clasificador.colors[0];
 		Color colorMax =labor.getClasificador().getColorFor(max);// Clasificador.colors[Clasificador.colors.length-1];
 
+		//System.out.println("creando extrudedP Layer "+(System.currentTimeMillis()-time));
 
 //		int workDone = 0;
 //		for(FC c:itemsToShow){
@@ -922,12 +1130,13 @@ System.out.println("actializando las estadisticas con "+centroid);
 				legend.render(dc);
 			}
 		};
-
+		
+		//System.out.println("antes de crear el layer "+(System.currentTimeMillis()-time)); 
 		//labor.getLayer().addRenderable(analiticLegendrenderable);
 		RenderableLayer layer = new RenderableLayer(){
 			private Sector s = null;
-			public void render(DrawContext dc){
-
+			public void render(DrawContext dc){//no se ejecuta hasta que se muestra el layer. como corresponde
+				//System.out.println("rendering ExtrudedPolygonsLayer");
 //				Position p1 = dc.getView().computePositionFromScreenPoint(0, 0);
 //				Position p2 = dc.getView().computePositionFromScreenPoint(-1920, -1080);
 				Sector visibleSector = dc.getVisibleSector();
@@ -939,11 +1148,11 @@ System.out.println("actializando las estadisticas con "+centroid);
 
 				List<FC> features = labor.cachedOutStoreQuery(env);
 				//System.out.println("los features en vista son "+features.size());
-				System.out.println("analizando las features en render create extruded polygon");
+				//System.out.println("analizando las features en render create extruded polygon");
 				features.stream().forEach((c)->{
 					Geometry g = c.getGeometry();
 					if(g instanceof Point){
-						System.out.println("creando un marker para "+g);
+						//System.out.println("creando un marker para "+g);
 						Point center =(Point)g;
 //						double d = ProyectionConstants.metersToLongLat(5);//construyo un rectangulo de 10x10 al rededor del punto
 //						Coordinate D = new Coordinate(center.getX()-d, center.getX()+d); 
@@ -988,6 +1197,9 @@ System.out.println("actializando las estadisticas con "+centroid);
 					}
 				});//for each feature create renderable
 				
+				} else {
+					//esto se ejecuta cada vez que se mueve el mouse sobre el mapa. es muy util
+					//System.out.println("ProcessMapTask 993: el sector visible no cambio asi que no cambio los renderables");
 				}
 				analiticLegendrenderable.render(dc);
 				this.getRenderables().forEach((r)->r.render(dc));
@@ -1023,7 +1235,11 @@ System.out.println("actializando las estadisticas con "+centroid);
 			pmStandard.setLabelText(labor.nombreProperty.get());
 			pmStandard.setAttributes(pointAttribute);
 			labor.getLayer().addRenderable(pmStandard);
-			labor.getLayer().setValue(ZOOM_TO_KEY, pointPosition);		
+			
+			Coordinate centre = labor.outCollection.getBounds().centre();
+			Position centerPosition = Position.fromDegrees(
+					centre.y,centre.x);
+			labor.getLayer().setValue(ZOOM_TO_KEY, centerPosition);		
 		}
 	}
 

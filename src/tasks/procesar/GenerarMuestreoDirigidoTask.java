@@ -4,38 +4,21 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
 
 import org.geotools.data.FeatureReader;
 import org.geotools.data.simple.SimpleFeatureIterator;
-import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
-import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.geometry.BoundingBox;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 
 import dao.Labor;
 import dao.LaborItem;
-import dao.config.Configuracion;
-import dao.config.Cultivo;
-import dao.cosecha.CosechaConfig;
-import dao.cosecha.CosechaItem;
-import dao.cosecha.CosechaLabor;
 import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
@@ -50,7 +33,8 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 	private List<Labor<? extends LaborItem>> aMuestrear;
 	private double superficieMinimaAMuestrear=0;
 	private double densidadDeMuestrasDeseada=0;
-	private double cantidadMaximaDeMuestrasTotal=Double.MAX_VALUE;
+	//private double cantidadMaximaDeMuestrasTotal=Double.MAX_VALUE;
+	
 	private double cantidadMinimaDeMuestrasPoligonoAMuestrear=0;
 
 
@@ -60,7 +44,7 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 		super.labor = new Suelo();
 	super.labor.featureBuilder = new SimpleFeatureBuilder(super.labor.getPointType());
 		this.superficieMinimaAMuestrear=supMinima;
-		this.densidadDeMuestrasDeseada=densidad;
+		this.densidadDeMuestrasDeseada=1/densidad;
 		this.cantidadMinimaDeMuestrasPoligonoAMuestrear=cantMaxPoly;
 
 
@@ -79,8 +63,8 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 
 		String nombre =null;
 
-		List<SueloItem> features = Collections.synchronizedList(new ArrayList<SueloItem>());
-		for(Labor c:aMuestrear){			
+		//List<SueloItem> features = Collections.synchronizedList(new ArrayList<SueloItem>());
+		for(Labor<? extends LaborItem> c:aMuestrear){			
 			if(nombre == null){
 				nombre=labor.getNombreProperty().get()+" "+c.getNombreProperty().get();	
 			}else {
@@ -88,7 +72,7 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 			}
 
 			FeatureReader<SimpleFeatureType, SimpleFeature> reader =c.outCollection.reader();
-			//TODO por cada poligono de las labores de entrada 
+			//por cada poligono de las labores de entrada 
 			while (reader.hasNext()) {
 				SimpleFeature feature = reader.next();
 				Geometry geometry = (Geometry) feature.getDefaultGeometry();

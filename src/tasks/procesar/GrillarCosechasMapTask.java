@@ -100,7 +100,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 				cultivo=c.producto.getValue();
 			}
 			if(nombre == null){
-				nombre=labor.getNombreProperty()+" "+c.getNombreProperty().get();	
+				nombre=labor.getNombreProperty().get()+" "+c.getNombreProperty().get();	
 			}else {
 				nombre+=" - "+c.getNombreProperty().get();
 			}

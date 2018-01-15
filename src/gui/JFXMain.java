@@ -243,7 +243,7 @@ public class JFXMain extends Application {
 
 	private List<Margen> margenes= new ArrayList<Margen>();
 
-	private ExecutorService executorPool = Executors.newCachedThreadPool();
+	public static ExecutorService executorPool = Executors.newCachedThreadPool();
 	private Node wwNode=null;//contiene el arbol con los layers y el swingnode con el world wind
 
 
@@ -1991,8 +1991,8 @@ public class JFXMain extends Application {
 		 superficieMinimaAMuestrear = Double.valueOf(ppmPOptional.get());
 
 		TextInputDialog densidadDialog = new TextInputDialog("Cantidad de muestras por Ha");
-		densidadDialog.setTitle("Cantidad de muestras por hectarea deseada");
-		densidadDialog.setContentText("Cantidad por Ha");
+		densidadDialog.setTitle("Cantidad de hectareas po muestra deseada");
+		densidadDialog.setContentText("Has por muestra");
 		Optional<String> densidadOptional = densidadDialog.showAndWait();
 		 densidadDeMuestrasDeseada = Double.valueOf(densidadOptional.get());
 

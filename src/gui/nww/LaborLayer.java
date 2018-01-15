@@ -1,14 +1,6 @@
 package gui.nww;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import javax.media.opengl.GLContext;
-
-import gov.nasa.worldwind.geom.Sector;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import gov.nasa.worldwind.render.DrawContext;
-import gov.nasa.worldwind.render.ExtrudedPolygon;
-import javafx.application.Platform;
 
 public class LaborLayer extends RenderableLayer {
 	private RenderableLayer analyticSurfaceLayer=null;
@@ -18,8 +10,9 @@ public class LaborLayer extends RenderableLayer {
 	private int screenPixelsSectorMinSize=1000;//2000 queda bueno
 	private static int MAX_EXTRUDED_ELEMENTS=10000;
 	long vS =0;
+	private boolean extrudedRendered=false;
 
-	private long lastRendered=System.currentTimeMillis();
+//	private long lastRendered=System.currentTimeMillis();
 //	public void preRender(DrawContext dc){
 //		if(analyticSurfaceLayer!=null){
 //			analyticSurfaceLayer.render(dc);			
@@ -46,11 +39,12 @@ public class LaborLayer extends RenderableLayer {
 	public void render(DrawContext dc){
 		if(!this.isEnabled())return;
 		long vsNow =dc.getView().getViewStateID();
-		long tNow = System.currentTimeMillis();
+		//long tNow = System.currentTimeMillis();
 		double eyeElevation = dc.getView().getCurrentEyePosition().elevation;
 		if( //(this.vS==vsNow  &&
 				//extrudedPolygonsLayer != null && (
-				elementsCount<MAX_EXTRUDED_ELEMENTS || eyeElevation < screenPixelsSectorMinSize ){
+				//elementsCount<MAX_EXTRUDED_ELEMENTS || 
+				eyeElevation < screenPixelsSectorMinSize ){
 			
 			extrudedPolygonsLayer.render(dc);
 			analyticSurfaceLayer.setEnabled(false);
@@ -59,7 +53,12 @@ public class LaborLayer extends RenderableLayer {
 			this.vS=vsNow;
 			analyticSurfaceLayer.setEnabled(true);
 			analyticSurfaceLayer.render(dc);	
-			this.lastRendered=tNow;
+			if(!extrudedRendered){
+				extrudedPolygonsLayer.render(dc);
+				
+				extrudedRendered=true;
+			}
+			//this.lastRendered=tNow;
 		}
 		
 //		double eyeElevation = dc.getView().getCurrentEyePosition().elevation;
@@ -138,6 +137,7 @@ public class LaborLayer extends RenderableLayer {
 	public void setExtrudedPolygonsLayer(RenderableLayer extrudedPolygonsLayer) {
 		this.extrudedPolygonsLayer = extrudedPolygonsLayer;
 		this.elementsCount=extrudedPolygonsLayer.getNumRenderables();
+		this.extrudedRendered=false;
 	}
 
 	/**
