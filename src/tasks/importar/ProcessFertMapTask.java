@@ -63,15 +63,11 @@ public class ProcessFertMapTask extends ProcessMapTask<FertilizacionItem,Fertili
 		
 		System.out.println("Fertilizacion Type: "+DataUtilities.spec(reader.getFeatureType()));
 
-		//initCrsTransform(storeCRS);
-
 		int divisor = 1;
 
 		while (reader.hasNext()) {
-
 			SimpleFeature simpleFeature = reader.next();
 			FertilizacionItem ci = labor.constructFeatureContainer(simpleFeature);
-
 
 			featureNumber++;
 

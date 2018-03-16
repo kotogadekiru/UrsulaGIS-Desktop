@@ -366,6 +366,15 @@ public static List<Poligono> getPoligonosActivos() {
 		return results;
 	}
 
+	public static List<Ndvi> getNdviActivos() {
+		System.out.println("buscando ndvi activos");
+		  TypedQuery<Ndvi> query =
+				  em().createNamedQuery(Ndvi.FIND_ACTIVOS, Ndvi.class);
+			  List<Ndvi> results = query.getResultList();
+			//  closeEm();
+		return results;
+	}
+
 
 
 

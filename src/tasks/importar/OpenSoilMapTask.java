@@ -1,32 +1,22 @@
 package tasks.importar;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.index.quadtree.Quadtree;
-
-import dao.fertilizacion.FertilizacionItem;
-import dao.suelo.Suelo;
-import dao.suelo.SueloItem;
-import gov.nasa.worldwind.render.ExtrudedPolygon;
-import javafx.scene.Group;
-import javafx.scene.shape.Path;
-import tasks.ProcessMapTask;
-
-import org.geotools.data.FeatureReader;
-import org.geotools.data.FileDataStore;
-import org.geotools.data.simple.SimpleFeatureCollection;
-import org.geotools.data.simple.SimpleFeatureIterator;
-import org.geotools.data.simple.SimpleFeatureSource;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
-
-import utils.ProyectionConstants;
-
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.geotools.data.FeatureReader;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
+
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Point;
+
+import dao.suelo.Suelo;
+import dao.suelo.SueloItem;
+import gov.nasa.worldwind.render.ExtrudedPolygon;
+import tasks.ProcessMapTask;
+import utils.ProyectionConstants;
 
 
 /**
@@ -37,7 +27,8 @@ import java.util.List;
 
 public class OpenSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 	public OpenSoilMapTask(Suelo sueloMap) {
-		this.labor=sueloMap;
+		super(sueloMap);
+		//this.labor=sueloMap;
 	}
 	
 	public void doProcess() throws IOException {

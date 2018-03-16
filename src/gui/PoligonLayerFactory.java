@@ -45,15 +45,17 @@ public class PoligonLayerFactory {
 	static public MeasureTool createPoligonLayer(Poligono poli, WorldWindow wwd,LayerPanel layerPanel){
 		RenderableLayer surfaceLayer = new RenderableLayer();
 		poli.setLayer(surfaceLayer);
+	//	poli.setLayer(surfaceLayer);		
+		surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, poli);
 		MeasureTool measureTool = createMeasureTool(wwd, surfaceLayer);
 		
 		List<Position> positions = poli.getPositions();
 
 		measureTool.setPositions((ArrayList<? extends Position>) positions);
+	
 		//measureTool.setArmed(false);//hace que no se agreguen nuevos puntos en click
 
-		poli.setLayer(surfaceLayer);		
-		surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, poli);
+		
 		
 		DoubleProperty valueProperty= new SimpleDoubleProperty();
 		valueProperty.setValue( poli.getArea());
@@ -92,6 +94,8 @@ public class PoligonLayerFactory {
 		
 		return measureTool;
 	}
+	
+	
 
 
 

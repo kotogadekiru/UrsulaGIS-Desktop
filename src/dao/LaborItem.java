@@ -33,7 +33,7 @@ public abstract class LaborItem implements Comparable<Object>{
 	protected Double rumbo=new Double(0);
 	protected Double ancho=new Double(0);
 
-	protected Double elevacion=new Double(0);
+	protected Double elevacion=new Double(0);//ojo que a veces elev 0 jode sobre todo en AnalyticLayer
 	protected Integer categoria=new Integer(0);
 
 	protected Double areaSinSup= new Double(0);

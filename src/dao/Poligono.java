@@ -16,11 +16,15 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Transient;
 
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Polygon;
 
 import javax.persistence.AccessType;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.layers.Layer;
 import lombok.Data;
+import utils.ProyectionConstants;
 
 @Data
 @Entity @Access(AccessType.PROPERTY)
@@ -46,6 +50,7 @@ public class Poligono {
 	 */
 	private boolean activo =false;
 	private String positionsString="";
+	//un poligono tiene LineString shell y LineString[] holes  #ver PolygonValidator
 	@Transient
 	private List<Position> positions = new ArrayList<Position>();
 	@Transient
@@ -124,25 +129,36 @@ public class Poligono {
 			}
 			}
 		}
-	//	positions.remove(positions.size()-1);
 	
-		Position anterior=null,actual =null;
-		List <Position> aRemover = new ArrayList<Position>();
-		for(int i = 1;positions.size()>1 && i<positions.size();i++){
-			anterior = positions.get(i-1);
-			actual = positions.get(i);
-			if(anterior.equals(actual)){
-				aRemover.add(actual);				
-			}			
-		}
-		//System.out.println("Eliminando duplicados "+aRemover);
-		positions.removeAll(aRemover);
+	//XXX comento esto porque tengo miedo que me este borrando puntos reales.
+//		Position anterior=null,actual =null;
+//		List <Position> aRemover = new ArrayList<Position>();
+//		for(int i = 1;positions.size()>1 && i<positions.size();i++){
+//			anterior = positions.get(i-1);
+//			actual = positions.get(i);
+//			if(anterior.equals(actual)){
+//				aRemover.add(actual);				
+//			}			
+//		}
+//		//System.out.println("Eliminando duplicados "+aRemover);
+//		positions.removeAll(aRemover);
+		
 		Position p0 = positions.get(0);
 		Position pn = positions.get(positions.size()-1);
 		if(!p0.equals(pn)){
 			positions.add(positions.get(0));
 		//	System.out.println("completando el poligono para que sea cerrado");
 		}
+		
+		GeometryFactory fact = new GeometryFactory();
+		Coordinate[] shell = new Coordinate[positions.size()];
+		for(int i =0; i<positions.size();i++){
+			Position pos=positions.get(i);
+		shell[i]=new Coordinate(pos.getLongitude().degrees,pos.getLatitude().degrees);
+			
+		}
+		Polygon p = fact.createPolygon(shell);
+		this.setArea(ProyectionConstants.A_HAS(p.getArea()));
 		}catch(Exception e){
 			e.printStackTrace();
 		}

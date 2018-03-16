@@ -1,14 +1,56 @@
 package utils;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-
+import java.util.List;
 
 import com.vividsolutions.jts.geom.*;
 
 import com.vividsolutions.jts.operation.polygonize.Polygonizer;
 
 public class PolygonValidator {
+	
+	public static List<Polygon> geometryToFlatPolygons(Geometry itemGeometry){
+		List<Polygon> ret=new ArrayList<Polygon>();
+
+		if(itemGeometry instanceof MultiPolygon){
+			//System.out.println("convirtiendo un multipolygon en polygon " +itemGeometry);
+			MultiPolygon mp = (MultiPolygon)itemGeometry;
+			for(int i=0;i<mp.getNumGeometries();i++){
+				Geometry gi=mp.getGeometryN(i);
+				if(gi instanceof Polygon){
+					Polygon pi =(Polygon)gi;
+					ret.add(polygonToFlatPolygon(pi));
+				}//si no es polygono ignorarla
+			}
+
+		} else if(itemGeometry instanceof Polygon) {
+			Polygon pi =(Polygon)itemGeometry;
+			ret.add(polygonToFlatPolygon(pi));
+		}
+		return ret;
+	}
+		
+	public static Polygon polygonToFlatPolygon(Polygon pi){
+			GeometryFactory fact = pi.getFactory();		
+			LinearRing shell = fact.createLinearRing(coordsToFlat( pi.getExteriorRing().getCoordinates()));
+			LinearRing[] holes = new LinearRing[pi.getNumInteriorRing()];
+			for(int i=0;i<pi.getNumInteriorRing();i++){
+				holes[i]=fact.createLinearRing(coordsToFlat( pi.getInteriorRingN(i).getCoordinates()));
+			}
+			Polygon p = pi.getFactory().createPolygon(shell,holes);
+			return p;
+		}
+
+	public static Coordinate[] coordsToFlat(Coordinate[] boundaryCoords) {		
+		Coordinate[] coordinates = new Coordinate[boundaryCoords.length];
+		for(int i =0;i<boundaryCoords.length;i++){						
+			Coordinate c = boundaryCoords[i];
+			coordinates[i]=new Coordinate(c.x,c.y);
+		}
+		return coordinates;
+	}
 
 
 

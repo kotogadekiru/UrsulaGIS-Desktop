@@ -18,7 +18,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import tasks.ShowNDVITifFileTask;
 import utils.ExcelHelper;
@@ -100,7 +99,7 @@ public class NDVIHistoChart extends VBox {
 
 
 	private XYChart.Series<String, Number> createSeries(Ndvi ndvi) {	
-		Double[] histograma = new Double[]{0.2,0.29, 0.38, 0.46, 0.55, 0.64, 0.73, 0.81, 0.90};
+		Double[] histograma = new Double[]{ShowNDVITifFileTask.MIN_VALUE,0.29, 0.38, 0.46, 0.55, 0.64, 0.73, 0.81, ShowNDVITifFileTask.MAX_VALUE};
 		numClasses=histograma.length+1;//histograma tiene un elemento menos que clases porque se extiende a inf
 		
 		//numClasses = 9;//ndvi.clasificador.getNumClasses();

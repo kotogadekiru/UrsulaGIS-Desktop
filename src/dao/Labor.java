@@ -70,7 +70,7 @@ import utils.ProyectionConstants;
 //@Entity @Access(AccessType.PROPERTY)//getter
 @Inheritance(strategy=javax.persistence.InheritanceType.TABLE_PER_CLASS)
 public abstract class Labor<E extends LaborItem>  {
-	public static final double FEET_TO_METERS = 0.3048;
+	
 	public static final String NONE_SELECTED = "Ninguna";
 	public static final String LABOR_LAYER_IDENTIFICATOR = "LABOR";
 	
@@ -87,7 +87,7 @@ public abstract class Labor<E extends LaborItem>  {
 	@Transient
 	public StringProperty nombreProperty = new SimpleStringProperty();
 	@Transient
-	public LaborLayer layer;//realmente quiero guardar esto aca?? o me conviene ponerlo en un mapa en otro lado para evitar la vinculacion de objetos
+	public LaborLayer layer=null;//realmente quiero guardar esto aca?? o me conviene ponerlo en un mapa en otro lado para evitar la vinculacion de objetos
 
 	protected static final String COLUMNA_CATEGORIA = "Categoria";
 	public static final String COLUMNA_DISTANCIA = "Distancia";
@@ -364,7 +364,7 @@ public abstract class Labor<E extends LaborItem>  {
 
 	public void setLayer(LaborLayer renderableLayer) {		
 		this.layer = renderableLayer;
-		renderableLayer.setValue(LABOR_LAYER_IDENTIFICATOR, this);//TODO usar esto para no tener el layer dentro de la cosecha
+		renderableLayer.setValue(LABOR_LAYER_IDENTIFICATOR, this);//usar esto para no tener el layer dentro de la cosecha
 		this.nombreProperty.addListener((o,old,nu)->{
 			this.layer.setName(nu);});
 		renderableLayer.setName(this.nombreProperty.get());
@@ -425,12 +425,19 @@ public abstract class Labor<E extends LaborItem>  {
 	public List<E> cachedOutStoreQuery(Envelope envelope){
 		List<E> objects = new ArrayList<E>();
 		synchronized(this){
+			//si la cache crecio mucho la limito a un tamanio
+//			if(treeCache!=null && treeCache.size()>50*1000){//71053 se limpia todo el timepo
+//				System.out.println("limpiando cache con size = "+treeCache.size()+" envelope = "+envelope.toString());
+//				treeCache=null;
+//			}//esto no sirve porque updateAllCachedEnvelopes carga todas las features no solo las del envelope
+			//TODO poner un timer si no se uso el treeCache en x segundos limpiarlo.
 			if( treeCache==null){			
 				updateAllCachedEnvelopes(envelope);			
-			}
+			} 
 		}
 		@SuppressWarnings("unchecked")
-		List<SimpleFeature> cachedObjects = treeCache.query(envelope);
+		List<SimpleFeature> cachedObjects = treeCache.query(envelope);//FIXME Exception in thread "pool-2-thread-5" java.util.ConcurrentModificationException
+		//el error se produjo al convertir un ndvi a cosecha
 
 		FeatureType schema = this.outCollection.getSchema();			    
 		CoordinateReferenceSystem targetCRS = schema.getGeometryDescriptor().getCoordinateReferenceSystem();		
@@ -567,8 +574,19 @@ public abstract class Labor<E extends LaborItem>  {
 		return objects;
 	}
 
+	/**
+	 * metodo que construye una feature leyendo las columnas estandar definidas para el tipo de labor
+	 * @param next
+	 * @param newIDS
+	 * @return
+	 */
 	public abstract E constructFeatureContainerStandar(SimpleFeature next,boolean newIDS) ;
 
+	/**
+	 * metodo que construye una feature leyendo las columnas seleccionadas por el usuario de las disponibles en el shp
+	 * @param next
+	 * @return
+	 */
 	public abstract E constructFeatureContainer(SimpleFeature next) ;
 
 

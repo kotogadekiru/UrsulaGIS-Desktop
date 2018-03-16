@@ -26,10 +26,13 @@ import com.google.api.client.json.jackson.JacksonFactory;
 
 import dao.config.Configuracion;
 import gui.JFXMain;
+import javafx.application.Platform;
 import javafx.concurrent.Task;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -122,13 +125,13 @@ public class UpdateTask  extends Task<File>{
 		}
 		return fout;
 	}
-	
-	public static void main(String[] args){
-		UpdateTask ut = new UpdateTask();
-		String msiPath ="C:\\Users\\quero\\AppData\\Roaming\\UrsulaGIS\\UrsulaGIS-0.2.18.msi";
-
-		ut.instalarNuevaVersion(new File(msiPath));
-	}
+//	
+//	public static void main(String[] args){
+//		UpdateTask ut = new UpdateTask();
+//		String msiPath ="C:\\Users\\quero\\AppData\\Roaming\\UrsulaGIS\\UrsulaGIS-0.2.18.msi";
+//
+//		ut.instalarNuevaVersion(new File(msiPath));
+//	}
 
 	private void instalarNuevaVersion(File fout) {
 		File bat = new File(fout.getParentFile().getPath()+File.separator+"install.bat");
@@ -302,9 +305,27 @@ public class UpdateTask  extends Task<File>{
 			HttpRequest request = requestFactory.buildGetRequest(url);
 			HttpResponse response = request.execute();
 			GenericJson content = response.parseAs(GenericJson.class);
+			//response.disconnect();
 			UpdateTask.lastVersionNumber =(String) content.get("lastVersionNumber");
 			//			UpdateRespone ur = response.parseAs(UpdateRespone.class);
 			//			System.out.println(ur);
+			try{
+			String message = (String)content.get("mensaje");
+			if(message!=null){
+				Platform.runLater(()->{
+					Alert a = new Alert(AlertType.INFORMATION);
+					a.setTitle("Info");
+					a.setHeaderText("UrsulaGIS dice:");
+					a.setContentText(message);
+					a.show();
+				
+				});
+				
+				
+			}
+			}catch(Exception e){
+				
+			}
 			if(versionToDouble(lastVersionNumber)>versionToDouble(JFXMain.VERSION)){
 				UpdateTask.lastVersionURL = (String)content.get("lastVersionURL");
 				return true;	

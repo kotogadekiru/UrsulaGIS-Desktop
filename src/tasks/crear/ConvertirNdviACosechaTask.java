@@ -79,8 +79,8 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 		
 		GeometryFactory fact = new GeometryFactory();
 		
-		double latStep = -sector.getDeltaLatDegrees() / (double) (height - 1);
-		double lonStep = sector.getDeltaLonDegrees() / (double) (width - 1);
+		double latStep = -sector.getDeltaLatDegrees() / (double) (height-1);//-1
+		double lonStep = sector.getDeltaLonDegrees() / (double) (width-1);
 		
 		
 		List<CosechaItem> itemsToShow = new ArrayList<CosechaItem>();
@@ -100,6 +100,7 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 				double lon = minLon+x*lonStep;
 				
 				GridPointAttributes attr = it.hasNext() ? it.next() : null;
+				if(x==0 || y==0||x==width-1||y==height-1)continue;//me salteo la primera fila de cada costado
 				double value = attr.getValue();
 				
 				if(value <= ShowNDVITifFileTask.MAX_VALUE && value >= ShowNDVITifFileTask.MIN_VALUE && value !=0){

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
@@ -18,6 +19,7 @@ import org.opengis.geometry.BoundingBox;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
@@ -118,7 +120,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		// 2 generar una grilla de ancho ="ancho" que cubra bounds
 		List<Polygon>  grilla = construirGrilla(unionEnvelope, ancho);
 		//List<Polygon>  grilla = construirGrillaTriangular(unionEnvelope, ancho);
-		double elementos = grilla.size();
+		//double elementos = grilla.size();
 		System.out.println("creando una grilla con "+grilla.size()+" elementos");
 		// 3 recorrer cada pixel de la grilla promediando los valores y generando los nuevos items de la cosecha
 
@@ -223,32 +225,10 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		//TODO 4 mostrar la cosecha sintetica creada
 		labor.constructClasificador();
 
-	//	this.pathTooltips.clear();
-
-//		for(CosechaItem c:byPolygon.values()){
-//			Geometry g = c.getGeometry();
-//			if(g instanceof Polygon){
-//
-//				//pathTooltips.add(
-//						getPathTooltip((Polygon)g,c);
-//						//);	
-//
-//
-//			} else if(g instanceof MultiPolygon){
-//				MultiPolygon mp = (MultiPolygon)g;			
-//				for(int i=0;i<mp.getNumGeometries();i++){
-//					Polygon p = (Polygon) (mp).getGeometryN(i);
-//					//pathTooltips.add(
-//							getPathTooltip(p,c);
-//							//);	
-//				}
-//
-//			}
-//		}
 		runLater(byPolygon.values());
 		updateProgress(0, featureCount);
 		long time=System.currentTimeMillis()-init;
-		System.out.println("tarde "+time+" milisegundos en unir las cosechas. es "+time/elementos+" milisegundos por poligono");
+		System.out.println("tarde "+time+" milisegundos en unir las cosechas. es "+time/featureCount+" milisegundos por poligono");
 	}
 
 	/**
@@ -262,23 +242,31 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		if(cosechasPoly.size()<1){
 			return null;
 		}
-
-		// sumar todas las supferficies, y calcular el promedio ponderado de cada una de las variables por la superficie superpuesta
-		double areaPoly = 0;
-		Map<CosechaItem,Double> intersecciones = new HashMap<CosechaItem,Double>();
-		for(CosechaItem cPoly : cosechasPoly){
-			Geometry g = cPoly.getGeometry();
-			//XXX si es una cosecha de ambientes el area es importante
-						try{
-							g= EnhancedPrecisionOp.intersection(poly,g);
-
-						}catch(Exception e){
-							System.err.println("no se pudo hacer la interseccion entre\n"+poly+"\n y\n"+g);
-						}
-			Double areaPoly2 = g.getArea();
-			areaPoly+=areaPoly2;
-			intersecciones.put(cPoly,areaPoly2);
 		
+		List<Geometry> intersections = new ArrayList<Geometry>();
+		// sumar todas las supferficies, y calcular el promedio ponderado de cada una de las variables por la superficie superpuesta
+		Geometry union = null;
+		double areaPoly = 0;
+		Map<CosechaItem,Double> areasIntersecciones = new HashMap<CosechaItem,Double>();
+		for(CosechaItem cPoly : cosechasPoly){			
+			//XXX si es una cosecha de ambientes el area es importante
+			Geometry g = cPoly.getGeometry();
+			try{
+				
+				g= EnhancedPrecisionOp.intersection(poly,g);
+				Double areaInterseccion = g.getArea();
+				areaPoly+=areaInterseccion;
+				areasIntersecciones.put(cPoly,areaInterseccion);
+				
+				if(union==null){
+					union = g;
+						
+				}
+				intersections.add(g);
+			
+			}catch(Exception e){
+				System.err.println("no se pudo hacer la interseccion entre\n"+poly+"\n y\n"+g);
+			}		
 		}
 
 		CosechaItem c = null;
@@ -289,8 +277,8 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 			distancia=ancho;
 		
 	//		double pesoTotal=0;
-		for(CosechaItem cPoly : cosechasPoly){
-				Double gArea = intersecciones.get(cPoly);//cPoly.getGeometry();
+		for(CosechaItem cPoly : areasIntersecciones.keySet()){
+				Double gArea = areasIntersecciones.get(cPoly);//cPoly.getGeometry();
 				if(gArea==null){
 					//System.out.println("g es null asi que no lo incluyo en la suma "+cPoly);
 					continue;}
@@ -307,12 +295,15 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 //			System.err.println("la suma de los pesos en la ponderacion de la grilla no es 1, es "+pesoTotal);
 		//la suma de los pesos en la ponderacion de la grilla no es 1, es 1.0000000000000002
 //		}
+//		cosechasPoly.parallelStream().collect(Collectors.summingDouble((cosecha)->{
+//			return Math.abs(rindeProm- cosecha.getAmount());
+//		}));
 			double sumaDesvio2 = 0.0;
-			for(CosechaItem cosecha : cosechasPoly){
+			for(CosechaItem cosecha : areasIntersecciones.keySet()){
 				double cantidadCosecha = cosecha.getAmount();				
 				sumaDesvio2+= Math.abs(rindeProm- cantidadCosecha);
 			}
-			desvioPromedio = Math.sqrt(sumaDesvio2)/cosechasPoly.size();
+			desvioPromedio = Math.sqrt(sumaDesvio2)/areasIntersecciones.keySet().size();
 			
 
 			//	System.out.println("pesos = "+pesos);
@@ -324,7 +315,18 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 //			for(Coordinate coord : poly.getCoordinates()){
 //				coord.z=elev;
 //			}
-			c.setGeometry(poly);
+
+			GeometryFactory fact = intersections.get(0).getFactory();
+			Geometry[] geomArray = new Geometry[intersections.size()];
+			GeometryCollection colectionCat = fact.createGeometryCollection(intersections.toArray(geomArray));
+			
+			try{
+				union = colectionCat.convexHull();//esto hace que no se cubra el area entre polygonos a menos que la grilla sea mas grande que el area
+				}catch(Exception e){
+
+				}
+			
+			c.setGeometry(union);
 			c.setRindeTnHa(rindeProm);
 			c.setDesvioRinde(desvioPromedio);
 			c.setAncho(ancho);

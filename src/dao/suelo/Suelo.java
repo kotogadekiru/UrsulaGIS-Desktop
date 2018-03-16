@@ -23,14 +23,14 @@ import lombok.Data;
 public class Suelo extends Labor<SueloItem>{
 	private static final double DENSIDAD_SUELO_20CM = 2.6;
 	//los nombres de las columnas estandar
-	public static final String COLUMNA_N = "PPM N";
-	public static final String COLUMNA_P = "PPM P";
-	public static final String COLUMNA_K = "PPM K";
-	public static final String COLUMNA_S = "PPM S";
-	public static final String COLUMNA_MO = "PPM MO";
+	public static final String COLUMNA_N = "PPM_N";
+	public static final String COLUMNA_P = "PPM_P";
+	public static final String COLUMNA_K = "PPM_K";
+	public static final String COLUMNA_S = "PPM_S";
+	public static final String COLUMNA_MO = "PPM_MO";
 	
-	public static final String COLUMNA_PROF_NAPA= "Prof Napa";
-	public static final String COLUMNA_AGUA_PERFIL= "Agua Perf";
+	public static final String COLUMNA_PROF_NAPA= "Prof_Nap";
+	public static final String COLUMNA_AGUA_PERFIL= "Agua_Pe";
 
 	//las propiedades que le permiten al usuario definir el nombre de sus columnas
 	@Transient

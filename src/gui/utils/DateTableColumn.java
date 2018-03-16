@@ -60,6 +60,8 @@ public class DateTableColumn<T> extends TableColumn<T, Date> {
 		this.setComparator(new Comparator<Date>(){
 			@Override
 			public int compare(Date arg0, Date arg1) {
+				if(arg0==null)return -1;
+				if(arg1==null)return 1;
 				return arg0.compareTo(arg1);
 			}
 		});

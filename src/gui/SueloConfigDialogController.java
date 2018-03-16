@@ -1,16 +1,17 @@
 package gui;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import dao.Clasificador;
+import dao.Labor;
+import dao.suelo.Suelo;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
@@ -18,22 +19,11 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
-import dao.Clasificador;
-import dao.Labor;
-import dao.config.Cultivo;
-import dao.config.Fertilizante;
-import dao.config.Semilla;
-import dao.cosecha.CosechaLabor;
-import dao.fertilizacion.FertilizacionLabor;
-import dao.siembra.SiembraLabor;
-import dao.suelo.Suelo;
 
 
 /**

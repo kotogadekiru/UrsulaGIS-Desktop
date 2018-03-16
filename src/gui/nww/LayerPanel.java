@@ -2,6 +2,7 @@ package gui.nww;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.CheckBoxTreeItem;
@@ -155,34 +157,34 @@ public class LayerPanel extends VBox {
 			//TODO crear un map que mantenga la configuracion del usuario respecto de que ramas estan expandidas
 			if(value != null && value instanceof CosechaLabor){				
 				cosechasItem.getChildren().add(checkBoxTreeItem);
-			//	cosechasItem.setExpanded(true);
+				//	cosechasItem.setExpanded(true);
 			}else if(value != null && value instanceof SiembraLabor){				
 				siembrasItem.getChildren().add(checkBoxTreeItem);
-			//	siembrasItem.setExpanded(true);
+				//	siembrasItem.setExpanded(true);
 			}else if(value != null && value instanceof PulverizacionLabor){				
 				pulverizacionesItem.getChildren().add(checkBoxTreeItem);
-			//	pulverizacionesItem.setExpanded(true);
+				//	pulverizacionesItem.setExpanded(true);
 			}else if(value != null && value instanceof FertilizacionLabor){				
 				fertilizacionestItem.getChildren().add(checkBoxTreeItem);
-			//	fertilizacionestItem.setExpanded(true);
-//			}else if(value != null && value instanceof Margen){				
-//					margenesItem.getChildren().add(checkBoxTreeItem);
-//					margenesItem.setExpanded(true);
-				
+				//	fertilizacionestItem.setExpanded(true);
+				//			}else if(value != null && value instanceof Margen){				
+				//					margenesItem.getChildren().add(checkBoxTreeItem);
+				//					margenesItem.setExpanded(true);
+
 			}else if(value != null){
 				TreeItem<Layer> knownItem=null;
-				
+
 				String rootItemName ="unknown";
-				
+
 				if(value instanceof String){
 					rootItemName=(String) value;
-					
+
 				} else if(value instanceof Object){//margen y lo que pueda suceder mas adelante
 					rootItemName=  value.getClass().getSimpleName();
 				} else {
 					continue;
 				}
-				
+
 				for(TreeItem<Layer> item :rootItem.getChildren()){
 					if(item.getValue().getName().equals(rootItemName)){//antes comparaba con value en vez de rootItem
 						knownItem=item;		
@@ -192,13 +194,13 @@ public class LayerPanel extends VBox {
 					RenderableLayer rootLayer = new RenderableLayer();
 					rootLayer.setName(rootItemName);
 					knownItem = new CheckBoxTreeItem<Layer>(rootLayer);
-				//	knownItem.setExpanded(true);
+					//	knownItem.setExpanded(true);
 					rootItem.getChildren().add(knownItem);
 				}
-				
+
 				knownItem.getChildren().add(checkBoxTreeItem);
-				
-				
+
+
 
 			}
 			checkBoxTreeItem.setSelected(layer.isEnabled());
@@ -209,53 +211,53 @@ public class LayerPanel extends VBox {
 
 			//this.layersPanel.getChildren().add(jcb);
 		}
-		
-//		List<TreeItem<Layer>> aQuitar = new ArrayList<>();
-//		for(TreeItem<Layer> item :rootItem.getChildren()){
-//			if(item.getChildren().size()==0){
-//				aQuitar.add(item);
-//			}
-//		}
-//		rootItem.getChildren().removeAll(aQuitar);
-		
-		for(TreeItem<Layer> item : rootItem.getChildren()){
-		try{ item.getChildren().sort((c1,c2)->{
-			//fijarse si es de tipo ndvi
-			Object labor1 = c1.getValue().getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-			Object labor2 = c2.getValue().getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 
-			String l1Name =c1.getValue().getName();
-			String l2Name =c2.getValue().getName();
-			
-			if(labor1 != null && labor1 instanceof Ndvi && 
-					labor2 != null && labor2 instanceof Ndvi &&
-					l1Name.startsWith(l2Name.substring(0, l2Name.length()-"02-01-2018".length()))){
-				Date fecha1 = ((Ndvi)labor1).getFecha();
-				Date fecha2 = ((Ndvi)labor2).getFecha();
-				return fecha1.compareTo(fecha2);
-				
-			} else {
-			
-			
-			
-//			//TODO comparar por el valor del layer en vez del nombre del layer
-//			DateFormat df =new  SimpleDateFormat("dd-MM-yyyy");
-//			
-//			try{
-//				Date d1 = df.parse(l1Name);
-//				Date d2 = df.parse(l2Name);
-//				return d1.compareTo(d2);
-//			} catch(Exception e){
-//				//no se pudo parsear como fecha entonces lo interpreto como string.
-//				//e.printStackTrace();
-//			}
-			return l1Name.compareTo(l2Name);
+		//		List<TreeItem<Layer>> aQuitar = new ArrayList<>();
+		//		for(TreeItem<Layer> item :rootItem.getChildren()){
+		//			if(item.getChildren().size()==0){
+		//				aQuitar.add(item);
+		//			}
+		//		}
+		//		rootItem.getChildren().removeAll(aQuitar);
+
+		for(TreeItem<Layer> item : rootItem.getChildren()){
+			try{ item.getChildren().sort((c1,c2)->{
+				//fijarse si es de tipo ndvi
+				Object labor1 = c1.getValue().getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+				Object labor2 = c2.getValue().getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+
+				String l1Name =c1.getValue().getName();
+				String l2Name =c2.getValue().getName();
+
+				if(labor1 != null && labor1 instanceof Ndvi && 
+						labor2 != null && labor2 instanceof Ndvi &&
+						l1Name.startsWith(l2Name.substring(0, l2Name.length()-"02-01-2018".length()))){
+					Date fecha1 = ((Ndvi)labor1).getFecha().getTime();
+					Date fecha2 = ((Ndvi)labor2).getFecha().getTime();
+					return fecha1.compareTo(fecha2);
+
+				} else {
+
+
+
+					//			//TODO comparar por el valor del layer en vez del nombre del layer
+					//			DateFormat df =new  SimpleDateFormat("dd-MM-yyyy");
+					//			
+					//			try{
+					//				Date d1 = df.parse(l1Name);
+					//				Date d2 = df.parse(l2Name);
+					//				return d1.compareTo(d2);
+					//			} catch(Exception e){
+					//				//no se pudo parsear como fecha entonces lo interpreto como string.
+					//				//e.printStackTrace();
+					//			}
+					return l1Name.compareTo(l2Name);
+				}
+			});
+			}catch(Exception e){
+				e.printStackTrace();
+				System.out.println("no se pudo ordenar");
 			}
-		});
-		}catch(Exception e){
-			e.printStackTrace();
-			System.out.println("no se pudo ordenar");
-		}
 		}
 		if(tree==null){
 			tree = constructTreeView( rootItem);
@@ -285,9 +287,13 @@ public class LayerPanel extends VBox {
 		RenderableLayer cosechLayer = new RenderableLayer();
 		cosechLayer.setName("Cosechas");
 		cosechasItem = new CheckBoxTreeItem<Layer>(cosechLayer);
-//		RenderableLayer ndviLayer = new RenderableLayer();
-//		ndviLayer.setName("Ndvi");
-//		ndviItem = new CheckBoxTreeItem<Layer>(ndviLayer);
+		//		RenderableLayer ndviLayer = new RenderableLayer();
+		//		ndviLayer.setName("Ndvi");
+		//		ndviItem = new CheckBoxTreeItem<Layer>(ndviLayer);
+
+
+
+		//TODO agregar un menu contextual con acciones para los root Items como quitar todas
 
 		rootItem.getChildren().addAll(pulverizacionesItem,fertilizacionestItem,siembrasItem,cosechasItem);
 		rootItem.setExpanded(true);
@@ -298,7 +304,7 @@ public class LayerPanel extends VBox {
 		//tree.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		//los puedo seleccionar pero no puedo actuar sobre mas de uno  a la vez por que set on action es del item en foco.
 		//tendria que poner acciones en los nodos y buscar los subitems seleccionados y ahi aplicar
-		
+
 		tree.setEditable(false);
 		tree.setStyle("-fx-background-color:transparent;");//-fx-focus-color: -fx-control-inner-background ; -fx-faint-focus-color: -fx-control-inner-background ;
 		//tree.setShowRoot(false);
@@ -332,45 +338,56 @@ public class LayerPanel extends VBox {
 				}else{
 					menu.getItems().clear();
 				}
-				if(nuLayer==null)return;
+				if(nuLayer==null)return;//nuLayer no puede ser null
 				Object value = nuLayer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-				if(value ==null)return;
-				
-				Class<? extends Object> valueClass = value.getClass();
-				
-				for(Class<?> key : actions.keySet()){
-					if(key.isAssignableFrom(valueClass)
-							|| (key==null && valueClass==null)){						
-						constructMenuItem(nuLayer, menu, actions.get(key));
-					}					
-				}
-				
-//				if(value != null && v){//value instanceof Labor){	
-//						
-//				}
-//
-//				if(value != null && value instanceof CosechaLabor){					
-//						constructMenuItem(nuLayer, menu, actions.get(COSECHA_ACTION));
-//				}	
-//				
-//				if(value != null && value instanceof FertilizacionLabor){
-//				
-//						constructMenuItem(nuLayer, menu, actions.get(FERTILIZACION_ACTION));
-//					}
-//				
-//				if(value != null && value instanceof SiembraLabor){
-//					
-//						constructMenuItem(nuLayer, menu, actions.get(SIEMBRA_ACTION));
-//					}
-//				
-//				if(value != null && value instanceof PulverizacionLabor){					
-//						constructMenuItem(nuLayer, menu, actions.get(PULVERIZACION_ACTION));
-//					}
-//
-//				if(value != null){//cuando value es null es porque es un root
-//						constructMenuItem(nuLayer, menu,actions.get(TODOS_ACTION));
-//					}
+				if(value == null){
+					String rootLayerName = nuLayer.getName();
+					List<Function<Layer, String>> cosechasP = new ArrayList<Function<Layer,String>>();
+					for(Function<Layer, String> act : actions.get(Object.class)){
 
+						CheckBoxTreeItem<Layer> actTreeItem = null;
+						for(TreeItem<Layer> item :rootItem.getChildren()){
+							if(item.getValue().getName().equals(rootLayerName)){//antes comparaba con value en vez de rootItem
+								actTreeItem=(CheckBoxTreeItem<Layer>) item;		
+							}
+						}
+						if(actTreeItem==null)continue;
+						ObservableList<TreeItem<Layer>> children = actTreeItem.getChildren();
+						if(children.size()>0 
+						//		&& (
+						//		actTreeItem.isSelected() //selected no parece andar
+						//	actTreeItem.isIndeterminate() //tampoco anda :(
+						//		)
+								){
+							Function<Layer, String> multiAct = (layer)->{
+								if(layer==null){
+									return act.apply(null) + " Seleccionados";
+								} else{
+									for(TreeItem<Layer> item: children){
+										Layer itemLayer = item.getValue();
+										if(itemLayer.isEnabled()){
+											act.apply(itemLayer);
+										}
+									}
+									return act.apply(null);	
+								}};
+								cosechasP.add(multiAct);
+								constructMenuItem(nuLayer, menu, cosechasP );
+						}
+					}						
+
+
+				} else {
+
+					Class<? extends Object> valueClass = value.getClass();
+
+					for(Class<?> key : actions.keySet()){
+						if(key.isAssignableFrom(valueClass)
+								|| (key==null && valueClass==null)){						
+							constructMenuItem(nuLayer, menu, actions.get(key));
+						}					
+					}
+				}
 				cell.setContextMenu(menu);
 			});
 
@@ -384,9 +401,9 @@ public class LayerPanel extends VBox {
 
 	private void constructMenuItem(Layer nuLayer, ContextMenu menu, List<Function<Layer, String>> actions) {
 		for(Function<Layer,String> p :actions){
-		MenuItem cut = new MenuItem(p.apply(null));
-		cut.setOnAction(e->{Platform.runLater(()->p.apply(nuLayer));});		
-		menu.getItems().add(cut);
+			MenuItem cut = new MenuItem(p.apply(null));
+			cut.setOnAction(e->{Platform.runLater(()->p.apply(nuLayer));});		
+			menu.getItems().add(cut);
 		}
 	}
 
@@ -399,8 +416,8 @@ public class LayerPanel extends VBox {
 	public void update(WorldWindow wwd) {
 		//	this.layersPanel.getChildren().clear();
 		Platform.runLater(()->		this.fill(wwd));
-		
-		
+
+
 	}
 
 

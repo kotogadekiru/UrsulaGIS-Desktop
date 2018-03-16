@@ -1,31 +1,21 @@
 package tasks;
 
 import java.io.IOException;
-import java.nio.DoubleBuffer;
 import java.text.DecimalFormat;
-import java.text.Format;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.media.opengl.GL2;
-
-import org.geotools.data.shapefile.shp.JTSUtilities;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.geometry.BoundingBox;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
-import com.jogamp.common.nio.Buffers;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
@@ -43,7 +33,6 @@ import dao.LaborItem;
 import gov.nasa.worldwind.WorldWind;
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Extent;
-import gov.nasa.worldwind.geom.Frustum;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Sector;
 import gov.nasa.worldwind.layers.RenderableLayer;
@@ -55,12 +44,6 @@ import gov.nasa.worldwind.render.PointPlacemark;
 import gov.nasa.worldwind.render.PointPlacemarkAttributes;
 import gov.nasa.worldwind.render.Renderable;
 import gov.nasa.worldwind.render.ShapeAttributes;
-import gov.nasa.worldwind.render.SurfacePolygon;
-import gov.nasa.worldwind.render.SurfacePolygons;
-import gov.nasa.worldwind.util.BufferWrapper;
-import gov.nasa.worldwind.util.SurfaceTileDrawContext;
-import gov.nasa.worldwind.util.VecBuffer;
-import gov.nasa.worldwind.util.VecBufferSequence;
 import gov.nasa.worldwind.util.WWMath;
 import gov.nasa.worldwindx.examples.analytics.AnalyticSurface;
 import gov.nasa.worldwindx.examples.analytics.AnalyticSurface.GridPointAttributes;
@@ -68,7 +51,6 @@ import gov.nasa.worldwindx.examples.analytics.AnalyticSurfaceAttributes;
 import gov.nasa.worldwindx.examples.analytics.AnalyticSurfaceLegend;
 import gov.nasa.worldwindx.examples.analytics.ExportableAnalyticSurface;
 import gui.JFXMain;
-import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -82,7 +64,6 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
-import tasks.procesar.GrillarCosechasMapTask;
 import utils.PolygonValidator;
 import utils.ProyectionConstants;
 //import org.opengis.filter.FilterFactory2;
@@ -653,6 +634,8 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	 */
 	private RenderableLayer createAnalyticSurfaceFromQuery(int segs){		
 		ReferencedEnvelope bounds = labor.outCollection.getBounds();
+	//	System.out.println("createAnalyticSurfaceFromQuery");
+	//	System.out.println("bounds = "+bounds);
 		double res=  Math.sqrt(bounds.getArea()/(segs*10000));
 		double	resolution =res;// Math.sqrt(bounds.getArea()/40000)>1?;//como el tiempo por item es 0.1 limito el tiempo de rendering a 2seg
 		double	ancho = resolution / ProyectionConstants.metersToLong();
@@ -662,11 +645,13 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		double maxX = bounds.getMaxX();
 		double maxY = bounds.getMaxY();
 
-		System.out.println("creando analyticSurface con segs="+segs);
+	//	System.out.println("creando analyticSurface con segs="+segs);
 
-		Double maxElev = labor.maxElev;
-		Double minElev = labor.minElev;
+		Double maxElev = Math.max(labor.maxElev,1.0);
+		Double minElev = Math.min(labor.minElev,1.0);
 
+		System.out.println("maxElev,minElev= "+maxElev+", "+minElev);
+		
 		int offset = 3;//para que quede un lugar a cada lado mas el desplazamiento
 		int width=(int) ((maxX-minX)/resolution)+offset;
 		int height=(int) ((maxY-minY)/resolution)+offset;
@@ -678,7 +663,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			attributesList.add(transparent);
 		}
 		
-		ReferencedEnvelope unionEnvelope = labor.outCollection.getBounds();
+		//ReferencedEnvelope unionEnvelope = labor.outCollection.getBounds();
 		
 		Consumer<Polygon> polygonConsumer = new Consumer<Polygon>(){
 
@@ -716,14 +701,6 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				} else {
 					//System.out.println("no hay features para fila,columna= "+fila+","+col);
 				}
-				//	System.out.println("agregando el elemento "+index);
-//				if(index>=attributesList.size()){
-//					System.out.println("index="+index+" es mas grande que size="+attributesList.size());
-//					for(int i = attributesList.size();index>=i;i++){
-//						attributesList.add(i,transparent);
-//					}
-//				}
-				
 				
 				try{
 					attributesList.set(index,newGridPoint);				
@@ -735,7 +712,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			
 		};
 		//long time = System.currentTimeMillis();
-		construirGrilla(unionEnvelope, ancho,polygonConsumer);
+		construirGrilla(bounds, ancho,polygonConsumer);
 		
 		//System.out.println("columnas sin datos: "+cols.toString());
 		//System.out.println("tarde "+(System.currentTimeMillis()-time)+" en crear la grilla");
@@ -758,7 +735,11 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		//		surface.getSurfaceAttributes().setInteriorMaterial(material);
 
 		surface.setValues(attributesList);//.subList(0, width*height));
-		double scale = 	(maxElev)/minElev;
+		
+		double scale =1.0;
+		if(minElev>0){
+			 scale = 	(maxElev)/minElev;// 1/1=1 en cambio 0/0=inf
+		}
 		surface.setVerticalScale(5/scale);		
 		surface.setSurfaceAttributes(attr);
 		surface.setAltitude(1);
@@ -809,7 +790,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	 * @return una lista de poligonos que representa una grilla con un 100% de superposiocion
 	 */
 	public static void construirGrilla(BoundingBox bounds,double ancho,Consumer<Polygon> lambda) {
-		System.out.println("construyendo grilla");
+		//System.out.println("construyendo grilla");
 		//List<Polygon> polygons = new ArrayList<Polygon>();
 		//convierte los bounds de longlat a metros
 		Double minX = bounds.getMinX()/ProyectionConstants.metersToLong();
@@ -818,15 +799,12 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		Double maxY = bounds.getMaxY()/ProyectionConstants.metersToLat();
 		Double x0=minX;
 		
-		ExecutorService executorPool = Executors.newCachedThreadPool();
-		
 		for(int x=0;(x0)<maxX;x++){
 			x0=minX+x*ancho;
 			Double x1=minX+(x+1)*ancho;
 			for(int y=0;(minY+y*ancho)<maxY;y++){
 				Double y0=minY+y*ancho;
 				Double y1=minY+(y+1)*ancho;
-
 
 				Coordinate D = new Coordinate(x0*ProyectionConstants.metersToLong(), y0*ProyectionConstants.metersToLat()); 
 				Coordinate C = new Coordinate(x1*ProyectionConstants.metersToLong(), y0*ProyectionConstants.metersToLat());
@@ -851,9 +829,9 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				//				DirectPosition lower = positionFactory.createDirectPosition(new double[]{180,90});
 				//	Envelope envelope = geometryFactory.createEnvelope( upper, lower );
 
-				LinearRing shell = fact.createLinearRing(coordinates);
-				LinearRing[] holes = null;
-				Polygon poly = new Polygon(shell, holes, fact);	
+				//LinearRing shell = fact.createLinearRing(coordinates);
+				//LinearRing[] holes = null;
+				Polygon poly =	fact.createPolygon(coordinates);// new Polygon(shell, holes, fact);
 				//executorPool.execute(()->lambda.accept(poly));
 				lambda.accept(poly);
 				
@@ -981,29 +959,44 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			labor.minElev=Math.min(labor.minElev,fc.getElevacion());
 			labor.maxElev=Math.max(labor.maxElev,fc.getElevacion());
 
-			//TODO aproximar el envelope con un rectangulo
+			// aproximar el envelope con un rectangulo
 			//arribaIzq es la coordenada x,y del que tenga max y? 
-			Point centroid =null;
+		
 			if(g instanceof Point){
-				centroid =(Point) g;
+				Point centroid =(Point) g;
+				if(labor.minX==null || labor.minX.getLongitude().degrees>centroid.getX()){
+					labor.minX=Position.fromDegrees(centroid.getY(), centroid.getX());
+				}
+				if(labor.minY==null ||labor.minY.getLatitude().degrees>centroid.getY()){
+					labor.minY=Position.fromDegrees(centroid.getY(), centroid.getX());
+				}
+				if(labor.maxX==null ||labor.maxX.getLongitude().degrees<centroid.getX()){
+					labor.maxX=Position.fromDegrees(centroid.getY(), centroid.getX());
+				}
+				if(labor.maxY==null ||labor.maxY.getLatitude().degrees<centroid.getY()){
+					labor.maxY=Position.fromDegrees(centroid.getY(), centroid.getX());
+				}
 			}else{
-				centroid = g.getCentroid();//si la geometria es grande esto falla?
+				Envelope envelope = g.getEnvelopeInternal();//si la geometria es grande esto falla?
+				
+				if(labor.minX==null || labor.minX.getLongitude().degrees>envelope.getMinX()){
+					labor.minX=Position.fromDegrees(envelope.centre().y, envelope.getMinX());
+				}
+				if(labor.minY==null ||labor.minY.getLatitude().degrees>envelope.getMinY()){
+					labor.minY=Position.fromDegrees(envelope.getMinY(), envelope.centre().x);
+				}
+				if(labor.maxX==null ||labor.maxX.getLongitude().degrees<envelope.getMaxX()){
+					labor.maxX=Position.fromDegrees(envelope.centre().y, envelope.getMaxX());
+				}
+				if(labor.maxY==null ||labor.maxY.getLatitude().degrees<envelope.getMaxY()){
+					labor.maxY=Position.fromDegrees(envelope.getMaxY(), envelope.centre().x);
+				}
+				
 			}
 			
 			//System.out.println("actualizando las estadisticas con "+centroid);
 
-			if(labor.minX==null || labor.minX.getLongitude().degrees>centroid.getX()){
-				labor.minX=Position.fromDegrees(centroid.getY(), centroid.getX());
-			}
-			if(labor.minY==null ||labor.minY.getLatitude().degrees>centroid.getY()){
-				labor.minY=Position.fromDegrees(centroid.getY(), centroid.getX());
-			}
-			if(labor.maxX==null ||labor.maxX.getLongitude().degrees<centroid.getX()){
-				labor.maxX=Position.fromDegrees(centroid.getY(), centroid.getX());
-			}
-			if(labor.maxY==null ||labor.maxY.getLatitude().degrees<centroid.getY()){
-				labor.maxY=Position.fromDegrees(centroid.getY(), centroid.getX());
-			}
+	
 
 			//	labor.minX = Math.min(labor.minX, envelopeInternal.getMinX());
 			//	labor.minY = Math.min(labor.minY, envelopeInternal.getMinY());
@@ -1014,7 +1007,8 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 		labor.minAmount=min;
 		labor.maxAmount=max;
-		System.out.println("(min,max) = ("+min+" , "+max+")");
+		System.out.println("(maxElev, minElev)= ("+labor.maxElev+" , "+labor.minElev+")");
+		System.out.println("(min, max) = ("+min+" , "+max+")");//(min,max) = (203.0 , 203.0)
 	}
 
 	protected void runLater(Collection<FC> itemsToShow) {	
@@ -1022,7 +1016,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		updateStatsLabor(itemsToShow);
 
 		labor.getLayer().removeAllRenderables();//tiene que estar antes de runLaterInternall para que no se propagen los poligonos viejos
-		//TODO crear un renderable layer que dibuje el layer de los poligonos si esta suficientemente cerca
+		// crear un renderable layer que dibuje el layer de los poligonos si esta suficientemente cerca
 		//o el analyticSurface si esta lejos
 		//if(itemsToShow.size()<10000){
 		//long time = System.currentTimeMillis();
@@ -1037,7 +1031,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		labor.getLayer().setAnalyticSurfaceLayer(analyticSurfaceLayer);
 		labor.getLayer().setExtrudedPolygonsLayer(extrudedPolygonsLayer);
 		labor.getLayer().setElementsCount(itemsToShow.size());
-		//	labor.getLayer().dispose();
+		//labor.getLayer().dispose();
 		//labor.setLayer(altitudeDependingLayer);//esto funciona bien pero no se actualiza al editar
 		//labor.getLayer().addRenderable(altitudeDependingLayer);
 		//labor.getLayer().setPickEnabled(false);//si hago esto no puedo pasar el pick a extrudedPolygonsLayers
@@ -1056,51 +1050,12 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	}
 
 	private RenderableLayer createExtrudedPolygonsLayer(Collection<FC> itemsToShow) {	
-		//long time = System.currentTimeMillis();
-		//System.out.println("createExtrudedPolygonsLayer "+itemsToShow );
-		//this.pathTooltips.clear();
-		//labor.getLayer().removeAllRenderables();
-		//labor.getLayer().setPickEnabled(false);//evita que se muestre el tooltip
+
 		double min = labor.minAmount;//Double.MAX_VALUE;
 		double max = labor.maxAmount;//-Double.MAX_VALUE;
 
-		//		double min=0;
-		//		double max=10000;
-		//System.out.println("antes de buscar los colores "+(System.currentTimeMillis()-time));
 		Color colorMin = labor.getClasificador().getColorFor(min);// Clasificador.colors[0];
 		Color colorMax =labor.getClasificador().getColorFor(max);// Clasificador.colors[Clasificador.colors.length-1];
-
-		//System.out.println("creando extrudedP Layer "+(System.currentTimeMillis()-time));
-
-//		int workDone = 0;
-//		for(FC c:itemsToShow){
-//			this.updateProgress(workDone, itemsToShow.size());
-//			workDone++;
-//			//			double amount = c.getAmount();
-//			//			if( min>amount){
-//			//				min=amount;
-//			//				colorMin = labor.getClasificador().getColorFor(c);
-//			//			}
-//			//			if( max<amount){
-//			//				max=amount;
-//			//				colorMax = labor.getClasificador().getColorFor(c);
-//			//			}
-//
-//			Geometry g = c.getGeometry();
-//			if(g instanceof Polygon){
-//				//	pathTooltips.add(
-//				getPathTooltip((Polygon)g,c);
-//				//		);	
-//			} else if(g instanceof MultiPolygon){
-//				MultiPolygon mp = (MultiPolygon)g;			
-//				for(int i=0;i<mp.getNumGeometries();i++){
-//					Polygon p = (Polygon) (mp).getGeometryN(i);
-//					getPathTooltip(p,c);//se construye el poligono y se agrega al layer
-//					//	pathTooltips.add(getPathTooltip(p,c));	
-//				}
-//
-//			}
-//		}
 
 		double HUE_MIN = colorMin.getHue()/ 360d; //0d / 360d;
 		double HUE_MAX = colorMax.getHue()/ 360d;//240d / 360d;
@@ -1147,8 +1102,8 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				Envelope env = new Envelope(visibleSector.getMinLongitude().degrees,visibleSector.getMinLatitude().degrees,visibleSector.getMaxLongitude().degrees,visibleSector.getMaxLatitude().degrees);//p1.getLongitude().degrees, p1.getLatitude().degrees,p2.getLongitude().degrees, p2.getLatitude().degrees);
 
 				List<FC> features = labor.cachedOutStoreQuery(env);
-				//System.out.println("los features en vista son "+features.size());
-				//System.out.println("analizando las features en render create extruded polygon");
+			//	System.out.println("los features en vista son "+features.size());
+			//	System.out.println("analizando las features en render create extruded polygon");
 				features.stream().forEach((c)->{
 					Geometry g = c.getGeometry();
 					if(g instanceof Point){
@@ -1371,9 +1326,9 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		progressPane.getChildren().remove(progressContainer);
 	}
 
-	public void start() {
-		Platform.runLater(this);
-	}
+//	public void start() {
+//		Platform.runLater(this);
+//	}
 
 	public void installProgressBar(Pane progressBox) {
 		this.progressPane= progressBox;

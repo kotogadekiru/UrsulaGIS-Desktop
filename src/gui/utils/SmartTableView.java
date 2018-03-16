@@ -5,17 +5,14 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-
 import org.controlsfx.control.table.TableFilter;
 import org.controlsfx.control.table.TableFilter.Builder;
 
-import dao.Poligono;
 import dao.config.Agroquimico;
 import dao.config.Campania;
 import dao.config.Cultivo;
@@ -24,33 +21,22 @@ import dao.config.Establecimiento;
 import dao.config.Fertilizante;
 import dao.config.Lote;
 import dao.utils.JPAStringProperty;
-import utils.DAH;
 import gui.JFXMain;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
-import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import utils.DAH;
 
 
 
@@ -82,6 +68,7 @@ public class SmartTableView<T> extends TableView<T> {
 		if(data.size()>0){
 			populateColumns(data.get(0).getClass());
 		}else{
+			//populateColumns(onDoubleClick.get().getClass());
 			System.out.println("no creo las columnas porque no hay datos");
 		}
 
@@ -103,22 +90,6 @@ public class SmartTableView<T> extends TableView<T> {
 						data.add(onDoubleClick.get());
 					}		            
 				} 
-				//			else if(MouseButton.SECONDARY.equals(event.getButton()) && event.getClickCount() == 2){
-				//				T rowData = this.getSelectionModel().getSelectedItem();
-				//			
-				//				Alert alert = new Alert(AlertType.CONFIRMATION);
-				//				Stage stage = (Stage) alert.getDialogPane().getScene().getWindow();
-				//				
-				//				stage.getIcons().add(new Image(JFXMain.ICON));
-				//				alert.setTitle("Borrar registro");
-				//				alert.setHeaderText("Esta accion borrara permanentemente el registro. Desea Continuar?");
-				//				Optional<ButtonType> res = alert.showAndWait();
-				//				if(res.get().equals(ButtonType.OK) && rowData!=null){
-				//					data.remove(rowData);
-				//
-				//					DAH.remove(rowData);
-				//				}
-				//			} 
 				else if(MouseButton.SECONDARY.equals(event.getButton()) && event.getClickCount() == 1){
 
 					mostrarItem.setOnAction((ev)->{
@@ -133,15 +104,30 @@ public class SmartTableView<T> extends TableView<T> {
 						alert.setHeaderText("Esta accion borrara permanentemente el registro. Desea Continuar?");
 						Optional<ButtonType> res = alert.showAndWait();
 						if(res.get().equals(ButtonType.OK) && rowData!=null){
-							data.remove(rowData);
-							DAH.remove(rowData);
+							try{
+								DAH.remove(rowData);
+								data.remove(rowData);
+								if(data.size()==0){
+									data.add(onDoubleClick.get());
+								}
+								refresh();
+							}catch(Exception e){
+								Alert eliminarFailAlert = new Alert(AlertType.ERROR);
+								((Stage) eliminarFailAlert.getDialogPane().getScene().getWindow()).
+										getIcons().add(new Image(JFXMain.ICON));
+								eliminarFailAlert.setTitle("Borrar registro");
+								eliminarFailAlert.setHeaderText("No se pudo borrar el registro");
+								eliminarFailAlert.setContentText(e.getMessage());
+								eliminarFailAlert.show();
+							}							
 						}
 					});			
 				}
 			}
 		});
 
-		data.addListener((javafx.collections.ListChangeListener.Change<? extends T> c)->{if(	getColumns().size()==0){
+		data.addListener((javafx.collections.ListChangeListener.Change<? extends T> c)->{
+			if(	getColumns().size()==0){			
 			populateColumns(c.getList().get(0).getClass());
 		}});
 
@@ -178,9 +164,15 @@ public class SmartTableView<T> extends TableView<T> {
 				continue;
 			}
 			String name = method.getName();
-			if(name.startsWith("get")){
+			if(name.startsWith("get")||name.startsWith("is")){
 				Class<?> fieldType = method.getReturnType();
-				String setMethodName = name.replace("get", "set");
+				String setMethodName = null;
+				if(name.startsWith("is")){
+					setMethodName = name.replace("is", "set");
+				} else {
+					setMethodName = name.replace("get", "set");
+				}
+				
 				name = name.replace("get", "");
 				if(String.class.isAssignableFrom(fieldType)){
 					getStringColumn(clazz,method, name, fieldType, setMethodName);

@@ -2,6 +2,8 @@ package dao.cosecha;
 
 import java.util.List;
 
+import javax.persistence.Access;
+import javax.persistence.AccessType;
 import javax.persistence.Entity;
 import javax.persistence.Transient;
 
@@ -24,9 +26,10 @@ import lombok.Data;
 import utils.ProyectionConstants;
 
 @Data
-@Entity
+@Entity @Access(AccessType.FIELD)
 public class CosechaLabor extends Labor<CosechaItem> {
 	private static final int KG_POR_TN = 1000;
+	public static final double FEET_TO_METERS = 0.3048;
 	private static final double KG_POR_LIBRA = 0.453592;
 
 	public static final String COLUMNA_VELOCIDAD = "Velocidad";
@@ -51,8 +54,8 @@ public class CosechaLabor extends Labor<CosechaItem> {
 
 	@Transient 
 	public StringProperty colRendimiento= null;
-
-	public Property<Cultivo> producto=null;
+	@Transient 
+	public Property<Cultivo> producto=null;//FIXME producto no se puede guardar como una property
 	@Transient 
 	public SimpleDoubleProperty precioGranoProperty= null;
 	@Transient 

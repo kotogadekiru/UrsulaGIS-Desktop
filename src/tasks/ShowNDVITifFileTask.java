@@ -51,12 +51,14 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 	public static final double CLOUD_RENDER_VALUE = 2.2;
 	private static final int WATER_VALUE = -2;
 	private static final int CLOUD_VALUE = 2;
-	public static final double MAX_VALUE = 0.9;//1.0;
+	public static final double MAX_VALUE = 0.9;//1.0;//con soja en floracion no pasa de 0.9
 	public static final double MIN_VALUE =0.2;// 0.2;
 	private File file=null;
+	private Ndvi ndvi=null;
 	private Poligono ownerPoli = null;
-	public ShowNDVITifFileTask(File f){
+	public ShowNDVITifFileTask(File f,Ndvi _ndvi){
 		file =f;
+		ndvi=_ndvi;
 	}
 	public Layer call() {	
 		try{
@@ -194,20 +196,33 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 			layer.setPickEnabled(false);
 			layer.addRenderable(surface);
 			layer.addRenderable(renderable);
-			Ndvi ndvi = new Ndvi();
-			ndvi.setNombre(fileName);
+			if(ndvi==null){
+				ndvi = new Ndvi();
+				ndvi.setNombre(fileName);
+				ndvi.setF(file);
+				ndvi.setPixelArea(pixelArea);//pixelArea);
+				
+				//04-01-2018
+				SimpleDateFormat format1 = new SimpleDateFormat("dd-MM-yyyy");
+				//System.out.println("convirtiendo fechaString "+fechaString);
+				//convirtiendo fechaString 04-01-2018
+				Date fecha = null;
+				try{
+					fecha = format1.parse(fechaString);//java.text.ParseException: Unparseable date: "Jag 20 30-08-20175528033450897731504"
+					ndvi.getFecha().setTime(fecha);
+				}catch(Exception e){
+					
+				}
+			}
+		
 			ndvi.setSurfaceLayer(surface);
-			ndvi.setF(file);
-			ndvi.setPixelArea(pixelArea);//pixelArea);
-			//04-01-2018
-			SimpleDateFormat format1 = new SimpleDateFormat("dd-MM-yyyy");
-			//System.out.println("convirtiendo fechaString "+fechaString);
-			//convirtiendo fechaString 04-01-2018
-			Date fecha = format1.parse(fechaString);
+		
+		
+			
 			// creando un ndvi con fecha
 			//System.out.println("creando un ndvi con fecha "+fecha);
 			//creando un ndvi con fecha Thu Jan 04 00:00:00 ART 2018
-			ndvi.setFecha(fecha);
+			
 			layer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, ndvi);
 			layer.setValue(ProcessMapTask.ZOOM_TO_KEY, pointPosition);		
 			
@@ -245,12 +260,12 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 	}
 	
 	public static BufferWrapperRaster loadRasterFile(File file){
-		if(!file.exists()){	
-			//TODO si el recurso es web podemos bajarlo a 
-			// Download the data and save it in a temp file.
-			String path = file.getAbsolutePath();
-			file = ExampleUtil.saveResourceToTempFile(path, "." + WWIO.getSuffix(path));
-		}
+//		if(!file.exists()){	
+//			//TODO si el recurso es web podemos bajarlo a 
+//			// Download the data and save it in a temp file.
+//			String path = file.getAbsolutePath();
+//			file = ExampleUtil.saveResourceToTempFile(path, "." + WWIO.getSuffix(path));
+//		}
 
 
 

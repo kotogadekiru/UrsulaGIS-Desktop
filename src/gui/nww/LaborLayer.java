@@ -39,17 +39,16 @@ public class LaborLayer extends RenderableLayer {
 	public void render(DrawContext dc){
 		if(!this.isEnabled())return;
 		long vsNow =dc.getView().getViewStateID();
-		//long tNow = System.currentTimeMillis();
+
 		double eyeElevation = dc.getView().getCurrentEyePosition().elevation;
 		if( //(this.vS==vsNow  &&
 				//extrudedPolygonsLayer != null && (
-				//elementsCount<MAX_EXTRUDED_ELEMENTS || 
+				//elementsCount<MAX_EXTRUDED_ELEMENTS || //si comento esto cuando es una labor sintentica no se muestra
 				eyeElevation < screenPixelsSectorMinSize ){
 			
 			extrudedPolygonsLayer.render(dc);
 			analyticSurfaceLayer.setEnabled(false);
-		} else //if(analyticSurfaceLayer!=null)
-		{
+		} else 	{//if(analyticSurfaceLayer!=null)
 			this.vS=vsNow;
 			analyticSurfaceLayer.setEnabled(true);
 			analyticSurfaceLayer.render(dc);	
@@ -58,7 +57,6 @@ public class LaborLayer extends RenderableLayer {
 				
 				extrudedRendered=true;
 			}
-			//this.lastRendered=tNow;
 		}
 		
 //		double eyeElevation = dc.getView().getCurrentEyePosition().elevation;
@@ -105,6 +103,7 @@ public class LaborLayer extends RenderableLayer {
 	public void pick(DrawContext dc, java.awt.Point point) {//pick(DrawContext dc, Point p){
 		if(this.isEnabled()&&extrudedPolygonsLayer!=null ){
 			extrudedPolygonsLayer.pick(dc, point);
+			//TODO cambiar esto por una consulta a la base y mostrar un baloon
 		} else{
 			super.pick(dc, point);
 		}

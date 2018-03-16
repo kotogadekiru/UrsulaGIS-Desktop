@@ -36,6 +36,7 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		SueloItem si = new SueloItem();
 		si.setPpmP(ppmP);
 		si.setPpmN(ppmN);
+
 		labor.setPropiedadesLabor(si);
 		GeometryFactory fact = new GeometryFactory();
 		List<? extends Position> positions = poli.getPositions();

@@ -28,8 +28,8 @@ public class Empresa implements Comparable<Empresa>{
 	
 	private String nombre= new String();
 	
-	@OneToMany(cascade=CascadeType.ALL, mappedBy="empresa")
-	private List<Establecimiento> establecimientos=new ArrayList<Establecimiento>();
+//	@OneToMany(cascade=CascadeType.ALL, mappedBy="empresa")
+//	private List<Establecimiento> establecimientos=new ArrayList<Establecimiento>();
 	
 	
 	public Empresa() {
@@ -54,19 +54,19 @@ public class Empresa implements Comparable<Empresa>{
 		this.nombre= nombre;// = nombre;
 	}
 
-	/**
-	 * @return the establecimientos
-	 */
-	public List<Establecimiento> getEstablecimientos() {
-		return establecimientos;
-	}
-
-	/**
-	 * @param establecimientos the establecimientos to set
-	 */
-	public void setEstablecimientos(List<Establecimiento> establecimientos) {
-		this.establecimientos = establecimientos;
-	}
+//	/**
+//	 * @return the establecimientos
+//	 */
+//	public List<Establecimiento> getEstablecimientos() {
+//		return establecimientos;
+//	}
+//
+//	/**
+//	 * @param establecimientos the establecimientos to set
+//	 */
+//	public void setEstablecimientos(List<Establecimiento> establecimientos) {
+//		this.establecimientos = establecimientos;
+//	}
 
 	
 	

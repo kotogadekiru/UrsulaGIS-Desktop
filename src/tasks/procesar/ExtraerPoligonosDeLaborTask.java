@@ -1,36 +1,21 @@
 package tasks.procesar;
 
-import java.awt.Component;
-import java.awt.Cursor;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.geotools.data.simple.SimpleFeatureIterator;
-import org.geotools.geometry.jts.JTS;
 import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.operation.buffer.BufferOp;
 import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 
-import dao.Poligono;
-import gov.nasa.worldwind.avlist.AVKey;
-import gov.nasa.worldwind.geom.Position;
-import gov.nasa.worldwind.layers.RenderableLayer;
-import gov.nasa.worldwind.util.UnitsFormat;
-import gov.nasa.worldwind.util.measure.MeasureTool;
-import gov.nasa.worldwind.util.measure.MeasureToolController;
 import dao.Labor;
-import javafx.application.Platform;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
+import dao.Poligono;
+import gov.nasa.worldwind.geom.Position;
 import javafx.concurrent.Task;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -40,89 +25,74 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import utils.PolygonValidator;
 import utils.ProyectionConstants;
 
-public class ExtraerPoligonosDeCosechaTask extends Task<List<Poligono>> {
+public class ExtraerPoligonosDeLaborTask extends Task<List<Poligono>> {
 	private static final String TASK_CLOSE_ICON = "/gui/event-close.png";
 
 	private ProgressBar progressBarTask;
 	private Pane progressPane;
 	private Label progressBarLabel;
 	private HBox progressContainer;
-	
+
 	private Labor<?> labor;
-	public ExtraerPoligonosDeCosechaTask(Labor<?> l) {
+	public ExtraerPoligonosDeLaborTask(Labor<?> l) {
 		this.labor = l;
 	}
 
 	@Override
 	protected List<Poligono> call() {
 		try{
-		List<Poligono> poligonos = new ArrayList<Poligono>();
-		SimpleFeatureIterator it = labor.getOutCollection().features();
-		int featureCount=labor.getOutCollection().size();
-		int index =0;
-		while(it.hasNext()){
-			updateProgress(index, featureCount);
-			SimpleFeature next = it.next();
-
-			List<Polygon> mp = getPolygons(next.getDefaultGeometry());
-			
-		//	for(Polygon p : mp){
-			Polygon p =null;
-			Geometry boundary =  mp.get(0);//.getBoundary();// com.vividsolutions.jts.geom.MultiLineString
-			
-			if(boundary.getNumGeometries()>1){
-				System.out.println("boundary tiene dim >1");
-			
-				continue;
-			} else{
-				p=(Polygon) boundary;
-			}
-				p =getPolygons(PolygonValidator.validate((Geometry)p)).get(0); 
-				Poligono poli =new Poligono();
-				poli.setNombre(labor.getNombreProperty().get()+" "+index);
-
-			//	p =(Polygon) p.buffer(ProyectionConstants.metersToLongLat(10));
-			//	p=(Polygon) p.convexHull();
-				 p = (Polygon) JTS.smooth( p,1 );
-			//	BufferOp op = new BufferOp(p);
-			//	p=(Polygon) op.getResultGeometry(ProyectionConstants.metersToLongLat(20));
-			
-				try{	
-					TopologyPreservingSimplifier ts =new TopologyPreservingSimplifier(p);
-					ts.setDistanceTolerance(ProyectionConstants.metersToLongLat(10));
-					p=	getPolygons(ts.getResultGeometry()).get(0);
-				}catch(Exception e){
-					e.printStackTrace();
-				}
-				
-				Geometry bp = p.getBoundary();
-				double has = ProyectionConstants.A_HAS(p.getArea());
-				poli.setArea(has);
-				Coordinate[] coordinates = bp.getCoordinates();
-				for(Coordinate c :coordinates){//las coordenadas no estan ordenadas o tienen huecos
-					poli.getPositions().add(Position.fromDegrees(c.y,c.x));
-				}
-				poli.getPositions().add(Position.fromDegrees(coordinates[0].y,coordinates[0].x));//cierro el poligono
-			//	double has = poli.getArea();
+			List<Poligono> poligonos = new ArrayList<Poligono>();
+			SimpleFeatureIterator it = labor.getOutCollection().features();
+			int featureCount=labor.getOutCollection().size();
+			int index =0;
+			while(it.hasNext()){
+				updateProgress(index, featureCount);
+				SimpleFeature next = it.next();
+				double has = ProyectionConstants.A_HAS(((Geometry)next.getDefaultGeometry()).getArea());
 				if(has>0.2){//cada poli mayor a 10m2
+				Poligono poli = featureToPoligono(next);
+
+				poli.setNombre(labor.getNombreProperty().get()+" "+index);
+				GeometryFactory fact = ((Geometry)next.getDefaultGeometry()).getFactory();
+				List<Position> positions = poli.getPositions();
+
+				Coordinate[] coordinates = new Coordinate[positions.size()];
+				for(int i =0;i<positions.size();i++){
+					Position pos = positions.get(i);
+					coordinates[i]=new Coordinate(pos.getLongitude().degrees,pos.getLatitude().degrees);
+				}
+				Polygon p =fact.createPolygon(coordinates);
+				//		p = (Polygon) JTS.smooth( p,1 );
+
+			
+
+				Geometry bp = p.getBoundary();
+			
+				poli.setArea(has);
+
+				
+					Coordinate[] finalCoords = bp.getCoordinates();
+					poli.getPositions().clear();
+					for(Coordinate c :finalCoords){//las coordenadas no estan ordenadas o tienen huecos
+						poli.getPositions().add(Position.fromDegrees(c.y,c.x));
+					}
 					poligonos.add(poli);
 				} else{
 					System.out.println("el poligono es chico "+has);
 				}
-			//}
-			index++;
-		}
-		return poligonos;
+				//}
+				index++;
+			}
+			return poligonos;
 		}catch(Exception e){
 			e.printStackTrace();
 			return null;
 		}
 	}
 
-	
+
 	/**
 	 * metodo usado por las capas de siembra fertilizacion, pulverizacion y suelo para obtener los poligonos
 	 * @param dao
@@ -146,7 +116,73 @@ public class ExtraerPoligonosDeCosechaTask extends Task<List<Poligono>> {
 		}
 		return polygons;
 	}
-	
+
+	public static Poligono featureToPoligono(SimpleFeature feature){			
+		Object g=feature.getDefaultGeometry();
+		if(g instanceof Geometry){						
+			ArrayList<Position> iterable = new ArrayList<Position>();
+			
+			try{	
+				TopologyPreservingSimplifier ts =new TopologyPreservingSimplifier((Geometry) g);
+				ts.setDistanceTolerance(ProyectionConstants.metersToLongLat(1));
+				g=	ts.getResultGeometry();
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+			
+			Geometry mainBoundary = ((Geometry) g).getBoundary();
+			Geometry seed =mainBoundary.getGeometryN(0);// mp.getGeometryN(0);
+			Coordinate[] coordinates = seed.getCoordinates();
+			for(Coordinate c : coordinates){
+				iterable.add(Position.fromDegrees(c.y, c.x));							
+			}
+
+			for(int n =1;n<mainBoundary.getNumGeometries();n++){
+				Geometry toAdd =mainBoundary.getGeometryN(n);// mp.getGeometryN(0);
+				Coordinate[] cToAdd= toAdd.getCoordinates();
+				//1 buscar los puntos de cada una de las geometrias que esten mas cerca
+				int minIt=0;
+				int minCoord=0;
+				double minDistance=-1;
+				for(int i=0;i<iterable.size();i++){
+					Position itPos = iterable.get(i);
+					for(int j=0;j<cToAdd.length;j++){
+						Coordinate c=cToAdd[j];
+						Position pToAdd = Position.fromDegrees(c.y, c.x);
+						double dist = Position.linearDistance(pToAdd,itPos ).degrees;
+						if(minDistance<0 || dist<minDistance){
+							minDistance=dist;
+							minIt=i;
+							minCoord=j;												
+						}
+					}
+				}			
+				//insertar en iterable position minIt las coordenadas de ToAdd empezando por minCoord
+				for(int j=0;j<cToAdd.length;j++){//empiezo en j=0
+					int index = (j+minCoord)%cToAdd.length;
+
+					Coordinate c = cToAdd[index];//para recorrer hasta cero al final
+					Position pToAdd = Position.fromDegrees(c.y, c.x);
+					int finalIndex = minIt+1+j;
+					iterable.add(finalIndex, pToAdd);			
+				}
+
+				Coordinate c = cToAdd[minCoord];//para recorrer hasta cero al final
+				Position pToAdd = Position.fromDegrees(c.y, c.x);
+				iterable.add(minIt+cToAdd.length+1,pToAdd);
+				iterable.add(minIt+cToAdd.length+2, iterable.get(minIt));
+			}
+
+
+			if(!iterable.get(0).equals(iterable.get(iterable.size()-1))){
+				iterable.add(iterable.get(0));
+			}
+			Poligono poli = new Poligono();
+			poli.setPositions(iterable);
+			return poli;
+		} else {return null;}
+	}
+
 	public void installProgressBar(Pane progressBox) {
 		this.progressPane= progressBox;
 		progressBarTask = new ProgressBar();			
