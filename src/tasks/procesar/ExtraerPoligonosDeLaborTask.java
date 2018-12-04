@@ -15,6 +15,9 @@ import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 
 import dao.Labor;
 import dao.Poligono;
+import dao.config.Configuracion;
+import dao.cosecha.CosechaLabor;
+import dao.utils.PropertyHelper;
 import gov.nasa.worldwind.geom.Position;
 import javafx.concurrent.Task;
 import javafx.scene.control.Button;
@@ -36,25 +39,30 @@ public class ExtraerPoligonosDeLaborTask extends Task<List<Poligono>> {
 	private HBox progressContainer;
 
 	private Labor<?> labor;
+	private double supMin = 0;
 	public ExtraerPoligonosDeLaborTask(Labor<?> l) {
 		this.labor = l;
+		this.supMin = labor.getConfig().supMinimaProperty().get()/ProyectionConstants.METROS2_POR_HA;//5
+		// PropertyHelper.initDoubleProperty(Cosecha.SUP_MINIMA_M2_KEY, "10", labor.getConfig());
+		//Configuracion.getInstance().getPropertyOrDefault(CosechaLabor., def)
 	}
 
 	@Override
 	protected List<Poligono> call() {
 		try{
 			List<Poligono> poligonos = new ArrayList<Poligono>();
-			SimpleFeatureIterator it = labor.getOutCollection().features();
-			int featureCount=labor.getOutCollection().size();
+			SimpleFeatureIterator it = labor.outCollection.features();
+			int featureCount=labor.outCollection.size();
 			int index =0;
 			while(it.hasNext()){
 				updateProgress(index, featureCount);
 				SimpleFeature next = it.next();
 				double has = ProyectionConstants.A_HAS(((Geometry)next.getDefaultGeometry()).getArea());
-				if(has>0.2){//cada poli mayor a 10m2
+				
+				if(has>supMin) {//0.2){//cada poli mayor a 10m2
 				Poligono poli = featureToPoligono(next);
 
-				poli.setNombre(labor.getNombreProperty().get()+" "+index);
+				poli.setNombre(labor.getNombre()+" "+index);
 				GeometryFactory fact = ((Geometry)next.getDefaultGeometry()).getFactory();
 				List<Position> positions = poli.getPositions();
 
@@ -116,9 +124,9 @@ public class ExtraerPoligonosDeLaborTask extends Task<List<Poligono>> {
 		}
 		return polygons;
 	}
-
-	public static Poligono featureToPoligono(SimpleFeature feature){			
-		Object g=feature.getDefaultGeometry();
+	
+	public static Poligono geometryToPoligono(Geometry g){			
+		//Object g=feature.getDefaultGeometry();
 		if(g instanceof Geometry){						
 			ArrayList<Position> iterable = new ArrayList<Position>();
 			
@@ -131,7 +139,8 @@ public class ExtraerPoligonosDeLaborTask extends Task<List<Poligono>> {
 			}
 			
 			Geometry mainBoundary = ((Geometry) g).getBoundary();
-			Geometry seed =mainBoundary.getGeometryN(0);// mp.getGeometryN(0);
+			if(mainBoundary.getNumGeometries()==0)return null;
+			Geometry seed =mainBoundary.getGeometryN(0);
 			Coordinate[] coordinates = seed.getCoordinates();
 			for(Coordinate c : coordinates){
 				iterable.add(Position.fromDegrees(c.y, c.x));							
@@ -183,13 +192,20 @@ public class ExtraerPoligonosDeLaborTask extends Task<List<Poligono>> {
 		} else {return null;}
 	}
 
+	public static Poligono featureToPoligono(SimpleFeature feature){			
+		Object g=feature.getDefaultGeometry();
+		if(g instanceof Geometry){
+			return ExtraerPoligonosDeLaborTask.geometryToPoligono((Geometry)g);
+		} else {return null;}
+	}
+
 	public void installProgressBar(Pane progressBox) {
 		this.progressPane= progressBox;
 		progressBarTask = new ProgressBar();			
 		progressBarTask.setProgress(0);
 
 		progressBarTask.progressProperty().bind(this.progressProperty());
-		progressBarLabel = new Label(labor.nombreProperty.get());
+		progressBarLabel = new Label(labor.getNombre());
 		progressBarLabel.setTextFill(Color.BLACK);
 
 

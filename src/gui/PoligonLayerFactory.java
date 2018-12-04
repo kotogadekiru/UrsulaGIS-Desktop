@@ -53,10 +53,7 @@ public class PoligonLayerFactory {
 
 		measureTool.setPositions((ArrayList<? extends Position>) positions);
 	
-		//measureTool.setArmed(false);//hace que no se agreguen nuevos puntos en click
-
-		
-		
+				
 		DoubleProperty valueProperty= new SimpleDoubleProperty();
 		valueProperty.setValue( poli.getArea());
 
@@ -87,7 +84,7 @@ public class PoligonLayerFactory {
 					//surfaceLayer.setName(poli.getNombre()+" "+formated);
 					surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, poli);
 					valueProperty.setValue(area);
-					layerPanel.update(wwd);				
+					//layerPanel.update(wwd);				//XXX esto hace que se re calcule todo el arbol varias veces??
 				}                	                  
 			}
 		});

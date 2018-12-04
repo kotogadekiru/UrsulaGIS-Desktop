@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<RCDLogFile language="en-US" xmlns="urn:schemas-johndeere-com:RCD:LogFile"
+	xmlns:bt="urn:schemas-johndeere-com:BasicTypes" xmlns:rcdsetup="urn:schemas-johndeere-com:RCD:Setup"
+	xmlns:spatial="urn:schemas-johndeere-com:SpatialTypes" xmlns:rep="urn:schemas-johndeere-com:Representation"
+	xmlns:unit="urn:schemas-johndeere-com:UnitSystem" xmlns:xsi="http://www.w3.org/2001/xmlschema-instance">
+	<RCDLogHeader>
+		<FileSchemaVersion nonProductionCode="0">
+			<bt:FileSchemaContentVersion major="2"
+				minor="0" />
+			<bt:UnitOfMeasureVersion major="1" minor="36" />
+			<bt:RepresentationSystemVersion major="4"
+				minor="140" />
+		</FileSchemaVersion>
+		<SourceApp major="2" minor="8" build="1031" revision="0"
+			nameSourceApp="RCDFieldDoc" uuidSourceApp="{492ce5c7-5193-49f0-93a1-2c88fdbe1633}"
+			uuidSourceAppNode="{43cb2ca8-0000-1000-6aa3-e1e1e114c450}"
+			uuidSession="{50b25a5a-0000-1000-7fd5-e1e1e114c450}" />
+		<FieldRef eridRef="{50b26f8d-0000-1000-7fd7-e1e1e114c450}" />
+		<TaskRef eridRef="{fc3073ce-4cd0-4a45-b0d8-29be19fe8e9e}" />
+	</RCDLogHeader>
+	<RCDLogBlock>
+		<ConfigBlock>
+			<Setup>
+				<rcdsetup:FileSchemaVersion
+					nonProductionCode="0">
+					<bt:FileSchemaContentVersion major="3"
+						minor="11" />
+					<bt:UnitOfMeasureVersion major="1" minor="36" />
+					<bt:RepresentationSystemVersion
+						major="4" minor="140" />
+				</rcdsetup:FileSchemaVersion>
+				<bt:Synchronization>
+					<bt:NodeVersions>
+						<bt:Node uuid="a522dda1-a850-4ae1-9d8c-8eb57bc82496"
+							lastSeen="2005-02-24T13:38:31Z" />
+					</bt:NodeVersions>
+					<bt:EntityDeletions />
+				</bt:Synchronization>
+				<rcdsetup:Participant>
+					<rcdsetup:Client lastModified="2012-11-13T16:19:35.000Z"
+						sourceNode="{43cb2ca8-0000-1000-6aa3-e1e1e114c450}" erid="{50a27317-0000-1000-7f95-e1e1e114c450}"
+						name="CHEDIACK" active="true" />
+				</rcdsetup:Participant>
+				<rcdsetup:Participant>
+					<rcdsetup:Operator lastModified="2012-03-19T08:27:23.000Z"
+						sourceNode="{43cb2ca8-0000-1000-6aa3-e1e1e114c450}" erid="{4f66edcf-0000-1000-7faa-e1e1e114c450}"
+						name="0scar sole" active="true" operatorLicense="12841244" />
+				</rcdsetup:Participant>
+				<rcdsetup:Farm lastModified="2012-11-25T19:20:27.000Z"
+					sourceNode="{43cb2ca8-0000-1000-6aa3-e1e1e114c450}" erid="{50b26f7b-0000-1000-7fd7-e1e1e114c450}"
+					name="Los Jagueles" active="true" clientRef="{50a27317-0000-1000-7f95-e1e1e114c450}" />
+				<rcdsetup:Field lastModified="2012-11-25T19:20:45.000Z"
+					sourceNode="{43cb2ca8-0000-1000-6aa3-e1e1e114c450}" erid="{50b26f8d-0000-1000-7fd7-e1e1e114c450}"
+					name="LJ 20" farmRef="{50b26f7b-0000-1000-7fd7-e1e1e114c450}"
+					active="true" />
+				<rcdsetup:Products>
+					<rcdsetup:Crop lastModified="2006-01-26T19:30:02.300Z"
+						sourceNode="{e2fddae0-3c59-42c6-bfd8-ed50d027cf5d}" id="2" name="Cebada"
+						active="true" legacyId="2">
+						<rcdsetup:CropWeight value="21.770000"
+							sourceUOM="kg1bu-1" variableRepresentation="vrCropWeightVolume" />
+						<rcdsetup:StandardPayableMoisture
+							value="14.000000" sourceUOM="prcnt" variableRepresentation="vrStandardPayableMoisture" />
+						<rcdsetup:CropVariety lastModified="2011-11-30T10:29:38.000Z"
+							sourceNode="{43cb2ca8-0000-1000-6aa3-e1e1e114c450}" erid="{4ed60592-0000-1000-402e-e1e1e114c450}"
+							name="nn" active="true" brandRef="{4ed0b3af-0000-1000-401a-e1e1e114c450}"
+							treated="false" GMO="false" />
+					</rcdsetup:Crop>
+				</rcdsetup:Products>
+				<rcdsetup:MachineType lastModified="2008-09-17T15:57:34.300Z"
+					sourceNode="{e2fddae0-3c59-42c6-bfd8-ed50d027cf5d}" erid="{d8dce5b0-cc8d-4c34-afac-27d93793bd86}"
+					name="Cosechadora" active="true" refID="3" />
+				<rcdsetup:Equipment>
+					<rcdsetup:Machine lastModified="2012-11-25T19:19:34.000Z"
+						sourceNode="{43cb2ca8-0000-1000-6aa3-e1e1e114c450}" erid="{4df9de49-0000-1000-4038-e1e1e114c450}"
+						name="john deere" active="true" serialNumber=""
+						machineTypeRef="{d8dce5b0-cc8d-4c34-afac-27d93793bd86}"
+						machineModelRef="{4df9ddfc-0000-1000-4037-e1e1e114c450}">
+						<rcdsetup:MachineDefinition>
+							<rcdsetup:MachineSettings>
+								<rcdsetup:dtHitchType value="dtiFrontRigidThreePoint"
+									definedTypeRepresentation="dtHitchType" />
+								<rcdsetup:Offsets>
+									<rcdsetup:vrReceiverOffset value="0.000000"
+										sourceUOM="in" variableRepresentation="vrReceiverOffset" />
+									<rcdsetup:vrGPSToNonSteeringAxleOffset
+										value="-1.500000" sourceUOM="m" variableRepresentation="vrGPSToNonSteeringAxleOffset" />
+									<rcdsetup:ConnectionDistance>
+										<rcdsetup:vrNonSteeringAxleToConnectionOffset
+											value="-2.000000" sourceUOM="m"
+											variableRepresentation="vrNonSteeringAxleToConnectionOffset" />
+										<rcdsetup:ConnectionType value="dtiFrontRigidThreePoint"
+											definedTypeRepresentation="dtHitchType" />
+									</rcdsetup:ConnectionDistance>
+									<rcdsetup:dtNonSteeringAxleLocation
+										value="dtiFrontAxle" definedTypeRepresentation="dtNonSteeringAxleLocation" />
+									<rcdsetup:vrMachineReceiverVerticalOffset
+										value="3.400000" sourceUOM="m" variableRepresentation="vrMachineVerticalReceiverOffset" />
+								</rcdsetup:Offsets>
+							</rcdsetup:MachineSettings>
+							<rcdsetup:MachineAutomationSettings
+								turnSensitivity="70">
+								<rcdsetup:vrTurnRadius value="6705.600000"
+									sourceUOM="mm" variableRepresentation="vrMachineTurnRadius" />
+							</rcdsetup:MachineAutomationSettings>
+						</rcdsetup:MachineDefinition>
+					</rcdsetup:Machine>
+				</rcdsetup:Equipment>
+				<rcdsetup:Task lastModified="2008-09-17T15:57:58.900Z"
+					sourceNode="{e2fddae0-3c59-42c6-bfd8-ed50d027cf5d}" erid="{fc3073ce-4cd0-4a45-b0d8-29be19fe8e9e}"
+					name="Cosecha" active="true" />
+				<rcdsetup:Brand lastModified="2011-11-26T09:38:55.000Z"
+					sourceNode="{43cb2ca8-0000-1000-6aa3-e1e1e114c450}" erid="{4ed0b3af-0000-1000-401a-e1e1e114c450}"
+					name="n1" active="true" />
+				<rcdsetup:UserDefinedType lastModified="2008-09-17T15:56:53.000Z"
+					sourceNode="{e2fddae0-3c59-42c6-bfd8-ed50d027cf5d}" erid="{93a85c5d-7d67-4e3f-9561-95b34fb0207d}"
+					name="TipoGestiónResiduos" active="true">
+					<rcdsetup:UserDefinedTypeInstance
+						lastModified="2008-09-17T15:56:53.000Z" sourceNode="{e2fddae0-3c59-42c6-bfd8-ed50d027cf5d}"
+						erid="{66bb9df6-1b66-4164-b006-a7f5c234ceee}" name="Picar y esparcir"
+						active="true" />
+				</rcdsetup:UserDefinedType>
+				<rcdsetup:MachineModel lastModified="2011-06-16T10:42:04.000Z"
+					sourceNode="{43cb2ca8-0000-1000-6aa3-e1e1e114c450}" erid="{4df9ddfc-0000-1000-4037-e1e1e114c450}"
+					name="9870 sts" machineModelId="0"
+					machineTypeRef="{d8dce5b0-cc8d-4c34-afac-27d93793bd86}">
+					<rcdsetup:MachineDefinition />
+				</rcdsetup:MachineModel>
+			</Setup>
+			<EquipmentConfiguration>
+				<Meter id="15">
+					<TargetElement>
+						<VariableNumberColumn columnID="TgtElement16"
+							sourceUOM="prcnt" variableRepresentation="vrRelativeHumidity" />
+						<vrLatency value="0.000000" sourceUOM="sec"
+							variableRepresentation="vrLatency" />
+					</TargetElement>
+				</Meter>
+				<Meter id="17">
+					<TargetElement>
+						<VariableNumberColumn columnID="TgtElement18"
+							sourceUOM="F" variableRepresentation="vrAirTemperature" />
+						<vrLatency value="0.000000" sourceUOM="sec"
+							variableRepresentation="vrLatency" />
+					</TargetElement>
+				</Meter>
+				<Meter id="19">
+					<TargetElement>
+						<VariableNumberColumn columnID="TgtElement20"
+							sourceUOM="km1hr-1" variableRepresentation="vrWindSpeed" />
+						<vrLatency value="0.000000" sourceUOM="sec"
+							variableRepresentation="vrLatency" />
+					</TargetElement>
+				</Meter>
+				<Meter id="21">
+					<TargetElement>
+						<VariableNumberColumn columnID="TgtElement22"
+							sourceUOM="F" variableRepresentation="vrSoilTemperature" />
+						<vrLatency value="0.000000" sourceUOM="sec"
+							variableRepresentation="vrLatency" />
+					</TargetElement>
+				</Meter>
+				<Meter id="23">
+					<TargetElement>
+						<DefinedTypeColumn columnID="TgtElement24"
+							definedTypeRepresentation="dtWindDirection" />
+						<vrLatency value="0.000000" sourceUOM="sec"
+							variableRepresentation="vrLatency" />
+					</TargetElement>
+				</Meter>
+				<Meter id="25">
+					<TargetElement>
+						<DefinedTypeColumn columnID="TgtElement26"
+							definedTypeRepresentation="dtSkyCondition" />
+						<vrLatency value="0.000000" sourceUOM="sec"
+							variableRepresentation="vrLatency" />
+					</TargetElement>
+				</Meter>
+				<Meter id="27">
+					<TargetElement>
+						<DefinedTypeColumn columnID="TgtElement28"
+							definedTypeRepresentation="dtSoilMoisture" />
+						<vrLatency value="0.000000" sourceUOM="sec"
+							variableRepresentation="vrLatency" />
+					</TargetElement>
+				</Meter>
+				<Meter id="29">
+					<TargetElement>
+						<VariableNumberColumn columnID="TgtElement30"
+							sourceUOM="l1hr-1" variableRepresentation="vrFuelRatePerHour" />
+						<vrLatency value="0.000000" sourceUOM="sec"
+							variableRepresentation="vrLatency" />
+					</TargetElement>
+				</Meter>
+				<Meter id="31">
+					<TargetElement>
+						<VariableNumberColumn columnID="TgtElement32"
+							sourceUOM="km1hr-1" variableRepresentation="vrVehicleSpeed" />
+						<vrLatency value="0.000000" sourceUOM="sec"
+							variableRepresentation="vrLatency" />
+					</TargetElement>
+				</Meter>
+				<NavigationReference>
+					<vrInlineOffset value="0.000000" sourceUOM="in"
+						variableRepresentation="vrInlineOffset" />
+					<vrLateralOffset value="0.000000" sourceUOM="in"
+						variableRepresentation="vrLateralOffset" />
+					<vrLatitude columnID="GPSLatitude_5140" sourceUOM="arcdeg"
+						variableRepresentation="vrLatitude" />
+					<vrLongitude columnID="GPSLongitude_5140" sourceUOM="arcdeg"
+						variableRepresentation="vrLongitude" />
+					<vrHeading columnID="GPSHeading_5140" sourceUOM="arcdeg"
+						variableRepresentation="vrHeading" />
+					<vrDeltaDistance columnID="DeltaDistance_5140"
+						sourceUOM="cm" variableRepresentation="vrDistanceTraveled" />
+					<vrElevation columnID="Elevation_5140" sourceUOM="m"
+						variableRepresentation="vrElevation" />
+					<dtNavigationType value="dtiVehicleGPS"
+						definedTypeRepresentation="dtNavigationType" />
+					<dtSignalType columnID="SignalType_5140"
+						definedTypeRepresentation="dtSignalType" />
+					<vrGPSAccuracy columnID="GPSAccuracy_5140" sourceUOM="prcnt"
+						variableRepresentation="vrGPSAccuracy" />
+					<vrGPSVerticalAccuracy columnID="GPSVerticalAccuracy_5140"
+						sourceUOM="mm" variableRepresentation="vrGPSVerticalAccuracy" />
+				</NavigationReference>
+				<NavigationReference>
+					<vrInlineOffset value="0.500000" sourceUOM="m"
+						variableRepresentation="vrInlineOffset" />
+					<vrLateralOffset value="0.000000" sourceUOM="in"
+						variableRepresentation="vrLateralOffset" />
+					<vrLatitude columnID="GPSLatitude_5141" sourceUOM="arcdeg"
+						variableRepresentation="vrLatitude" />
+					<vrLongitude columnID="GPSLongitude_5141" sourceUOM="arcdeg"
+						variableRepresentation="vrLongitude" />
+					<vrHeading columnID="GPSHeading_5141" sourceUOM="arcdeg"
+						variableRepresentation="vrHeading" />
+					<vrDeltaDistance columnID="DeltaDistance_5141"
+						sourceUOM="cm" variableRepresentation="vrDistanceTraveled" />
+					<vrElevation columnID="Elevation_5140" sourceUOM="m"
+						variableRepresentation="vrElevation" />
+					<dtNavigationType value="dtiComputedImplement"
+						definedTypeRepresentation="dtNavigationType" />
+					<dtSignalType columnID="SignalType_5140"
+						definedTypeRepresentation="dtSignalType" />
+					<vrGPSAccuracy columnID="GPSAccuracy_5140" sourceUOM="prcnt"
+						variableRepresentation="vrGPSAccuracy" />
+					<vrGPSVerticalAccuracy columnID="GPSVerticalAccuracy_5140"
+						sourceUOM="mm" variableRepresentation="vrGPSVerticalAccuracy" />
+				</NavigationReference>
+				<dtHitchType value="dtiThreePoint"
+					definedTypeRepresentation="dtHitchType" />
+			</EquipmentConfiguration>
+			<EquipmentConfiguration>
+				<Meter id="250">
+					<MeasuredElement>
+						<VariableNumberColumn columnID="MeasElement251"
+							sourceUOM="prcnt" variableRepresentation="vrHarvestMoisture" />
+						<vrLatency value="10.000000" sourceUOM="sec"
+							variableRepresentation="vrLatency" />
+					</MeasuredElement>
+					<SectionRef idRef="311" />
+					<SectionRef idRef="312" />
+					<SectionRef idRef="313" />
+					<SectionRef idRef="314" />
+					<SectionRef idRef="315" />
+					<SectionRef idRef="316" />
+				</Meter>
+				<Meter id="253">
+					<MeasuredElement calibration="652">
+						<VariableNumberColumn columnID="MeasElement254"
+							sourceUOM="kg" variableRepresentation="vrYieldWetMass" />
+						<vrLatency value="10.000000" sourceUOM="sec"
+							variableRepresentation="vrLatency" />
+					</MeasuredElement>
+					<SectionRef idRef="311" />
+					<SectionRef idRef="312" />
+					<SectionRef idRef="313" />
+					<SectionRef idRef="314" />
+					<SectionRef idRef="315" />
+					<SectionRef idRef="316" />
+				</Meter>
+				<Meter id="257">
+					<MeasuredElement>
+						<DefinedTypeColumn columnID="MeasElement258"
+							definedTypeRepresentation="dtHeaderStatus" />
+						<vrLatency value="0.000000" sourceUOM="sec"
+							variableRepresentation="vrLatency" />
+					</MeasuredElement>
+					<SectionRef idRef="311" />
+					<SectionRef idRef="312" />
+					<SectionRef idRef="313" />
+					<SectionRef idRef="314" />
+					<SectionRef idRef="315" />
+					<SectionRef idRef="316" />
+				</Meter>
+				<Section id="311">
+					<vrInlineOffset value="0.000000" sourceUOM="mm"
+						variableRepresentation="vrInlineOffset" />
+					<vrLateralOffset value="-4375.000000" sourceUOM="mm"
+						variableRepresentation="vrLateralOffset" />
+					<RecordingStateElement>
+						<DefinedTypeColumn columnID="Section300_State"
+							definedTypeRepresentation="dtRecordingStatus" />
+						<vrLatency value="0.000000" sourceUOM="sec"
+							variableRepresentation="vrLatency" />
+					</RecordingStateElement>
+					<vrSectionWidth value="1750.000000" sourceUOM="mm"
+						variableRepresentation="vrSectionWidth" />
+				</Section>
+				<Section id="312">
+					<vrInlineOffset value="0.000000" sourceUOM="mm"
+						variableRepresentation="vrInlineOffset" />
+					<vrLateralOffset value="-2625.000000" sourceUOM="mm"
+						variableRepresentation="vrLateralOffset" />
+					<RecordingStateElement>
+						<DefinedTypeColumn columnID="Section302_State"
+							definedTypeRepresentation="dtRecordingStatus" />
+						<vrLatency value="0.000000" sourceUOM="sec"
+							variableRepresentation="vrLatency" />
+					</RecordingStateElement>
+					<vrSectionWidth value="1750.000000" sourceUOM="mm"
+						variableRepresentation="vrSectionWidth" />
+				</Section>
+				<Section id="313">
+					<vrInlineOffset value="0.000000" sourceUOM="mm"
+						variableRepresentation="vrInlineOffset" />
+					<vrLateralOffset value="-875.000000" sourceUOM="mm"
+						variableRepresentation="vrLateralOffset" />
+					<RecordingStateElement>
+						<DefinedTypeColumn columnID="Section304_State"
+							definedTypeRepresentation="dtRecordingStatus" />
+						<vrLatency value="0.000000" sourceUOM="sec"
+							variableRepresentation="vrLatency" />
+					</RecordingStateElement>
+					<vrSectionWidth value="1750.000000" sourceUOM="mm"
+						variableRepresentation="vrSectionWidth" />
+				</Section>
+				<Section id="314">
+					<vrInlineOffset value="0.000000" sourceUOM="mm"
+						variableRepresentation="vrInlineOffset" />
+					<vrLateralOffset value="875.000000" sourceUOM="mm"
+						variableRepresentation="vrLateralOffset" />
+					<RecordingStateElement>
+						<DefinedTypeColumn columnID="Section306_State"
+							definedTypeRepresentation="dtRecordingStatus" />
+						<vrLatency value="0.000000" sourceUOM="sec"
+							variableRepresentation="vrLatency" />
+					</RecordingStateElement>
+					<vrSectionWidth value="1750.000000" sourceUOM="mm"
+						variableRepresentation="vrSectionWidth" />
+				</Section>
+				<Section id="315">
+					<vrInlineOffset value="0.000000" sourceUOM="mm"
+						variableRepresentation="vrInlineOffset" />
+					<vrLateralOffset value="2625.000000" sourceUOM="mm"
+						variableRepresentation="vrLateralOffset" />
+					<RecordingStateElement>
+						<DefinedTypeColumn columnID="Section308_State"
+							definedTypeRepresentation="dtRecordingStatus" />
+						<vrLatency value="0.000000" sourceUOM="sec"
+							variableRepresentation="vrLatency" />
+					</RecordingStateElement>
+					<vrSectionWidth value="1750.000000" sourceUOM="mm"
+						variableRepresentation="vrSectionWidth" />
+				</Section>
+				<Section id="316">
+					<vrInlineOffset value="0.000000" sourceUOM="mm"
+						variableRepresentation="vrInlineOffset" />
+					<vrLateralOffset value="4375.000000" sourceUOM="mm"
+						variableRepresentation="vrLateralOffset" />
+					<RecordingStateElement>
+						<DefinedTypeColumn columnID="Section310_State"
+							definedTypeRepresentation="dtRecordingStatus" />
+						<vrLatency value="0.000000" sourceUOM="sec"
+							variableRepresentation="vrLatency" />
+					</RecordingStateElement>
+					<vrSectionWidth value="1750.000000" sourceUOM="mm"
+						variableRepresentation="vrSectionWidth" />
+				</Section>
+				<dtHitchType value="dtiThreePoint"
+					definedTypeRepresentation="dtHitchType" />
+			</EquipmentConfiguration>
+			<LogTaskRegion taskRegionId="{50b2706c-0000-1000-7fdb-e1e1e114c450}"
+				timeStamp="2012-11-25T21:30:43.000Z" timeColumnID="ElapsedTime"
+				logInterval="1000" cropYear="2012">
+				<MachineRef eridRef="{4df9de49-0000-1000-4038-e1e1e114c450}" />
+				<OperatorRef eridRef="{4f66edcf-0000-1000-7faa-e1e1e114c450}" />
+				<Operation id="1" operationGroupID="1">
+					<dtOperationClass value="dtiHarvest"
+						definedTypeRepresentation="dtOperationClass" />
+					<ProductRef eridRef="{4ed60592-0000-1000-402e-e1e1e114c450}" />
+					<MeterRef idRef="250" />
+					<MeterRef idRef="253" />
+					<MeterRef idRef="257" />
+					<UserDefinedTypeInstanceRef
+						eridRef="{66bb9df6-1b66-4164-b006-a7f5c234ceee}" />
+					<LoadIdentityRef idRef="{50a272e2-0000-1000-7f95-e1e1e114c450}" />
+				</Operation>
+				<TaskMeasurements taskMeasurementType="weather">
+					<MeterRef idRef="15" />
+				</TaskMeasurements>
+				<TaskMeasurements taskMeasurementType="weather">
+					<MeterRef idRef="17" />
+				</TaskMeasurements>
+				<TaskMeasurements taskMeasurementType="weather">
+					<MeterRef idRef="19" />
+				</TaskMeasurements>
+				<TaskMeasurements taskMeasurementType="weather">
+					<MeterRef idRef="21" />
+				</TaskMeasurements>
+				<TaskMeasurements taskMeasurementType="weather">
+					<MeterRef idRef="23" />
+				</TaskMeasurements>
+				<TaskMeasurements taskMeasurementType="observation">
+					<MeterRef idRef="25" />
+				</TaskMeasurements>
+				<TaskMeasurements taskMeasurementType="observation">
+					<MeterRef idRef="27" />
+				</TaskMeasurements>
+				<TaskMeasurements taskMeasurementType="machineInfo">
+					<MeterRef idRef="31" />
+				</TaskMeasurements>
+				<TaskMeasurements taskMeasurementType="machineInfo">
+					<MeterRef idRef="29" />
+				</TaskMeasurements>
+			</LogTaskRegion>
+		</ConfigBlock>
+		<LogDataBlock logDataProcessor="EvenByteDelta">
+			<EvenByteDelta filePathName="50b2706b-0000-1000-7fdb-e1e1e114c450.fdd"
+				xmlns="urn:schemas-johndeere-com:LogDataBlock:EvenByteDelta"
+				filePosition="0" />
+		</LogDataBlock>
+	</RCDLogBlock>
+</RCDLogFile>

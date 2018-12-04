@@ -25,7 +25,7 @@ public class Campania implements Comparable<Campania>{
 	public static final String FIND_ALL="Campania.findAll";
 	public static final String FIND_NAME="Campania.findName";
 	@Id @GeneratedValue
-	private long id;
+	private Long id=null;
 
 	public String nombre=new String();
 	

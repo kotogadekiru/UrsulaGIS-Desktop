@@ -326,17 +326,28 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 
 		//colPasada ;
 		this.comboCultivo.setItems(FXCollections.observableArrayList(DAH.getAllCultivos()));
-		this.comboCultivo.valueProperty().bindBidirectional(labor.producto);
+		this.comboCultivo.getSelectionModel().select(labor.getCultivo());
+		this.comboCultivo.valueProperty().addListener((obj,old,n)->{
+			labor.cultivo=n;
+			if(n!=null)labor.config.getConfigProperties().setProperty(CosechaLabor.CosechaLaborConstants.PRODUCTO_DEFAULT,n.getNombre());
+		});
+		
 
 
 		//StringConverter<Number> converter = new NumberStringConverter();//FIXME corregir que el separador de miles
 		DecimalFormat converter = new DecimalFormat("0.00"){
 	            @Override
-	            public Object parseObject(String source) throws ParseException {
+	            public Object parseObject(String source)  {
 	            	if("".equals(source)||source==null){
 	            		source="0.00";
 	            	}
-	            	return super.parseObject(source);
+	            	try {
+						return super.parseObject(source);
+					} catch (ParseException e) {
+						e.printStackTrace();
+						return new Double(0.0);
+					
+					}
 	            }
 		};
 		
@@ -344,13 +355,58 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		converter.setGroupingSize(3);
 
 		//textPrecioGrano
-		Bindings.bindBidirectional(this.textPrecioGrano.textProperty(), labor.precioGranoProperty, converter);
+		//Bindings.bindBidirectional(this.textPrecioGrano.textProperty(), labor.precioGranoProperty, converter);
+		//TODO init textPrecioGrano con el valor de properties o el valor de la labor
+		if(labor.getPrecioGrano()!=null) {
+			this.textPrecioGrano.textProperty().set(labor.getPrecioGrano().toString());
+		}else {
+			this.textPrecioGrano.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.PRECIO_GRANO, labor.getPrecioGrano().toString()));
+		}
+		this.textPrecioGrano.textProperty().addListener((obj,old,n)->{
+			try {
+				labor.setPrecioInsumo(converter.parse(n).doubleValue());
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			//config.getConfigProperties().getPropertyOrDefault(CosechaLabor.PRECIO_GRANO,"0")
+			labor.config.getConfigProperties().setProperty(CosechaLabor.CosechaLaborConstants.PRECIO_GRANO, n);
+		});
 
 		//textCostoCosechaHa
-		Bindings.bindBidirectional(this.textCostoCosechaHa.textProperty(), labor.precioLaborProperty, converter);
+		//Bindings.bindBidirectional(this.textCostoCosechaHa.textProperty(), labor.precioLaborProperty, converter);
+		if(labor.getPrecioLabor()!=null) {
+			this.textCostoCosechaHa.textProperty().set(labor.getPrecioLabor().toString());
+		}else {
+			this.textCostoCosechaHa.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_HA, labor.getPrecioLabor().toString()));
+		}
+		//this.textCostoCosechaHa.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_HA, labor.getPrecioLabor().toString()));
+		this.textCostoCosechaHa.textProperty().addListener((obj,old,n)->{
+			try {
+				labor.setPrecioLabor(converter.parse(n).doubleValue());
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			labor.config.getConfigProperties().setProperty(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_HA, n);
+		});
+		
 
 		//textCostoCosechaTn
-		Bindings.bindBidirectional(this.textCostoCosechaTn.textProperty(), labor.costoCosechaTnProperty, converter);
+		//Bindings.bindBidirectional(this.textCostoCosechaTn.textProperty(), labor.costoCosechaTnProperty, converter);
+		if(labor.getCostoCosechaTn()!=null) {
+			this.textCostoCosechaTn.textProperty().set(labor.getCostoCosechaTn().toString());
+		}else {
+			this.textCostoCosechaTn.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_TN, labor.getCostoCosechaTn().toString()));
+		}
+	//	this.textCostoCosechaTn.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_TN, labor.getCostoCosechaTn().toString()));
+		this.textCostoCosechaTn.textProperty().addListener((obj,old,n)->{
+			try {
+				labor.setCostoCosechaTn(converter.parse(n).doubleValue());
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			labor.config.getConfigProperties().setProperty(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_TN, n);
+		});
 
 		//textAnchoDef
 		Bindings.bindBidirectional(this.textAnchoDef.textProperty(), labor.anchoDefaultProperty, converter);
@@ -377,6 +433,9 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		Map<String,Double> unidades = new HashMap<String,Double>();
 		unidades.put("metro",1d);
 		unidades.put("pulgada",0.0254);
+		unidades.put("centimetros",0.01d);
+		unidades.put("milimetros",0.001d);
+		
 		
 		this.cbMetrosPorUnidad.setItems(FXCollections.observableArrayList(unidades.keySet()));
 		this.cbMetrosPorUnidad.valueProperty().addListener((ov,old,nv)->{
@@ -437,7 +496,9 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		this.comboClasificador.valueProperty().bindBidirectional(labor.clasificador.tipoClasificadorProperty);
 		//choiceClasificador.textProperty().bindBidirectional(labor.clasificador.tipoClasificadorProperty);
 
-		textNombre.textProperty().bindBidirectional(labor.nombreProperty);
+		//textNombre.textProperty().bindBidirectional(labor.nombreProperty);
+		textNombre.textProperty().set(labor.getNombre());
+		textNombre.textProperty().addListener((obj,old,nu)->labor.setNombre(nu));
 
 		CosechaConfig cosechaConfig = (CosechaConfig) labor.config;
 		chkOutlayers.selectedProperty().bindBidirectional(labor.config.correccionOutlayersProperty());
@@ -453,11 +514,12 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		chkResumirGeometrias.selectedProperty().bindBidirectional(labor.config.resumirGeometriasProperty());
 		
 		//StringConverter<LocalDate> dateConverter = this.datePickerFecha.getConverter();
-		datePickerFecha.setValue(l.fechaProperty.getValue());
+
+		datePickerFecha.setValue(DateConverter.asLocalDate(l.fecha));
 		datePickerFecha.setConverter(new DateConverter());
-		datePickerFecha.valueProperty().addListener((obs, bool1, bool2) -> {
-			l.fechaProperty.setValue(datePickerFecha.getValue());
-		//	l.fechaProperty.setValue(dateConverter.toString(bool2));
+		datePickerFecha.valueProperty().addListener((obs, bool1, n) -> {
+			l.setFecha(DateConverter.asDate(n));
+			//l.fechaProperty.setValue(bool2);
 		});
 	//	Bindings.bindBidirectional(this.datePickerFecha.valueProperty()., l.fechaProperty, );
 		

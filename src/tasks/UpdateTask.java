@@ -38,6 +38,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.web.WebView;
+import javafx.stage.Stage;
 
 
 public class UpdateTask  extends Task<File>{
@@ -314,9 +316,19 @@ public class UpdateTask  extends Task<File>{
 			if(message!=null){
 				Platform.runLater(()->{
 					Alert a = new Alert(AlertType.INFORMATION);
-					a.setTitle("Info");
-					a.setHeaderText("UrsulaGIS dice:");
-					a.setContentText(message);
+					//a.initOwner(JFXMain.ICON);
+					Stage stage = (Stage) a.getDialogPane().getScene().getWindow();
+			        stage.getIcons().add(new Image(JFXMain.ICON));
+			        
+					WebView webView = new WebView();
+					webView.getEngine().loadContent(message);
+
+
+					//   webView.setPrefSize(150, 60);
+					a.setHeaderText("");
+					a.setGraphic(null);
+
+					a.getDialogPane().setContent(webView);;
 					a.show();
 				
 				});

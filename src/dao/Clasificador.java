@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.geotools.data.simple.SimpleFeatureCollection;
+import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.filter.function.Classifier;
 import org.geotools.filter.function.JenksNaturalBreaksFunction;
@@ -26,6 +27,7 @@ import lombok.Data;
 public class Clasificador {
 	public static final String NUMERO_CLASES_CLASIFICACION = "NUMERO_CLASES_CLASIFICACION";
 	public static final String CLASIFICADOR_JENKINS = "JENKINS";
+	public static final String CLASIFICADOR_DESVIOSTANDAR = "DESVIO_STANDAR";
 	public static final String TIPO_CLASIFICADOR = "CLASIFICADOR";
 
 	public static final  String[] clasficicadores = {"Jenkins","Desvio Standar"};
@@ -225,20 +227,35 @@ public class Clasificador {
 
 	public Color getColorFor(double amount) {
 		int absCat = getCategoryFor(amount);//entre 0 y numClases-1
+		return getColorForCategoria(absCat);
+//		int length =colors.length-1;
+//		int clases =getNumClasses()-1;
+//		int colorIndex = absCat*(length/clases);
+//		//	System.out.println(absCat+"*"+length+"/"+clases+" = "+colorIndex+" colorIndex");
+//		if(colorIndex>length){
+//			colorIndex=length;
+//		}
+//		return colors[colorIndex];
+	}
+
+	public Color getColorForCategoria(Integer absCat) {
+		//int absCat = getCategoryFor(amount);//entre 0 y numClases-1
 		int length =colors.length-1;
 		int clases =getNumClasses()-1;
 		int colorIndex = absCat*(length/clases);
 		//	System.out.println(absCat+"*"+length+"/"+clases+" = "+colorIndex+" colorIndex");
+		if(colorIndex>length){
+			colorIndex=length;
+		}
 		return colors[colorIndex];
 	}
-
+	
 	public Color getColorFor(LaborItem dao) {	
 		return getColorFor(dao.getAmount());
 
 	}
 
 	public int getNumClasses() {
-
 		int numClases = clasesClasificadorProperty.intValue();
 		//return 3;
 		if(numClases>colors.length|| numClases<1){
@@ -246,10 +263,30 @@ public class Clasificador {
 			numClases=colors.length;
 		}
 		return numClases;
-		// TODO Auto-generated method stub
-
 	}
+	
 	public boolean isInitialized(){return initialized;}
+
+	public void constructClasificador(String nombreClasif, Labor<?> labor) {
+		System.out.println("constructClasificador "+nombreClasif);
+		if (Clasificador.CLASIFICADOR_JENKINS.equalsIgnoreCase(nombreClasif)) {
+			System.out.println("construyendo clasificador jenkins "+labor.colAmount.get());
+			this.constructJenksClasifier(labor.outCollection,labor.colAmount.get());
+		} else {//if(Clasificador.CLASIFICADOR_DESVIOSTANDAR.equalsIgnoreCase(nombreClasif)) {
+			System.out.println("no hay jenks Classifier falling back to histograma");
+			List<LaborItem> items = new ArrayList<LaborItem>();
+
+			SimpleFeatureIterator ocReader = labor.outCollection.features();
+			while (ocReader.hasNext()) {
+				items.add(labor.constructFeatureContainerStandar(ocReader.next(),false));
+			}
+			ocReader.close();
+			this.constructHistogram(items);
+		}
+		
+	}
+
+	
 
 	//	public Clasificador clone(){
 	//		Clasificador cn = new Clasificador();

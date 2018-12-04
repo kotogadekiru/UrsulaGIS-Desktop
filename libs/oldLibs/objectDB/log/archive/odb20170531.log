@@ -1,0 +1,47 @@
+------------------------------------------------------------------------------------------------------------------------
+
+[2017-05-31 19:21:59 #1 store] 
+Database 'C:\Users\quero\AppData\Roaming\$ursulaGIS.odb' is opened by 5212@dellRed
+
+[2017-05-31 19:22:00 #2 type] 
+Type dao.config.Lote is not enhanced.
+
+[2017-05-31 19:22:00 #3 type] 
+Type dao.config.Establecimiento is not enhanced.
+
+[2017-05-31 19:22:00 #4 type] 
+Type dao.config.Empresa is not enhanced.
+
+[2017-05-31 19:22:00 #5 type] 
+Type dao.config.Fertilizante is not enhanced.
+
+[2017-05-31 19:22:00 #6 type.registry] 
+New type dao.Poligono
+
+[2017-05-31 19:22:00 #7 type] 
+Type dao.Poligono is not enhanced.
+
+[2017-05-31 19:22:00 #8 type.registry] 
+New type gov.nasa.worldwind.avlist.AVList
+
+[2017-05-31 19:22:00 #9 type.registry] 
+New type gov.nasa.worldwind.event.MessageListener
+
+[2017-05-31 19:22:00 #10 type.registry] 
+New type gov.nasa.worldwind.WWObject
+
+[2017-05-31 19:22:00 #11 type.registry] 
+New type gov.nasa.worldwind.Disposable
+
+[2017-05-31 19:22:00 #12 type.registry] 
+New type gov.nasa.worldwind.Restorable
+
+[2017-05-31 19:22:00 #13 type.registry] 
+New type gov.nasa.worldwind.layers.Layer
+
+[2017-05-31 19:22:00 #14 type.registry] 
+New type gov.nasa.worldwind.geom.LatLon
+
+[2017-05-31 19:22:00 #15 type.registry] 
+New type gov.nasa.worldwind.geom.Position
+

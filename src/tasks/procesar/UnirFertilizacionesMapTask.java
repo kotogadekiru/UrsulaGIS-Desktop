@@ -1,13 +1,6 @@
 package tasks.procesar;
 
-import gov.nasa.worldwind.avlist.AVKey;
-import gov.nasa.worldwind.layers.RenderableLayer;
-import gov.nasa.worldwind.render.ExtrudedPolygon;
-import gui.nww.LaborLayer;
-import tasks.ProcessMapTask;
-
 import java.io.IOException;
-import java.io.Reader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,36 +9,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.geotools.data.FeatureReader;
-import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.opengis.feature.Feature;
-import org.opengis.feature.FeatureVisitor;
 import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.geometry.BoundingBox;
 
-import utils.ProyectionConstants;
-
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LinearRing;
-import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 
-import dao.Clasificador;
-import dao.cosecha.CosechaItem;
-import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
+import gov.nasa.worldwind.render.ExtrudedPolygon;
+import gui.nww.LaborLayer;
+import tasks.ProcessMapTask;
+import utils.ProyectionConstants;
 
 public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem,FertilizacionLabor> {
 	/**
@@ -80,7 +61,7 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 			nombreProgressBar = "unir fertilizaciones";
 		}
 		labor.setLayer(new LaborLayer());
-		labor.getNombreProperty().setValue(nombreProgressBar);//este es el nombre que se muestra en el progressbar
+		labor.setNombre(nombreProgressBar);//este es el nombre que se muestra en el progressbar
 	}
 
 	/**
@@ -91,7 +72,7 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 		long init = System.currentTimeMillis();
 		// TODO 1 obtener el bounds general que cubre a todas las fertilizaciones
 		ReferencedEnvelope unionEnvelope = null;
-		double ancho = labor.getConfig().getAnchoGrilla();
+		double ancho = labor.getConfigLabor().getAnchoGrilla();
 		String nombre =null;
 		String prefijo = "clon";
 		if(fertilizaciones.size()>1){
@@ -100,17 +81,17 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 		int featuresInsertadas=0;
 		for(FertilizacionLabor fert:fertilizaciones){
 			if(nombre == null){
-				nombre=prefijo+" "+fert.getNombreProperty().get();	
+				nombre=prefijo+" "+fert.getNombre();	
 			}else {
-				nombre+=" - "+fert.getNombreProperty().get();
+				nombre+=" - "+fert.getNombre();
 			}
 			if(labor.fertilizanteProperty.getValue()==null){//inicializo las propiedades con los valores de la primera fert unida
 				//esto no se corre porque en el constructor se inicializa con los valores default
 				System.out.println("inicializando las variables de la nueva fertilizacion con los de la primera fert a unir");
 				labor.fertilizanteProperty.setValue(fert.fertilizanteProperty.getValue());
-				labor.precioInsumoProperty.setValue(fert.precioInsumoProperty.getValue());
+				labor.setPrecioInsumo(fert.getPrecioInsumo());
 				labor.fechaProperty.setValue(fert.fechaProperty.getValue());
-				labor.precioLaborProperty.setValue(fert.precioLaborProperty.getValue());
+				labor.setPrecioLabor(fert.getPrecioLabor());
 			}
 //			FeatureReader<SimpleFeatureType, SimpleFeature> reader = fert.outCollection.reader();
 //			while(reader.hasNext()){
@@ -132,7 +113,7 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 				unionEnvelope.expandToInclude(b);
 			}
 		}
-		labor.nombreProperty.set(nombre);
+		labor.setNombre(nombre);
 		labor.setLayer(new LaborLayer());
 		
 		/*grillar la fertilizacion resultante sumando las dosis*/
@@ -286,7 +267,7 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 
 		if(sumAreaInterseccion>getAreaMinimaLongLat()){
 			double insumoProm=0,desvioPromedio=0,ancho=0,distancia=0,elev=0,rumbo=0;// , pesos=0;
-			ancho=labor.getConfig().getAnchoGrilla();
+			ancho=labor.getConfigLabor().getAnchoGrilla();
 			distancia=ancho;
 		
 

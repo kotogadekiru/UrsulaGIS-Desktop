@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 
 import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
@@ -17,6 +18,7 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 
 import dao.Ndvi;
+import dao.Poligono;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 import gov.nasa.worldwind.geom.Sector;
@@ -28,12 +30,13 @@ import tasks.ShowNDVITifFileTask;
 import utils.ProyectionConstants;
 
 public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,CosechaLabor> {
-	Double rinde = new Double(0);
+	private static final double NDVI_RINDE_CERO = ShowNDVITifFileTask.MIN_VALUE;//0.2;
+	Double rindeProm = new Double(0);
 	Ndvi ndvi=null;
 
 	public ConvertirNdviACosechaTask(CosechaLabor cosechaLabor,Ndvi _ndvi,Double _rinde){//RenderableLayer layer, FileDataStore store, double d, Double correccionRinde) {
 		super(cosechaLabor);
-		rinde=_rinde;
+		rindeProm=_rinde;
 		ndvi=_ndvi;
 
 	}
@@ -63,9 +66,9 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 			return;
 		}
 		this.featureCount=size;
-		Double average = new Double(sum/size);
-		System.out.println("el promedio de los ndvi es "+average);
-		if(average.isNaN())average =1.0;
+		Double averageNdvi = new Double(sum/size);
+		System.out.println("el promedio de los ndvi es "+averageNdvi);
+		if(averageNdvi.isNaN())averageNdvi =1.0;
 		 it = values.iterator();
 		 
 	 
@@ -94,16 +97,39 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 				labor.getType());
 		
 		double id=0;
+		
+		
+		//lineal
+		double pendienteNdviRinde=averageNdvi>NDVI_RINDE_CERO?rindeProm/(averageNdvi-NDVI_RINDE_CERO):1;
+		double origenNdviRinde = -pendienteNdviRinde*NDVI_RINDE_CERO;
+		Function<Double,Double> calcRinde = (r)->pendienteNdviRinde*r+origenNdviRinde;
+		
+		//logaritmica
+//		double pendienteNdviRinde=averageNdvi>NDVI_RINDE_CERO?Math.log(rindeProm)/(Math.log(averageNdvi)-Math.log(NDVI_RINDE_CERO)):1;
+//		double origenNdviRinde = -pendienteNdviRinde*Math.log(NDVI_RINDE_CERO);
+//		System.out.println("r="+pendienteNdviRinde+"* Math.log(_ndvi+0.8)"+origenNdviRinde);
+//		Function<Double,Double> calcRinde = (_ndvi)->pendienteNdviRinde*Math.log(_ndvi+0.8)+origenNdviRinde;
+		
+		
+		Poligono contorno = this.ndvi.getContorno();
+		Geometry contornoGeom =null;
+		if(contorno !=null) {
+			contornoGeom = contorno.toGeometry();
+		}
+		
 		for (int y = 0; y < height; y++){
 			double lat = minLat + y * latStep;
 			for (int x = 0; x < width; x++)	{
 				double lon = minLon+x*lonStep;
 				
 				GridPointAttributes attr = it.hasNext() ? it.next() : null;
-				if(x==0 || y==0||x==width-1||y==height-1)continue;//me salteo la primera fila de cada costado
-				double value = attr.getValue();
+				double ndvi = attr.getValue();
+				if((ndvi<=NDVI_RINDE_CERO)){//&&(x<3 || y<3||x>width-3||y>height-3)){
+					continue;//me salteo la primera fila de cada costado
+				}
 				
-				if(value <= ShowNDVITifFileTask.MAX_VALUE && value >= ShowNDVITifFileTask.MIN_VALUE && value !=0){
+				
+				if(ndvi <= ShowNDVITifFileTask.MAX_VALUE && ndvi >= ShowNDVITifFileTask.MIN_VALUE && ndvi !=0){
 					CosechaItem ci = new CosechaItem();
 					ci.setId(id);
 					ci.setElevacion(elev);
@@ -112,7 +138,8 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 					ci.setAncho(ancho);
 					ci.setDistancia(ancho);
 					
-					Double rindeNDVI = new Double(rinde*value/average);
+					//Double rindeNDVI = new Double(pendienteNdviRinde*ndvi+origenNdviRinde);//aproximacion lineal
+					Double rindeNDVI = new Double(calcRinde.apply(ndvi));//aproximacion logaritmica
 					//System.out.println("creado nueva cosecha con rinde "+rindeNDVI+" para el ndvi "+value+" rinde prom "+rinde+" ndvi promedio "+average);
 					ci.setRindeTnHa(rindeNDVI);
 					labor.setPropiedadesLabor(ci);
@@ -122,9 +149,20 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 					coordinates[1]= new Coordinate(lon+lonStep,lat,elev);
 					coordinates[2]= new Coordinate(lon+lonStep,lat+latStep,elev);
 					coordinates[3]= new Coordinate(lon,lat+latStep,elev);
-					coordinates[4]=new Coordinate(lon,lat,elev);
+					coordinates[4]= new Coordinate(lon,lat,elev);
 					
-					Polygon poly = fact.createPolygon(coordinates);	
+					Geometry poly = fact.createPolygon(coordinates);	
+				
+					// recortar si esta afuera del contorno del ndvi
+					if(contornoGeom!=null && !contornoGeom.covers(poly)) {//OK! funciona. no introducir poligonos empty!
+						try {
+						poly=poly.intersection(contornoGeom);
+						if(poly.isEmpty())continue;
+						//System.out.println("el contorno no cubre el polygono y la interseccion es: "+poly.toText());
+						}catch(Exception e) {//com.vividsolutions.jts.geom.TopologyException: Found null DirectedEdge
+							e.printStackTrace();//com.vividsolutions.jts.geom.TopologyException: side location conflict [ (-61.920393510481325, -33.66456750394795, NaN) ]
+						}
+					}
 					ci.setGeometry(poly);
 					
 					SimpleFeature f = ci.getFeature(fBuilder);

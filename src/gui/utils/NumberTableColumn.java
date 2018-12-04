@@ -18,73 +18,71 @@ import javafx.scene.text.TextAlignment;
 public class NumberTableColumn<T> extends TableColumn<T,String> {
 	public NumberTableColumn(String title,Function<T,Number>  getMethod, BiConsumer<T,Number> setMethod){
 		super(title);	
-		//TableColumn<Monitor,String> vacasOrdenie = new TableColumn<Monitor,String>(title);		
-	
-			setEditable(setMethod != null);
-			DecimalFormat df = new DecimalFormat("###,###.###");
-			//NumberFormat df = NumberFormat.getInstance();//getNumberInstance();//getIntegerInstance();
-		
-		//	 this.setCellValueFactory(new PropertyValueFactory<T, Date>("date"));
+
+		setEditable(setMethod != null);
+		DecimalFormat df = new DecimalFormat("###,###.###");
+
 		setCellValueFactory(cellData ->{
-			Number IntegerValue = getMethod.apply(cellData.getValue());
+			Number numberValue = getMethod.apply(cellData.getValue());
+			if(numberValue ==null)return  new SimpleStringProperty();
 			try{
-			return new SimpleStringProperty(df.format(IntegerValue));	
+				return new SimpleStringProperty(df.format(numberValue));	
 			}catch(Exception e){
-				System.out.println("Falló el Decimal Format en String Table Column "+title +" para "+IntegerValue);
-				
-				return new SimpleStringProperty(String.valueOf(IntegerValue));
+				System.out.println("Falló el Decimal Format en String Table Column "+title +" para "+numberValue);
+
+				return new SimpleStringProperty(String.valueOf(numberValue));
 			}
 		}
-		
-		);
-		
+
+				);
+
 		this.setPrefWidth(70);
 		//hago que la cabecera se ajuste en tamaño
-			    Label label = new Label(this.getText());
-			    label.setStyle("-fx-padding: 8px;");
-			    label.setWrapText(true);
-			    label.setAlignment(Pos.CENTER);
-			    label.setTextAlignment(TextAlignment.CENTER);
-			 
-			    StackPane stack = new StackPane();
-			    stack.getChildren().add(label);
-			    stack.prefWidthProperty().bind(this.widthProperty().subtract(5));
-			    label.prefWidthProperty().bind(stack.prefWidthProperty());
-			    this.setGraphic(stack);
-		
-			
-		
+		Label label = new Label(this.getText());
+		label.setStyle("-fx-padding: 8px;");
+		label.setWrapText(true);
+		label.setAlignment(Pos.CENTER);
+		label.setTextAlignment(TextAlignment.CENTER);
+
+		StackPane stack = new StackPane();
+		stack.getChildren().add(label);
+		stack.prefWidthProperty().bind(this.widthProperty().subtract(5));
+		label.prefWidthProperty().bind(stack.prefWidthProperty());
+		this.setGraphic(stack);
+
+
+
 		setCellFactory(TextFieldTableCell.<T>forTableColumn());
 		this.setStyle("-fx-alignment: CENTER-RIGHT;");// alinear a la derecha OK!!
-		
+
 		this.setOnEditCommit( cellEditingEvent -> {													
-													T p = cellEditingEvent.getRowValue();
-													
-													try {
-														Number newVal = df.parse(cellEditingEvent.getNewValue());//Long?
-														setMethod.accept(p,newVal);//Integer.valueOf( cellEditingEvent.getNewValue()));		
-														//DAH.save(p);
-													} catch (Exception e) {	e.printStackTrace();}
-												
-													});
+			T p = cellEditingEvent.getRowValue();
+
+			try {
+				Number newVal = df.parse(cellEditingEvent.getNewValue());//Long?
+				setMethod.accept(p,newVal);//Integer.valueOf( cellEditingEvent.getNewValue()));		
+				//DAH.save(p);
+			} catch (Exception e) {	e.printStackTrace();}
+
+		});
 		this.setComparator(new Comparator<String>(){
 
 			@Override
 			public int compare(String arg0, String arg1) {
-				
+
 				try {
 					Double d0 = df.parse(arg0).doubleValue();
 					Double d1 = df.parse(arg1).doubleValue();
-					
+
 					return d0.compareTo(d1);
 				} catch (ParseException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				return 0;
-		
+
 			}
-			
+
 		});
 	}
 }

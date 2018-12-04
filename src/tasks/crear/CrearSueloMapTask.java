@@ -21,14 +21,16 @@ import utils.ProyectionConstants;
 public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 	Double ppmP = new Double(0);
 	Double ppmN = new Double(0);
+	Double pMO = new Double(0);
 	Poligono poli=null;
 
-	public CrearSueloMapTask(Suelo labor,Poligono _poli,Double _amount, Double _ppmN){
+	public CrearSueloMapTask(Suelo labor,Poligono _poli,Double _amount, Double _ppmN, Double _pMO){
 		super(labor);
 		ppmP=_amount;
 		ppmN=_ppmN;
+		pMO=_pMO;
 		poli=_poli;
-		labor.getNombreProperty().setValue(poli.getNombre());
+		labor.setNombre(poli.getNombre());
 
 	}
 
@@ -36,6 +38,7 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		SueloItem si = new SueloItem();
 		si.setPpmP(ppmP);
 		si.setPpmN(ppmN);
+		si.setPorcMO(pMO);
 
 		labor.setPropiedadesLabor(si);
 		GeometryFactory fact = new GeometryFactory();

@@ -1,0 +1,20 @@
+------------------------------------------------------------------------------------------------------------------------
+
+[2017-05-23 22:02:36 #1 store] 
+Database 'C:\Users\quero\AppData\Roaming\$ursulaGIS.odb' has been recovered (tr. 31-31)
+
+[2017-05-23 22:02:36 #2 store] 
+Database 'C:\Users\quero\AppData\Roaming\$ursulaGIS.odb' is opened by 11908@dellRed
+
+[2017-05-23 22:02:36 #3 type] 
+Type dao.config.Lote is not enhanced.
+
+[2017-05-23 22:02:36 #4 type] 
+Type dao.config.Establecimiento is not enhanced.
+
+[2017-05-23 22:02:36 #5 type] 
+Type dao.config.Empresa is not enhanced.
+
+[2017-05-23 22:02:36 #6 type] 
+Type dao.config.Fertilizante is not enhanced.
+

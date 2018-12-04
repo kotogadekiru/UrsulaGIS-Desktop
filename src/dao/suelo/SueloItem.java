@@ -3,7 +3,11 @@ package dao.suelo;
 import org.opengis.feature.simple.SimpleFeature;
 
 import dao.LaborItem;
+import dao.config.Fertilizante;
+import dao.cosecha.CosechaItem;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import utils.ProyectionConstants;
 
 //Los parámetros necesarios para cada tipo de suelo son: 
 //o Capacidad de campo
@@ -16,6 +20,7 @@ import lombok.Data;
 //o Profundidad máxima de exploración radicular
 
 @Data
+@EqualsAndHashCode(callSuper=true)//si no pones esto todos los hashmaps andan mal y grillar cosecha no anda
 public class SueloItem extends LaborItem { //suelo item no es labor item. le sobra: rumbo, ancho y distancia
 	public static final String PPM_N = "PPM N";
 	public static final String PPM_FOSFORO = "PPM P";
@@ -35,7 +40,7 @@ public class SueloItem extends LaborItem { //suelo item no es labor item. le sob
 	private Double ppmP=new Double(0);	
 	private Double ppmK=new Double(0);	
 	private Double ppmS=new Double(0);	
-	private Double ppmMO=new Double(0);	//puede ser labil o permanente
+	private Double porcMO=new Double(0);	//puede ser labil o permanente
 	/*La profundidad en cm hasta la napa*/
 	private Double profNapa=new Double(0);	
 	private Double aguaPerfil=new Double(0);	
@@ -61,7 +66,7 @@ public class SueloItem extends LaborItem { //suelo item no es labor item. le sob
 				getPpmP(),
 				getPpmK(),
 				getPpmS(),
-				getPpmMO(),
+				getPorcMO(),
 				getProfNapa(),
 				getAguaPerfil()				
 		};
@@ -73,5 +78,6 @@ public class SueloItem extends LaborItem { //suelo item no es labor item. le sob
 		return 0.0;
 	}
 	
+
 
 }

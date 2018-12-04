@@ -3,6 +3,7 @@ package dao;
 import java.text.DecimalFormat;
 
 import dao.config.Configuracion;
+import dao.utils.PropertyHelper;
 import dao.LaborConfig;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -34,7 +35,7 @@ public class LaborConfig {
 	//1 acre	43.560sq ft (survey) o 10 sq ch	4046,873m 2
 	private static final String METROS_POR_UNIDAD_DIST_KEY = "metrosPorUnidadDistancia";//1 pie =	0,3048 metros //1 pulgadas =0,0254 metros
 
-	private static final String SUP_MINIMA_M2_KEY = "SUP_MINIMA_M2";
+	public static final String SUP_MINIMA_M2_KEY = "SUP_MINIMA_M2";
 	private static final String CANTIDAD_DISTANCIAS_ENTRADA_REGIMEN_PASADA_KEY = "CANTIDAD_DISTANCIAS_ENTRADA_REGIMEN_PASADA";
 	private static final String CANTIDAD_DISTANCIAS_TOLERANCIA_KEY = "CANTIDAD_DISTANCIAS_TOLERANCIA";
 	private static final String N_VARIANZAS_TOLERA_KEY = "N_VARIANZAS_TOLERA2";
@@ -85,7 +86,7 @@ public class LaborConfig {
 			config.setProperty(CORRECCION_DEMORA_PESADA_KEY, bool2.toString());
 		});	
 		
-		valorCorrimientoPesadaProperty = Labor.initDoubleProperty(CORRIMIENTO_PESADA_KEY, "0", config);
+		valorCorrimientoPesadaProperty = PropertyHelper.initDoubleProperty(CORRIMIENTO_PESADA_KEY, "0", config);
 		
 		correccionOutlayersProperty = new SimpleBooleanProperty(
 				"true".equals(config.getPropertyOrDefault(CORRECCION_OUTLAYERS_KEY,"false")));
@@ -114,10 +115,10 @@ public class LaborConfig {
 			}
 		);
 		
-		anchoFiltroOutlayersProperty =Labor.initDoubleProperty(ANCHO_OUTLAYERS_KEY, "50", config);
+		anchoFiltroOutlayersProperty = PropertyHelper.initDoubleProperty(ANCHO_OUTLAYERS_KEY, "50", config);
 	
 		
-		anchoGrillaProperty =Labor.initDoubleProperty(ANCHO_GRILLA_KEY, "10", config);
+		anchoGrillaProperty = PropertyHelper.initDoubleProperty(ANCHO_GRILLA_KEY, "10", config);
 
 		
 		 cantMaxGeometriasSuperpuestasProperty = new SimpleIntegerProperty(df.parse(config.getPropertyOrDefault(MAX_GEOMETRYES_KEY,"50")).intValue());
@@ -133,8 +134,8 @@ public class LaborConfig {
 				}
 			);
 			
-		 valorMetrosPorUnidadDistanciaProperty = Labor.initDoubleProperty(METROS_POR_UNIDAD_DIST_KEY, "1", config);
-		 supMinimaProperty = Labor.initDoubleProperty(SUP_MINIMA_M2_KEY, "10", config);
+		 valorMetrosPorUnidadDistanciaProperty =  PropertyHelper.initDoubleProperty(METROS_POR_UNIDAD_DIST_KEY, "1", config);
+		 supMinimaProperty =  PropertyHelper.initDoubleProperty(SUP_MINIMA_M2_KEY, "10", config);
 	
 		 
 		

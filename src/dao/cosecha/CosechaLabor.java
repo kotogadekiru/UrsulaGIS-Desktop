@@ -5,6 +5,9 @@ import java.util.List;
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.Entity;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Transient;
 
 import org.geotools.data.FileDataStore;
@@ -16,21 +19,34 @@ import dao.LaborConfig;
 import dao.LaborItem;
 import dao.config.Configuracion;
 import dao.config.Cultivo;
+import dao.utils.PropertyHelper;
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.Property;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import lombok.Data;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 import utils.ProyectionConstants;
 
-@Data
-@Entity @Access(AccessType.FIELD)
-public class CosechaLabor extends Labor<CosechaItem> {
-	private static final int KG_POR_TN = 1000;
+
+@Getter
+@Setter(value = AccessLevel.PUBLIC)
+@Entity @Access(AccessType.FIELD)//variable (el default depende de donde pongas el @Id)
+@NamedQueries({
+	@NamedQuery(name=CosechaLabor.CosechaLaborConstants.FIND_ALL, query="SELECT c FROM CosechaLabor c") ,
+	@NamedQuery(name=CosechaLabor.CosechaLaborConstants.FIND_NAME, query="SELECT o FROM CosechaLabor o where o.nombre = :name") ,
+	@NamedQuery(name=CosechaLabor.CosechaLaborConstants.FIND_ACTIVOS, query="SELECT o FROM CosechaLabor o where o.activo = true") ,
+}) 
+public class CosechaLabor extends Labor<CosechaItem> {	
+	public static class CosechaLaborConstants{
+	public static final String FIND_ALL="CosechaLabor.findAll";
+	public static final String FIND_NAME = "CosechaLabor.findName";
+	public static final String FIND_ACTIVOS = "CosechaLabor.findActivos";
+	
+	public static final int KG_POR_TN = 1000;
 	public static final double FEET_TO_METERS = 0.3048;
-	private static final double KG_POR_LIBRA = 0.453592;
+	public static final double KG_POR_LIBRA = 0.453592;
 
 	public static final String COLUMNA_VELOCIDAD = "Velocidad";
 	public static final String COLUMNA_RENDIMIENTO = "Rendimient";
@@ -40,34 +56,32 @@ public class CosechaLabor extends Labor<CosechaItem> {
 	public static final String COLUMNA_IMPORTE_HA = "importe_ha";
 
 
-	private static final String PRECIO_GRANO = "precioGrano";
-	private static final String CORRECCION_COSECHA = "CORRECCION_COSECHA";
-	private static final String COSTO_COSECHA_TN = "COSTO_COSECHA_TN";
-	private static final String COSTO_COSECHA_HA = "COSTO_COSECHA_HA";
+	public static final String PRECIO_GRANO = "precioGrano";
+	public static final String CORRECCION_COSECHA = "CORRECCION_COSECHA";
+	public static final String COSTO_COSECHA_TN = "COSTO_COSECHA_TN";
+	public static final String COSTO_COSECHA_HA = "COSTO_COSECHA_HA";
 
-	private static final String MAX_RINDE_KEY = "MAX_RINDE";
-	private static final String MIN_RINDE_KEY = "MIN_RINDE";
+	public static final String MAX_RINDE_KEY = "MAX_RINDE";
+	public static final String MIN_RINDE_KEY = "MIN_RINDE";
 
-	private static final String PRODUCTO_DEFAULT = "CultivoDefault";
-	private static final String COLUMNA_COSTO_LB_HA = "CostoLbTn";
-	private static final String COLUMNA_COSTO_LB_TN = "CostoLbHa";
+	public static final String PRODUCTO_DEFAULT = "CultivoDefault";
+	public static final String COLUMNA_COSTO_LB_HA = "CostoLbTn";
+	public static final String COLUMNA_COSTO_LB_TN = "CostoLbHa";
+	
+	}
+	public StringProperty colRendimiento= new SimpleStringProperty();
+	 
+	public Cultivo cultivo= null;//FIXME producto no se puede guardar como una property
+	public Double costoCosechaTn = new Double(0);
+	public Double precioGrano = new Double(0);
+	//public DoubleProperty precioGranoProperty= new SimpleDoubleProperty();	 
+	//public DoubleProperty costoCosechaTnProperty= new SimpleDoubleProperty();
 
-	@Transient 
-	public StringProperty colRendimiento= null;
-	@Transient 
-	public Property<Cultivo> producto=null;//FIXME producto no se puede guardar como una property
-	@Transient 
-	public SimpleDoubleProperty precioGranoProperty= null;
-	@Transient 
-	public SimpleDoubleProperty costoCosechaTnProperty= null;
+	//TODO mover a tasks separados de la cosecha	 
+	public DoubleProperty correccionCosechaProperty= new SimpleDoubleProperty();//es el porcentaje de 0-100 por que que hay que multiplicar el rinde 
+	public DoubleProperty maxRindeProperty= new SimpleDoubleProperty();
+	public DoubleProperty minRindeProperty= new SimpleDoubleProperty();
 
-	//TODO mover a tasks separados de la cosecha
-	@Transient 
-	public SimpleDoubleProperty correccionCosechaProperty= null;//es el porcentaje de 0-100 por que que hay que multiplicar el rinde 
-	@Transient 
-	public SimpleDoubleProperty maxRindeProperty= null;
-	@Transient 
-	public SimpleDoubleProperty minRindeProperty= null;
 
 	/**
 	 * constructor que sirve para crear una cosecha artificial cuando no tiene
@@ -91,56 +105,61 @@ public class CosechaLabor extends Labor<CosechaItem> {
 		List<String> availableColums = this.getAvailableColumns();		
 		Configuracion properties = getConfigLabor().getConfigProperties();
 
-		colRendimiento = initStringProperty(CosechaLabor.COLUMNA_RENDIMIENTO, properties, availableColums);
+		colRendimiento = PropertyHelper.initStringProperty(CosechaLabor.CosechaLaborConstants.COLUMNA_RENDIMIENTO, properties, availableColums);
 		//como detecto que es una cosecha default evito hacer correcciones de flow y de distancia
-		if(CosechaLabor.COLUMNA_RENDIMIENTO.equals(colRendimiento.get())){
+		if(CosechaLabor.CosechaLaborConstants.COLUMNA_RENDIMIENTO.equals(colRendimiento.get())){
 			this.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
 			this.getConfiguracion().correccionRindeProperty().setValue(false);
 			this.getConfiguracion().valorMetrosPorUnidadDistanciaProperty().set(1);
 		}
-		colAmount= new SimpleStringProperty(CosechaLabor.COLUMNA_RENDIMIENTO);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
+		colAmount= new SimpleStringProperty(CosechaLabor.CosechaLaborConstants.COLUMNA_RENDIMIENTO);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
 
-		correccionCosechaProperty = initDoubleProperty(CosechaLabor.CORRECCION_COSECHA, "100", properties);
-		minRindeProperty = initDoubleProperty(CosechaLabor.MIN_RINDE_KEY, "0", properties);
-		maxRindeProperty = initDoubleProperty(CosechaLabor.MAX_RINDE_KEY, "0", properties);
-		precioGranoProperty = initDoubleProperty(CosechaLabor.PRECIO_GRANO, "0", properties);
-		costoCosechaTnProperty = initDoubleProperty(CosechaLabor.COSTO_COSECHA_TN, "0", properties);
+		correccionCosechaProperty = PropertyHelper.initDoubleProperty(CosechaLabor.CosechaLaborConstants.CORRECCION_COSECHA, "100", properties);
+		minRindeProperty = PropertyHelper.initDoubleProperty(CosechaLabor.CosechaLaborConstants.MIN_RINDE_KEY, "0", properties);
+		maxRindeProperty = PropertyHelper.initDoubleProperty(CosechaLabor.CosechaLaborConstants.MAX_RINDE_KEY, "0", properties);
+		
+		precioGrano = PropertyHelper.initDouble(CosechaLabor.CosechaLaborConstants.PRECIO_GRANO, "0", properties);
+		costoCosechaTn = PropertyHelper.initDouble(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_TN, "0", properties);
 
-		String productoKEY = properties.getPropertyOrDefault(CosechaLabor.PRODUCTO_DEFAULT, Cultivo.MAIZ);
-		producto = new SimpleObjectProperty<Cultivo>(Cultivo.cultivos.get(productoKEY));//values().iterator().next());
-		producto.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(CosechaLabor.PRODUCTO_DEFAULT,bool2.getNombre());
-		});
+		String productoKEY = properties.getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.PRODUCTO_DEFAULT, Cultivo.MAIZ);
+		Cultivo cultDefault = null;
+		try {
+			cultDefault = Cultivo.cultivos.get(productoKEY);//DAH.getCultivo(productoKEY);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		//productoProperty = new SimpleObjectProperty<Cultivo>(cultDefault);//values().iterator().next());
+		cultivo=cultDefault;
+//		cultivo.addListener((obs, bool1, bool2) -> {
+//			//this.cultivo=bool2;
+//			if(bool2!=null)properties.setProperty(CosechaLabor.PRODUCTO_DEFAULT,bool2.getNombre());
+//		});
 	}
 
 	@Override
-	protected DoubleProperty initPrecioLaborHaProperty(){
-		return initDoubleProperty(CosechaLabor.COSTO_COSECHA_HA,"0",config.getConfigProperties());
+	protected Double initPrecioLaborHa(){
+		return Double.parseDouble(config.getConfigProperties().getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_HA,"0"));
+		//return PropertyHelper.initDoubleProperty(CosechaLabor.COSTO_COSECHA_HA,"0",config.getConfigProperties());
 	} 
 	
 	@Override
-	protected DoubleProperty initPrecioInsumoProperty() {
-		return initDoubleProperty(CosechaLabor.PRECIO_GRANO,  "0", config.getConfigProperties());
+	protected Double initPrecioInsumo() {
+		return Double.parseDouble(config.getConfigProperties().getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.PRECIO_GRANO,"0"));
+		//return PropertyHelper.initDoubleProperty(CosechaLabor.PRECIO_GRANO,  "0", config.getConfigProperties());
 	//	return initDoubleProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,"0",config.getConfigProperties());
 	}
 
 	@Override
+	@Transient
 	public String getTypeDescriptors() {
-		String type = CosechaLabor.COLUMNA_RENDIMIENTO + ":Double,"	
-				+CosechaLabor.COLUMNA_DESVIO_REND + ":Double,"	
-				+CosechaLabor.COLUMNA_COSTO_LB_HA + ":Double,"	
-				+CosechaLabor.COLUMNA_COSTO_LB_TN + ":Double,"	
+		String type = CosechaLabor.CosechaLaborConstants.COLUMNA_RENDIMIENTO + ":Double,"	
+				+CosechaLabor.CosechaLaborConstants.COLUMNA_DESVIO_REND + ":Double,"	
+				+CosechaLabor.CosechaLaborConstants.COLUMNA_COSTO_LB_HA + ":Double,"	
+				+CosechaLabor.CosechaLaborConstants.COLUMNA_COSTO_LB_TN + ":Double,"	
 				//+CosechaLabor.COLUMNA_VELOCIDAD + ":Double,"	
-				+ CosechaLabor.COLUMNA_PRECIO + ":Double,"
-				+CosechaLabor.COLUMNA_IMPORTE_HA+":Double";
+				+ CosechaLabor.CosechaLaborConstants.COLUMNA_PRECIO + ":Double,"
+				+CosechaLabor.CosechaLaborConstants.COLUMNA_IMPORTE_HA+":Double";
 		return type;
-	}
-
-
-
-	public void changeFeature(SimpleFeature old, CosechaItem ci) {
-		outCollection.remove(old);
-		outCollection.add(ci.getFeature(featureBuilder));
 	}
 
 	@Override
@@ -171,15 +190,12 @@ public class CosechaLabor extends Labor<CosechaItem> {
 			 * libra]*[1 segundo]*[m2 por Ha]/(width*distance)
 			 */
 			double constantes = ProyectionConstants.METROS2_POR_HA
-					* KG_POR_LIBRA/KG_POR_TN;// XXX asume un dato por segundo
+					* CosechaLabor.CosechaLaborConstants.KG_POR_LIBRA/CosechaLabor.CosechaLaborConstants.KG_POR_TN;// XXX asume un dato por segundo
 			//si la distancia o el ancho son cero esto da infinito
 			double divisor = ci.getDistancia() * ci.getAncho();
 			if(divisor>0){
 				rindeDouble = rindeDouble * constantes / (divisor);
 			} 
-//			else {
-//				rindeDouble =rindeDouble;
-//			}
 			
 			List<AttributeType> descriptors = harvestFeature.getType().getTypes();
 			String moistureColumn =null;
@@ -201,8 +217,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 			String convertir =this.config.getConfigProperties().getPropertyOrDefault("ConvertirElevacionPiesAMetros", "true");
 			if("true".equals(convertir)){
 				//double feetToMeters =;
-				ci.setElevacion(ci.getElevacion()*FEET_TO_METERS);
-				
+				ci.setElevacion(ci.getElevacion()*CosechaLabor.CosechaLaborConstants.FEET_TO_METERS);				
 			}
 		}
 
@@ -213,9 +228,9 @@ public class CosechaLabor extends Labor<CosechaItem> {
 	}
 
 	public void setPropiedadesLabor(CosechaItem ci){
-		ci.precioTnGrano =this.precioGranoProperty.get();
-		ci.costoLaborHa=this.precioLaborProperty.get();
-		ci.costoLaborTn=this.costoCosechaTnProperty.get();
+		ci.precioTnGrano =this.getPrecioInsumo();//precioGranoProperty.get();
+		ci.costoLaborHa=this.getPrecioLabor();
+		ci.costoLaborTn=this.getCostoCosechaTn();
 	}
 	
 	@Override
@@ -224,9 +239,9 @@ public class CosechaLabor extends Labor<CosechaItem> {
 		CosechaItem ci = new CosechaItem(harvestFeature);
 		super.constructFeatureContainerStandar(ci,harvestFeature,newIDS);
 		ci.rindeTnHa = LaborItem.getDoubleFromObj(harvestFeature
-				.getAttribute(CosechaLabor.COLUMNA_RENDIMIENTO));
+				.getAttribute(CosechaLabor.CosechaLaborConstants.COLUMNA_RENDIMIENTO));
 		ci.desvioRinde = LaborItem.getDoubleFromObj(harvestFeature
-				.getAttribute(CosechaLabor.COLUMNA_DESVIO_REND));
+				.getAttribute(CosechaLabor.CosechaLaborConstants.COLUMNA_DESVIO_REND));
 
 		setPropiedadesLabor(ci);//para que se actualice si se edito la labor
 //		ci.precioTnGrano = LaborItem.getDoubleFromObj(harvestFeature
@@ -252,4 +267,20 @@ public class CosechaLabor extends Labor<CosechaItem> {
 	public LaborConfig getConfigLabor() {
 		return getConfiguracion();
 	}
+	
+	@ManyToOne
+	public Cultivo getCultivo() {
+		return this.cultivo;
+	}
+	
+	public void setCultivo(Cultivo c) {
+		System.out.println("camniando el cultivo de "+getCultivo()+" a "+c);
+//		if(productoProperty==null) {
+//			productoProperty = new SimpleObjectProperty<Cultivo>();
+//		}
+		this.cultivo=c;
+		System.out.println("el cultivo quedo en "+getCultivo());
+	}
+
+
 }

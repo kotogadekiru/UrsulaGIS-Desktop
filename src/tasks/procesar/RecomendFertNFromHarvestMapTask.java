@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 
 import org.geotools.data.FeatureReader;
@@ -30,6 +31,8 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 	private CosechaLabor cosecha;
 	private List<Suelo> suelos;
 	private List<FertilizacionLabor> fertilizaciones;
+	private Double minFert=null;
+	private Double maxFert=null;
 	public RecomendFertNFromHarvestMapTask(FertilizacionLabor labor,CosechaLabor cosechaEstimada, List<Suelo> _suelos, List<FertilizacionLabor> _fert) {
 		super(labor);
 		this.cosecha =cosechaEstimada;
@@ -40,7 +43,7 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 			FeatureReader<SimpleFeatureType, SimpleFeature> reader =cosecha.outCollection.reader();
 			featureNumber=cosecha.outCollection.size();
 			List<FertilizacionItem> itemsToShow = new ArrayList<FertilizacionItem>();
-			Cultivo cultivo = cosecha.producto.getValue();
+			Cultivo cultivo = cosecha.getCultivo();
 			Fertilizante fert = this.labor.fertilizanteProperty.getValue();
 			
 			//TODO calcular el balance de nitrogeno en el suelo luego de la fertilizacion y completar lo que haga falta para la cosecha estimada;
@@ -57,13 +60,24 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 				Double areaGeom =  ProyectionConstants.A_HAS(geom.getArea());
 				fi.setGeometry(geom);
 				double absN = ci.getRindeTnHa()*cultivo.getAbsN();
-				double dispNSuelo = getNDisponibleSuelo(geom)/areaGeom;
+				double dispNSuelo = getNDisponibleSuelo(geom);//incluye el organico a mineralizar.
+				
+				//System.out.println("kg disponible suelo: " + dispNSuelo+ "areaGeom:"+areaGeom);
+				dispNSuelo=dispNSuelo/areaGeom;
+				
 				double dispNFert = getNDisponibleFert(geom)/areaGeom;
-			//	System.out.println("absN="+absN+" dispSuelo="+dispNSuelo+" dispNFert="+dispNFert);
+				//System.out.println("absN="+absN+" dispSuelo="+dispNSuelo+" dispNFert="+dispNFert);
 				double nAAplicar= absN-dispNSuelo-dispNFert;
-			//	System.out.println("nAAplicar="+nAAplicar);
+				//System.out.println("nAAplicar="+nAAplicar);
 				nAAplicar = Math.max(0, nAAplicar);
 				double reposicionN = nAAplicar/(fert.getPorcN()/100);
+				
+				if(this.minFert!=null&&this.minFert>reposicionN) {
+					reposicionN=minFert;
+				}
+				if(this.maxFert!=null&&this.maxFert<reposicionN) {
+					reposicionN=maxFert;
+				}
 				fi.setDosistHa(reposicionN);
 				fi.setElevacion(10d);
 				labor.setPropiedadesLabor(fi);
@@ -94,6 +108,7 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 					Double kgNHa = (Double) item.getDosistHa() * fertilizante.getPorcN()/100;
 					Geometry fertGeom = item.getGeometry();				
 					fertGeom= PolygonValidator.validate(fertGeom);
+					if(!fertGeom.intersects(geometry))return DoubleStream.of(0.0);
 					Double area = 0.0;
 					try {
 						//XXX posible punto de error/ exceso de demora/ inneficicencia
@@ -114,12 +129,21 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 		
 		private Double getNDisponibleSuelo(Geometry geometry) {
 			Double kgNSuelo = new Double(0);
+			boolean estival = this.cosecha.getCultivo().isEstival();
 			kgNSuelo=	suelos.parallelStream().flatMapToDouble(suelo->{
 				List<SueloItem> items = suelo.cachedOutStoreQuery(geometry.getEnvelopeInternal());
-				return items.parallelStream().flatMapToDouble(item->{
-					Double kgNHa= (Double) item.getPpmN()*suelo.getDensidad();//TODO multiplicar por la densidad del suelo
+				//System.out.println("hay "+items.size()+" items en el suelo "+suelo.nombre);
+				return items.stream().flatMapToDouble(item->{
+					//Double kgNHa= (Double) item.getPpmN()*suelo.getDensidad();
+				//	double kgSueloHa = ProyectionConstants.METROS2_POR_HA*0.6*suelo.getDensidad();
+					Double kgNHa=suelo.getKgNHa(item);// (Double) item.getPpmN()*kgSueloHa*Fertilizante.porcN_NO3/1000000;
+					double porcOrgDisponible =1/3;
+					if(estival)porcOrgDisponible=2/3;
+					Double kgNOrganicoHa= suelo.getKgNOrganicoHa(item)*porcOrgDisponible;//divido la mineralizacion anual a la mitad. pero depende del cultivo
+					
 					Geometry geom = item.getGeometry();				
 					geom= PolygonValidator.validate(geom);
+					if(!geom.intersects(geometry))return DoubleStream.of(0.0);
 					Double area = 0.0;
 					try {
 						//XXX posible punto de error/ exceso de demora/ inneficicencia
@@ -127,9 +151,10 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 						area = ProyectionConstants.A_HAS(inteseccionGeom.getArea());
 						// Geometry
 					} catch (Exception e) {
-						//e.printStackTrace();
+						e.printStackTrace();
 					}				
-					return DoubleStream.of( kgNHa * area);				
+					//System.out.println("los kgN/ha para ppmN: "+item.getPpmN()+" es "+kgNHa+ "has es " +area);
+					return DoubleStream.of( (kgNHa +kgNOrganicoHa)* area);				
 				});
 			}).sum();
 //			System.out
@@ -138,6 +163,8 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 		
 			return kgNSuelo;
 		}
+		
+		
 		
 		@Override
 		protected ExtrudedPolygon getPathTooltip(Geometry poly, FertilizacionItem fertFeature) {
@@ -175,5 +202,14 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 
 		protected int gerAmountMax() {
 			return 1000;
+		}
+		
+		public void setMinFert(Double _minFert) {
+			this.minFert=_minFert;
+			
+		}
+		public void setMaxFert(Double _maxFert) {
+			this.maxFert=_maxFert;
+			
 		}
 }

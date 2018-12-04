@@ -4,30 +4,19 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import javafx.scene.Group;
-import javafx.scene.shape.Path;
-import tasks.ProcessMapTask;
-
 import org.geotools.data.FeatureReader;
-import org.geotools.data.FileDataStore;
-import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
-import org.geotools.data.simple.SimpleFeatureSource;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
-import utils.ProyectionConstants;
-
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.index.quadtree.Quadtree;
 
-import dao.fertilizacion.FertilizacionItem;
-import dao.fertilizacion.FertilizacionLabor;
 import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
+import tasks.ProcessMapTask;
+import utils.ProyectionConstants;
 
 public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLabor> {	
 //	private int featureCount;
@@ -207,27 +196,40 @@ public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLab
 
 	}
 	
-	public  ExtrudedPolygon  getPathTooltip( Geometry poly,SiembraItem siembraFeature) {
-	//	Path path = getPathFromGeom(poly,siembraFeature);		
-		
+//	public ExtrudedPolygon  getPathTooltip( Geometry poly,SiembraItem siembraFeature) {		
+//		double area = poly.getArea() *ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+//		DecimalFormat df = new DecimalFormat("#.00"); 
+//		String tooltipText = new String(
+//				"Densidad: "+ df.format(siembraFeature.getDosisHa()) + " Kg/Ha\n\n"
+//				+"Costo: " + df.format(siembraFeature.getImporteHa()) + " U$S/Ha\n"				
+//			//	+"Sup: " +  df.format(area*ProyectionConstants.METROS2_POR_HA) + " m2\n"
+//		//		+"feature: " + featureNumber						
+//		);
+//		
+//		if(area<1){
+//			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
+//		} else {
+//			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
+//		}
+//		return super.getExtrudedPolygonFromGeom(poly, siembraFeature,tooltipText);	
+//	}
+	
+	@Override
+	public ExtrudedPolygon  getPathTooltip( Geometry poly,SiembraItem siembraFeature) {		
 		double area = poly.getArea() *ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		DecimalFormat df = new DecimalFormat("#.00"); 
 		String tooltipText = new String(
-				"Densidad: "+ df.format(siembraFeature.getDosisHa()) + " Kg/Ha\n\n"
-				+"Costo: " + df.format(siembraFeature.getImporteHa()) + " U$S/Ha\n"				
-			//	+"Sup: " +  df.format(area*ProyectionConstants.METROS2_POR_HA) + " m2\n"
-		//		+"feature: " + featureNumber						
-		);
-		
+				"Densidad: "+ df.format(siembraFeature.getDosisHa()) + " Kg/Ha\n"								
+				);
+		tooltipText=tooltipText.concat( "Fert: " + df.format(siembraFeature.getDosisFertLinea()) + " Kg/Ha\n"		);
+		tooltipText=tooltipText.concat( "Costo: " + df.format(siembraFeature.getImporteHa()) + " U$S/Ha\n"		);
+
 		if(area<1){
 			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
 		} else {
 			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
 		}
-
-		
-		return super.getExtrudedPolygonFromGeom(poly, siembraFeature,tooltipText);
-	//	return ret;		
+		return super.getExtrudedPolygonFromGeom(poly, siembraFeature,tooltipText);	
 	}
 	
 	protected  int getAmountMin(){return 0;} 

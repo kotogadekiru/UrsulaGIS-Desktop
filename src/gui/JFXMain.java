@@ -16,8 +16,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -30,10 +34,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
+import javax.measure.unit.SystemOfUnits;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -54,17 +62,18 @@ import org.geotools.data.simple.SimpleFeatureStore;
 import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.feature.SchemaException;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.filter.SortByImpl;
+import org.geotools.xml.filter.FilterComplexTypes.SortByType;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.filter.sort.SortBy;
 
-import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.index.quadtree.Quadtree;
 
 import dao.Labor;
 import dao.LaborItem;
@@ -85,6 +94,7 @@ import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.margen.Margen;
 import dao.pulverizacion.PulverizacionLabor;
+import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
 import dao.suelo.Suelo;
 import gov.nasa.worldwind.Configuration;
@@ -100,7 +110,6 @@ import gov.nasa.worldwind.data.DataRasterReaderFactory;
 import gov.nasa.worldwind.event.RenderingExceptionListener;
 import gov.nasa.worldwind.event.SelectListener;
 import gov.nasa.worldwind.exception.WWAbsentRequirementException;
-import gov.nasa.worldwind.geom.LatLon;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Sector;
 import gov.nasa.worldwind.globes.ElevationModel;
@@ -113,7 +122,6 @@ import gov.nasa.worldwind.layers.SurfaceImageLayer;
 import gov.nasa.worldwind.layers.ViewControlsLayer;
 import gov.nasa.worldwind.layers.ViewControlsSelectListener;
 import gov.nasa.worldwind.render.SurfaceImage;
-import gov.nasa.worldwind.render.SurfacePolygon;
 import gov.nasa.worldwind.terrain.ZeroElevationModel;
 import gov.nasa.worldwind.util.StatusBar;
 import gov.nasa.worldwind.util.UnitsFormat;
@@ -125,9 +133,12 @@ import gui.nww.LayerPanel;
 import gui.nww.WWPanel;
 import gui.utils.DateConverter;
 import gui.utils.SmartTableView;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -159,6 +170,7 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -168,6 +180,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import tasks.ExportLaborMapTask;
 import tasks.GetNDVI2ForLaborTask;
 import tasks.GoogleGeocodingHelper;
@@ -195,6 +208,7 @@ import tasks.procesar.ProcessMarginMapTask;
 import tasks.procesar.ProcessNewSoilMapTask;
 import tasks.procesar.RecomendFertNFromHarvestMapTask;
 import tasks.procesar.RecomendFertPFromHarvestMapTask;
+import tasks.procesar.SiembraFertTask;
 import tasks.procesar.UnirCosechasMapTask;
 import tasks.procesar.UnirFertilizacionesMapTask;
 import utils.DAH;
@@ -209,15 +223,16 @@ public class JFXMain extends Application {
 	private static final String GOV_NASA_WORLDWIND_AVKEY_INITIAL_LATITUDE = "gov.nasa.worldwind.avkey.InitialLatitude";
 	//	private static final double MAX_VALUE = 1.0;
 	//	private static final double MIN_VALUE = 0.2;
-	public static final String VERSION = "0.2.23 dev";
-	private static final String TITLE_VERSION = "Ursula GIS "+VERSION;
-	private static final String BUILD_INFO="Esta aplicacion fue compilada el 29 de Agosto de 2017."
+	public static final String VERSION = "0.2.24 dev";
+	private static final String TITLE_VERSION = "Ursula GIS-v"+VERSION;
+	private static final String BUILD_INFO="Esta aplicacion fue compilada el 29 de Septiembre de 2018."
 			+"<br>Ursula GIS es de uso libre y gratutito provista sin ninguna garantia."
 			+"<br>Se encuentra en estado de desarrollo y se provee a modo de prueba."
 			+"<br>Desarrollada por Tomas Lund Petersen, cualquier consulta enviar un mail a kotogadekiru@gmail.com"
 			+"<br>Twitter: @redbaron_ar";
-	public static final String ICON = "gui/1-512.png";
+	public static final String ICON ="gui/32x32-icon-earth.png";// "gui/1-512.png";//UrsulaGIS-Desktop/src/gui/32x32-icon-earth.png
 	private static final String SOUND_FILENAME = "gui/Alarm08.wav";//"Alarm08.wav" funciona desde eclipse pero no desde el jar 
+
 	private Stage stage=null;
 	private Scene scene=null;
 
@@ -278,18 +293,42 @@ public class JFXMain extends Application {
 				DAH.closeEm();
 				System.out.println("em Closed");
 				System.out.println("Application Closed by click to Close Button(X)");
-
+				getWwd().shutdown();
 				System.exit(0); 
 			});
 		});
 		primaryStage.show();
-
-
-
-
-
+		
+		//start clearCache cronJob
+		startClearCacheCronJob();
 	}
 
+	private void startClearCacheCronJob() {
+		  ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+		  Runnable clearCaches =() ->{
+			 cosechas.forEach(l->{
+				 LocalTime now = LocalTime.now().minusSeconds(60);
+				 
+				 synchronized(l){
+					 if(l.cacheLastRead.isBefore(now)) {
+						 l.clearCache();
+					 }
+				 }
+			 });
+			 fertilizaciones.forEach(l->l.clearCache());
+			 siembras.forEach(l->l.clearCache());
+			 pulverizaciones.forEach(l->l.clearCache());
+			 suelos.forEach(l->l.clearCache());
+			 margenes.forEach(l->l.clearCache());
+			// System.out.println("termine de limpiar todas las caches");
+		  };
+
+		  ScheduledFuture<?> clearCachesHandle =  scheduler.scheduleAtFixedRate(clearCaches, 60, 30, TimeUnit.SECONDS);
+		  //scheduler.schedule(()->  { clearCachesHandle.cancel(true);  }, 60 * 60, TimeUnit.SECONDS);//stop clearing caches after an hour
+		
+	}
+		
 	private static void setInitialPosition() {
 		Configuracion config =Configuracion.getInstance();
 		double initLat = Double.parseDouble(config.getPropertyOrDefault(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LATITUDE, "-35"));
@@ -463,7 +502,7 @@ public class JFXMain extends Application {
 		addMenuItem("Poligonos",(a)->doImportarPoligonos(null),menuImportar);
 
 		final Menu menuHerramientas = new Menu("Herramientas");
-		addMenuItem("CosechaJD",(a)->doLeerCosechaJD(),menuHerramientas);
+		//addMenuItem("CosechaJD",(a)->doLeerCosechaJD(),menuHerramientas);
 		//insertMenuItem(menuCalcular,"Retabilidades",a->doProcessMargin());
 		addMenuItem("Distancia",(a)->doMedirDistancia(),menuHerramientas);
 		addMenuItem("Superficie",(a)->doMedirSuperficie(),menuHerramientas);
@@ -472,6 +511,7 @@ public class JFXMain extends Application {
 		addMenuItem("Unir Cosechas",(a)->doUnirCosechas(null),menuHerramientas);
 		addMenuItem("Unir Fertilizaciones",(a)->doUnirFertilizaciones(null),menuHerramientas);
 		addMenuItem("Balance De Nutrientes",(a)->doProcesarBalanceNutrientes(),menuHerramientas);
+		addMenuItem("Generar Siembra Fertilizada",(a)->doGenerarSiembraFertilizada(),menuHerramientas);
 		addMenuItem("Generar Orden De Compra Insumos",(a)->doGenerarOrdenDeCompra(),menuHerramientas);
 		addMenuItem("Ir a",(a)->{
 			TextInputDialog anchoDialog = new TextInputDialog("Pehuajo");
@@ -493,7 +533,8 @@ public class JFXMain extends Application {
 		addMenuItem("Evolucion NDVI",(a)->{
 			doShowNDVIEvolution();
 		},menuHerramientas);
-
+		addMenuItem("Unir Poligonos",(a)->doUnirPoligonos(),menuHerramientas);
+		addMenuItem("Intersectar Poligonos",(a)->doIntersectarPoligonos(),menuHerramientas);
 
 		/*Menu Exportar*/
 		final Menu menuExportar = new Menu("Exportar");		
@@ -513,6 +554,9 @@ public class JFXMain extends Application {
 		addMenuItem("Campaña",(a)->doConfigCampania(),menuConfiguracion);
 		addMenuItem("Poligonos",(a)->doConfigPoligonos(),menuConfiguracion);
 		addMenuItem("Ndvi",(a)->doShowNdviTable(),menuConfiguracion);
+		//addMenuItem("Labores",(a)->doShowLaboresTable(),menuConfiguracion);
+
+
 
 		MenuItem actualizarMI=addMenuItem("Actualizar !",null,menuConfiguracion);
 		actualizarMI.setOnAction((a)->doUpdate(actualizarMI));
@@ -577,13 +621,33 @@ public class JFXMain extends Application {
 
 		poligonosP.add((layer)->{
 			if(layer==null){
+				return "Editar"; 
+			} else {
+				Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+				if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){
+					//mostrar un dialogo para editar el nombre del poligono
+					Poligono p =(Poligono)layerObject;
+					TextInputDialog nombreDialog = new TextInputDialog(p.getNombre());
+					nombreDialog.setTitle("Edite el poligono");
+					nombreDialog.setContentText("Nombre");
+
+					Optional<String> nombreOptional = nombreDialog.showAndWait();
+					if(nombreOptional.isPresent()){
+						p.setNombre(nombreOptional.get());
+						this.getLayerPanel().update(this.getWwd());
+					}
+				}
+				return "converti a Siembra";
+			}});
+
+		poligonosP.add((layer)->{
+			if(layer==null){
 				return "Convertir a Siembra"; 
 			} else {
 				Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 				if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){
 					//doConvertirASiembra((Polygon) layerObject);
 					doCrearSiembra((Poligono) layerObject);
-
 				}
 				return "converti a Siembra";
 			}});
@@ -595,7 +659,6 @@ public class JFXMain extends Application {
 				Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 				if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){	
 					doCrearFertilizacion((Poligono) layerObject);
-
 				}
 				return "converti a Fertilizacion";
 			}});
@@ -607,7 +670,6 @@ public class JFXMain extends Application {
 				Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 				if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){
 					doCrearPulverizacion((Poligono) layerObject);
-
 				}
 				return "converti a Pulverizacion";
 			}});
@@ -630,8 +692,8 @@ public class JFXMain extends Application {
 				Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 				if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){
 					doCrearSuelo((Poligono) layerObject);
+					layer.setEnabled(false);
 					//TODO deshabilitar layer para que el polygono no rompa la cosecha nueva
-
 				}
 				return "converti a Cosecha";
 			}});
@@ -683,22 +745,19 @@ public class JFXMain extends Application {
 				}
 				return "went to " + layer.getName();
 			}});
-		laboresP.add((layer)->{
-
-			if(layer==null){
-				return "Guardar"; 
-			} else {		
-				enDesarrollo();
-				Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-				if (layerObject==null){
-				}else if(Labor.class.isAssignableFrom(layerObject.getClass())){
-					doGuardarLabor((Labor<?>) layerObject);
-				}
-				return "guarde labor " + layer.getName();
-			}});
-
-
-
+//		laboresP.add((layer)->{
+//
+//			if(layer==null){
+//				return "Guardar"; 
+//			} else {		
+//				enDesarrollo();
+//				Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+//				if (layerObject==null){
+//				}else if(Labor.class.isAssignableFrom(layerObject.getClass())){
+//					doGuardarLabor((Labor<?>) layerObject);
+//				}
+//				return "guarde labor " + layer.getName();
+//			}});
 
 		/**
 		 *Accion que permite editar un mapa de rentabilidad
@@ -866,6 +925,17 @@ public class JFXMain extends Application {
 				return "Exportar Prescripcion"; 
 			} else{
 				doExportPrescripcion((FertilizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+				return "labor Exportada" + layer.getName();
+			}});
+
+		/**
+		 * Accion permite exportar la labor como shp
+		 */
+		siembrasP.add((layer)->{
+			if(layer==null){
+				return "Exportar Prescripcion"; 
+			} else{
+				doExportPrescripcionSiembra((SiembraLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 				return "labor Exportada" + layer.getName();
 			}});
 
@@ -1069,7 +1139,7 @@ public class JFXMain extends Application {
 			in.close();
 			out.close();
 		}catch(Exception e){
-
+			e.printStackTrace();
 		}
 	}
 
@@ -1278,94 +1348,178 @@ public class JFXMain extends Application {
 				+ "Permite exporta a excel y cotizar precios online y guardar");
 		message.show();
 		//TODO implementar este metodo
-		
-	
+
+
 	}
 
+	private void doGenerarSiembraFertilizada() {
+		enDesarrollo();
+		Alert message = new Alert(Alert.AlertType.INFORMATION);
+		message.setHeaderText("Generar Siembra Fertilizada");
+		message.setContentText("metodo que toma las labores activas de siembra fertilizacion " 
+				+ " hace un biclustering juntando todas las features de la misma clase de siembra y fertilizacion y las resume en una feature sintetica.");
+		message.show();
+
+		//todo pasarlabor el filtrado por visibles aca y pasar nuevas listas solo con las visibles
+		SiembraLabor siembraEnabled = siembras.stream().filter((l)->l.getLayer().isEnabled()).collect(Collectors.toList()).get(0);
+		FertilizacionLabor fertEnabled = fertilizaciones.stream().filter((l)->l.getLayer().isEnabled()).collect(Collectors.toList()).get(0);
+		//List<SiembraLabor> siemEnabled = siembras.stream().filter((l)->l.getLayer().isEnabled()).collect(Collectors.toList());
+		//List<CosechaLabor> cosechasEnabled = cosechas.stream().filter((l)->l.getLayer().isEnabled()).collect(Collectors.toList());			
+
+
+		SiembraFertTask siembraFertTask = new SiembraFertTask(siembraEnabled, fertEnabled);
+
+		siembraFertTask.installProgressBar(progressBox);
+
+		siembraFertTask.setOnSucceeded(handler -> {
+			SiembraLabor ret = (SiembraLabor)handler.getSource().getValue();
+			siembraFertTask.uninstallProgressBar();
+
+			this.siembras.add(ret);
+			insertBeforeCompass(getWwd(), ret.getLayer());
+			this.getLayerPanel().update(this.getWwd());
+
+			playSound();
+			viewGoTo(ret);
+			System.out.println("SiembraFertTask succeded");
+		});
+		executorPool.execute(siembraFertTask);
+
+
+	}
+
+
+
 	private void doShowNDVIEvolution() {
-		executorPool.execute(()->{
-			List<Layer> ndviLayers = new ArrayList<Layer>();
-			LayerList layers = getWwd().getModel().getLayers();
-			for (Layer l : layers) {
-				Object o = l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-				if (l.isEnabled() && o instanceof Ndvi){
-					l.setEnabled(false);
-					ndviLayers.add(l);
-				}
-			}	
-			ndviLayers.sort((c1,c2)->{
-				String l1Name =c1.getName();
-				String l2Name =c2.getName();
-				Ndvi ndvi1 = (Ndvi)c1.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-				Ndvi ndvi2 = (Ndvi)c2.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-				try{
-					return ndvi1.getFecha().compareTo(ndvi2.getFecha());
-				} catch(Exception e){
-					System.err.println("no se pudo comparar las fechas de los ndvi. comparando nombres");
-				}
-				// comparar por el valor del layer en vez del nombre del layer
-				DateFormat df =new  SimpleDateFormat("dd-MM-yyyy");
+		//TODO agregar grafico con la evolucion del ndvi promedio, la superficie de nubes agua y cultivo
+		//	executorPool.execute(()->{
+		List<SurfaceImageLayer> ndviLayers = new ArrayList<SurfaceImageLayer>();
+		LayerList layers = getWwd().getModel().getLayers();
+		for (Layer l : layers) {
+			Object o = l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			if (l.isEnabled() && o instanceof Ndvi){
+				//l.setEnabled(false);
+				ndviLayers.add((SurfaceImageLayer) l);
+			}
+		}	
 
-				try{
-					Date d1 = df.parse(l1Name.substring(l1Name.length()-"dd-MM-yyyy".length()));
-					Date d2 = df.parse(l2Name.substring(l2Name.length()-"dd-MM-yyyy".length()));
-					return d1.compareTo(d2);
-				} catch(Exception e){
-					//no se pudo parsear como fecha entonces lo interpreto como string.
-					//e.printStackTrace();
-				}
-				return l1Name.compareTo(l2Name);
-			});
-			Platform.runLater(()->{
-				this.layerPanel.update(getWwd());
-				getWwd().redraw();
-			});
+		DateFormat df =new  SimpleDateFormat("dd-MM-yyyy");
+		ndviLayers.sort((c1,c2)->{
+			String l1Name =c1.getName();
+			String l2Name =c2.getName();
+			Ndvi ndvi1 = (Ndvi)c1.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			Ndvi ndvi2 = (Ndvi)c2.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			try{
+				return ndvi1.getFecha().compareTo(ndvi2.getFecha());
+			} catch(Exception e){
+				System.err.println("no se pudo comparar las fechas de los ndvi. comparando nombres");
+			}
+			// comparar por el valor del layer en vez del nombre del layer
+			try{
+				Date d1 = df.parse(l1Name.substring(l1Name.length()-"dd-MM-yyyy".length()));
+				Date d2 = df.parse(l2Name.substring(l2Name.length()-"dd-MM-yyyy".length()));
+				return d1.compareTo(d2);
+			} catch(Exception e){
+				//no se pudo parsear como fecha entonces lo interpreto como string.
+				//e.printStackTrace();
+			}
+			return l1Name.compareTo(l2Name);
+		});
 
-			//junto los ndvi segun fecha para hacer la evolucion correctamente.
-			Map<Date, List<Layer>>  fechaMap = ndviLayers.stream().collect(Collectors.groupingBy((l2)->{
-				Ndvi lNdvi = (Ndvi)l2.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-				return lNdvi.getFecha().getTime();}));
 
-			fechaMap.keySet().stream().sorted().forEach((date)->{
-				List<Layer> layerList = fechaMap.get(date);
-				for(Layer l: layerList){				
-					l.setEnabled(true);
-				}
-				Platform.runLater(()->{
-					this.layerPanel.update(getWwd());
-					getWwd().redraw();
+		//junto los ndvi segun fecha para hacer la evolucion correctamente.
+		Map<Date, List<SurfaceImageLayer>>  fechaMap = ndviLayers.stream().collect(
+				Collectors.groupingBy((l2)->{
+					Ndvi lNdvi = (Ndvi)l2.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+					return lNdvi.getFecha().getTime();
+				}));
+
+		List<Date> dates= fechaMap.keySet().stream().distinct().sorted().collect(Collectors.toList());
+
+		Timeline timeline = new Timeline();
+		timeline.setCycleCount(1);
+		timeline.setAutoReverse(false);	
+
+		double s =0;
+
+		KeyFrame startKF = new KeyFrame(Duration.seconds(s),(t)->{
+			//System.out.println("cambiando opacity a "+n);
+			for(SurfaceImageLayer l: ndviLayers){					
+				//l.setOpacity(n.doubleValue());				
+				l.setEnabled(false);	
+				//l.setOpacity(0);
+			}
+			this.layerPanel.update(getWwd());
+			getWwd().redraw();		
+			//System.out.println("termine de apagar los layers");
+		});
+		timeline.getKeyFrames().add(startKF);
+		//s+=0.1;//wait
+
+		for(Date date:dates){
+
+			ObjectProperty<Date> antesP = new SimpleObjectProperty<Date>(null);
+			int dIndex = dates.indexOf(date);
+			if(dIndex>0){
+				antesP.set(dates.get(dIndex-1));
+			}
+			if(antesP.get()==null){		
+				//s+=1;
+				//System.out.println("agregando antesKeyFrame con s="+s);
+				KeyFrame antesKeyFrame = new KeyFrame(Duration.seconds(s),(t)->{				
+					List<SurfaceImageLayer> layerList = fechaMap.get(date);
+					for(SurfaceImageLayer l: layerList){					
+						//l.setOpacity(1);
+						if(!l.isEnabled()){
+							l.setEnabled(true);
+						}
+					}
+					Platform.runLater(()->{
+						this.layerPanel.update(getWwd());
+						getWwd().redraw();
+					});
 				});
+				timeline.getKeyFrames().add(antesKeyFrame);	
+			}else{			
+				List<SurfaceImageLayer> layerList = fechaMap.get(date);
+				List<SurfaceImageLayer> antesLayerList = fechaMap.get(antesP.get());
+				long days=(date.getTime()-antesP.get().getTime())/(1000*60*60*24);
+				//System.out.println("days= "+days);
+				double avanceDia =0.2;//0.2seg por dia ->2 seg por imagen
+				double totalTime = days*avanceDia;			
+				//System.out.println("agregando dateFrame con s="+s);
 
-				try {
-					Thread.sleep(2000);//idea: se puede hacer proporcional el tiempo de espera con el delta de tiempo entre imagenes
-				} catch (InterruptedException e) {
+				s+=totalTime;		//1						
+				timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(s),(t)->{				
+					for(SurfaceImageLayer l: layerList){
+						l.setEnabled(true);
+						//l.setOpacity(0.2);					
+					}
+					for(Layer l: antesLayerList){	
+						l.setEnabled(false);
+						//l.setOpacity(0.8);
+					}
+					Platform.runLater(()->{
+						this.layerPanel.update(getWwd());
+						getWwd().redraw();
+					});
+				}));		
 
-					e.printStackTrace();
-				}
-				for(Layer l: layerList){				
-					l.setEnabled(false);
-				}
-
-				Platform.runLater(()->{
-					this.layerPanel.update(getWwd());
-					getWwd().redraw();
-				});
-			});
-
+			}
+		}
+		s+=4;
+		//System.out.println("agregando endKF con s="+s);
+		KeyFrame endKF = new KeyFrame(Duration.seconds(s),(t)->{
 			for(Layer l: ndviLayers){
 				l.setEnabled(true);
 			}
-			Platform.runLater(()->{
-				this.layerPanel.update(getWwd());
-				getWwd().redraw();
-			});
-
-
+			this.layerPanel.update(getWwd());
+			getWwd().redraw();
+			//System.out.println("termine de habilitar todos los layers endKF "+System.currentTimeMillis());
 		});
+		timeline.getKeyFrames().add(endKF);
+		timeline.play();
 	}
-
-
-
 
 	private void doUpdate(MenuItem actualizarMI) {
 		Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -1453,7 +1607,7 @@ public class JFXMain extends Application {
 		vb.getChildren().addAll(nombreTF,t);
 		supDialog.setGraphic(vb);
 		supDialog.initModality(Modality.NONE);
-		nombreTF.textProperty().addListener((o,old,n)->{
+		nombreTF.textProperty().addListener((obj,old,n)->{
 			poli.setNombre(n);
 			// es importante para que se modifique el layerPanel con el nombre actualizado
 			this.getLayerPanel().update(this.getWwd());
@@ -1465,7 +1619,91 @@ public class JFXMain extends Application {
 		});
 	}
 
+	/**
+	 * metodo que toma los poligonos seleccionados y los une si se intersectan
+	 */
+	private void doUnirPoligonos(){
+		List<Geometry> geometriasActivas = new ArrayList<Geometry>();
+		//1 obtener los poligonos activos
+		LayerList layers = this.getWwd().getModel().getLayers();
+		for (Layer l : layers) {
+			Object o = l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			if (l.isEnabled() && o instanceof Poligono){
+				Poligono p = (Poligono)o;
+				geometriasActivas.add(p.toGeometry());
+			}
+		}
 
+		GeometryFactory fact = new GeometryFactory();
+		Geometry[] geomArray = new Geometry[geometriasActivas.size()];
+		for(int i=0;i<geometriasActivas.size();i++){
+			geomArray[i]=geometriasActivas.get(i);
+		}
+		GeometryCollection collection = fact.createGeometryCollection(geomArray);
+		Geometry union = collection.buffer(0);//ProyectionConstants.metersToLongLat(20));
+		double has = ProyectionConstants.A_HAS(union.getArea());
+		Poligono poli = ExtraerPoligonosDeLaborTask.geometryToPoligono(union);
+		MeasureTool measureTool = PoligonLayerFactory.createPoligonLayer(poli, this.getWwd(), this.getLayerPanel());
+		poli.setArea(has);
+		poli.setNombre("Union");
+		insertBeforeCompass(this.getWwd(), measureTool.getApplicationLayer());
+		this.getLayerPanel().update(this.getWwd());		
+	}
+
+	/**
+	 * metodo que toma los poligonos seleccionados calcula la inteseccion y agrega
+	 * los poligonos intesectados
+	 * a int b
+	 * a - (a int b)
+	 * b - (a int b)
+	 * 
+	 */
+	private void doIntersectarPoligonos(){
+		executorPool.submit(()->{
+			try {
+				List<Geometry> geometriasActivas = new ArrayList<Geometry>();
+				//1 obtener los poligonos activos
+				LayerList layers = this.getWwd().getModel().getLayers();
+				for (Layer l : layers) {
+					Object o = l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+					if (l.isEnabled() && o instanceof Poligono){
+						Poligono p = (Poligono)o;
+						geometriasActivas.add(p.toGeometry());
+					}
+				}
+				List<Geometry> geometriasOutput = new ArrayList<Geometry>();
+				for(int i=0;i<geometriasActivas.size()-1;i++){
+					Geometry a = geometriasActivas.get(i);
+					for(int j = i+1;j<geometriasActivas.size();j++){
+						Geometry b =geometriasActivas.get(j);
+						try {geometriasOutput.add(a.difference(b));}catch(Exception e) {}//found non-noded intersection between LINESTRING (
+						try {geometriasOutput.add(b.difference(a));}catch(Exception e) {}
+						try {geometriasOutput.add(a.intersection(b));}catch(Exception e) {}						
+					}
+				}
+
+				int num=0;
+				for(Geometry g:geometriasOutput){
+					for(int n=0;n<g.getNumGeometries();n++){
+						Geometry gn=g.getGeometryN(n);
+						if(g.getNumGeometries()==0)continue;
+						Poligono poli = ExtraerPoligonosDeLaborTask.geometryToPoligono(gn);
+						if(poli ==null)continue;
+						MeasureTool measureTool = PoligonLayerFactory.createPoligonLayer(poli, this.getWwd(), this.getLayerPanel());
+						double has = ProyectionConstants.A_HAS(gn.getArea());
+						poli.setArea(has);
+						poli.setNombre("Interseccion "+num+"["+n+"]");num++;
+						insertBeforeCompass(this.getWwd(), measureTool.getApplicationLayer());
+					}
+				}
+
+				this.getLayerPanel().update(this.getWwd());
+			}catch(Exception e) {
+				System.err.println("Error al intesectar los poligonos");
+				e.printStackTrace();
+			}
+		});
+	}
 
 	private void doMedirDistancia() {		 
 		RenderableLayer layer = new RenderableLayer();
@@ -1749,13 +1987,20 @@ public class JFXMain extends Application {
 	 * @param placementObject
 	 */
 	private void doGetNdviTiffFile(Object placementObject) {//ndvi2
-		LocalDate ini =null;
+		LocalDate fin =null;
 		if(placementObject !=null && Labor.class.isAssignableFrom(placementObject.getClass())){
-			ini= (LocalDate)((Labor<?>)placementObject).fechaProperty.getValue();
+			fin= DateConverter.asLocalDate((Date)((Labor<?>)placementObject).getFecha());
 		} 
-		ini = dateChooser(ini);
+		//fin = dateChooser(fin);
+		NdviDatePickerDialog ndviDpDLG =new  NdviDatePickerDialog(this.stage);
+		LocalDate ret = ndviDpDLG.ndviDateChooser(fin);
+		if(ret ==null)return;//seleccionar fecha termino en cancel.
+		System.out.println("saliendo de date Picker con Begin: "+ndviDpDLG.initialDate+" End: "+ndviDpDLG.finalDate);
+		//Begin: 2018-02-28 End: 2018-03-28
+		fin = ndviDpDLG.finalDate;
 
-		if(ini!=null){
+
+		if(fin!=null){
 			File downloadLocation=null;
 			try {
 				downloadLocation = File.createTempFile("ndviTemp", "").getParentFile();
@@ -1775,7 +2020,8 @@ public class JFXMain extends Application {
 			});
 
 			GetNDVI2ForLaborTask task = new GetNDVI2ForLaborTask(placementObject,downloadLocation,observableList);
-			task.setDate(ini);
+			task.setFinDate(fin);
+			task.setBeginDate(ndviDpDLG.initialDate);
 			task.installProgressBar(progressBox);
 			task.setOnSucceeded(handler -> {
 				if(placementObject instanceof Poligono){
@@ -1783,6 +2029,7 @@ public class JFXMain extends Application {
 				}
 				task.uninstallProgressBar();
 			});
+			System.out.println("ejecutando el task GetNDVI2ForLaborTask");
 			executorPool.submit(task);
 		}
 	}
@@ -2018,7 +2265,7 @@ public class JFXMain extends Application {
 
 	private void doCrearSuelo(Poligono poli) {
 		Suelo labor = new Suelo();
-		labor.nombreProperty.set("suelo");
+		labor.setNombre("suelo");
 		LaborLayer layer = new LaborLayer();
 		labor.setLayer(layer);
 
@@ -2031,18 +2278,24 @@ public class JFXMain extends Application {
 
 		TextInputDialog ppmPDialog = new TextInputDialog("PpmP");
 		ppmPDialog.setTitle("Configure partes por millon de P");
-		ppmPDialog.setContentText("Ppm P");
+		ppmPDialog.setContentText("Ppm P 0-20");
 		Optional<String> ppmPOptional = ppmPDialog.showAndWait();
 		Double ppmP = Double.valueOf(ppmPOptional.get());
 
-		TextInputDialog ppmNDialog = new TextInputDialog("PpmN");
+		TextInputDialog ppmNDialog = new TextInputDialog("PpmN 0-60");
 		ppmNDialog.setTitle("Configure partes por millon de N");
 		ppmNDialog.setContentText("Ppm N");
 		Optional<String> ppmNOptional = ppmNDialog.showAndWait();
 		Double ppmN = Double.valueOf(ppmNOptional.get());
+		
+		TextInputDialog pMODialog = new TextInputDialog("%MO 0-20");
+		pMODialog.setTitle("Configure el % de Materia Organica Total");
+		pMODialog.setContentText("%M0");
+		Optional<String> pMOOptional = pMODialog.showAndWait();
+		Double pMO = Double.valueOf(pMOOptional.get());
 
 
-		CrearSueloMapTask umTask = new CrearSueloMapTask(labor,poli,ppmP,ppmN);
+		CrearSueloMapTask umTask = new CrearSueloMapTask(labor,poli,ppmP,ppmN,pMO);
 		umTask.installProgressBar(progressBox);
 
 		umTask.setOnSucceeded(handler -> {
@@ -2067,7 +2320,6 @@ public class JFXMain extends Application {
 	 * @param l una Labor
 	 */
 	private void doGenerarMuestreoDirigido(Labor<?> l) {		 
-		enDesarrollo();
 
 		double superficieMinimaAMuestrear=0;
 		double densidadDeMuestrasDeseada=0;
@@ -2134,7 +2386,6 @@ public class JFXMain extends Application {
 			insertBeforeCompass(getWwd(), ret.getLayer());
 			this.getLayerPanel().update(this.getWwd());
 			poli.getLayer().setEnabled(false);
-			umTask.uninstallProgressBar();
 			viewGoTo(ret);
 			umTask.uninstallProgressBar();
 			System.out.println("OpenHarvestMapTask succeded");
@@ -2216,6 +2467,7 @@ public class JFXMain extends Application {
 		CosechaLabor labor = new CosechaLabor();
 		LaborLayer layer = new LaborLayer();
 		labor.setLayer(layer);
+		labor.setNombre(poli.getNombre());
 		Optional<CosechaLabor> cosechaConfigured= HarvestConfigDialogController.config(labor);
 		if(!cosechaConfigured.isPresent()){//
 			System.out.println("el dialogo termino con cancel asi que no continuo con la cosecha");
@@ -2250,7 +2502,7 @@ public class JFXMain extends Application {
 
 	private void doConvertirNdviACosecha(Ndvi ndvi) {
 		CosechaLabor labor = new CosechaLabor();
-		labor.nombreProperty.set(ndvi.getNombre());
+		labor.setNombre(ndvi.getNombre());
 		labor.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
 		LaborLayer layer = new LaborLayer();
 		labor.setLayer(layer);
@@ -2261,11 +2513,30 @@ public class JFXMain extends Application {
 			return;
 		}							
 
-		TextInputDialog anchoDialog = new TextInputDialog("Rinde");
-		anchoDialog.setTitle("Configure Rinde");
-		anchoDialog.setContentText("Rinde");
-		Optional<String> anchoOptional = anchoDialog.showAndWait();
-		Double rinde = Double.valueOf(anchoOptional.get());
+		Double rinde = null;
+		try {
+			TextInputDialog anchoDialog = new TextInputDialog("Rinde");
+			anchoDialog.setTitle("Configure Rinde");
+			anchoDialog.setContentText("Rinde");
+			anchoDialog.initOwner(this.stage);
+			Optional<String> anchoOptional = anchoDialog.showAndWait();
+			rinde = Double.valueOf(anchoOptional.get());
+		}catch(java.lang.NumberFormatException e) {
+
+			DecimalFormat format=(DecimalFormat) DecimalFormat.getInstance();
+			DecimalFormatSymbols symbols=format.getDecimalFormatSymbols();
+			char sep=symbols.getDecimalSeparator();
+
+			Alert a = new Alert(Alert.AlertType.ERROR);
+			a.initOwner(this.stage);
+
+			a.setTitle("Error de formato");
+			a.setHeaderText("El numero ingresado es invalido. Use \""+sep+"\" como separador de decimales");
+			a.setContentText(e.getMessage());
+			a.show();
+			return;
+		}
+
 		ConvertirNdviACosechaTask umTask = new ConvertirNdviACosechaTask(labor,ndvi,rinde);
 		umTask.installProgressBar(progressBox);
 
@@ -2311,7 +2582,6 @@ public class JFXMain extends Application {
 	}
 
 	private void doExtraerPoligonos(Labor<?> labor ) {	
-		enDesarrollo();
 		ExtraerPoligonosDeLaborTask umTask = new ExtraerPoligonosDeLaborTask(labor);
 		umTask.installProgressBar(progressBox);
 
@@ -2339,6 +2609,9 @@ public class JFXMain extends Application {
 			umTask.installProgressBar(progressBox);
 
 			umTask.setOnSucceeded(handler -> {
+				//Suelo ret = (Suelo)handler.getSource().getValue();
+				
+			
 				this.getLayerPanel().update(this.getWwd());
 				umTask.uninstallProgressBar();
 				this.wwjPanel.repaint();
@@ -2426,7 +2699,25 @@ public class JFXMain extends Application {
 			cosechasAUnir.add(cosechaLabor);
 
 		}
+		boolean calibrar =false;
+
+		if(cosechasAUnir.size()>1) {
+			Alert calibrarAlert = new Alert(Alert.AlertType.CONFIRMATION);
+			calibrarAlert.setTitle("Calibrar cosechas?");
+			calibrarAlert.setContentText("Desea calibrar los promedios de las cosechas en las zonas superpuestas?");
+
+			Optional<ButtonType> calibrarButton = calibrarAlert.showAndWait();
+			if(calibrarButton.isPresent()){
+				if(calibrarButton.get().equals(ButtonType.OK)){
+					calibrar=true;
+				}
+
+			} else{
+				return;
+			}
+		}
 		UnirCosechasMapTask umTask = new UnirCosechasMapTask(cosechasAUnir);
+		umTask.setCalibrar(calibrar);
 		umTask.installProgressBar(progressBox);
 
 		umTask.setOnSucceeded(handler -> {
@@ -2447,7 +2738,7 @@ public class JFXMain extends Application {
 		//			}
 		//		}
 	}
-	
+
 	private void doUnirFertilizaciones(FertilizacionLabor fertilizacionLabor) {
 		List<FertilizacionLabor> fertilizacionesAUnir = new ArrayList<FertilizacionLabor>();
 		if(fertilizacionLabor == null){
@@ -2540,21 +2831,59 @@ public class JFXMain extends Application {
 		DAH.save(layerObject);		
 	}
 
-	// TODO generar un layer de fertilizacion a partir de una cosecha
+	// generar un layer de fertilizacion a partir de una cosecha
 	//el proceso consiste el levantar las geometrias de la cosecha y preguntarle la usuario
 	//que producto aplico y en que densidad por hectarea
 	private void doRecomendFertPFromHarvest(CosechaLabor value) {
 		FertilizacionLabor labor = new FertilizacionLabor();
 		labor.setLayer(new LaborLayer());
 
-		labor.getNombreProperty().setValue(value.getNombreProperty().get()+" Prescripcion P");
+		labor.setNombre(value.getNombre()+" Prescripcion P");
 		Optional<FertilizacionLabor> cosechaConfigured= FertilizacionConfigDialogController.config(labor);
 		if(!cosechaConfigured.isPresent()){//
 			System.out.println("el dialogo termino con cancel asi que no continuo con la cosecha");
 			return;
 		}							
 
+		//Dialogo preguntar min y max a aplicar
+		Alert minMaxDialog = new Alert(AlertType.CONFIRMATION);
+		DecimalFormat df = new DecimalFormat();
+		TextField min = new TextField(df.format(0));
+		TextField max = new TextField(df.format(0));
+
+		VBox vb = new VBox();
+		vb.getChildren().add(new HBox(new Label("Fert Min"),min));
+		vb.getChildren().add(new HBox(new Label("Fert Max"),max));
+
+		minMaxDialog.setGraphic(vb);
+		minMaxDialog.setTitle("Configure maximo y minimo para la dosis");
+		minMaxDialog.setContentText("Cero para ignorarlo.");
+		//dateDialog.setHeaderText("Fecha Desde");
+		minMaxDialog.initOwner(this.stage);
+		Optional<ButtonType> res = minMaxDialog.showAndWait();
+		Double minFert =null,maxFert=null; 
+		if(res.get().equals(ButtonType.OK)){
+			try {
+				minFert=df.parse(min.getText()).doubleValue();
+				if(minFert==0)minFert=null;
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			try {
+				maxFert=df.parse(max.getText()).doubleValue();
+				if(maxFert==0)maxFert=null;
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			return;
+		}
+
 		RecomendFertPFromHarvestMapTask umTask = new RecomendFertPFromHarvestMapTask(labor,value);
+		umTask.setMinFert(minFert);
+		umTask.setMaxFert(maxFert);
 		umTask.installProgressBar(progressBox);
 
 		//	testLayer();
@@ -2570,7 +2899,7 @@ public class JFXMain extends Application {
 			System.out.println("RecomendFertFromHarvestPotentialMapTask succeded");
 			playSound();
 		});//fin del OnSucceeded
-	//	umTask.start();
+		//	umTask.start();
 		JFXMain.executorPool.execute(umTask);
 	}
 
@@ -2579,6 +2908,7 @@ public class JFXMain extends Application {
 		//el proceso consiste el levantar las geometrias de la cosecha y preguntarle la usuario
 		//que producto aplico y en que densidad por hectarea
 
+		//TODO permitir generar una aplicacion partida en 2 o mas fechas.
 
 		List<Suelo> suelosEnabled = suelos.stream().filter((l)->l.getLayer().isEnabled()).collect(Collectors.toList());
 		List<FertilizacionLabor> fertEnabled = fertilizaciones.stream().filter((l)->l.getLayer().isEnabled()).collect(Collectors.toList());
@@ -2588,17 +2918,53 @@ public class JFXMain extends Application {
 		FertilizacionLabor fertN = new FertilizacionLabor();
 		fertN.setLayer(new LaborLayer());
 
-		fertN.getNombreProperty().setValue(cosecha.getNombreProperty().get()+" Prescripcion N");
+		fertN.setNombre(cosecha.getNombre()+" Prescripcion N");
 		Optional<FertilizacionLabor> fertConfigured= FertilizacionConfigDialogController.config(fertN);
 		if(!fertConfigured.isPresent()){//
 			System.out.println("el dialogo termino con cancel asi que no continuo con la cosecha");
 			return;
 		}							
 
+		//Dialogo preguntar min y max a aplicar
+		Alert minMaxDialog = new Alert(AlertType.CONFIRMATION);
+		DecimalFormat df = new DecimalFormat();
+		TextField min = new TextField(df.format(0));
+		TextField max = new TextField(df.format(0));
+
+		VBox vb = new VBox();
+		vb.getChildren().add(new HBox(new Label("Fert Min"),min));
+		vb.getChildren().add(new HBox(new Label("Fert Max"),max));
+
+		minMaxDialog.setGraphic(vb);
+		minMaxDialog.setTitle("Configure maximo y minimo para la dosis");
+		minMaxDialog.setContentText("Cero para ignorarlo.");
+		//dateDialog.setHeaderText("Fecha Desde");
+		minMaxDialog.initOwner(this.stage);
+		Optional<ButtonType> res = minMaxDialog.showAndWait();
+		Double minFert =null,maxFert=null; 
+		if(res.get().equals(ButtonType.OK)){
+			try {
+				minFert=df.parse(min.getText()).doubleValue();
+				if(minFert==0)minFert=null;
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			try {
+				maxFert=df.parse(max.getText()).doubleValue();
+				if(maxFert==0)maxFert=null;
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			return;
+		}
 
 		RecomendFertNFromHarvestMapTask umTask = new RecomendFertNFromHarvestMapTask(fertN,cosecha, suelosEnabled,
 				fertEnabled);
-
+		umTask.setMinFert(minFert);
+		umTask.setMaxFert(maxFert);
 		//RecomendFertNFromHarvestMapTask umTask = new RecomendFertNFromHarvestMapTask(labor,value);
 		umTask.installProgressBar(progressBox);
 
@@ -2615,7 +2981,7 @@ public class JFXMain extends Application {
 			System.out.println("RecomendFertNFromHarvestPotentialMapTask succeded");
 			playSound();
 		});//fin del OnSucceeded
-	//	umTask.start();
+		//	umTask.start();
 		JFXMain.executorPool.execute(umTask);
 	}
 
@@ -2739,13 +3105,13 @@ public class JFXMain extends Application {
 	private void doImportarPoligonos(List<File> files) {
 		List<FileDataStore> stores = chooseShapeFileAndGetMultipleStores(files);
 		executorPool.submit(()->{
-		if (stores != null) {for(FileDataStore store : stores){//abro cada store y lo dibujo en el harvestMap individualmente
+			if (stores != null) {for(FileDataStore store : stores){//abro cada store y lo dibujo en el harvestMap individualmente
 				System.out.println("cargando stores para importar poligonos");
 				try {
 					SimpleFeatureSource	source = store.getFeatureSource();
 
 					SimpleFeatureIterator iterator = source.getFeatures().features();
-					
+
 					while(iterator.hasNext()){
 						SimpleFeature feature = iterator.next();			
 						double has = ProyectionConstants.A_HAS(((Geometry)feature.getDefaultGeometry()).getArea());
@@ -2760,13 +3126,13 @@ public class JFXMain extends Application {
 					e.printStackTrace();
 				}
 			}//fin del for stores
-		}//if stores != null
+			}//if stores != null
 		});
 	}
 
-	
-	
-	
+
+
+
 	private void doOpenPulvMap(List<File> files) {
 		List<FileDataStore> stores = chooseShapeFileAndGetMultipleStores(files);
 		if (stores != null) {
@@ -2896,8 +3262,8 @@ public class JFXMain extends Application {
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("Renta ");
-		cosechasEnabled.forEach((c)->sb.append(c.getNombreProperty().get()+" "));
-		margen.getNombreProperty().setValue(sb.toString());
+		cosechasEnabled.forEach((c)->sb.append(c.getNombre()+" "));
+		margen.setNombre(sb.toString());
 
 		Optional<Margen> margenConfigured= MargenConfigDialogController.config(margen);
 		if(!margenConfigured.isPresent()){//
@@ -3101,7 +3467,7 @@ public class JFXMain extends Application {
 
 		final Labor<?> laborToExport = cosechaLabor;
 
-		String nombre = laborToExport.getNombreProperty().get();
+		String nombre = laborToExport.getNombre();
 		File shapeFile =  getNewShapeFile(nombre);
 
 		ExportLaborMapTask ehTask = new ExportLaborMapTask(cosechaLabor,shapeFile);
@@ -3109,9 +3475,10 @@ public class JFXMain extends Application {
 	}
 
 
-
+	//TODO permitir al ususario definir el formato. para siembra fertilizada necesita 3 columnas
+	//en la linea, al costado de la linea, siembra
 	private void doExportPrescripcion(FertilizacionLabor laborToExport) {
-		String nombre = laborToExport.getNombreProperty().get();
+		String nombre = laborToExport.getNombre();
 		File shapeFile =  getNewShapeFile(nombre);
 		executorPool.execute(()->{
 			SimpleFeatureType type = null;
@@ -3193,10 +3560,156 @@ public class JFXMain extends Application {
 			config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
 			config.save();
 		});//fin del run later
-
 	}
 
+	//TODO permitir al ususario definir el formato. para siembra fertilizada necesita 3 columnas
+	//en la linea, al costado de la linea, siembra
+	private void doExportPrescripcionSiembra(SiembraLabor laborToExport) {
+		String nombre = laborToExport.getNombre();
+		File shapeFile =  getNewShapeFile(nombre);
+		executorPool.execute(()->{
+			SimpleFeatureType type = null;
+			String typeDescriptor = "*the_geom:"+Polygon.class.getCanonicalName()+":srid=4326,"
 
+				+ SiembraLabor.COLUMNA_DOSIS_LINEA + ":java.lang.Long,"
+				+ SiembraLabor.COLUMNA_DOSIS_COSTADO + ":java.lang.Long,"
+				+ "Siembra" + ":java.lang.Long";
+			System.out.println("creando type con: "+typeDescriptor);
+			System.out.println("Long.SIZE="+Long.SIZE);//64bits=16bytes. ok!!
+			try {
+				type = DataUtilities.createType("PrescType", typeDescriptor);
+			} catch (SchemaException e) {
+				e.printStackTrace();
+			}
+
+			System.out.println("PrescType: "+DataUtilities.spec(type));//PrescType: the_geom:Polygon,Rate:java.lang.Long
+
+			List<LaborItem> items = new ArrayList<LaborItem>();
+			int zonas = laborToExport.outCollection.size();
+			if(zonas>=100) {
+				//TODO reabsorver zonas mas chicas a las mas grandes vecinas
+				System.out.println("tiene mas de 100 zonas, reabsorviendo...");
+				//TODO tomar las 100 zonas mas grandes y reabsorver las otras en estas
+				
+				SimpleFeatureIterator it = laborToExport.outCollection.features();
+				while(it.hasNext()){
+					SiembraItem fi = laborToExport.constructFeatureContainerStandar(it.next(),false);
+					items.add(fi);
+				}
+				it.close();
+				
+				items.sort((i1,i2)->-1*Double.compare(i1.getGeometry().getArea(), i2.getGeometry().getArea()));					
+				List<LaborItem> itemsAgrandar =items.subList(0,100-1);
+				Quadtree tree=new Quadtree();
+				for(LaborItem ar : itemsAgrandar) {
+					Geometry gAr =ar.getGeometry();
+					tree.insert(gAr.getEnvelopeInternal(), ar);
+				}
+				List<LaborItem> itemsAReducir =items.subList(100, items.size()-1);
+				int n=0;
+				while(itemsAReducir.size()>0 || n>10) {
+					List<LaborItem> done = new ArrayList<LaborItem>();		
+					for(LaborItem ar : itemsAReducir) {
+						Geometry gAr =ar.getGeometry();
+						List<LaborItem> vecinos =(List<LaborItem>) tree.query(gAr.getEnvelopeInternal());
+
+						if(vecinos.size()>0) {
+							Optional<LaborItem> opV = vecinos.stream().reduce((v1,v2)->{
+								boolean v1i = gAr.intersects(v1.getGeometry());
+								boolean v2i = gAr.intersects(v2.getGeometry());
+								return v1i&&v2i?(v1.getGeometry().getArea()>v2.getGeometry().getArea()?v1:v2):(v1i?v1:v2);
+
+							});
+							if(opV.isPresent()) {
+								LaborItem v = opV.get();
+								Geometry g = v.getGeometry();
+								tree.remove(g.getEnvelopeInternal(), v);
+								Geometry union = g.union(gAr);
+								v.setGeometry(union);
+								tree.insert(union.getEnvelopeInternal(), v);
+								done.add(ar);
+							}
+						}
+					}
+					n++;
+					itemsAReducir.removeAll(done);
+				}
+				items.clear();
+				items.addAll((List<LaborItem>)tree.queryAll());
+
+			}
+
+			DefaultFeatureCollection exportFeatureCollection =  new DefaultFeatureCollection("PrescType",type);
+			SimpleFeatureBuilder fb = new SimpleFeatureBuilder(type);//ok
+		
+			for(LaborItem i:items) {//(it.hasNext()){
+				SiembraItem fi=(SiembraItem) i;
+				Geometry itemGeometry=fi.getGeometry();
+				List<Polygon> flatPolygons = PolygonValidator.geometryToFlatPolygons(itemGeometry);
+				for(Polygon p : flatPolygons){
+					fb.add(p);
+					Double semilla = fi.getAmount();
+					Double linea = fi.getDosisFertLinea();
+					Double costado = fi.getDosisFertCostado();
+
+					System.out.println("presc Dosis = "+semilla);
+					fb.add(linea);
+					fb.add(costado);
+					fb.add(semilla.longValue());
+
+					SimpleFeature exportFeature = fb.buildFeature(fi.getId().toString());
+					exportFeatureCollection.add(exportFeature);
+				}
+			}
+			//it.close();
+
+			ShapefileDataStore newDataStore = createShapefileDataStore(shapeFile,type);//aca el type es GeometryDescriptorImpl the_geom <MultiPolygon:MultiPolygon> nillable 0:1 
+			SimpleFeatureSource featureSource = null;
+			try {
+				String typeName = newDataStore.getTypeNames()[0];
+				featureSource = newDataStore.getFeatureSource(typeName);
+			} catch (IOException e) {
+
+				e.printStackTrace();
+			}
+
+
+			if (featureSource instanceof SimpleFeatureStore) {
+				SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;//aca es de tipo polygonFeature(the_geom:MultiPolygon,Rate:Rate)
+				Transaction transaction = new DefaultTransaction("create");
+				featureStore.setTransaction(transaction);
+
+				/*
+				 * SimpleFeatureStore has a method to add features from a
+				 * SimpleFeatureCollection object, so we use the
+				 * ListFeatureCollection class to wrap our list of features.
+				 */
+
+				try {
+					featureStore.setFeatures(exportFeatureCollection.reader());
+					try {
+						transaction.commit();
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					}finally {
+						try {
+							transaction.close();
+							//System.out.println("closing transaction");
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			}		
+
+			System.out.println("despues de guardar el shp el schema es: "+ shapeFile);
+			Configuracion config = Configuracion.getInstance();
+			config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
+			config.save();
+		});//fin del run later
+	}
 
 	private void doExportHarvestDePuntos(CosechaLabor cosechaLabor) {
 		if(cosechaLabor==null){
@@ -3210,7 +3723,7 @@ public class JFXMain extends Application {
 
 		CosechaLabor laborToExport = cosechaLabor;
 
-		String nombre = laborToExport.getNombreProperty().get();
+		String nombre = laborToExport.getNombre();
 		File shapeFile =  getNewShapeFile(nombre);
 		Platform.runLater(()->{//esto me introduce un error al grabar en el que se pierderon features
 
@@ -3430,11 +3943,35 @@ public class JFXMain extends Application {
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(labor.nombreProperty.get());
+			tablaStage.setTitle(labor.getNombre());
 			tablaStage.setScene(scene);
 			tablaStage.show();	 
 		});
 
+	}
+
+	private void doShowLaboresTable() {
+		Platform.runLater(()->{
+			final ObservableList<Labor<?>> data =
+					FXCollections.observableArrayList(
+							DAH.getAllLabores()
+							);
+			if(data.size()<1){
+				System.out.println("no hay labores");
+				//data.add(new Lote());
+			}
+			SmartTableView<Labor<?>> table = new SmartTableView<Labor<?>>(data);//,data);
+			table.setEditable(true);
+			//table.setOnDoubleClick(()->new Lote("Nuevo Lote"));
+
+			Scene scene = new Scene(table, 800, 600);
+			Stage tablaStage = new Stage();
+			tablaStage.getIcons().add(new Image(JFXMain.ICON));
+			tablaStage.setTitle("Labores");
+			tablaStage.setScene(scene);
+			tablaStage.show();	 
+
+		});	
 	}
 
 	/**
@@ -3604,8 +4141,13 @@ public class JFXMain extends Application {
 				this.getLayerPanel().update(this.getWwd());
 				//getWwd().redraw();
 			});
+			try {
+				tablaStage.show();	 
+			}catch(Exception e){
+				//aca lanza un error de que no encuentra el column header. probablemente porque en java 10 no tiene permiso para acceder al internal api
+				//java.lang.NoSuchMethodException: javafx.scene.control.skin.TableViewSkin.getTableHeaderRow()
 
-			tablaStage.show();	 
+			}
 		});	
 	}
 
@@ -3746,14 +4288,17 @@ public class JFXMain extends Application {
 
 
 		File lastFile = null;
-		String lastFileName =  Configuracion.getInstance().getPropertyOrDefault(Configuracion.LAST_FILE,null);
-		if(lastFileName != null){
+		String lastFileName =  Configuracion.getInstance().getPropertyOrDefault(Configuracion.LAST_FILE,"");
+		if(lastFileName != ""){
 			lastFile = new File(lastFileName);
 		}
-		if(lastFile != null ){
-			fileChooser.setInitialDirectory(lastFile.getParentFile());
-			fileChooser.setInitialFileName(lastFile.getName());
-		}
+		if(lastFile ==null || ! lastFile.exists()) {
+			lastFile=File.listRoots()[0];
+		} 
+		//if(lastFile != null && lastFile.exists()){
+		fileChooser.setInitialDirectory(lastFile.getParentFile());
+		fileChooser.setInitialFileName(lastFile.getName());
+
 
 		//	if(file!=null)		fileChooser.setInitialDirectory(file.getParentFile());
 		// Set extension filter
@@ -3806,7 +4351,7 @@ public class JFXMain extends Application {
 		if (files != null) {
 			for(File f : files){
 				try {
-					stores.add(FileDataStoreFinder.getDataStore(f));
+					stores.add(FileDataStoreFinder.getDataStore(f));//esto falla con java10 :(
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -3865,6 +4410,7 @@ public class JFXMain extends Application {
 	 * @param f2 filter regex "*.jpg"
 	 */
 	private List<File> chooseFiles(String f1,String f2) {
+		System.out.println("choosing files");
 		List<File> files =null;
 		FileChooser fileChooser = new FileChooser();
 		fileChooser.setTitle("Seleccione un archivo");
@@ -3877,26 +4423,43 @@ public class JFXMain extends Application {
 		if(lastFileName != null){
 			lastFile = new File(lastFileName);
 		}
-		if(lastFile != null ){
+		if(lastFile ==null || ! lastFile.exists()) {
+			lastFile=File.listRoots()[0];
+		} 	
+		try{
+			System.out.println("lastfile "+lastFile);
+			//if(lastFile != null && lastFile.exists()){
+			System.out.println("parent "+lastFile.getParent());
+			System.out.println("lastfileName "+lastFile.getName());
 			fileChooser.setInitialDirectory(lastFile.getParentFile());
 			fileChooser.setInitialFileName(lastFile.getName());
-		}
-		try{
+			System.out.println("showing multiple dialog...");
 			files = fileChooser.showOpenMultipleDialog(this.stage);
+			System.out.println("dialog shown");
 			//		file = files.get(0);
-		}catch(IllegalArgumentException e){
+		}catch(Exception e){
+			e.printStackTrace();
+			try{
 			fileChooser.setInitialDirectory(null);
-			File file = fileChooser.showOpenDialog(this.stage);
-			files = new LinkedList<File>();
-			files.add(file);
+			files = fileChooser.showOpenMultipleDialog(this.stage);
+			}catch(Exception e2){
+				e2.printStackTrace();
+				//give up
+			}
+			
 		}
+		System.out.println("files selected "+files);
 
+		try {
 		if(files!=null && files.size()>0){
 			File f = files.get(0);
 			config.setProperty(Configuracion.LAST_FILE,f.getAbsolutePath());	
 			config.save();
 		}
-
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		System.out.println("returning files");
 		return files;
 	}
 
@@ -3917,14 +4480,18 @@ public class JFXMain extends Application {
 		if(lastFileName != null){
 			lastFile = new File(lastFileName);
 		}
-		if(lastFile != null ){
-			fileChooser.setInitialDirectory(lastFile.getParentFile());
-			if(nombre == null){
-				nombre = lastFile.getName();
-			}
-			fileChooser.setInitialFileName(nombre);
-			config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
+		if(lastFile ==null || ! lastFile.exists()) {
+			lastFile=File.listRoots()[0];
+		} 
+		//if(lastFile != null && lastFile.exists()){
+		fileChooser.setInitialDirectory(lastFile.getParentFile());
+
+		if(nombre == null){
+			nombre = lastFile.getName();
 		}
+		fileChooser.setInitialFileName(nombre);
+		config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
+
 
 		//if(file!=null)	fileChooser.setInitialDirectory(file.getParentFile());
 
@@ -3953,14 +4520,18 @@ public class JFXMain extends Application {
 		if(lastFileName != null){
 			lastFile = new File(lastFileName);
 		}
-		if(lastFile != null ){
-			fileChooser.setInitialDirectory(lastFile.getParentFile());
-			if(nombre == null){
-				nombre = lastFile.getName();
-			}
-			fileChooser.setInitialFileName(nombre);
-			config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
+		if(lastFile ==null || ! lastFile.exists()) {
+			lastFile=File.listRoots()[0];
+		} 
+		//if(lastFile != null && lastFile.exists()){
+		fileChooser.setInitialDirectory(lastFile.getParentFile());
+
+		if(nombre == null){
+			nombre = lastFile.getName();
 		}
+		fileChooser.setInitialFileName(nombre);
+		config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
+
 
 		//if(file!=null)	fileChooser.setInitialDirectory(file.getParentFile());
 

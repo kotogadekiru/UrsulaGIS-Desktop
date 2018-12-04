@@ -3,8 +3,6 @@ package dao.config;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.Access;
-import javax.persistence.AccessType;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -12,14 +10,15 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.Transient;
 
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import lombok.Data;
-@Data
+import lombok.Getter;
+import lombok.Setter;
+import lombok.AccessLevel;
+
+//@Data
+@Getter
+@Setter(value = AccessLevel.PUBLIC)
 @Entity //@Access(AccessType.PROPERTY)
 @NamedQueries({
 	@NamedQuery(name=Semilla.FIND_ALL, query="SELECT o FROM Semilla o") ,
@@ -34,7 +33,7 @@ public class Semilla {
 	public static final String SEMILLA_DE_MAIZ = "Semilla de Maiz";
 	
 	@Id @GeneratedValue
-	private long id;
+	private Long id=null;
 	private String nombre = new String();
 	
 	@ManyToOne(cascade=CascadeType.PERSIST)

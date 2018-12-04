@@ -3,7 +3,6 @@ package dao;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.net.URLEncoder;
 import java.util.Calendar;
 
 import javax.persistence.Access;
@@ -11,17 +10,21 @@ import javax.persistence.AccessType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Lob;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
-
+import dao.config.Configuracion;
 import gov.nasa.worldwindx.examples.analytics.ExportableAnalyticSurface;
-import lombok.Data;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter(value = AccessLevel.PUBLIC)
 @Entity @Access(AccessType.FIELD)
 @NamedQueries({
 	@NamedQuery(name=Ndvi.FIND_ALL, query="SELECT c FROM Ndvi c") ,
@@ -29,20 +32,21 @@ import lombok.Data;
 	@NamedQuery(name=Ndvi.FIND_ACTIVOS, query="SELECT o FROM Ndvi o where o.activo = true") ,
 }) 
 public class Ndvi {
-
 	public static final String FIND_ALL="Ndvi.findAll";
 	public static final String FIND_NAME = "Ndvi.findName";
 	public static final String FIND_ACTIVOS = "Ndvi.findActivos";
+	
 	@javax.persistence.Id @GeneratedValue
 	private Long id=null;
-	String nombre=null;
+	private String nombre=null;
 
 	@Temporal(TemporalType.DATE)
 	private Calendar fecha=Calendar.getInstance();
 	
 	@Transient
-	File f=null;
-
+	private File f=null;
+	@ManyToOne
+	private Poligono contorno = null;
 	@Lob
 	private byte[] content;//el contenido de la imagen ndvi
 	
@@ -51,8 +55,8 @@ public class Ndvi {
  
 	@Transient
 	ExportableAnalyticSurface surfaceLayer=null;
-	@Transient
-	double pixelArea=0;
+	
+	double pixelArea=100/10000;//100m2
 	
 	public boolean getActivo(){
 		return activo;
@@ -80,16 +84,23 @@ public class Ndvi {
 		try {
 			
 			String parent =nombre.replaceAll("[\\\\/:*?\"<>|]", "-");//URLEncoder.encode(nombre, "UTF-8");// nombre.replaceAll("\\", "-");
-			System.out.println("parentFile "+parent);
+			//System.out.println("parentFile "+parent);
 			
-			 f = File.createTempFile(parent, "");   //esto crea el archivo con un nombre random
-			 f=new File(f.getParentFile(),parent);
+			 //f = File.createTempFile(parent, "");   //esto crea el archivo con un nombre random
+			
+			 File ursulaGISFolder = new File(Configuracion.ursulaGISFolder);
+			 f = File.createTempFile(parent, ".tif", ursulaGISFolder);
+			 //f=new File(f.getParentFile(),parent);
+			 f.deleteOnExit();
 			 FileOutputStream fos = new FileOutputStream(f.getPath());
 			 fos.write(content);
 			 fos.close();
-
+//FIXME por alguna razon esto no funciona en el ejecutable parece que devuelve null.
         } catch (Exception e) {
 	     e.printStackTrace();
         } 
+		if(this.pixelArea==0) {
+			this.pixelArea=0.008084403745300213;
+		}
 	}
 }

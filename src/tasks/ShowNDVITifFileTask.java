@@ -7,6 +7,9 @@ import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
 
 import dao.Clasificador;
 import dao.Labor;
@@ -33,32 +36,44 @@ import gov.nasa.worldwind.render.PointPlacemarkAttributes;
 import gov.nasa.worldwind.render.Renderable;
 import gov.nasa.worldwind.util.BufferWrapper;
 import gov.nasa.worldwind.util.Logging;
-import gov.nasa.worldwind.util.WWIO;
 import gov.nasa.worldwind.util.WWMath;
 import gov.nasa.worldwindx.examples.analytics.AnalyticSurface;
 import gov.nasa.worldwindx.examples.analytics.AnalyticSurface.GridPointAttributes;
 import gov.nasa.worldwindx.examples.analytics.AnalyticSurfaceAttributes;
 import gov.nasa.worldwindx.examples.analytics.AnalyticSurfaceLegend;
 import gov.nasa.worldwindx.examples.analytics.ExportableAnalyticSurface;
-import gov.nasa.worldwindx.examples.util.ExampleUtil;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
 import javafx.stage.Modality;
+import lombok.experimental.var;
+import lombok.extern.java.Log;
 import utils.ProyectionConstants;
+@Log //private static final java.util.logging.Logger log = java.util.logging.Logger.getLogger(LogExample.class.getName());
 public class ShowNDVITifFileTask extends Task<Layer>{
-	public static final double WATER_RENDER_VALUE = 0.19; //para que quede sobre el nivel del suelo
-	public static final double CLOUD_RENDER_VALUE = 2.2;
+	public static final double WATER_RENDER_VALUE = 0.09; //para que quede sobre el nivel del suelo
+	public static final double CLOUD_RENDER_VALUE = 2;// 2.2;
 	private static final int WATER_VALUE = -2;
 	private static final int CLOUD_VALUE = 2;
-	public static final double MAX_VALUE = 0.9;//1.0;//con soja en floracion no pasa de 0.9
-	public static final double MIN_VALUE =0.2;// 0.2;
+	public static final double MAX_VALUE = 1.0;//1.0;//con soja en floracion no pasa de 0.9
+	public static final double MIN_VALUE =0.1;// 0.2;
+	public static final double TRANSPARENT_VALUE = 0.000000001;// 0.2;
+	/*
+	-The values between –1 and 0 correspond to non-plant surfaces that have a reflectance in the Red that is greater than the
+	reflectance in the Near Infrared: water, snow, or even clouds. 
+	-Soil has an NDVI value close to 0. 
+	-With their substantial reflectance in the Near Infrared, plants have an NDVI value from 0.1 to nearly 1.0;
+ 	the higher the value, the greater the plant density 
+	 */
 	private File file=null;
 	private Ndvi ndvi=null;
 	private Poligono ownerPoli = null;
 	public ShowNDVITifFileTask(File f,Ndvi _ndvi){
 		file =f;
 		ndvi=_ndvi;
+		Handler consoleHandler = new ConsoleHandler();
+		consoleHandler.setLevel(Level.ALL);
+		log.addHandler(consoleHandler);
 	}
 	public Layer call() {	
 		try{
@@ -68,9 +83,16 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 			}
 
 			String fileName = file.getName();
+			fileName= fileName.replace(".tif", "");
 			//COPERNICUSS220170328T140051_20170328T140141_T20HNH.nd.tif
 			if(fileName.contains("COPERNICUSS2")){
 				fileName=fileName.replace("COPERNICUSS2", "");
+				fileName=fileName.substring(0, "20170328".length());
+				fileName=fileName.substring("201703".length(), fileName.length())
+						+"-"+fileName.substring("2017".length(), "201703".length())
+						+"-"+fileName.substring(0, "2017".length());
+			} else if(fileName.contains("LANDSATLC08C01T1_TOALC08_XXXXXX_")){
+				fileName=fileName.replace("LANDSATLC08C01T1_TOALC08_XXXXXX_", "");
 				fileName=fileName.substring(0, "20170328".length());
 				fileName=fileName.substring("201703".length(), fileName.length())
 						+"-"+fileName.substring("2017".length(), "201703".length())
@@ -96,10 +118,10 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 
 			double HUE_MIN = Clasificador.colors[0].getHue()/360d;//0d / 360d;
 			double HUE_MAX = Clasificador.colors[Clasificador.colors.length-1].getHue()/360d;//240d / 360d;
-			double transparentValue =raster.getTransparentValue();
+			//TRANSPARENT_VALUE =raster.getTransparentValue();
 		//	System.out.println("ndvi transparent value = "+transparentValue);
 			//double transparentValue =extremes[0];
-			transparentValue=0;//para que pueda interpretar los valores clipeados como transparente
+			//TRANSPARENT_VALUE=0;//para que pueda interpretar los valores clipeados como transparente
 			
 			int width = raster.getWidth();
 			int height = raster.getHeight();
@@ -112,17 +134,29 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 			double pixelArea = ProyectionConstants.A_HAS(((dLat*lon)/(width*height)));//12... =~ 10
 			//System.out.println("el area calculada del pixel es "+pixelArea);
 			
+			//acoto los valores entre -2.2 y 2.2
 			BufferWrapper buffer = raster.getBuffer();
-			for(int i=1;i<buffer.length()-1;i++){
+			//log.setLevel(Level.ALL);
+			
+			for(int i=0;i<buffer.length();i++){
 				double value = buffer.getDouble(i);
-				  value = Math.max(value, -2.2);
-				  value = Math.min(value, 2.2);
+				//log.info("agregando value "+value);
+				//System.out.println("agregando value " +value);
+				if(Double.isNaN(value) || Double.isInfinite(value)) {					
+					//log.fine("agregando Nan a transparente");
+					//System.out.println("agregando value a transparente" +value);
+					value=TRANSPARENT_VALUE;
+				} else {
+				//	value =0.000001;
+				//  value = Math.max(value, -2.2);
+				//  value = Math.min(value, 2.2);
+				}
 				  buffer.putDouble(i, value);
 			}
 			
 			 @SuppressWarnings("unchecked")
 			ArrayList<AnalyticSurface.GridPointAttributes> attributesList
-	            = (ArrayList<GridPointAttributes>) AnalyticSurface.createColorGradientValues(raster.getBuffer(), transparentValue, MIN_VALUE, MAX_VALUE, HUE_MIN, HUE_MAX);
+	            = (ArrayList<GridPointAttributes>) AnalyticSurface.createColorGradientValues(raster.getBuffer(), 55, MIN_VALUE, MAX_VALUE, HUE_MIN, HUE_MAX);
 			 if(attributesList.size()==0)return null;
 			 attributesList.replaceAll((gpa)->{
 				 double value = gpa.getValue();
@@ -143,7 +177,7 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 			surface.setValues(attributesList);
 			// surface.setVerticalScale(5e3);
 			surface.setVerticalScale(100);
-		//	surface.setAltitude(2000);
+			//surface.setAltitude(-10);
 
 			
 			AnalyticSurfaceAttributes attr = new AnalyticSurfaceAttributes();
@@ -189,7 +223,18 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 					legend.render(dc);
 				}
 			};
-			SurfaceImageLayer layer = new SurfaceImageLayer();
+			SurfaceImageLayer layer = new SurfaceImageLayer(){
+				@Override
+				public void setOpacity(double opacity){
+					//System.out.println("setting opacity en SurfaceImageLayer"+opacity);
+					AnalyticSurfaceAttributes attributes = surface.getSurfaceAttributes();
+					attributes.setInteriorOpacity(opacity);
+					surface.setSurfaceAttributes(attributes);
+					legend.setOpacity(opacity);
+					
+				}
+				
+			};
 			
 		
 			layer.setName(fileName);
@@ -199,8 +244,8 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 			if(ndvi==null){
 				ndvi = new Ndvi();
 				ndvi.setNombre(fileName);
-				ndvi.setF(file);
-				ndvi.setPixelArea(pixelArea);//pixelArea);
+				ndvi.setF(file);				
+				ndvi.setContorno(ownerPoli);
 				
 				//04-01-2018
 				SimpleDateFormat format1 = new SimpleDateFormat("dd-MM-yyyy");
@@ -214,7 +259,7 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 					
 				}
 			}
-		
+			ndvi.setPixelArea(pixelArea);//pixelArea);
 			ndvi.setSurfaceLayer(surface);
 		
 		
@@ -277,8 +322,10 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 		try{
 			// Before reading the raster, verify that the file contains elevations.
 			AVList metadata = reader.readMetadata(file, null);
+			metadata.setValue(AVKey.PIXEL_FORMAT, AVKey.ELEVATION);
+			 String pixelFormat = metadata.getStringValue(AVKey.PIXEL_FORMAT);
 			//metadata.setValue(AVKE, value)
-			if (metadata == null || !AVKey.ELEVATION.equals(metadata.getStringValue(AVKey.PIXEL_FORMAT)))
+			if (metadata == null || !AVKey.ELEVATION.equals(pixelFormat))
 			{
 				Platform.runLater(()->{
 					Alert imagenAlert = new Alert(Alert.AlertType.ERROR);
@@ -315,12 +362,12 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 			// are reprojected (if necessary); primary rasters are not.
 			int width = rasters[0].getWidth();
 			int height = rasters[0].getHeight();
+			System.out.println("height: "+height+" width: "+width);
 
 			DataRaster subRaster = rasters[0].getSubRaster(width, height, sector, rasters[0]);
-
+			System.out.println("subRaster: "+subRaster);
 			// Verify that the sub-raster can create a ByteBuffer, then create one.
-			if (!(subRaster instanceof BufferWrapperRaster))
-			{
+			if (!(subRaster instanceof BufferWrapperRaster)){
 				String msg = Logging.getMessage("ElevationModel.CannotCreateElevationBuffer", file.getName());
 				Logging.logger().severe(msg);
 				throw new WWRuntimeException(msg);
@@ -336,6 +383,9 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 	}
 	
 	public void setPoligono(Poligono p){
+		if(ndvi!=null) {
+			this.ndvi.setContorno(p);
+		}
 		this.ownerPoli=p;
 	}
 	

@@ -16,6 +16,7 @@ import org.eclipse.persistence.config.TargetServer;
 
 import static org.eclipse.persistence.config.PersistenceUnitProperties.*;
 
+import dao.Labor;
 import dao.Ndvi;
 import dao.Poligono;
 import dao.config.Agroquimico;
@@ -27,6 +28,7 @@ import dao.config.Establecimiento;
 import dao.config.Fertilizante;
 import dao.config.Lote;
 import dao.config.Semilla;
+import dao.cosecha.CosechaLabor;
 
 public class DAH {
 	private static final String APPDATA = "APPDATA";
@@ -143,6 +145,8 @@ public class DAH {
 				em.getTransaction().begin();		
 				em.merge(entidad);
 				em.getTransaction().commit();			
+			}finally {
+				
 			}
 		} else{
 			em.persist(entidad);	
@@ -173,7 +177,7 @@ public class DAH {
 	//	EntityManager em = em();
 		TypedQuery<Establecimiento> query = em().createNamedQuery(
 				Establecimiento.FIND_NAME, Establecimiento.class);
-		query.setParameter(0, establecimientoName);
+		query.setParameter("name", establecimientoName);
 		
 		Establecimiento result = null;
 		if(query.getResultList().size()>0){
@@ -188,7 +192,18 @@ public class DAH {
 	public static List<Establecimiento> getAllEstablecimientos() {
 		return getAllEstablecimientos(em());
 	}
-
+	
+	public static List<? extends Labor<?>> getAllLabores() {
+		return getAllLabores(em());
+	}
+	public static List<? extends Labor<?>> getAllLabores(EntityManager em) {
+		@SuppressWarnings("rawtypes")
+		TypedQuery<CosechaLabor> query = em.createNamedQuery(
+				CosechaLabor.FIND_ALL, CosechaLabor.class);
+		@SuppressWarnings("unchecked")
+		List<? extends Labor<?>> results = (List<? extends Labor<?>>) query.getResultList();
+		return results;
+	}
 	/**
 	 * 
 	 * @param periodoName
@@ -223,18 +238,24 @@ public class DAH {
 //		EntityManager em = em();
 //		TypedQuery<Producto> query =
 //				em.createQuery("SELECT p FROM Producto p where p.nombre like '"+cultivoName+"'", Producto.class);
+		Number count = (Number)em().createNamedQuery(Cultivo.COUNT_ALL).getSingleResult();
+		System.out.print("hay "+count+" cultivos en la base de datos");
+		if(count.intValue() ==0) {
+			List<Cultivo> results = getAllCultivos();//getAll crea los cultivos default
+		}
 
 		TypedQuery<Cultivo> query = em().createNamedQuery(
 				Cultivo.FIND_NAME, Cultivo.class);
-		query.setParameter(0, cultivoName);
+		query.setParameter("name", cultivoName);
 		
 		Cultivo result = null;
 		if(query.getResultList().size()>0){
 			result = query.getSingleResult();
-		} else {
-			result = new Cultivo(cultivoName);
-			DAH.save(result);
-		}
+		}  
+//		else {
+//			result = new Cultivo(cultivoName);
+//			DAH.save(result);
+//		}
 		return result;
 	}
 
@@ -246,6 +267,12 @@ public class DAH {
 					Cultivo.cultivos.values().forEach((d)->DAH.save(d));
 					results = query.getResultList();
 					//results.addAll(Cultivo.cultivos.values());
+				} else {
+					results.forEach(cult->{
+						//Cultivo.cultivos.s
+						if(cult.getEstival()==null)cult.setEstival(true);
+						if(cult.getAporteMO()==null)cult.setAporteMO(1000*(-1+cult.getAbsN()/cult.getExtN()));//kg por tn;  estimacion en base a la extraccion de n vs absorcion de n
+					});
 				}
 			  return results;
 	}

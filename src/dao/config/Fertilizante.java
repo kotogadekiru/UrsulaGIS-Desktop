@@ -20,8 +20,13 @@ public class Fertilizante implements Comparable<Fertilizante>{
 	public static final String SUPERFOSFATO_TRIPLE_SPT = "Superfosfato Triple (SPT)";
 	public static final String SUPERFOSFATO_SIMPLE = "Superfosfato Simple";
 	public static final String FOSFATO_MONOAMONICO_MAP = "Fosfato Monoamonico (MAP)";
-	public static final String FOSFATO_DIAMONICO_DAP = "Fosfato Diamonico (DAP)";
+	public static final String FOSFATO_DIAMONICO_DAP = "Fosfato Diamonico (DAP)";//se usa en fertilizacion labor para seleccionar el default
 	
+	public static final Double porcN_NO3=0.2259;//necesario para convertir de ppm Nitratos NO3 a kgN
+	public static final Double porcP_PO4=0.3231;
+	
+	public static final Double porcN_MO=0.04;
+	public static final Double porcMO_DISP_Campania=0.02;
 	
 	public static final String FIND_ALL="Fertilizante.findAll";
 	public static final String FIND_NAME="Fertilizante.findName";
@@ -34,18 +39,18 @@ public class Fertilizante implements Comparable<Fertilizante>{
 //		fertilizantes.put(SUPERFOSFATO_SIMPLE,new Fertilizante(SUPERFOSFATO_SIMPLE,0.576,0.0));		//0-(18~21)-0-0
 //		fertilizantes.put(SUPERFOSFATO_TRIPLE_SPT,new Fertilizante(SUPERFOSFATO_TRIPLE_SPT,0.1472,0.0));//0-(44~53)-0-0
 		
-//		%N		%P
+//								%N			%P
 //Amoníaco anhidro 							82	
 //Nitrato de amonio							33.5	
 //Sulfato de amonio							21	
 //Fosfato diamónico			 18 a 21		21		20
-//Fosfato monoamónico							11		23
-//Nitrato de Calcio							15	
-//Cianamida cálcica	 20 a 22				22	
-//Nitrato de Potasio							13	
-//Nitrato de Sodio							16	
-//Urea										46	
-//Urea - Amonio Nitrato (UAN)					32				
+//Fosfato monoamónico			11			23
+//Nitrato de Calcio				15	
+//Cianamida cálcica			 20 a 22		22	
+//Nitrato de Potasio			13	
+//Nitrato de Sodio				16	
+//Urea							46	
+//Urea - Amonio Nitrato (UAN)	32				
 		
 		//Nitrogenados
 fertilizantes.put("Amoníaco anhidro",new Fertilizante("Amoníaco anhidro",82,0.0,0.0,0.0));//ok
@@ -72,7 +77,7 @@ fertilizantes.put("Yeso Agricola",new Fertilizante("Yeso Agricola",0.0,0.0,0,17)
 	}
 	
 	@Id @GeneratedValue
-	private long id;
+	private Long id=null;
 	
 	String nombre = new String();
 	

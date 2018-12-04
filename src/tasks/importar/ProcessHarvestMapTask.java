@@ -213,9 +213,16 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 				 * creo la geometria que corresponde a la feature tomando en cuenta si esta activado el filtro de distancia y el de superposiciones
 				 */				
 				//				Geometry utmGeom = createGeometryForHarvest(anchoLongLat,
-				//						distanciaLongLat, utmPoint,pasada,altura,ci.getRindeTnHa());		
-				Geometry longLatGeom = createGeometryForHarvest(anchoLongLat,
+				//						distanciaLongLat, utmPoint,pasada,altura,ci.getRindeTnHa());
+				Geometry longLatGeom = null;
+				try {
+				 longLatGeom = createGeometryForHarvest(anchoLongLat,
 						distanciaLongLat, longLatPoint,altura,ci.getRindeTnHa());
+			
+				}catch(Exception e) {
+					e.printStackTrace();
+					continue;
+				}
 				if(longLatGeom == null 
 						//			|| geom.getArea()*ProyectionConstants.A_HAS()*10000<labor.config.supMinimaProperty().doubleValue()
 						){//con esto descarto las geometrias muy chicas
@@ -427,7 +434,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			for(SimpleFeature f : colections.get(i)){//por cada item de la categoria i
 				Object geomObj = f.getDefaultGeometry();
 				geometriesCat.add((Geometry)geomObj);
-				sumRinde+=LaborItem.getDoubleFromObj(f.getAttribute(CosechaLabor.COLUMNA_RENDIMIENTO));
+				sumRinde+=LaborItem.getDoubleFromObj(f.getAttribute(CosechaLabor.CosechaLaborConstants.COLUMNA_RENDIMIENTO));
 				sumatoriaAltura += LaborItem.getDoubleFromObj(f.getAttribute(Labor.COLUMNA_ELEVACION));
 				n++;
 			} 
@@ -436,7 +443,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			
 			double sumaDesvio2 = 0.0;
 			for(SimpleFeature f:colections.get(i)){
-				double cantidadCosecha = LaborItem.getDoubleFromObj(f.getAttribute(CosechaLabor.COLUMNA_RENDIMIENTO));	
+				double cantidadCosecha = LaborItem.getDoubleFromObj(f.getAttribute(CosechaLabor.CosechaLaborConstants.COLUMNA_RENDIMIENTO));	
 				sumaDesvio2+= Math.abs(rindeProm- cantidadCosecha);
 			}
 			
@@ -455,7 +462,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 					System.out.println("hubo una excepcion uniendo las geometrias. Procediendo con precision");
 					//java.lang.IllegalArgumentException: Comparison method violates its general contract!
 					try{
-					buffered= EnhancedPrecisionOp.buffer(colectionCat, bufer);
+					buffered= EnhancedPrecisionOp.buffer(colectionCat, bufer);//java.lang.IllegalArgumentException: Comparison method violates its general contract!
 					}catch(Exception e2){
 						e2.printStackTrace();
 					}
@@ -481,6 +488,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 
 		}//termino de recorrer las categorias
 		labor.setOutCollection(newOutcollection);
+		
 		return itemsCategoria;
 	}
 
@@ -1175,7 +1183,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			//esto funciona bien pero cuando los rindes son similares evita que corte poligonos que corresponde cortar
 			//TODO marcar los objects que no entraron en la lista final como elementos a volver a repasar al final
 
-
+			//FIXME si la geometria tiene elevacion esto genera errores. hacer la superposicion sin elevacion y luego volver a aplicar la elevacion?
 			geometryUnion = getUnion(fact, objects, poly);
 			try {			
 				if (geometryUnion != null 

@@ -9,8 +9,10 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import dao.LaborItem;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper=true)//si no pones esto todos los hashmaps andan mal y grillar cosecha no anda
 @Entity
 public class CosechaItem extends LaborItem {	
 	Double rindeTnHa=new Double(0);
@@ -175,4 +177,12 @@ public class CosechaItem extends LaborItem {
 				+ importeHa + ", id=" + id + ""
 				+ "]";
 	}
+	
+//	public int hashCode() {
+//		return super.hashCode();
+//	}
+//	
+//	public boolean equals(Object o) {
+//		return super.equals(o);
+//	}
 }

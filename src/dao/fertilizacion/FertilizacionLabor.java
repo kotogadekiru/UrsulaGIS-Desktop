@@ -2,31 +2,30 @@ package dao.fertilizacion;
 
 import java.util.List;
 
-import org.geotools.data.DataUtilities;
-import org.geotools.data.FileDataStore;
-import org.geotools.feature.SchemaException;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.Entity;
 
-import dao.Clasificador;
-import dao.LaborItem;
+import org.geotools.data.FileDataStore;
+import org.opengis.feature.simple.SimpleFeature;
+
 import dao.Labor;
 import dao.LaborConfig;
+import dao.LaborItem;
 import dao.config.Configuracion;
 import dao.config.Fertilizante;
-import dao.cosecha.CosechaConfig;
-import dao.cosecha.CosechaItem;
-import dao.cosecha.CosechaLabor;
-import dao.siembra.SiembraItem;
-import dao.siembra.SiembraLabor;
-import javafx.beans.property.DoubleProperty;
+import dao.utils.PropertyHelper;
 import javafx.beans.property.Property;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter(value = AccessLevel.PUBLIC)
+@Entity @Access(AccessType.FIELD)//variable (el default depende de donde pongas el @Id)
 public class FertilizacionLabor extends Labor<FertilizacionItem> {
 	public static final String COLUMNA_KG_HA = "Kg_FertHa";
 	public static final String COLUMNA_PRECIO_FERT = "Precio Kg Fert";
@@ -54,7 +53,7 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 		List<String> availableColums = this.getAvailableColumns();		
 		Configuracion properties = getConfigLabor().getConfigProperties();
 
-		colKgHaProperty = initStringProperty(FertilizacionLabor.COLUMNA_KG_HA,properties,availableColums);
+		colKgHaProperty = PropertyHelper.initStringProperty(FertilizacionLabor.COLUMNA_KG_HA,properties,availableColums);
 		colAmount= new SimpleStringProperty(FertilizacionLabor.COLUMNA_KG_HA);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
 
 			
@@ -95,8 +94,8 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 	}
 
 	public void setPropiedadesLabor(FertilizacionItem fi){
-		fi.setPrecioInsumo(this.precioInsumoProperty.get());
-		fi.setCostoLaborHa(this.precioLaborProperty.get());	
+		fi.setPrecioInsumo(this.getPrecioInsumo());
+		fi.setCostoLaborHa(this.getPrecioLabor());	
 	}
 
 	@Override
@@ -114,14 +113,14 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 	}
 
 	@Override
-	protected DoubleProperty initPrecioLaborHaProperty() {
-		return initDoubleProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,"0",config.getConfigProperties());
+	protected Double initPrecioLaborHa() {
+		return PropertyHelper.initDouble(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,"0",config.getConfigProperties());
 	}
 
 	
 	@Override
-	protected DoubleProperty initPrecioInsumoProperty() {
-		return initDoubleProperty(FertilizacionLabor.COLUMNA_PRECIO_FERT,  "0", config.getConfigProperties());
+	protected Double initPrecioInsumo() {
+		return PropertyHelper.initDouble(FertilizacionLabor.COLUMNA_PRECIO_FERT,  "0", config.getConfigProperties());
 	//	return initDoubleProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,"0",config.getConfigProperties());
 	}
 	
@@ -132,7 +131,4 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 		}
 		return config;
 	}
-
-
-
 }

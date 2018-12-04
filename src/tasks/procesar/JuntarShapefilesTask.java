@@ -286,7 +286,7 @@ public class JuntarShapefilesTask {
 		if(storeFeatures.size()==0)return null;
 		SimpleFeature f0 = storeFeatures.get(0);
 		SimpleFeatureBuilder fBuilder = new SimpleFeatureBuilder(f0.getType());
-		int size=storeFeatures.size();
+	//	int size=storeFeatures.size();
 		List<AttributeType> attributes = f0.getType().getTypes();
 		attributes.forEach(att->{
 			String attClassName = att.getBinding().getName();

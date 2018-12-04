@@ -8,6 +8,8 @@ public class SiembraItem extends LaborItem {
 	private Double precioInsumo= new Double(0);	
 	private Double costoLaborHa=new Double(0);	
 	private Double importeHa=new Double(0);	
+	private Double dosisFertLinea=new Double(0);
+	private Double dosisFertCostado=new Double(0);
 
 	public SiembraItem(SimpleFeature harvestFeature) {
 		super(harvestFeature);
@@ -39,10 +41,39 @@ public class SiembraItem extends LaborItem {
 	}
 
 	public void setImporteHa(Double doubleFromObj) {
-		this.importeHa = doubleFromObj;
-		
+		this.importeHa = doubleFromObj;	
 	}
 	
+	
+	
+	/**
+	 * @return the dosisFertLinea
+	 */
+	public Double getDosisFertLinea() {
+		return dosisFertLinea;
+	}
+
+	/**
+	 * @param dosisFertLinea the dosisFertLinea to set
+	 */
+	public void setDosisFertLinea(Double dosisFertLinea) {
+		this.dosisFertLinea = dosisFertLinea;
+	}
+
+	/**
+	 * @return the dosisFertCostado
+	 */
+	public Double getDosisFertCostado() {
+		return dosisFertCostado;
+	}
+
+	/**
+	 * @param dosisFertCostado the dosisFertCostado to set
+	 */
+	public void setDosisFertCostado(Double dosisFertCostado) {
+		this.dosisFertCostado = dosisFertCostado;
+	}
+
 	@Override
 	public Double getAmount() {
 		return getDosisHa();
@@ -52,6 +83,8 @@ public class SiembraItem extends LaborItem {
 	public Object[] getSpecialElementsArray() {
 		Object[] elements = new Object[]{
 				getDosisHa(),
+				getDosisFertLinea(),
+				getDosisFertCostado(),
 				getPrecioInsumo(),
 				getCostoLaborHa(),
 				getImporteHa()

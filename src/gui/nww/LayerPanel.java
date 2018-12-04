@@ -135,10 +135,10 @@ public class LayerPanel extends VBox {
 				item.getChildren().clear();
 			}
 		}
-
+		String nombre ="";
 		for (Layer layer : wwd.getModel().getLayers()) {
 			//LayerAction action = new LayerAction(layer, wwd, layer.isEnabled());
-			String nombre = layer.getName();
+			nombre = layer.getName();
 			if("Stars".equalsIgnoreCase(nombre)||
 					"Atmosphere".equalsIgnoreCase(nombre)||	
 					"Blue Marble May 2004".equalsIgnoreCase(nombre)||
@@ -205,7 +205,7 @@ public class LayerPanel extends VBox {
 			}
 			checkBoxTreeItem.setSelected(layer.isEnabled());
 			checkBoxTreeItem.selectedProperty().addListener((ob,old,nu)->{
-				layer.setEnabled(nu);
+				layer.setEnabled(nu);//aca se repinta el layer?
 			});
 
 
@@ -232,10 +232,13 @@ public class LayerPanel extends VBox {
 				if(labor1 != null && labor1 instanceof Ndvi && 
 						labor2 != null && labor2 instanceof Ndvi &&
 						l1Name.startsWith(l2Name.substring(0, l2Name.length()-"02-01-2018".length()))){
+					try {
 					Date fecha1 = ((Ndvi)labor1).getFecha().getTime();
 					Date fecha2 = ((Ndvi)labor2).getFecha().getTime();
 					return fecha1.compareTo(fecha2);
-
+					}catch(Exception e) {
+						return l1Name.compareToIgnoreCase(l2Name);
+					}
 				} else {
 
 
@@ -251,7 +254,7 @@ public class LayerPanel extends VBox {
 					//				//no se pudo parsear como fecha entonces lo interpreto como string.
 					//				//e.printStackTrace();
 					//			}
-					return l1Name.compareTo(l2Name);
+					return l1Name.compareToIgnoreCase(l2Name);
 				}
 			});
 			}catch(Exception e){

@@ -7,9 +7,10 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -17,6 +18,7 @@ import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.geometry.BoundingBox;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.CoordinateFilter;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
@@ -30,6 +32,7 @@ import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 import dao.Clasificador;
 import dao.Labor;
 import dao.LaborItem;
+import dao.config.Configuracion;
 import gov.nasa.worldwind.WorldWind;
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Extent;
@@ -69,6 +72,7 @@ import utils.ProyectionConstants;
 //import org.opengis.filter.FilterFactory2;
 
 public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> extends Task<E>{
+	private static final int TARGET_LOW_RES_TIME = 2000;
 	private static final String TASK_CLOSE_ICON = "/gui/event-close.png";
 	public static final String ZOOM_TO_KEY = "ZOOM_TO";
 	protected int featureCount=0;
@@ -93,6 +97,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	protected E call() throws Exception {
 
 		try {
+			labor.clearCache();//remember to clear your cache!!!
 			doProcess();
 		} catch (Exception e1) {
 			System.err.println("Error al procesar el task");
@@ -602,7 +607,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				labor.minAmount,labor.maxAmount,
 				HUE_MIN, HUE_MAX,
 				AnalyticSurfaceLegend.createDefaultColorGradientLabels(labor.minAmount, labor.maxAmount, legendLabelFormat),
-				AnalyticSurfaceLegend.createDefaultTitle(labor.getNombreProperty().get()));
+				AnalyticSurfaceLegend.createDefaultTitle(labor.getNombre()));
 		legend.setOpacity(1);
 		legend.setScreenLocation(new java.awt.Point(100, 400));
 
@@ -632,11 +637,11 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	/*
 	 * metodo que toma una lista de Features y los convierte a puntos en una superficie analitica para mostrar en la pantalla
 	 */
-	private RenderableLayer createAnalyticSurfaceFromQuery(int segs){		
+	private RenderableLayer createAnalyticSurfaceFromQuery(int milis){		
 		ReferencedEnvelope bounds = labor.outCollection.getBounds();
 	//	System.out.println("createAnalyticSurfaceFromQuery");
 	//	System.out.println("bounds = "+bounds);
-		double res=  Math.sqrt(bounds.getArea()/(segs*10000));
+		double res=  Math.sqrt(bounds.getArea()/(milis));//antes dividia por 10000 cuando eran segundos
 		double	resolution =res;// Math.sqrt(bounds.getArea()/40000)>1?;//como el tiempo por item es 0.1 limito el tiempo de rendering a 2seg
 		double	ancho = resolution / ProyectionConstants.metersToLong();
 	//	System.out.println("ancho "+ancho);
@@ -644,18 +649,20 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		double minY = bounds.getMinY();
 		double maxX = bounds.getMaxX();
 		double maxY = bounds.getMaxY();
-
+		//System.out.println("bounds: "+bounds);
 	//	System.out.println("creando analyticSurface con segs="+segs);
 
 		Double maxElev = Math.max(labor.maxElev,1.0);
 		Double minElev = Math.min(labor.minElev,1.0);
 
-		System.out.println("maxElev,minElev= "+maxElev+", "+minElev);
+		//System.out.println("maxElev,minElev= "+maxElev+", "+minElev);
 		
 		int offset = 3;//para que quede un lugar a cada lado mas el desplazamiento
 		int width=(int) ((maxX-minX)/resolution)+offset;
 		int height=(int) ((maxY-minY)/resolution)+offset;
 		int maxIndex =  width*height;
+		
+		//System.out.println("width="+width+" height="+height+" maxIndex="+maxIndex);
 		
 		AnalyticSurface.GridPointAttributes transparent  =  AnalyticSurface.createGridPointAttributes(0, new java.awt.Color(0,0,0,0));
 		LinkedList<AnalyticSurface.GridPointAttributes> attributesList = new LinkedList<AnalyticSurface.GridPointAttributes>();
@@ -673,15 +680,23 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				Coordinate coord = center.getCoordinate();
 				//calculo el indice en el que tiene que ir el nuevo dato
 				int col= (int)((coord.x-minX) / resolution)+1;
-				int fila = (int)((-coord.y+maxY) / resolution)+1;
+				int fila = (int)((-coord.y+maxY) / resolution)+1;//da negativo cuando y esta fuera de min max
 				int index = (col+fila*width);//index me da negativo
 				
-				//if(index>=maxIndex)return;
+				if(index<0 ||index>=maxIndex) {
+					System.err.println("fila="+fila+" col="+col+" index="+index);
+					//System.err.println("index out of range for "+center+" bounds = "+bounds);
+					return;
+				} else { 
+					//System.out.println("procesando index= "+index);
+				}
 				 Envelope envelope = p.getEnvelopeInternal();
 				//envelope.expandBy(2*resolution);//esto me trae algunos problemas 
 				List<FC> fueaturesToAdd = labor.cachedOutStoreQuery(envelope);
+				
 				//promediar
 				GridPointAttributes newGridPoint  = transparent;
+				
 				if(fueaturesToAdd!=null && fueaturesToAdd.size()>0){
 					//float r =0,g = 0,b=0,
 					float elev=0;
@@ -757,7 +772,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				labor.minAmount,labor.maxAmount,
 				HUE_MIN, HUE_MAX,
 				AnalyticSurfaceLegend.createDefaultColorGradientLabels(labor.minAmount, labor.maxAmount, legendLabelFormat),
-				AnalyticSurfaceLegend.createDefaultTitle(labor.getNombreProperty().get()));
+				AnalyticSurfaceLegend.createDefaultTitle(labor.getNombre()));
 		legend.setOpacity(1);
 		legend.setScreenLocation(new java.awt.Point(100, 400));
 
@@ -797,32 +812,56 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		Double minY = bounds.getMinY()/ProyectionConstants.metersToLat();
 		Double maxX = bounds.getMaxX()/ProyectionConstants.metersToLong();
 		Double maxY = bounds.getMaxY()/ProyectionConstants.metersToLat();
-		Double x0=minX;
+		Double x0=minX,x1=minX;
+		Double y0=minY,y1=minY;
 		
+		
+		GeometryFactory fact = new GeometryFactory();
+		Coordinate A = new Coordinate(); 
+		Coordinate B = new Coordinate(); 
+		Coordinate C = new Coordinate();
+		Coordinate D = new Coordinate();
+		//Coordinate[] coordinates = new Coordinate[5];
+		Coordinate[] coordinates = { A, B, C, D, A };
 		for(int x=0;(x0)<maxX;x++){
 			x0=minX+x*ancho;
-			Double x1=minX+(x+1)*ancho;
+			//Double
+			x1=minX+(x+1)*ancho;
 			for(int y=0;(minY+y*ancho)<maxY;y++){
-				Double y0=minY+y*ancho;
-				Double y1=minY+(y+1)*ancho;
+				//Double 
+				y0=minY+y*ancho;
+				//Double 
+				y1=minY+(y+1)*ancho;
 
-				Coordinate D = new Coordinate(x0*ProyectionConstants.metersToLong(), y0*ProyectionConstants.metersToLat()); 
-				Coordinate C = new Coordinate(x1*ProyectionConstants.metersToLong(), y0*ProyectionConstants.metersToLat());
-				Coordinate B = new Coordinate(x1*ProyectionConstants.metersToLong(), y1*ProyectionConstants.metersToLat());
-				Coordinate A =  new Coordinate(x0*ProyectionConstants.metersToLong(), y1*ProyectionConstants.metersToLat());
+				//Coordinate D = new Coordinate(x0*ProyectionConstants.metersToLong(), y0*ProyectionConstants.metersToLat()); 
+				D.x=x0*ProyectionConstants.metersToLong(); D.y=y0*ProyectionConstants.metersToLat();
+				//Coordinate C = new Coordinate(x1*ProyectionConstants.metersToLong(), y0*ProyectionConstants.metersToLat());
+				C.x=x1*ProyectionConstants.metersToLong(); C.y=y0*ProyectionConstants.metersToLat();
+				//Coordinate B = new Coordinate(x1*ProyectionConstants.metersToLong(), y1*ProyectionConstants.metersToLat());
+				B.x=x1*ProyectionConstants.metersToLong(); B.y= y1*ProyectionConstants.metersToLat();
+				//Coordinate A =  new Coordinate(x0*ProyectionConstants.metersToLong(), y1*ProyectionConstants.metersToLat());
+				A.x=x0*ProyectionConstants.metersToLong(); A.y=y1*ProyectionConstants.metersToLat();
+				
+				//System.out.println(A.y+" "+B.y+" "+C.y+" "+D.y);
 
 				/**
 				 * D-- ancho de carro--C ^ ^ | | avance ^^^^^^^^ avance | | A-- ancho de
 				 * carro--B
 				 * 
 				 */
-				Coordinate[] coordinates = { A, B, C, D, A };// Tiene que ser cerrado.
+				//Coordinate[] coordinates = { A, B, C, D, A };// Tiene que ser cerrado.
+//				coordinates[0]=A;
+//				coordinates[1]=B;
+//				coordinates[2]=C;
+//				coordinates[3]=D;
+//				coordinates[4]=A;
+				
 				// Empezar y terminar en
 				// el mismo punto.
 				// sentido antihorario
 
 				//			GeometryFactory fact = X.getFactory();
-				GeometryFactory fact = new GeometryFactory();
+				
 
 
 				//				DirectPosition upper = positionFactory.createDirectPosition(new double[]{-180,-90});
@@ -1024,7 +1063,37 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		//System.out.println("demora en crear extrudedPolygonsLayer: "+(System.currentTimeMillis()-time));
 		//}else{
 		//RenderableLayer analyticSurfaceLayer = createAnalyticSurface(itemsToShow);
-		RenderableLayer analyticSurfaceLayer = createAnalyticSurfaceFromQuery(2);
+
+		//Configuracion config = Configuracion.getInstance();
+		int lowRes= TARGET_LOW_RES_TIME;//Integer.parseInt(config.getPropertyOrDefault(FAST_LAYER_PROCESS_TIME, Integer.toString(TARGET_LOW_RES_TIME)));
+		//lowRes = 1000000;
+		long start = System.currentTimeMillis();
+		RenderableLayer analyticSurfaceLayer = createAnalyticSurfaceFromQuery(lowRes);//2
+		long end = System.currentTimeMillis();
+		long actualTime= end-start;
+		System.out.println("lowRes Rendering Time = "+actualTime);
+		//actualTime = 20000;//TODO remover esto que es para test solamente
+		//long error = (actualTime-TARGET_LOW_RES_TIME);
+		
+		//si para target tardo actual,
+		//cuanto le tengo que pedir para que tarde 5*target
+		//=5*target*target/actual
+	//	if(actualTime>TARGET_LOW_RES_TIME) {
+			lowRes=new Long(TARGET_LOW_RES_TIME*TARGET_LOW_RES_TIME/actualTime).intValue();
+	//	}
+		
+		//System.out.println("ERROR = "+error);
+		//if(error>0) {
+		//	lowRes=(int)(TARGET_LOW_RES_TIME-error);//no quiero subir la resolucion solo bajarla cuando sea necesario
+		//} else {
+		//	System.out.println("ERROR < 0 entonses simulo que pasaria si el error fuera de 10segundos ");
+		//	lowRes=(int)(TARGET_LOW_RES_TIME+40000);
+		//}
+		
+		//lowRes = (int)(TARGET_LOW_RES_TIME+error);//no importa el primero sino setear la barra para los demas.
+		//System.out.println("new lowRes = "+lowRes);
+	//	config.setProperty(FAST_LAYER_PROCESS_TIME,  Integer.toString(lowRes));
+	//	config.save();
 		analyticSurfaceLayer.setPickEnabled(false);//ya es false de fabrica
 
 		labor.getLayer().removeAllRenderables();
@@ -1036,17 +1105,61 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		//labor.getLayer().addRenderable(altitudeDependingLayer);
 		//labor.getLayer().setPickEnabled(false);//si hago esto no puedo pasar el pick a extrudedPolygonsLayers
 
+		System.out.println("low res rendering milis: "+lowRes);
+		
+		int medRes=5*lowRes;
+		System.out.println("mid res rendering milis: "+medRes);
+		int highRes=8*lowRes;
 		installPlaceMark();
+		if(medRes>TARGET_LOW_RES_TIME*2) {
+		CompletableFuture<Void> completableFuture 
+		  = CompletableFuture.runAsync(() -> {
+				RenderableLayer analyticSurfaceLayerHD = createAnalyticSurfaceFromQuery(medRes);//10
+				analyticSurfaceLayerHD.setPickEnabled(false);//ya es false de fabrica
+				labor.getLayer().setAnalyticSurfaceLayer(analyticSurfaceLayerHD);
+			})
+		    .thenRun(() -> {
+//		    	 try {
+//					Thread.sleep(TARGET_LOW_RES_TIME*5);
+//				} catch (InterruptedException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+				RenderableLayer analyticSurfaceLayerHD = createAnalyticSurfaceFromQuery(highRes);//30
+				analyticSurfaceLayerHD.setPickEnabled(false);//ya es false de fabrica
+				labor.getLayer().setAnalyticSurfaceLayer(analyticSurfaceLayerHD);
+				
+			});
+		
 		JFXMain.executorPool.execute(()->{
-			RenderableLayer analyticSurfaceLayerHD = createAnalyticSurfaceFromQuery(10);
-			analyticSurfaceLayerHD.setPickEnabled(false);//ya es false de fabrica
-			labor.getLayer().setAnalyticSurfaceLayer(analyticSurfaceLayerHD);
-		});
-		JFXMain.executorPool.execute(()->{
-			RenderableLayer analyticSurfaceLayerHD = createAnalyticSurfaceFromQuery(30);
-			analyticSurfaceLayerHD.setPickEnabled(false);//ya es false de fabrica
-			labor.getLayer().setAnalyticSurfaceLayer(analyticSurfaceLayerHD);
-		});
+//			 try {
+//					Thread.sleep(TARGET_LOW_RES_TIME);
+//				} catch (InterruptedException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+			try {
+				completableFuture.get();
+				System.out.println("Rendered");
+			} catch (InterruptedException | ExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			});
+		}
+//		JFXMain.executorPool.execute(()->{
+//			RenderableLayer analyticSurfaceLayerHD = createAnalyticSurfaceFromQuery(medRes);//10
+//			analyticSurfaceLayerHD.setPickEnabled(false);//ya es false de fabrica
+//			labor.getLayer().setAnalyticSurfaceLayer(analyticSurfaceLayerHD);
+//		});
+	
+		
+		
+//		JFXMain.executorPool.execute(()->{
+//			RenderableLayer analyticSurfaceLayerHD = createAnalyticSurfaceFromQuery(highRes);//30
+//			analyticSurfaceLayerHD.setPickEnabled(false);//ya es false de fabrica
+//			labor.getLayer().setAnalyticSurfaceLayer(analyticSurfaceLayerHD);
+//		});
 	}
 
 	private RenderableLayer createExtrudedPolygonsLayer(Collection<FC> itemsToShow) {	
@@ -1066,7 +1179,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		final AnalyticSurfaceLegend legend = AnalyticSurfaceLegend.fromColorGradient(min, max,
 				HUE_MIN, HUE_MAX,
 				AnalyticSurfaceLegend.createDefaultColorGradientLabels(min, max, legendLabelFormat),
-				AnalyticSurfaceLegend.createDefaultTitle(labor.getNombreProperty().get()));
+				AnalyticSurfaceLegend.createDefaultTitle(labor.getNombre()));
 		legend.setOpacity(0.6);
 		legend.setScreenLocation(new java.awt.Point(100, 400));
 
@@ -1098,6 +1211,8 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				if(s==null || !s.equals(visibleSector)){
 					s=visibleSector;
 				this.clearRenderables();
+				this.getRenderables().forEach(r->this.removeRenderable(r));
+				
 				//	System.out.println("dibujando entre p1= "+p1+" y p2="+p2);
 				Envelope env = new Envelope(visibleSector.getMinLongitude().degrees,visibleSector.getMinLatitude().degrees,visibleSector.getMaxLongitude().degrees,visibleSector.getMaxLatitude().degrees);//p1.getLongitude().degrees, p1.getLatitude().degrees,p2.getLongitude().degrees, p2.getLatitude().degrees);
 
@@ -1126,6 +1241,17 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 								center.getY(),center.getX());
 						
 						PointPlacemark pmStandard = new PointPlacemark(pointPosition);
+						pmStandard.setLabelText("Categoria: "+c.getCategoria());
+						Color color = labor.getClasificador().getColorForCategoria(c.getCategoria());
+						int red = new Double(color.getRed()*255).intValue();
+						int green = new Double(color.getGreen()*255).intValue();
+						int blue = new Double(color.getBlue()*255).intValue();
+						
+						PointPlacemarkAttributes pointAttribute = new PointPlacemarkAttributes();
+						//pointAttribute.setLabelMaterial(Material.DARK_GRAY);
+						pointAttribute.setImageColor(new java.awt.Color(red,green,blue));
+						pmStandard.setAttributes(pointAttribute);
+						
 						labor.getLayer().addRenderable(pmStandard);
 						//	System.out.println("dibujando "+extPoly);
 						//if(extPoly!=null)this.addRenderable(extPoly);//extPoly.render(dc);
@@ -1187,7 +1313,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			//		}
 
 			pointAttribute.setLabelMaterial(Material.DARK_GRAY);
-			pmStandard.setLabelText(labor.nombreProperty.get());
+			pmStandard.setLabelText(labor.getNombre());
 			pmStandard.setAttributes(pointAttribute);
 			labor.getLayer().addRenderable(pmStandard);
 			
@@ -1197,18 +1323,35 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			labor.getLayer().setValue(ZOOM_TO_KEY, centerPosition);		
 		}
 	}
+	
+	/**
+	 * 
+	 * @param c geometria a ser elevada hasta la altura de query
+	 * @param query geometria de la que se toma la altura para elevar a c
+	 * @return la geometria c elevada a la altura de query
+	 */
+	public static Geometry flatenGeometry(Geometry c, Geometry query) {
+		Geometry g = (Geometry)c.clone();
+		Coordinate cero = query.getCoordinates()[0];
+		g.apply( new CoordinateFilter() {
+			@Override
+			public void filter(Coordinate c) {
+				c.z=cero.z;					
+			}});
+		return g;
+	}
 
 	/**
 	 * @Description Metodo recomendado para unir varios poligonos rapido
 	 */
 	public Geometry getUnion(GeometryFactory fact, List<? extends LaborItem> objects, Geometry query) {
+		
 		//		System.out.println("getUnion(); "+System.currentTimeMillis());
 		if (objects == null || objects.size() < 1) {
 			return null;
 		} else if (objects.size() == 1) {
 			Geometry ob1 =(Geometry) objects.get(0).getGeometry();
-
-			return ob1;// (Geometry) crsTransform( ob1);
+			return flatenGeometry(ob1,query);// (Geometry) crsTransform( ob1);
 		} else {// hay mas de un objeto para unir
 			//System.out.println( "tratando de unir "+ objects.size()+" geometrias");
 			ArrayList<Geometry> geomList = new ArrayList<Geometry>();
@@ -1217,40 +1360,27 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			 *recorro todas las cosechas y si su geometria interna se cruza con la query la agrego a la lista de geometrias 
 			 */
 
-
 			int maxGeometries = 	labor.getConfigLabor().getMAXGeometries();//labor.getConfiguracion().getMAXGeometries();
-			//	Envelope queryEnvelope = query.getEnvelopeInternal();		
 			for (LaborItem o : objects) {			
-				Geometry g =o.getGeometry();
-				//Geometry g =crsTransform( o.getGeometry());
+				Geometry g= o.getGeometry();
+				Geometry flatG =flatenGeometry(g,query);
 				try{
-					if (g.intersects(query)) {//acelera mucho el proceso //g.getEnvelopeInternal().intersects(query) 
-
-						boolean contains = g.touches(zero);
+					if (flatG.intersects(query)) {//acelera mucho el proceso //g.getEnvelopeInternal().intersects(query) 
+						boolean contains = flatG.touches(zero);
 						if(!contains
 								&&geomList.size()<maxGeometries
-								&& g.isValid()
-								){//limito la cantidad de geometrias a unir arbitrariamente por una cuestion de performance 100 parece ser un techo 
-							g = makeGood(g);
-							geomList.add(g);
-							//System.out.println("agregue "+g+" a la lista para unir");
+								&& flatG.isValid()
+								){ 
+							flatG = makeGood(flatG);
+							geomList.add(flatG);
 						} else {
-							//System.out.println("not valid geometry "+g);
-							g = makeGood(g);
-
-							//System.out.println(	g.isValid()+" valid geometry "+g);
-							geomList.add(g);
-
+							flatG = makeGood(flatG);
+							geomList.add(flatG);
 						}
-						//						else{
-						//							System.out.println("contains zero o hay mas de 100 geometrias en superposicion");
-						//						}
 					}
 				}catch(Exception e){
-
 					e.printStackTrace();
 				}
-
 			}
 
 			if (geomList == null || geomList.size() < 1) {
@@ -1258,6 +1388,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			}
 
 			Geometry union = null;
+			
 			Geometry[] geomArray = geomList.toArray(new Geometry[geomList.size()]);
 
 			GeometryCollection polygonCollection = fact
@@ -1336,7 +1467,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		progressBarTask.setProgress(0);
 
 		progressBarTask.progressProperty().bind(this.progressProperty());
-		progressBarLabel = new Label(labor.nombreProperty.get());
+		progressBarLabel = new Label(labor.getNombre());
 		progressBarLabel.setTextFill(Color.BLACK);
 
 

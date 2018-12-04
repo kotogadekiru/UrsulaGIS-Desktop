@@ -24,7 +24,7 @@ public class Establecimiento implements Comparable<Establecimiento> {
 	public static final String FIND_NAME = "Establecimiento.findName";
 	
 	@Id @GeneratedValue
-	private long id;
+	private Long id=null;
 	
 	public String nombre=new String();
 	@ManyToOne
@@ -43,14 +43,14 @@ public class Establecimiento implements Comparable<Establecimiento> {
 	/**
 	 * @return the id
 	 */
-	public long getId() {
+	public Long getId() {
 		return id;
 	}
 
 	/**
 	 * @param id the id to set
 	 */
-	public void setId(long id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 

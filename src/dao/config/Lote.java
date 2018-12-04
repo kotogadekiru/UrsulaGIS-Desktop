@@ -21,7 +21,7 @@ public class Lote implements Comparable<Lote> {
 	public static final String FIND_NAME = "Lote.findNombre";
 
 	@Id @GeneratedValue
-	private long id;
+	private Long id=null;
 
 	public String nombre= new String();
 

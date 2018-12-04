@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
-
 import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
@@ -46,8 +44,8 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 
 		super.labor = new CosechaLabor();
 		//TODO asignar las columnas a  los valores estanar
-		labor.colAmount.set(CosechaLabor.COLUMNA_RENDIMIENTO);
-		labor.colRendimiento.set(CosechaLabor.COLUMNA_RENDIMIENTO);
+		labor.colAmount.set(CosechaLabor.CosechaLaborConstants.COLUMNA_RENDIMIENTO);
+		labor.colRendimiento.set(CosechaLabor.CosechaLaborConstants.COLUMNA_RENDIMIENTO);
 		labor.colAncho.set(CosechaLabor.COLUMNA_ANCHO);
 		labor.colCurso.set(CosechaLabor.COLUMNA_CURSO);
 		labor.colDistancia.set(CosechaLabor.COLUMNA_DISTANCIA);
@@ -73,7 +71,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		
 		
 		
-		labor.getNombreProperty().setValue("Grilla cosechas");//este es el nombre que se muestra en el progressbar
+		labor.setNombre("Grilla cosechas");//este es el nombre que se muestra en el progressbar
 	}
 
 	/**
@@ -90,21 +88,21 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		String nombre =null;
 		Cultivo cultivo =null;
 		for(CosechaLabor c:cosechas){
-			labor.precioGranoProperty.set(c.precioGranoProperty.get());
-			labor.costoCosechaTnProperty.set(c.costoCosechaTnProperty.get());
-			labor.fechaProperty.setValue(c.fechaProperty.getValue());
-			labor.precioInsumoProperty.set(c.precioInsumoProperty.get());
-			labor.precioLaborProperty.set(c.precioLaborProperty.get());
+			labor.precioGrano=c.precioGrano;
+			labor.costoCosechaTn=c.costoCosechaTn;
+			labor.setFecha(c.getFecha());//fechaProperty.setValue(c.fechaProperty.getValue());
+			labor.precioInsumo=c.precioInsumo;
+			labor.precioLabor=c.precioLabor;
 			
 			labor.minRindeProperty.set(Math.min(labor.minRindeProperty.get(), c.minRindeProperty.get()));
 			labor.maxRindeProperty.set(Math.max(labor.maxRindeProperty.get(), c.maxRindeProperty.get()));
 			if(cultivo==null){
-				cultivo=c.producto.getValue();
+				cultivo=c.getCultivo();//.getValue();
 			}
 			if(nombre == null){
-				nombre=labor.getNombreProperty().get()+" "+c.getNombreProperty().get();	
+				nombre=labor.getNombre()+" "+c.getNombre();	
 			}else {
-				nombre+=" - "+c.getNombreProperty().get();
+				nombre+=" - "+c.getNombre();
 			}
 
 			ReferencedEnvelope b = c.outCollection.getBounds();
@@ -114,8 +112,8 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 				unionEnvelope.expandToInclude(b);
 			}
 		}
-		labor.producto.setValue(cultivo);
-		labor.nombreProperty.set(nombre);
+		labor.setCultivo(cultivo);
+		labor.setNombre(nombre);
 		labor.setLayer(new LaborLayer());
 		// 2 generar una grilla de ancho ="ancho" que cubra bounds
 		List<Polygon>  grilla = construirGrilla(unionEnvelope, ancho);
@@ -233,12 +231,11 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 
 	/**
 	 * 
-	 * @param cosechasPoly
-	 * @param poly
+	 * @param cosechasPoly lista de cosechasitems que se intersectan con el poligono de entrada
+	 * @param poly ; el poligono a partir del cual se crea el cosecha Item promedio
 	 * @return SimpleFeature de tipo CosechaItemStandar que represente a cosechasPoly 
 	 */
-	private CosechaItem construirFeature(List<CosechaItem> cosechasPoly,
-			Polygon poly) {
+	private CosechaItem construirFeature(List<CosechaItem> cosechasPoly, Polygon poly) {
 		if(cosechasPoly.size()<1){
 			return null;
 		}
@@ -259,8 +256,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 				areasIntersecciones.put(cPoly,areaInterseccion);
 				
 				if(union==null){
-					union = g;
-						
+					union = g;		//union no se usa
 				}
 				intersections.add(g);
 			

@@ -24,6 +24,8 @@ import utils.ProyectionConstants;
 
 public class RecomendFertPFromHarvestMapTask extends ProcessMapTask<FertilizacionItem,FertilizacionLabor> {
 	private CosechaLabor cosecha;
+	private Double minFert=null;
+	private Double maxFert=null;
 
 	public RecomendFertPFromHarvestMapTask(FertilizacionLabor labor,CosechaLabor c) {
 		super(labor);
@@ -33,7 +35,7 @@ public class RecomendFertPFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 			FeatureReader<SimpleFeatureType, SimpleFeature> reader =cosecha.outCollection.reader();
 			featureNumber=cosecha.outCollection.size();
 			List<FertilizacionItem> itemsToShow = new ArrayList<FertilizacionItem>();
-			Cultivo cultivo = cosecha.producto.getValue();
+			Cultivo cultivo = cosecha.getCultivo();
 			Fertilizante fert = this.labor.fertilizanteProperty.getValue();
 			
 			while (reader.hasNext()) {
@@ -49,6 +51,12 @@ public class RecomendFertPFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 				fi.setGeometry(ci.getGeometry());
 				double extraccionP = ci.getRindeTnHa()*cultivo.getExtP();
 				double reposicionP = extraccionP/(fert.getPorcP()/100);
+				if(this.minFert!=null&&this.minFert>reposicionP) {
+					reposicionP=minFert;
+				}
+				if(this.maxFert!=null&&this.maxFert<reposicionP) {
+					reposicionP=maxFert;
+				}
 				fi.setDosistHa(reposicionP);
 				fi.setElevacion(10d);
 				labor.setPropiedadesLabor(fi);
@@ -105,5 +113,13 @@ public class RecomendFertPFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 
 		protected int gerAmountMax() {
 			return 1000;
+		}
+		public void setMinFert(Double _minFert) {
+			this.minFert=_minFert;
+			
+		}
+		public void setMaxFert(Double _maxFert) {
+			this.maxFert=_maxFert;
+			
 		}
 }

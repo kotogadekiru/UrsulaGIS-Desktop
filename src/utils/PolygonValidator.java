@@ -28,6 +28,8 @@ public class PolygonValidator {
 		} else if(itemGeometry instanceof Polygon) {
 			Polygon pi =(Polygon)itemGeometry;
 			ret.add(polygonToFlatPolygon(pi));
+		} else {
+			System.out.println("geometry no es multiPolygon ni poligon "+ itemGeometry);
 		}
 		return ret;
 	}

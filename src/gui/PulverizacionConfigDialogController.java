@@ -1,7 +1,6 @@
 package gui;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,12 +8,14 @@ import dao.Clasificador;
 import dao.Labor;
 import dao.config.Agroquimico;
 import dao.pulverizacion.PulverizacionLabor;
+import gui.utils.DateConverter;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
@@ -22,7 +23,6 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -149,13 +149,16 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 			return a.compareTo(b);
 		});
 		availableColums.add(Labor.NONE_SELECTED);
-		textNombre.textProperty().bindBidirectional(labor.nombreProperty);
+		//textNombre.textProperty().bindBidirectional(labor.nombreProperty);
+		textNombre.textProperty().set(labor.getNombre());
+		textNombre.textProperty().addListener((obj,old,nu)->labor.setNombre(nu));
 		
 		//datePickerFecha.valueProperty().bindBidirectional(l.fechaProperty,);
-		datePickerFecha.setValue(l.fechaProperty.getValue());
-		datePickerFecha.valueProperty().addListener((obs, bool1, bool2) -> {
-			
-			l.fechaProperty.setValue(bool2);
+		datePickerFecha.setValue(DateConverter.asLocalDate(l.fecha));
+		datePickerFecha.setConverter(new DateConverter());
+		datePickerFecha.valueProperty().addListener((obs, bool1, n) -> {
+			l.setFecha(DateConverter.asDate(n));
+			//l.fechaProperty.setValue(bool2);
 		});
 
 		// colDosis
@@ -171,12 +174,19 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 
 
 		StringConverter<Number> converter = new NumberStringConverter();
-
+		this.textPrecioInsumo.textProperty().addListener((obj,old,n)->{
+			labor.setPrecioInsumo(converter.fromString(n).doubleValue());
+			labor.config.getConfigProperties().setProperty(PulverizacionLabor.COLUMNA_PRECIO_PASADA, n);
+		});
 		//textPrecioGrano
-		Bindings.bindBidirectional(this.textPrecioInsumo.textProperty(), labor.precioInsumoProperty, converter);
+		//Bindings.bindBidirectional(this.textPrecioInsumo.textProperty(), labor.precioInsumoProperty, converter);
 
 		//textCostoLaborHa
-		Bindings.bindBidirectional(this.textCostoLaborHa.textProperty(), labor.precioLaborProperty, converter);
+		//Bindings.bindBidirectional(this.textCostoLaborHa.textProperty(), labor.precioLaborProperty, converter);
+		this.textCostoLaborHa.textProperty().addListener((obj,old,n)->{
+			labor.setPrecioLabor(converter.fromString(n).doubleValue());
+			labor.config.getConfigProperties().setProperty(PulverizacionLabor.COLUMNA_IMPORTE_HA, n);
+		});
 
 
 		Bindings.bindBidirectional(this.textClasesClasificador.textProperty(), labor.clasificador.clasesClasificadorProperty, converter);

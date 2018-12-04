@@ -23,7 +23,7 @@ public class Empresa implements Comparable<Empresa>{
 	 public static final String FIND_NAME = "Empresa.findName";
 
 	@Id @GeneratedValue
-	private long id;
+	private Long id=null;
 	
 	
 	private String nombre= new String();

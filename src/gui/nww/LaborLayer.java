@@ -44,19 +44,21 @@ public class LaborLayer extends RenderableLayer {
 		if( //(this.vS==vsNow  &&
 				//extrudedPolygonsLayer != null && (
 				//elementsCount<MAX_EXTRUDED_ELEMENTS || //si comento esto cuando es una labor sintentica no se muestra
+				analyticSurfaceLayer==null ||
 				eyeElevation < screenPixelsSectorMinSize ){
 			
-			extrudedPolygonsLayer.render(dc);
-			analyticSurfaceLayer.setEnabled(false);
+			if(extrudedPolygonsLayer!=null)extrudedPolygonsLayer.render(dc);//null pointer exception
+			if(analyticSurfaceLayer!=null)analyticSurfaceLayer.setEnabled(false);
 		} else 	{//if(analyticSurfaceLayer!=null)
 			this.vS=vsNow;
-			analyticSurfaceLayer.setEnabled(true);
-			analyticSurfaceLayer.render(dc);	
 			if(!extrudedRendered){
 				extrudedPolygonsLayer.render(dc);
 				
 				extrudedRendered=true;
 			}
+			analyticSurfaceLayer.setEnabled(true);
+			analyticSurfaceLayer.render(dc);	
+			
 		}
 		
 //		double eyeElevation = dc.getView().getCurrentEyePosition().elevation;
@@ -133,7 +135,15 @@ public class LaborLayer extends RenderableLayer {
 	/**
 	 * @param extrudedPolygonsLayer the extrudedPolygonsLayer to set
 	 */
-	public void setExtrudedPolygonsLayer(RenderableLayer extrudedPolygonsLayer) {
+	public void setExtrudedPolygonsLayer(RenderableLayer extrudedPolygonsLayer) {	
+		if(this.extrudedPolygonsLayer!=null) {
+			this.renderables.remove(this.extrudedPolygonsLayer);
+			
+			this.extrudedPolygonsLayer.removeAllRenderables();
+			this.extrudedPolygonsLayer.dispose();
+			System.out.println("removing old extrudedPolygonsLayer");
+			
+		}
 		this.extrudedPolygonsLayer = extrudedPolygonsLayer;
 		this.elementsCount=extrudedPolygonsLayer.getNumRenderables();
 		this.extrudedRendered=false;

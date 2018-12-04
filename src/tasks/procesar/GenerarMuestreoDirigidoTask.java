@@ -3,7 +3,6 @@ package tasks.procesar;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -42,13 +41,13 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 		this.aMuestrear=cosechas;
 
 		super.labor = new Suelo();
-	super.labor.featureBuilder = new SimpleFeatureBuilder(super.labor.getPointType());
+		super.labor.featureBuilder = new SimpleFeatureBuilder(super.labor.getPointType());
 		this.superficieMinimaAMuestrear=supMinima;
 		this.densidadDeMuestrasDeseada=1/densidad;
 		this.cantidadMinimaDeMuestrasPoligonoAMuestrear=cantMaxPoly;
 
 
-		labor.getNombreProperty().setValue("Muestreo Dirigido");//este es el nombre que se muestra en el progressbar
+		labor.setNombre("Muestreo Dirigido");//este es el nombre que se muestra en el progressbar
 	}
 
 	/**
@@ -66,9 +65,9 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 		//List<SueloItem> features = Collections.synchronizedList(new ArrayList<SueloItem>());
 		for(Labor<? extends LaborItem> c:aMuestrear){			
 			if(nombre == null){
-				nombre=labor.getNombreProperty().get()+" "+c.getNombreProperty().get();	
+				nombre=labor.getNombre()+" "+c.getNombre();	
 			}else {
-				nombre+=" - "+c.getNombreProperty().get();
+				nombre+=" - "+c.getNombre();
 			}
 
 			FeatureReader<SimpleFeatureType, SimpleFeature> reader =c.outCollection.reader();
@@ -76,7 +75,10 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 			while (reader.hasNext()) {
 				SimpleFeature feature = reader.next();
 				Geometry geometry = (Geometry) feature.getDefaultGeometry();
-
+				LaborItem container =c.constructFeatureContainer(feature);
+				Integer categoria =c.getClasificador().getCategoryFor(container.getAmount());
+				//System.out.println("categoria para Amount "+container.getAmount()+" es: "+categoria);//OK! categoria para Amount 12.28167988386877 es: 1
+				
 				//TODO si el area del poligono es mayor que la superficieMinimaAMuestrear
 
 				Point centroid = geometry.getCentroid();
@@ -97,10 +99,19 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 						double y =rand.nextGaussian()*sigma+centroid.getY();
 
 						Point random =centroid.getFactory().createPoint(new Coordinate(x,y));
-						
+//						Coordinate[] coords = new Coordinate[5];
+//						double width = ProyectionConstants.metersToLongLat(10/2);
+//						coords[0]=new Coordinate(x-width,y+width);
+//						coords[1]=new Coordinate(x+width,y+width);
+//						coords[2]=new Coordinate(x+width,y-width);
+//						coords[3]=new Coordinate(x-width,y-width);
+//						coords[4]=coords[0];
+//						Polygon random =centroid.getFactory().createPolygon(coords);//{new Coordinate(x,y),new Coordinate(x,y),new Coordinate(x,y),new Coordinate(x,y)});
+//						
 						if(geometry.contains(random)){
 							System.out.println("generando un punto random "+random);
 							SueloItem muestra = new SueloItem();
+							muestra.setCategoria(categoria);
 							muestra.setId(labor.getNextID());
 							muestra.setGeometry(random);
 							puntosGenerados.add(muestra);
@@ -126,7 +137,7 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 		it.close();
 
 
-		labor.nombreProperty.set(nombre);
+		labor.setNombre(nombre);
 		labor.setLayer(new LaborLayer());
 		//List<?> featureList = features.stream().map(f ->{
 		//	System.out.println("recorriendo features "+f);
@@ -162,15 +173,14 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
 		DecimalFormat df = new DecimalFormat("0.00");
 
-		String tooltipText = new String(
-				" Fosforo: "+ df.format(sueloItem.getPpmP()) +"Ppm\n"
-				);
+		String tooltipText = new String("Fosforo: "+ df.format(sueloItem.getPpmP()) +"Ppm\n");
 		tooltipText=tooltipText.concat("Nitrogeno: "+ df.format(sueloItem.getPpmN()) + "Ppm\n");
 		tooltipText=tooltipText.concat("Azufre: "+ df.format(sueloItem.getPpmS()) + "Ppm\n");
-		tooltipText=tooltipText.concat("Azufre: "+ df.format(sueloItem.getPpmS()) + "Ppm\n");
-		tooltipText=tooltipText.concat("Potasio: "+ df.format(sueloItem.getPpmS()) + "Ppm\n");
+		tooltipText=tooltipText.concat("Potasio: "+ df.format(sueloItem.getPpmK()) + "Ppm\n");
+		tooltipText=tooltipText.concat("Materia Organica: "+ df.format(sueloItem.getPpmMO()) + "Ppm\n");
 
 		tooltipText=tooltipText.concat("Elevacion: "+df.format(sueloItem.getElevacion() ) + "\n");
+		tooltipText=tooltipText.concat("Muestra Conjunta: "+df.format(sueloItem.getCategoria() ) + "\n");
 
 
 		tooltipText=tooltipText.concat("Id: "+sueloItem.getId() + "\n");

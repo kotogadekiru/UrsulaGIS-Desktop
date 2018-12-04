@@ -59,15 +59,19 @@ public class ExcelHelper {
 		if(lastFileName != null){
 			lastFile = new File(lastFileName);
 		}
-		if(lastFile != null ){
-			fileChooser.setInitialDirectory(lastFile.getParentFile());
-			fileChooser.setInitialFileName(lastFile.getName());
-			config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
-		}
-
-		//if(file!=null)	fileChooser.setInitialDirectory(file.getParentFile());
+		if(lastFile ==null || ! lastFile.exists()) {
+			lastFile=File.listRoots()[0];
+		} 
+		//if(lastFile != null && lastFile.exists()){
+		fileChooser.setInitialDirectory(lastFile.getParentFile());
+		fileChooser.setInitialFileName(lastFile.getName());
+				
+		config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
+		
 
 		File file = fileChooser.showSaveDialog(new Stage());
+		 config.setProperty(Configuracion.LAST_FILE,file.getParent());
+		 config.save();
 
 		System.out.println("archivo seleccionado para guardar "+file);
 

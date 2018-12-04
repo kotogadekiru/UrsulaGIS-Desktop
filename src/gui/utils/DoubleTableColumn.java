@@ -22,11 +22,15 @@ public class DoubleTableColumn<T> extends TableColumn<T,String> {
 
 		//	 this.setCellValueFactory(new PropertyValueFactory<T, Date>("date"));
 		setCellValueFactory(cellData ->{
-			Double doubleValue = getMethod.apply(cellData.getValue());
+			Double doubleValue = getMethod.apply(cellData.getValue());			
 			try{
-				return new SimpleStringProperty(df.format(doubleValue));	
+				String stringValue = "0.0";
+				if(doubleValue!=null) {
+					stringValue=df.format(doubleValue);
+				}
+				return new SimpleStringProperty(stringValue);	
 			}catch(Exception e){
-				System.out.println("Falló el Decimal Format en String Table Column "+title +" para "+doubleValue);
+				System.out.println("Falló el Decimal Format en DoubleTableColumn "+title +" para "+doubleValue);
 				return new SimpleStringProperty(String.valueOf(doubleValue));
 			}
 		});

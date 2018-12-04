@@ -21,6 +21,7 @@ public class BooleanTableColumn<T> extends TableColumn<T,Boolean> {
 
 		setCellValueFactory(cellData ->{
 			Boolean doubleValue = getMethod.apply(cellData.getValue());
+			if(doubleValue == null)doubleValue=new Boolean(true);
 			try{
 				SimpleBooleanProperty sbp = new SimpleBooleanProperty(doubleValue);
 				sbp.addListener((o,old, n)->{

@@ -7,6 +7,7 @@ import java.util.Optional;
 import dao.Clasificador;
 import dao.Labor;
 import dao.suelo.Suelo;
+import gui.utils.DateConverter;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -196,12 +197,15 @@ public class SueloConfigDialogController  extends Dialog<Suelo>{
 		this.comboClasificador.setItems(FXCollections.observableArrayList(Clasificador.clasficicadores));
 		this.comboClasificador.valueProperty().bindBidirectional(labor.clasificador.tipoClasificadorProperty);
 
-		textNombre.textProperty().bindBidirectional(labor.nombreProperty);
+		//textNombre.textProperty().bindBidirectional(labor.nombreProperty);
+		textNombre.textProperty().set(labor.getNombre());
+		textNombre.textProperty().addListener((obj,old,nu)->labor.setNombre(nu));
 
-		datePickerFecha.setValue(l.fechaProperty.getValue());
-		datePickerFecha.valueProperty().addListener((obs, bool1, bool2) -> {
-			
-			l.fechaProperty.setValue(bool2);
+		datePickerFecha.setValue(DateConverter.asLocalDate(l.fecha));
+		datePickerFecha.setConverter(new DateConverter());
+		datePickerFecha.valueProperty().addListener((obs, bool1, n) -> {
+			l.setFecha(DateConverter.asDate(n));
+			//l.fechaProperty.setValue(bool2);
 		});
 	}
 

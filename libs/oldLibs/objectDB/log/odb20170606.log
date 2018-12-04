@@ -1,0 +1,64 @@
+------------------------------------------------------------------------------------------------------------------------
+
+[2017-06-06 00:13:43 #1 store] 
+Database 'C:\Users\quero\AppData\Roaming\UrsulaGIS\$ursulaGIS.odb' has been recovered (tr. 230-230)
+
+[2017-06-06 00:13:43 #2 store] 
+Database 'C:\Users\quero\AppData\Roaming\UrsulaGIS\$ursulaGIS.odb' is opened by 10684@dellRed
+
+[2017-06-06 00:13:43 #3 type] 
+Type dao.config.Lote is not enhanced.
+
+[2017-06-06 00:13:43 #4 type] 
+Type dao.config.Establecimiento is not enhanced.
+
+[2017-06-06 00:13:43 #5 type] 
+Type dao.config.Empresa is not enhanced.
+
+[2017-06-06 00:13:43 #6 type] 
+Type dao.config.Fertilizante is not enhanced.
+
+[2017-06-06 00:13:43 #7 type] 
+Type dao.Poligono is not enhanced.
+
+[2017-06-06 00:13:43 #8 type] 
+Type dao.config.Semilla is not enhanced.
+
+[2017-06-06 00:13:44 #9 type] 
+Type dao.config.Cultivo is not enhanced.
+
+[2017-06-06 00:13:44 #10 type] 
+Type dao.config.Campania is not enhanced.
+
+------------------------------------------------------------------------------------------------------------------------
+
+[2017-06-06 00:14:35 #1 store] 
+Database 'C:\Users\quero\AppData\Roaming\UrsulaGIS\$ursulaGIS.odb' has been recovered (tr. 231-231)
+
+[2017-06-06 00:14:35 #2 store] 
+Database 'C:\Users\quero\AppData\Roaming\UrsulaGIS\$ursulaGIS.odb' is opened by 1560@dellRed
+
+[2017-06-06 00:14:36 #3 type] 
+Type dao.config.Lote is not enhanced.
+
+[2017-06-06 00:14:36 #4 type] 
+Type dao.config.Establecimiento is not enhanced.
+
+[2017-06-06 00:14:36 #5 type] 
+Type dao.config.Empresa is not enhanced.
+
+[2017-06-06 00:14:36 #6 type] 
+Type dao.config.Fertilizante is not enhanced.
+
+[2017-06-06 00:14:36 #7 type] 
+Type dao.Poligono is not enhanced.
+
+[2017-06-06 00:14:36 #8 type] 
+Type dao.config.Semilla is not enhanced.
+
+[2017-06-06 00:14:36 #9 type] 
+Type dao.config.Cultivo is not enhanced.
+
+[2017-06-06 00:14:36 #10 type] 
+Type dao.config.Campania is not enhanced.
+

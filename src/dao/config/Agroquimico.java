@@ -17,7 +17,7 @@ import javafx.beans.property.StringProperty;
 import lombok.Data;
 
 @Data
-@Entity @Access(AccessType.PROPERTY)
+@Entity @Access(AccessType.FIELD)
 @NamedQueries({
 	@NamedQuery(name=Agroquimico.FIND_ALL, query="SELECT o FROM Agroquimico o") ,
 	@NamedQuery(name=Agroquimico.FIND_NAME, query="SELECT o FROM Agroquimico o where o.nombre = :name") ,
@@ -27,8 +27,8 @@ public class Agroquimico implements Comparable<Agroquimico>{
 	public static final String FIND_NAME="Agroquimico.findName";
 	
 	
-	//@Id @GeneratedValue
-	private long id;
+	@Id @GeneratedValue
+	private Long id=null;
 	
 	private StringProperty nombre = new SimpleStringProperty();
 	//private Property<Cultivo> productoProperty=new SimpleObjectProperty<Cultivo>();//values().iterator().next());;
@@ -50,7 +50,7 @@ public class Agroquimico implements Comparable<Agroquimico>{
 		nombre.set(_nombre);
 	}
 
-	@Id @GeneratedValue
+	//@Id @GeneratedValue
 	public Long getId(){
 		return this.id;
 	}

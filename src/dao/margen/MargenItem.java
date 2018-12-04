@@ -7,10 +7,13 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import dao.LaborItem;
 import dao.config.Agroquimico;
+import dao.cosecha.CosechaItem;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
-@Entity
+@EqualsAndHashCode(callSuper=true)//si no pones esto todos los hashmaps andan mal y grillar cosecha no anda
+//@Entity
 public class MargenItem extends LaborItem{
 	private Double importePulvHa =new Double(0);//= getImportePulv(harvestPolygon);
 	private Double importeFertHa =new Double(0);//= getImporteFert(harvestPolygon);

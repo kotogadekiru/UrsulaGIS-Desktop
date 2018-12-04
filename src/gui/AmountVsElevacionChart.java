@@ -64,7 +64,7 @@ public class AmountVsElevacionChart extends VBox {
 
 		//		@SuppressWarnings("unchecked")
 		//		XYChart.Series<Number, Number> series = createSeries(labor);
-		chart.setTitle(labor.getNombreProperty().get());
+		chart.setTitle(labor.getNombre());
 		chart.legendVisibleProperty().setValue(false);
 		VBox.getVgrow(chart);
 		this.getChildren().add(chart);

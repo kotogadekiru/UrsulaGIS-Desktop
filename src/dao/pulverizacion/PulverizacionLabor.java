@@ -14,15 +14,21 @@ import dao.LaborConfig;
 import dao.LaborItem;
 import dao.config.Agroquimico;
 import dao.config.Configuracion;
+import dao.config.Cultivo;
+import dao.utils.PropertyHelper;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
-@Entity
+@Getter
+@Setter(value = AccessLevel.PUBLIC)
+//@Entity
 public class PulverizacionLabor extends Labor<PulverizacionItem> {
 	private static final String COLUMNA_DOSIS = "Dosis";
 	private static final String COLUMNA_PASADAS = "CantPasada";
@@ -58,7 +64,7 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 		//config = new PulverizacionConfig();
 		Configuracion properties = getConfigLabor().getConfigProperties();
 
-		colDosisProperty = initStringProperty(PulverizacionLabor.COLUMNA_DOSIS, properties, availableColums);
+		colDosisProperty = PropertyHelper.initStringProperty(PulverizacionLabor.COLUMNA_DOSIS, properties, availableColums);
 		colAmount= new SimpleStringProperty(PulverizacionLabor.COLUMNA_DOSIS);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
 		
 //		colCantPasadasProperty =initStringProperty(PulverizacionLabor.COLUMNA_PASADAS, properties, availableColums);
@@ -121,8 +127,8 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 
 
 	public void setPropiedadesLabor(PulverizacionItem pi){
-		pi.setPrecioInsumo(this.precioInsumoProperty.get());
-		pi.setCostoLaborHa(this.precioLaborProperty.get());	
+		pi.setPrecioInsumo(this.getPrecioInsumo());
+		pi.setCostoLaborHa(this.getPrecioLabor());	
 	}
 
 	@Override
@@ -149,13 +155,13 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 	}
 
 	@Override
-	protected DoubleProperty initPrecioLaborHaProperty() {
-		return initDoubleProperty(PulverizacionLabor.COSTO_LABOR_PULVERIZACION,"0",config.getConfigProperties());
+	protected Double initPrecioLaborHa() {
+		return PropertyHelper.initDouble(PulverizacionLabor.COSTO_LABOR_PULVERIZACION,"0",config.getConfigProperties());
 	}
 
 	@Override
-	protected DoubleProperty initPrecioInsumoProperty() {
-		return initDoubleProperty(PulverizacionLabor.PRECIO_INSUMO_KEY, "0", config.getConfigProperties()); 
+	protected Double initPrecioInsumo() {
+		return PropertyHelper.initDouble(PulverizacionLabor.PRECIO_INSUMO_KEY, "0", config.getConfigProperties()); 
 		//return initDoubleProperty(Margen.COSTO_TN_KEY,  "0", );
 	//	return initDoubleProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,"0",config.getConfigProperties());
 	}

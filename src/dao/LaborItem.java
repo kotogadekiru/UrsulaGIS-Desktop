@@ -3,8 +3,7 @@ package dao;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
 import lombok.Data;
-
-import java.util.Arrays;
+import lombok.EqualsAndHashCode;
 
 import javax.persistence.Access;
 import javax.persistence.AccessType;
@@ -19,7 +18,9 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
+
 @Data
+//@EqualsAndHashCode(callSuper=true)//si no pones esto todos los hashmaps andan mal y grillar cosecha no anda
 @Entity @Access(AccessType.FIELD)//variable (el default depende de donde pongas el @Id)
 //@Entity @Access(AccessType.PROPERTY)//getter
 @Inheritance(strategy=javax.persistence.InheritanceType.TABLE_PER_CLASS)
@@ -191,20 +192,20 @@ public abstract class LaborItem implements Comparable<Object>{
 		return d;
 	}
 
-	@Override
-	public boolean equals(Object o){
-		if(o instanceof LaborItem){
-			return compareTo((LaborItem)o) == 0;
-		} else{
-			return false;
-		}
-	}
-
-	@Override public int hashCode() {
-		int result = this.getAmount().intValue();
-
-		return result;
-	}
+//	@Override
+//	public boolean equals(Object o){
+//		if(o instanceof LaborItem){
+//			return compareTo((LaborItem)o) == 0;
+//		} else{
+//			return false;
+//		}
+//	}
+//
+//	@Override public int hashCode() {
+//		int result = this.getAmount().intValue();
+//
+//		return result;
+//	}
 
 
 

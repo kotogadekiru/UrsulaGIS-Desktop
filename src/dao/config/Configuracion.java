@@ -21,7 +21,7 @@ import utils.CustomProperties;
 
 public class Configuracion{
 	public static final String URSULA_GIS_APPDATA_FOLDER = "UrsulaGIS";
-	private static final String APPDATA = "APPDATA";
+	public static final String APPDATA = "APPDATA";
 	private static final String DEFAULT_CONFIG_PROPERTIES = "/dao/config/config.properties";
 	private static final String FILE_CONFIG_PROPERTIES = "config.properties";
 	private final CustomProperties configProp = new CustomProperties();

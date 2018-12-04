@@ -2,6 +2,14 @@ package gui;
 
 import java.text.DecimalFormat;
 
+import org.geotools.data.simple.SimpleFeatureIterator;
+import org.opengis.feature.simple.SimpleFeature;
+
+import com.vividsolutions.jts.geom.Geometry;
+
+import dao.Labor;
+import dao.LaborItem;
+import gui.utils.TooltipUtil;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
@@ -15,21 +23,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-
-import org.geotools.data.simple.SimpleFeatureIterator;
-import org.opengis.feature.simple.SimpleFeature;
-
 import utils.ExcelHelper;
 import utils.ProyectionConstants;
-
-import com.vividsolutions.jts.geom.Geometry;
-
-import dao.LaborItem;
-import dao.Labor;
-import dao.cosecha.CosechaLabor;
-import gui.utils.TooltipUtil;
 
 public class CosechaHistoChart extends VBox {
 	// VBox root = new VBox();
@@ -64,7 +60,7 @@ public class CosechaHistoChart extends VBox {
 		final NumberAxis yAxis = new NumberAxis();
 		yAxis.setLabel("Superficie");
 		final BarChart<String, Number> chart = new BarChart<String, Number>(xAxis, yAxis);
-		chart.setTitle(labor.getNombreProperty().get());
+		chart.setTitle(labor.getNombre());
 //				{
 //			 /** @inheritDoc */
 //		    @Override 

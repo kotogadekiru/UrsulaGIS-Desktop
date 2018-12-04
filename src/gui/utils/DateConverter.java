@@ -1,7 +1,11 @@
 package gui.utils;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 import javafx.util.StringConverter;
 
@@ -43,8 +47,7 @@ public class DateConverter extends StringConverter<LocalDate>
 	}
 
 	// Change LocalDate to String
-	public String toString(LocalDate date) 
-	{
+	public String toString(LocalDate date) {
 		String text = null;
 
 		if (date != null) 
@@ -53,5 +56,21 @@ public class DateConverter extends StringConverter<LocalDate>
 		}
 
 		return text;
-	}	
+	}
+
+	public static Date asDate(LocalDate localDate) {
+		return Date.from(localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+	}
+
+	public static Date asDate(LocalDateTime localDateTime) {
+		return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+	}
+
+	public static LocalDate asLocalDate(Date date) {
+		return Instant.ofEpochMilli(date.getTime()).atZone(ZoneId.systemDefault()).toLocalDate();
+	}
+
+	public static LocalDateTime asLocalDateTime(Date date) {
+		return Instant.ofEpochMilli(date.getTime()).atZone(ZoneId.systemDefault()).toLocalDateTime();
+	}
 }

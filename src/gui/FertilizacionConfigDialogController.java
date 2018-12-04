@@ -1,16 +1,21 @@
 package gui;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import dao.Clasificador;
+import dao.Labor;
+import dao.config.Fertilizante;
+import dao.fertilizacion.FertilizacionLabor;
+import gui.utils.DateConverter;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
@@ -18,20 +23,12 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
 import utils.DAH;
-import dao.Clasificador;
-import dao.Labor;
-import dao.config.Cultivo;
-import dao.config.Fertilizante;
-import dao.cosecha.CosechaLabor;
-import dao.fertilizacion.FertilizacionLabor;
 
 
 /**
@@ -183,10 +180,24 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 		StringConverter<Number> converter = new NumberStringConverter();
 
 		//textPrecioGrano
-		Bindings.bindBidirectional(this.textPrecioFert.textProperty(), labor.precioInsumoProperty, converter);
+		//Bindings.bindBidirectional(this.textPrecioFert.textProperty(), labor.precioInsumoProperty, converter);
+		this.textPrecioFert.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(FertilizacionLabor.COLUMNA_PRECIO_FERT, labor.getPrecioInsumo().toString()));
+		this.textPrecioFert.textProperty().addListener((obj,old,n)->{
+			
+				labor.setPrecioInsumo(converter.fromString(n).doubleValue());
+		
+			//config.getConfigProperties().getPropertyOrDefault(CosechaLabor.PRECIO_GRANO,"0")
+			labor.config.getConfigProperties().setProperty(FertilizacionLabor.COLUMNA_PRECIO_FERT, n);
+		});
 
 		//textCostoCosechaHa
-		Bindings.bindBidirectional(this.textCostoLaborHa.textProperty(), labor.precioLaborProperty, converter);
+		//Bindings.bindBidirectional(this.textCostoLaborHa.textProperty(), labor.precioLaborProperty, converter);
+		this.textCostoLaborHa.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(FertilizacionLabor.COLUMNA_PRECIO_PASADA, labor.getPrecioLabor().toString()));
+		this.textCostoLaborHa.textProperty().addListener((obj,old,n)->{			
+			labor.setPrecioLabor(converter.fromString(n).doubleValue());
+			//config.getConfigProperties().getPropertyOrDefault(CosechaLabor.PRECIO_GRANO,"0")
+			labor.config.getConfigProperties().setProperty(FertilizacionLabor.COLUMNA_PRECIO_PASADA, n);
+		});
 
 
 		Bindings.bindBidirectional(this.textClasesClasificador.textProperty(), labor.clasificador.clasesClasificadorProperty, converter);
@@ -194,12 +205,14 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 		this.comboClasificador.setItems(FXCollections.observableArrayList(Clasificador.clasficicadores));
 		this.comboClasificador.valueProperty().bindBidirectional(labor.clasificador.tipoClasificadorProperty);
 
-		textNombre.textProperty().bindBidirectional(labor.nombreProperty);
+		textNombre.textProperty().set(labor.getNombre());
+		textNombre.textProperty().addListener((obj,old,nu)->labor.setNombre(nu));
 		
-		datePickerFecha.setValue(l.fechaProperty.getValue());
-		datePickerFecha.valueProperty().addListener((obs, bool1, bool2) -> {
-			
-			l.fechaProperty.setValue(bool2);
+		datePickerFecha.setValue(DateConverter.asLocalDate(l.fecha));
+		datePickerFecha.setConverter(new DateConverter());
+		datePickerFecha.valueProperty().addListener((obs, bool1, n) -> {
+			l.setFecha(DateConverter.asDate(n));
+			//l.fechaProperty.setValue(bool2);
 		});
 	}
 

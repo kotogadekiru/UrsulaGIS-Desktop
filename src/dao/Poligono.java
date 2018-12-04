@@ -17,6 +17,7 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Transient;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 
@@ -33,7 +34,7 @@ import utils.ProyectionConstants;
 	@NamedQuery(name=Poligono.FIND_NAME, query="SELECT o FROM Poligono o where o.nombre = :name") ,
 	@NamedQuery(name=Poligono.FIND_ACTIVOS, query="SELECT o FROM Poligono o where o.activo = true") ,
 }) 
-public class Poligono {
+public class Poligono implements Comparable<Poligono>{
 	private static final String COORDINATE_CLOSE = "}";
 	private static final String COORDINATE_OPEN = "{";
 	private static final String COORDITANTE_SEPARATOR = ",";
@@ -207,5 +208,25 @@ public class Poligono {
 	
 	public String toString(){
 		return this.getNombre();
+	}
+	
+	public Geometry toGeometry(){
+		GeometryFactory fact = new GeometryFactory();
+		List<? extends Position> positions = this.getPositions();
+		Coordinate[] coordinates = new Coordinate[positions.size()];
+		for(int i=0;i<positions.size();i++){
+			Position p = positions.get(i);	
+			Coordinate c = new Coordinate(p.getLongitude().getDegrees(),p.getLatitude().getDegrees(),p.getElevation());
+			
+			coordinates[i]=c;
+		}
+		coordinates[coordinates.length-1]=coordinates[0];//en caso de que la geometria no este cerrada
+		Polygon poly = fact.createPolygon(coordinates);	
+		return poly;
+	}
+
+	@Override
+	public int compareTo(Poligono p) {
+		return this.getNombre().compareToIgnoreCase(p.getNombre());
 	}
 }

@@ -5,35 +5,12 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.OptionalDouble;
 import java.util.stream.DoubleStream;
 
-import javafx.beans.property.Property;
-import javafx.scene.Group;
-import javafx.scene.shape.Path;
-import tasks.ProcessMapTask;
-
-import org.geotools.data.FileDataStore;
-import org.geotools.data.Query;
-import org.geotools.data.simple.SimpleFeatureCollection;
-import org.geotools.data.simple.SimpleFeatureIterator;
-import org.geotools.data.simple.SimpleFeatureSource;
-import org.geotools.factory.CommonFactoryFinder;
-import org.geotools.feature.simple.SimpleFeatureBuilder;
-import org.geotools.filter.FilterFactory;
-import org.geotools.filter.text.cql2.CQL;
-import org.geotools.filter.text.cql2.CQLException;
 import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.filter.Filter;
-
-import utils.ProyectionConstants;
 
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.index.quadtree.Quadtree;
 
 import dao.Labor;
 import dao.config.Cultivo;
@@ -42,13 +19,12 @@ import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
-import dao.margen.MargenItem;
-import dao.pulverizacion.PulverizacionItem;
-import dao.siembra.SiembraItem;
 import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.nww.LaborLayer;
+import tasks.ProcessMapTask;
+import utils.ProyectionConstants;
 
 public class ProcessNewSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 	//public Group map = new Group();
@@ -76,9 +52,9 @@ public class ProcessNewSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		Suelo suelo = new Suelo();
 		suelo.setLayer(new LaborLayer());
 		StringBuilder sb = new StringBuilder();
-		sb.append("Balance P ");
-		cosechas.forEach((c)->sb.append(c.getNombreProperty().get()+" "));
-		suelo.getNombreProperty().setValue(sb.toString());
+		sb.append("Balance de Nutrientes ");
+		cosechas.forEach((c)->sb.append(c.getNombre()+" "));
+		suelo.setNombre(sb.toString());
 		suelo.setLayer(new LaborLayer());
 		super.labor=suelo;
 
@@ -141,8 +117,12 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 		Double 	kgPCosecha = getPpmPCosecha(geomQuery);
 		
 		Double kgNSuelo = getKgNSuelo(geomQuery);	
+		//Double kgNOrganicoSuelo = getKgNOrganicoSuelo(geomQuery); //no tomo el n organico porque lo calculo al momento de hacer la recomendacion y no quiero duplicaciones
 		Double kgNFert = getKgNFertilizacion(geomQuery);
 		Double kgNCosecha = getPpmNCosecha(geomQuery);
+		
+		Double kgMoSuelo = getKgMoSuelo(geomQuery);
+		Double kgMoCosecha = getKgMoCosecha(geomQuery);
 		
 		Double 	elev = getElevCosecha(geomQuery);
 
@@ -151,16 +131,21 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 		Double newKgHaPSuelo = (kgPFert + kgPSuelo - kgPCosecha)
 				/ areaQuery;
 		
-		Double newKgHaNSuelo = (kgNFert + kgNSuelo - kgNCosecha)
+		Double newKgHaNSuelo = (kgNFert + kgNSuelo  - kgNCosecha)//no tomo el n organico porque lo calculo al momento de hacer la recomendacion y no quiero duplicaciones
+				/ areaQuery;
+		
+		Double newKgHaMOSuelo = (kgMoSuelo + kgMoCosecha)
 				/ areaQuery;
 
 //		System.out.println("\ncantFertilizante en el suelo= " + kgPSuelo);
 //		System.out.println("cantFertilizante agregada= " + kgPFert);
 //		System.out.println("cantFertilizante absorvida= " + kgPCosecha);
 //		System.out.println("newKgHaPSuelo = "+newKgHaPSuelo);
-		Double newPpmPsuelo=newKgHaPSuelo/(labor.getDensidad()/2);
+		Double newPpmPsuelo=labor.calcPpmPHaKg(newKgHaPSuelo);///(labor.getDensidad()/2);
 	//	System.out.println("newPpmPsuelo = "+newPpmPsuelo);
-		Double newPpmNsuelo=newKgHaNSuelo/labor.getDensidad();
+		Double newPpmNsuelo=labor.calcPpmNHaKg(newKgHaNSuelo);//labor.getDensidad();
+		
+		Double newPMoSuelo = labor.calcPorcMoHaKg(newKgHaMOSuelo);
 		SueloItem sueloItem = new SueloItem();
 		synchronized(labor){
 			//fi= new FertilizacionItem();					
@@ -170,6 +155,7 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 		sueloItem.setGeometry(geomQuery);
 		sueloItem.setPpmP(newPpmPsuelo);
 		sueloItem.setPpmN(newPpmNsuelo);
+		sueloItem.setPorcMO(newPMoSuelo);
 		sueloItem.setElevacion(elev);//10.0);//para que aparezca en el mapa
 
 
@@ -212,7 +198,7 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 		Double kgPCosecha = new Double(0);
 		kgPCosecha = cosechas.parallelStream().flatMapToDouble(cosecha->{
 			List<CosechaItem> items = cosecha.cachedOutStoreQuery(geometry.getEnvelopeInternal());
-			Cultivo cultivo =cosecha.producto.getValue();
+			Cultivo cultivo =cosecha.getCultivo();
 			return items.parallelStream().flatMapToDouble(item->{
 				//double rindeItem = (Double) item.getRindeTnHa();
 				//double extraccionP = item.getRindeTnHa()*cultivo.getExtP();
@@ -233,11 +219,34 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 		return kgPCosecha;
 	}
 	
+	private double getKgMoCosecha(Geometry geometry){
+		Double kgMoCosecha = new Double(0);
+		kgMoCosecha = cosechas.parallelStream().flatMapToDouble(cosecha->{
+			List<CosechaItem> items = cosecha.cachedOutStoreQuery(geometry.getEnvelopeInternal());
+			Cultivo cultivo =cosecha.getCultivo();
+			return items.parallelStream().flatMapToDouble(item->{
+				Double kgMoApHa = item.getRindeTnHa()*cultivo.getAporteMO();
+				Geometry itGeom = item.getGeometry();				
+				Double area = 0.0;
+				try {
+					//XXX posible punto de error/ exceso de demora/ inneficicencia
+					Geometry inteseccionGeom = geometry.intersection(itGeom);// Computes a
+					area = ProyectionConstants.A_HAS(inteseccionGeom.getArea());
+					// Geometry
+				} catch (Exception e) {
+					e.printStackTrace();
+				}				
+				return DoubleStream.of( kgMoApHa * area);				
+			});
+		}).sum();
+		return kgMoCosecha;
+	}
+	
 	private double getPpmPCosecha(Geometry geometry) {
 		Double kgPCosecha = new Double(0);
 		kgPCosecha = cosechas.parallelStream().flatMapToDouble(cosecha->{
 			List<CosechaItem> items = cosecha.cachedOutStoreQuery(geometry.getEnvelopeInternal());
-			Cultivo cultivo =cosecha.producto.getValue();
+			Cultivo cultivo =cosecha.getCultivo();
 			return items.parallelStream().flatMapToDouble(item->{
 				//double rindeItem = (Double) item.getRindeTnHa();
 				//double extraccionP = item.getRindeTnHa()*cultivo.getExtP();
@@ -285,12 +294,35 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 		return kgPCosecha;
 	}
 	
+	private Double getKgMoSuelo(Geometry geometry) {
+		Double kgMoSuelo = new Double(0);
+		kgMoSuelo=	suelos.parallelStream().flatMapToDouble(suelo->{
+			List<SueloItem> items = suelo.cachedOutStoreQuery(geometry.getEnvelopeInternal());
+			return items.parallelStream().flatMapToDouble(item->{
+				Double kgMoHa= suelo.getKgMoHa(item);//(Double) item.getPpmN()*suelo.getDensidad();//TODO multiplicar por la densidad del suelo
+				Geometry geom = item.getGeometry();				
+
+				Double area = 0.0;
+				try {
+					//XXX posible punto de error/ exceso de demora/ inneficicencia
+					Geometry inteseccionGeom = geometry.intersection(geom);// Computes a
+					area = ProyectionConstants.A_HAS(inteseccionGeom.getArea());
+					// Geometry
+				} catch (Exception e) {
+					e.printStackTrace();
+				}				
+				return DoubleStream.of( kgMoHa * area);				
+			});
+		}).sum();
+		return kgMoSuelo;
+	}
+	
 	private Double getKgNSuelo(Geometry geometry) {
 		Double kgNSuelo = new Double(0);
 		kgNSuelo=	suelos.parallelStream().flatMapToDouble(suelo->{
 			List<SueloItem> items = suelo.cachedOutStoreQuery(geometry.getEnvelopeInternal());
 			return items.parallelStream().flatMapToDouble(item->{
-				Double kgNHa= (Double) item.getPpmN()*suelo.getDensidad();//TODO multiplicar por la densidad del suelo
+				Double kgNHa= suelo.getKgNHa(item);//(Double) item.getPpmN()*suelo.getDensidad();//TODO multiplicar por la densidad del suelo
 				Geometry geom = item.getGeometry();				
 
 				Double area = 0.0;
@@ -308,6 +340,29 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 		return kgNSuelo;
 	}
 
+	private Double getKgNOrganicoSuelo(Geometry geometry) {
+		Double kgNSuelo = new Double(0);
+		kgNSuelo=	suelos.parallelStream().flatMapToDouble(suelo->{
+			List<SueloItem> items = suelo.cachedOutStoreQuery(geometry.getEnvelopeInternal());
+			return items.parallelStream().flatMapToDouble(item->{
+				Double kgNHa= suelo.getKgNOrganicoHa(item);//divido por 2 porque es la mitad de la campania. si supiera si es invierno o verano puedo hacer 1/3 2/3 respectivamente
+				Geometry geom = item.getGeometry();				
+
+				Double area = 0.0;
+				try {
+					//XXX posible punto de error/ exceso de demora/ inneficicencia
+					Geometry inteseccionGeom = geometry.intersection(geom);// Computes a
+					area = ProyectionConstants.A_HAS(inteseccionGeom.getArea());
+					// Geometry
+				} catch (Exception e) {
+					e.printStackTrace();
+				}				
+				return DoubleStream.of( kgNHa * area);				
+			});
+		}).sum();
+		return kgNSuelo;
+	}
+	
 
 	//busco todos los items de los mapas de suelo
 	//calculo cuantas ppm aporta al cultivo,
@@ -320,7 +375,7 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 		kgPSuelo=	suelos.parallelStream().flatMapToDouble(suelo->{
 			List<SueloItem> items = suelo.cachedOutStoreQuery(geometry.getEnvelopeInternal());
 			return items.parallelStream().flatMapToDouble(item->{
-				Double kgPHa= (Double) item.getPpmP()*suelo.getDensidad()/2;//TODO multiplicar por la densidad del suelo
+				Double kgPHa= suelo.getKgPHa(item);// (Double) item.getPpmP()*suelo.getDensidad()/2;//TODO multiplicar por la densidad del suelo
 				Geometry geom = item.getGeometry();				
 
 				Double area = 0.0;

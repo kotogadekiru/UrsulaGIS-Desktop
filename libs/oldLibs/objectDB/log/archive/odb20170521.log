@@ -1,0 +1,89 @@
+------------------------------------------------------------------------------------------------------------------------
+
+[2017-05-21 11:26:19 #1 store] 
+Database 'C:\Users\quero\AppData\Roaming\$ursulaGIS.odb' is opened by 6172@dellRed
+
+[2017-05-21 11:26:19 #2 type.registry] 
+New type dao.config.Lote
+
+[2017-05-21 11:26:19 #3 type] 
+Type dao.config.Lote is not enhanced.
+
+[2017-05-21 11:26:19 #4 type.registry] 
+New type dao.config.Establecimiento
+
+[2017-05-21 11:26:20 #5 type] 
+Type dao.config.Establecimiento is not enhanced.
+
+[2017-05-21 11:26:20 #6 type.registry] 
+New type dao.config.Empresa
+
+[2017-05-21 11:26:20 #7 type] 
+Type dao.config.Empresa is not enhanced.
+
+------------------------------------------------------------------------------------------------------------------------
+
+[2017-05-21 12:04:57 #1 store] 
+Database 'C:\Users\quero\AppData\Roaming\$ursulaGIS.odb' has been recovered (tr. 1-3)
+
+[2017-05-21 12:04:57 #2 store] 
+Database 'C:\Users\quero\AppData\Roaming\$ursulaGIS.odb' is opened by 8128@dellRed
+
+[2017-05-21 12:04:57 #3 type] 
+Type dao.config.Lote is not enhanced.
+
+[2017-05-21 12:04:57 #4 type] 
+Type dao.config.Establecimiento is not enhanced.
+
+[2017-05-21 12:04:57 #5 type] 
+Type dao.config.Empresa is not enhanced.
+
+[2017-05-21 12:05:39 #6 type.registry] 
+New type java.util.ArrayList<java.lang.Object>
+
+[2017-05-21 12:05:39 #7 type.registry] 
+New type java.util.ArrayList<dao.config.Establecimiento>
+
+------------------------------------------------------------------------------------------------------------------------
+
+[2017-05-21 12:15:48 #1 store] 
+Database 'C:\Users\quero\AppData\Roaming\$ursulaGIS.odb' has been recovered (tr. 4-12)
+
+[2017-05-21 12:15:49 #2 store] 
+Database 'C:\Users\quero\AppData\Roaming\$ursulaGIS.odb' is opened by 4812@dellRed
+
+[2017-05-21 12:15:49 #3 type] 
+Type dao.config.Lote is not enhanced.
+
+[2017-05-21 12:15:49 #4 type] 
+Type dao.config.Establecimiento is not enhanced.
+
+[2017-05-21 12:15:49 #5 type] 
+Type dao.config.Empresa is not enhanced.
+
+[2017-05-21 12:15:49 #6 type.registry] 
+New type dao.config.Fertilizante
+
+[2017-05-21 12:15:49 #7 type] 
+Type dao.config.Fertilizante is not enhanced.
+
+------------------------------------------------------------------------------------------------------------------------
+
+[2017-05-21 12:16:47 #1 store] 
+Database 'C:\Users\quero\AppData\Roaming\$ursulaGIS.odb' has been recovered (tr. 13-30)
+
+[2017-05-21 12:16:47 #2 store] 
+Database 'C:\Users\quero\AppData\Roaming\$ursulaGIS.odb' is opened by 18116@dellRed
+
+[2017-05-21 12:16:47 #3 type] 
+Type dao.config.Lote is not enhanced.
+
+[2017-05-21 12:16:47 #4 type] 
+Type dao.config.Establecimiento is not enhanced.
+
+[2017-05-21 12:16:47 #5 type] 
+Type dao.config.Empresa is not enhanced.
+
+[2017-05-21 12:16:47 #6 type] 
+Type dao.config.Fertilizante is not enhanced.
+

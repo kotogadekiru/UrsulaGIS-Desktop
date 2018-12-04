@@ -2,7 +2,6 @@ package dao.margen;
 
 import java.util.List;
 
-import javax.persistence.Entity;
 import javax.persistence.Transient;
 
 import org.geotools.data.FileDataStore;
@@ -16,12 +15,15 @@ import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.siembra.SiembraLabor;
+import dao.utils.PropertyHelper;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.StringProperty;
-import lombok.Data;
-@Data
-@Entity
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
+@Getter
+@Setter(value = AccessLevel.PUBLIC)
 public class Margen extends Labor<MargenItem> {
 	public static final String COLUMNA_RENTABILIDAD = "RENTA";
 	public static final String COLUMNA_MARGEN = "MARGEN";
@@ -88,21 +90,21 @@ public class Margen extends Labor<MargenItem> {
 
 		Configuracion properties = getConfigLabor().getConfigProperties();
 
-		this.colRentabilidad = initStringProperty(Margen.COLUMNA_RENTABILIDAD, properties, availableColums);
-		this.colMargen = initStringProperty(Margen.COLUMNA_MARGEN, properties, availableColums);
-		this.colIngreso = initStringProperty(Margen.COLUMNA_IMPORTE_COSECHA, properties, availableColums);
-		this.colCostoFertilizacion = initStringProperty(Margen.COLUMNA_IMPORTE_FERT, properties, availableColums);
-		this.colCostoPulverizacion = initStringProperty(Margen.COLUMNA_IMPORTE_PULV, properties, availableColums);
-		this.colCostoSiembra = initStringProperty(Margen.COLUMNA_IMPORTE_SIEMBR, properties, availableColums);
-		this.colCostoTotal = initStringProperty(Margen.COLUMNA_COSTO_TOTAL, properties, availableColums);
-		this.colCostoFijo = initStringProperty(Margen.COLUMNA_IMPORTE_FIJO, properties, availableColums);
+		this.colRentabilidad = PropertyHelper.initStringProperty(Margen.COLUMNA_RENTABILIDAD, properties, availableColums);
+		this.colMargen = PropertyHelper.initStringProperty(Margen.COLUMNA_MARGEN, properties, availableColums);
+		this.colIngreso = PropertyHelper.initStringProperty(Margen.COLUMNA_IMPORTE_COSECHA, properties, availableColums);
+		this.colCostoFertilizacion = PropertyHelper.initStringProperty(Margen.COLUMNA_IMPORTE_FERT, properties, availableColums);
+		this.colCostoPulverizacion = PropertyHelper.initStringProperty(Margen.COLUMNA_IMPORTE_PULV, properties, availableColums);
+		this.colCostoSiembra = PropertyHelper.initStringProperty(Margen.COLUMNA_IMPORTE_SIEMBR, properties, availableColums);
+		this.colCostoTotal = PropertyHelper.initStringProperty(Margen.COLUMNA_COSTO_TOTAL, properties, availableColums);
+		this.colCostoFijo = PropertyHelper.initStringProperty(Margen.COLUMNA_IMPORTE_FIJO, properties, availableColums);
 		
-		this.colAmount=initStringProperty(Margen.AMOUNT_COLUMN_KEY, properties, availableColums);
+		this.colAmount=PropertyHelper.initStringProperty(Margen.AMOUNT_COLUMN_KEY, properties, availableColums);
 		
 		System.out.println("colAmount de Margen en initConfig es "+colAmount.get());
-		this.costoFleteProperty=initDoubleProperty(Margen.COSTO_FLETE_KEY, "0", properties);
-		this.costoTnProperty=initDoubleProperty(Margen.COSTO_TN_KEY, "0", properties);
-		this.costoFijoHaProperty = initDoubleProperty(Margen.COSTO_FIJO_KEY, "0", properties);
+		this.costoFleteProperty=PropertyHelper.initDoubleProperty(Margen.COSTO_FLETE_KEY, "0", properties);
+		this.costoTnProperty=PropertyHelper.initDoubleProperty(Margen.COSTO_TN_KEY, "0", properties);
+		this.costoFijoHaProperty = PropertyHelper.initDoubleProperty(Margen.COSTO_FIJO_KEY, "0", properties);
 	}
 
 	@Override
@@ -170,13 +172,13 @@ public class Margen extends Labor<MargenItem> {
 	}
 	
 	@Override
-	protected DoubleProperty initPrecioLaborHaProperty() {
-		return initDoubleProperty(Margen.COSTO_FIJO_KEY,"0",config.getConfigProperties());
+	protected Double initPrecioLaborHa() {
+		return PropertyHelper.initDouble(Margen.COSTO_FIJO_KEY,"0",config.getConfigProperties());
 	}
 
 	@Override
-	protected DoubleProperty initPrecioInsumoProperty() {
-		return initDoubleProperty(Margen.COSTO_TN_KEY,  "0", config.getConfigProperties());
+	protected Double initPrecioInsumo() {
+		return PropertyHelper.initDouble(Margen.COSTO_TN_KEY,  "0", config.getConfigProperties());
 	//	return initDoubleProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,"0",config.getConfigProperties());
 	}
 	

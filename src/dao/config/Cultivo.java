@@ -23,8 +23,11 @@ import lombok.Data;
 @NamedQueries({
 	@NamedQuery(name=Cultivo.FIND_ALL, query="SELECT c FROM Cultivo c") ,
 	@NamedQuery(name=Cultivo.FIND_NAME, query="SELECT o FROM Cultivo o where o.nombre = :name") ,
+	@NamedQuery(name=Cultivo.COUNT_ALL, query="SELECT COUNT(o) FROM Cultivo o") ,
+	
 }) 
 public class Cultivo implements Comparable<Cultivo>{
+	public static final String COUNT_ALL="Cultivo.countAll";
 	public static final String FIND_ALL="Cultivo.findAll";
 	public static final String FIND_NAME = "Cultivo.findName";
 	
@@ -36,7 +39,7 @@ public class Cultivo implements Comparable<Cultivo>{
 	public static final String CEBADA = "Cebada";
 	
 	@Id @GeneratedValue
-	private long id;
+	private Long id=null;
 	
 	private String nombre =new String();
 	
@@ -48,6 +51,7 @@ public class Cultivo implements Comparable<Cultivo>{
 	
 	//mm absorvidos de agua por tn de grano producido
 	private Double absAgua=new Double(0);
+	private Double aporteMO=new Double(0);
 	
 	//es lo que se lleva el grano por cada TN 
 	private Double extN=new Double(0);
@@ -56,6 +60,8 @@ public class Cultivo implements Comparable<Cultivo>{
 	private Double extS=new Double(0);
 
 	private Double rindeEsperado=new Double(0);
+	
+	private Boolean estival = true;
 	
 	public static Map<String,Cultivo> cultivos = new HashMap<String,Cultivo>();
 	static{				//String _nombre, Double _absP, Double _extP,Double rinde
@@ -68,6 +74,8 @@ public class Cultivo implements Comparable<Cultivo>{
 	}
 	
 	public Cultivo() {
+		aporteMO=new Double(0);
+		estival = true;
 	}
 	
 	public Cultivo(String _nombre) {
@@ -111,8 +119,11 @@ public class Cultivo implements Comparable<Cultivo>{
 		c.setExtP(c.getAbsP()*0.76);
 		c.setExtK(c.getAbsK()*0.21);
 		c.setExtS(c.getAbsS()*0.35);
+		
 		c.setRindeEsperado(10d);
 		c.setAbsAgua(1000/12d);
+		c.setAporteMO(1000*(-1+c.getAbsN()/c.getExtN()));//kg por tn;  estimacion en base a la extraccion de n vs absorcion de n
+		c.setEstival(true);// se puede usar el porcentaje de los grados dias de la campania que el cultivo esta activo
 		return c;
 	}
 	
@@ -145,6 +156,7 @@ public class Cultivo implements Comparable<Cultivo>{
 		c.setExtS(c.getAbsS()*0.57);
 		c.setRindeEsperado(10d);
 		c.setAbsAgua(1000/12d);
+		c.setAporteMO(1000*(-1+c.getAbsN()/c.getExtN()));//kg por tn;  estimacion en base a la extraccion de n vs absorcion de n
 		return c;
 	}
 	
@@ -175,6 +187,8 @@ public class Cultivo implements Comparable<Cultivo>{
 		c.setExtS(c.getAbsS()*0.34);
 		c.setRindeEsperado(4d);
 		c.setAbsAgua(1000/12d);
+		c.setEstival(false);
+		c.setAporteMO(1000*(-1+c.getAbsN()/c.getExtN()));//kg por tn;  estimacion en base a la extraccion de n vs absorcion de n
 		return c;
 	}
 	
@@ -207,6 +221,8 @@ public class Cultivo implements Comparable<Cultivo>{
 		c.setExtS(c.getAbsS()*0.48);
 		c.setRindeEsperado(4d);
 		c.setAbsAgua(1000/12d);
+		c.setEstival(false);
+		c.setAporteMO(1000*(-1+c.getAbsN()/c.getExtN()));//kg por tn;  estimacion en base a la extraccion de n vs absorcion de n
 		return c;
 	}
 	
@@ -240,7 +256,8 @@ public class Cultivo implements Comparable<Cultivo>{
 		c.setRindeEsperado(4d);
 		//para producir 1 Tn de grano se necesita una lámina de agua 125 – 160 mm (Ing. Marta Castiglione)
 		c.setAbsAgua(142.5);
-		
+		c.setEstival(true);
+		c.setAporteMO(1000*(-1+c.getAbsN()/c.getExtN()));//kg por tn;  estimacion en base a la extraccion de n vs absorcion de n
 		//135 dias de desarrollo para una Soja P
 		return c;
 	}
@@ -274,7 +291,15 @@ public class Cultivo implements Comparable<Cultivo>{
 		c.setExtS(c.getAbsS()*0.64);
 		c.setRindeEsperado(6d);
 		c.setAbsAgua(1000/12d);
+		c.setEstival(true);
+		c.setAporteMO(1000*(-1+c.getAbsN()/c.getExtN()));//kg por tn;  estimacion en base a la extraccion de n vs absorcion de n
 		return c;
 	}
+
+	public boolean isEstival() {
+		return this.estival;
+	}
+
+
 }
 

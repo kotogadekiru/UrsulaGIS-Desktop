@@ -3,6 +3,9 @@ package gui;
 import java.awt.Color;
 import java.text.DecimalFormat;
 import java.util.Iterator;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
 
 import dao.Clasificador;
 import dao.Ndvi;
@@ -21,7 +24,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import tasks.ShowNDVITifFileTask;
 import utils.ExcelHelper;
-
+import lombok.extern.java.Log;
+ @Log
 public class NDVIHistoChart extends VBox {
 //	private static final String ICON = "gisUI/1-512.png";
 	public static final String[] colors = {
@@ -52,6 +56,10 @@ public class NDVIHistoChart extends VBox {
 	public NDVIHistoChart(Ndvi ndvi) {
 		super();
 
+		Handler consoleHandler = new ConsoleHandler();
+		consoleHandler.setLevel(Level.ALL);
+		log.addHandler(consoleHandler);
+		
 		final CategoryAxis xAxis = new CategoryAxis();
 		xAxis.setLabel("NDVI");
 		final NumberAxis yAxis = new NumberAxis();
@@ -99,7 +107,14 @@ public class NDVIHistoChart extends VBox {
 
 
 	private XYChart.Series<String, Number> createSeries(Ndvi ndvi) {	
-		Double[] histograma = new Double[]{ShowNDVITifFileTask.MIN_VALUE,0.29, 0.38, 0.46, 0.55, 0.64, 0.73, 0.81, ShowNDVITifFileTask.MAX_VALUE};
+	   //Double[] histograma = new Double[]{ShowNDVITifFileTask.MIN_VALUE,0.29, 0.38, 0.46, 0.55, 0.64, 0.73, 0.81, ShowNDVITifFileTask.MAX_VALUE};
+		Double[] histograma = new Double[]{ShowNDVITifFileTask.MIN_VALUE,0.2125, 0.3250, 0.4375, 0.5500, 0.6625, 0.7750, 0.8875, ShowNDVITifFileTask.MAX_VALUE};
+		
+		double delta = (ShowNDVITifFileTask.MAX_VALUE-ShowNDVITifFileTask.MIN_VALUE)/(8-0);
+		for(int i =1;i<8;i++) {
+			histograma[i]=delta*i+ShowNDVITifFileTask.MIN_VALUE;
+			
+		}
 		numClasses=histograma.length+1;//histograma tiene un elemento menos que clases porque se extiende a inf
 		
 		//numClasses = 9;//ndvi.clasificador.getNumClasses();
@@ -130,6 +145,13 @@ public class NDVIHistoChart extends VBox {
 		clasi.setHistograma(histograma);
 		Iterable<? extends GridPointAttributes> values = ndvi.getSurfaceLayer().getValues();
 		Iterator<? extends GridPointAttributes> it = values.iterator();
+		
+		if(ndvi.getPixelArea()==0.0) {
+			//log.fine("seteandoPixelArea porque esta en cero");
+			ndvi.setPixelArea(0.008084403745300213);
+		}
+		//log.fine("ndvi pixel area "+ndvi.getPixelArea());
+		
 
 		int size = 0;
 		while(it.hasNext()){
@@ -137,7 +159,7 @@ public class NDVIHistoChart extends VBox {
 			GridPointAttributes f = it.next();
 //			Color color = f.getColor();
 			double value = f.getValue();
-			if(value < ShowNDVITifFileTask.MIN_VALUE || value > ShowNDVITifFileTask.MAX_VALUE || value == 0 ){
+			if(value < ShowNDVITifFileTask.MIN_VALUE || value > ShowNDVITifFileTask.MAX_VALUE || value == ShowNDVITifFileTask.TRANSPARENT_VALUE ){
 				if(value==ShowNDVITifFileTask.CLOUD_RENDER_VALUE){
 					this.superficieNube+=ndvi.getPixelArea();
 					this.superficieTotal+=ndvi.getPixelArea();
@@ -145,11 +167,12 @@ public class NDVIHistoChart extends VBox {
 					//System.out.println("sumando un valor de agua "+value);
 					this.superficieAgua+=ndvi.getPixelArea();
 					this.superficieTotal+=ndvi.getPixelArea();
-				}
+				} 
 			//	System.out.println("continuando por ndvi fuera de rango "+value);
 				continue;
-			} else if(value >= ShowNDVITifFileTask.MIN_VALUE && value <= ShowNDVITifFileTask.MAX_VALUE) {
+			} else if(value >= ShowNDVITifFileTask.MIN_VALUE && value <= ShowNDVITifFileTask.MAX_VALUE ) {
 				size++;
+				//log.fine("agregando a cultivo el value "+value);
 				int categoria = clasi.getCategoryFor(value);
 				String colorString = colorStrings[categoria];
 			//	if(colorString == null){
