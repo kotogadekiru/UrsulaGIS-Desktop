@@ -87,10 +87,11 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 			//COPERNICUSS220170328T140051_20170328T140141_T20HNH.nd.tif
 			if(fileName.contains("COPERNICUSS2")){
 				fileName=fileName.replace("COPERNICUSS2", "");
-				fileName=fileName.substring(0, "20170328".length());
-				fileName=fileName.substring("201703".length(), fileName.length())
-						+"-"+fileName.substring("2017".length(), "201703".length())
-						+"-"+fileName.substring(0, "2017".length());
+				fileName=fileName.substring(0, "20170328".length());//anio
+				fileName=fileName.substring("201703".length(), fileName.length())//dia
+						+"-"+fileName.substring("2017".length(), "201703".length())//mes
+						+"-"+fileName.substring(0, "2017".length());//anio
+			
 			} else if(fileName.contains("LANDSATLC08C01T1_TOALC08_XXXXXX_")){
 				fileName=fileName.replace("LANDSATLC08C01T1_TOALC08_XXXXXX_", "");
 				fileName=fileName.substring(0, "20170328".length());
@@ -99,11 +100,16 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 						+"-"+fileName.substring(0, "2017".length());
 			}
 			//en este punto fileName tiene la fecha en formato 20170328 es decir YYMMdd
+			
 			String fechaString = new String (fileName);
 
 			if(ownerPoli !=null){
 				fileName = ownerPoli.getNombre() +" "+ fileName;
 			}
+			if(ndvi!=null) {
+				fileName = ndvi.getNombre();
+			}
+			
 			final ExportableAnalyticSurface surface = new ExportableAnalyticSurface();
 			surface.setSector(raster.getSector());
 			surface.setDimensions(raster.getWidth(), raster.getHeight());
@@ -362,10 +368,10 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 			// are reprojected (if necessary); primary rasters are not.
 			int width = rasters[0].getWidth();
 			int height = rasters[0].getHeight();
-			System.out.println("height: "+height+" width: "+width);
+			//System.out.println("height: "+height+" width: "+width);
 
 			DataRaster subRaster = rasters[0].getSubRaster(width, height, sector, rasters[0]);
-			System.out.println("subRaster: "+subRaster);
+			//System.out.println("subRaster: "+subRaster);
 			// Verify that the sub-raster can create a ByteBuffer, then create one.
 			if (!(subRaster instanceof BufferWrapperRaster)){
 				String msg = Logging.getMessage("ElevationModel.CannotCreateElevationBuffer", file.getName());

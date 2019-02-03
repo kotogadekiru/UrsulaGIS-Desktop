@@ -43,7 +43,7 @@ public abstract class LaborItem implements Comparable<Object>{
 	}
 	
 	public LaborItem(SimpleFeature feature) {
-		this.geometry = (Geometry) feature.getDefaultGeometry();
+		setGeometry( (Geometry) feature.getDefaultGeometry());
 	}
 
 	public void setGeometry(Geometry geom) {

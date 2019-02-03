@@ -218,11 +218,18 @@ public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLab
 	public ExtrudedPolygon  getPathTooltip( Geometry poly,SiembraItem siembraFeature) {		
 		double area = poly.getArea() *ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		DecimalFormat df = new DecimalFormat("#.00"); 
-		String tooltipText = new String(
-				"Densidad: "+ df.format(siembraFeature.getDosisHa()) + " Kg/Ha\n"								
-				);
+		
+		String tooltipText = new String("Densidad: "+ df.format(siembraFeature.getDosisML()) + " Sem/m\n");
+		tooltipText=tooltipText.concat("Kg: " + df.format(siembraFeature.getDosisHa()) + " kg/Ha\n");
+		
 		tooltipText=tooltipText.concat( "Fert: " + df.format(siembraFeature.getDosisFertLinea()) + " Kg/Ha\n"		);
 		tooltipText=tooltipText.concat( "Costo: " + df.format(siembraFeature.getImporteHa()) + " U$S/Ha\n"		);
+		
+//		String tooltipText = new String(
+//				"Densidad: "+ df.format(siembraFeature.getDosisHa()) + " Kg/Ha\n"								
+//				);
+//		tooltipText=tooltipText.concat( "Fert: " + df.format(siembraFeature.getDosisFertLinea()) + " Kg/Ha\n"		);
+//		tooltipText=tooltipText.concat( "Costo: " + df.format(siembraFeature.getImporteHa()) + " U$S/Ha\n"		);
 
 		if(area<1){
 			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");

@@ -1,10 +1,21 @@
 package dao.siembra;
-import org.opengis.feature.simple.SimpleFeature;
-import dao.LaborItem;
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.Entity;
 
-public class SiembraItem extends LaborItem {
-//	private Double elevacion = new Double(0);	
+import org.opengis.feature.simple.SimpleFeature;
+
+import dao.LaborItem;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter(value = AccessLevel.PUBLIC)
+@Entity @Access(AccessType.FIELD)
+public class SiembraItem extends LaborItem {	
 	private Double dosisHa =new Double(0);	
+	private Double dosisML =new Double(0);	//dosis metro lineal
 	private Double precioInsumo= new Double(0);	
 	private Double costoLaborHa=new Double(0);	
 	private Double importeHa=new Double(0);	
@@ -82,6 +93,7 @@ public class SiembraItem extends LaborItem {
 	@Override
 	public Object[] getSpecialElementsArray() {
 		Object[] elements = new Object[]{
+				getDosisML(),
 				getDosisHa(),
 				getDosisFertLinea(),
 				getDosisFertCostado(),
@@ -108,11 +120,4 @@ public class SiembraItem extends LaborItem {
 	public void setCostoLaborHa(Double precioPasada) {
 		this.costoLaborHa = precioPasada;
 	}
-
-
-
-
-
-
-
 }

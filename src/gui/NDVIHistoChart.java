@@ -31,15 +31,15 @@ public class NDVIHistoChart extends VBox {
 	public static final String[] colors = {
 			//	"rgb(158,1,66)",
 			//	"rgb(213,62,79)",
-			" rgb(244,109,67)", 
-			" rgb(253,174,97)",
-			" rgb(254,224,139)",
-			" rgb(255,255,191)",
-			" rgb(230,245,152)",
-			" rgb(171,221,164)",
-			"rgb(102,194,165)",
-			"rgb(50,136,189)",// "BLUE"};
-	"DARKBLUE" };
+			" rgb(244,109,67)",  //$NON-NLS-1$
+			" rgb(253,174,97)", //$NON-NLS-1$
+			" rgb(254,224,139)", //$NON-NLS-1$
+			" rgb(255,255,191)", //$NON-NLS-1$
+			" rgb(230,245,152)", //$NON-NLS-1$
+			" rgb(171,221,164)", //$NON-NLS-1$
+			"rgb(102,194,165)", //$NON-NLS-1$
+			"rgb(50,136,189)",// "BLUE"}; //$NON-NLS-1$
+	"DARKBLUE" }; //$NON-NLS-1$
 
 	// Color.rgb(94,79,162)};
 	@SuppressWarnings("unchecked")
@@ -61,11 +61,11 @@ public class NDVIHistoChart extends VBox {
 		log.addHandler(consoleHandler);
 		
 		final CategoryAxis xAxis = new CategoryAxis();
-		xAxis.setLabel("NDVI");
+		xAxis.setLabel("NDVI"); //$NON-NLS-1$
 		final NumberAxis yAxis = new NumberAxis();
-		yAxis.setLabel("Superficie");
+		yAxis.setLabel(Messages.getString("NDVIHistoChart.Superficie")); //$NON-NLS-1$
 		final BarChart<String, Number> chart = new BarChart<String, Number>(xAxis, yAxis);
-		chart.setTitle(ndvi.getNombre()+" NDVI");
+		chart.setTitle(ndvi.getNombre()+" NDVI"); //$NON-NLS-1$
 
 		series = createSeries(ndvi);
 
@@ -73,24 +73,24 @@ public class NDVIHistoChart extends VBox {
 		chart.getData().add(series);
 		VBox.getVgrow(chart);
 		this.getChildren().add(chart);
-		DecimalFormat df = new DecimalFormat("0.00");
+		DecimalFormat df = new DecimalFormat("0.00"); //$NON-NLS-1$
 		BorderPane bottom = new BorderPane();
 		
 		double superficieCultivo = superficieTotal-superficieAgua-superficieNube;
 		
 		VBox left = new VBox();
 		left.getChildren().addAll(
-				new Label("NDVI Promedio: "+df.format(ndviPromedio)),
-				new Label("Superficie Cultivo: "+df.format(superficieCultivo)+"Has "+df.format(superficieCultivo/superficieTotal*100)+"%"),
-				new Label("Superficie Nubes: "+df.format(superficieNube)+"Has "+df.format(superficieNube/superficieTotal*100)+"%"),
-				new Label("Superficie Agua: "+df.format(superficieAgua)+"Has "+df.format(superficieAgua/superficieTotal*100)+"%"),
-				new Label("Superficie Total: "+df.format(superficieTotal)+"Has")
+				new Label(Messages.getString("NDVIHistoChart.ndvi_promedio")+df.format(ndviPromedio)), //$NON-NLS-1$
+				new Label(Messages.getString("NDVIHistoChart.sup_cultivo")+df.format(superficieCultivo)+Messages.getString("NDVIHistoChart.has5")+df.format(superficieCultivo/superficieTotal*100)+"%"), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				new Label(Messages.getString("NDVIHistoChart.sup_nubes")+df.format(superficieNube)+Messages.getString("NDVIHistoChart.has4")+df.format(superficieNube/superficieTotal*100)+"%"), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				new Label(Messages.getString("NDVIHistoChart.sup_agua")+df.format(superficieAgua)+Messages.getString("NDVIHistoChart.has3")+df.format(superficieAgua/superficieTotal*100)+"%"), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				new Label(Messages.getString("NDVIHistoChart.sup_total")+df.format(superficieTotal)+Messages.getString("NDVIHistoChart.has2")) //$NON-NLS-1$ //$NON-NLS-2$
 				);
 		
 	
 		
 		VBox right = new VBox();
-		Button exportButton = new Button("Exportar");
+		Button exportButton = new Button(Messages.getString("NDVIHistoChart.exportar")); //$NON-NLS-1$
 		exportButton.setOnAction(a->{doExportarExcell();});
 		right.getChildren().add(exportButton);
 		bottom.setCenter(left);
@@ -177,9 +177,9 @@ public class NDVIHistoChart extends VBox {
 				String colorString = colorStrings[categoria];
 			//	if(colorString == null){
 					Color color = f.getColor();
-					colorString = " rgb("+color.getRed()
-					+","+color.getGreen()
-					+","+color.getBlue()+")";
+					colorString = " rgb("+color.getRed() //$NON-NLS-1$
+					+","+color.getGreen() //$NON-NLS-1$
+					+","+color.getBlue()+")"; //$NON-NLS-1$ //$NON-NLS-2$
 					colorStrings[categoria]=colorString;
 			//	}
 				Double sup = superficies[categoria];		
@@ -213,13 +213,13 @@ public class NDVIHistoChart extends VBox {
 			cData.nodeProperty().addListener(( ov, oldNode, newNode)-> {
 					if (newNode != null) {
 						if(color!=null){
-							newNode.setStyle("-fx-bar-fill: " + color + ";");
+							newNode.setStyle("-fx-bar-fill: " + color + ";"); //$NON-NLS-1$ //$NON-NLS-2$
 						}
-						DecimalFormat df = new DecimalFormat("0.00");
+						DecimalFormat df = new DecimalFormat("0.00"); //$NON-NLS-1$
 							df.setGroupingSize(3);
 							df.setGroupingUsed(true);
 							double val = cData.getYValue().doubleValue();
-							Tooltip tooltip = new Tooltip(df.format(val)+" Has\n"+df.format(val/superficieTotal*100)+"%");
+							Tooltip tooltip = new Tooltip(df.format(val)+Messages.getString("NDVIHistoChart.has1")+df.format(val/superficieTotal*100)+"%"); //$NON-NLS-1$ //$NON-NLS-2$
 							tooltip.autoHideProperty().set(false);
 							Tooltip.install(newNode,tooltip );					
 					}				

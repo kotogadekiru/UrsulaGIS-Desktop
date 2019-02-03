@@ -53,8 +53,8 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 	@FXML
 	private TextField textEntresurco;//ok
 	
-	@FXML
-	private TextField textSemillasBolsa;//ok
+//	@FXML
+//	private TextField textSemillasBolsa;//ok
 
 
 	@FXML
@@ -177,7 +177,12 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 
 	
 		this.comboInsumo.setItems(FXCollections.observableArrayList(DAH.getAllSemillas()));//Semilla.semillas.values()));
-		this.comboInsumo.valueProperty().bindBidirectional(labor.semillaProperty);
+	//	this.comboInsumo.valueProperty().bindBidirectional(labor.semillaProperty);
+		this.comboInsumo.valueProperty().addListener((obj,old,n)->{		
+			labor.setSemilla(n);
+			//labor.setPrecioLabor(converter.fromString(n).doubleValue());
+			labor.config.getConfigProperties().setProperty(SiembraLabor.SEMILLA_DEFAULT, n.getNombre());
+		});
 
 
 		StringConverter<Number> converter = new NumberStringConverter();
@@ -199,7 +204,14 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 			labor.config.getConfigProperties().setProperty(SiembraLabor.COLUMNA_PRECIO_PASADA, n);
 		});
 		
-//		Bindings.bindBidirectional(this.textEntresurco.textProperty(), labor.entreSurco, converter);
+		
+		this.textEntresurco.textProperty().set(converter.toString(labor.getEntreSurco()));
+		this.textEntresurco.textProperty().addListener((obj,old,n)->{			
+			labor.setEntreSurco(converter.fromString(n).doubleValue());
+			labor.config.getConfigProperties().setProperty(SiembraLabor.ENTRE_SURCO_DEFAULT_KEY, n);
+		});
+		
+		//Bindings.bindBidirectional(this.textEntresurco.textProperty(), labor.entreSurco, converter);
 //		
 //		Bindings.bindBidirectional(this.textSemillasBolsa.textProperty(), labor.semillasPorBolsa, converter);
 

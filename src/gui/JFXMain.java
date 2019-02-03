@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -157,6 +158,7 @@ import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
@@ -235,6 +237,8 @@ public class JFXMain extends Application {
 
 	private Stage stage=null;
 	private Scene scene=null;
+	
+	private static Configuracion config = Configuracion.getInstance();
 
 	private Dimension canvasSize = new Dimension(1500, 800);
 
@@ -330,7 +334,7 @@ public class JFXMain extends Application {
 	}
 		
 	private static void setInitialPosition() {
-		Configuracion config =Configuracion.getInstance();
+		//Configuracion config =Configuracion.getInstance();
 		double initLat = Double.parseDouble(config.getPropertyOrDefault(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LATITUDE, "-35"));
 		double initLong = Double.parseDouble(config.getPropertyOrDefault(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LONGITUDE, "-62"));
 		double initAltitude = Double.parseDouble(config.getPropertyOrDefault(GOV_NASA_WORLDWIND_AVKEY_INITIAL_ALTITUDE, "19.07e5"));
@@ -556,6 +560,7 @@ public class JFXMain extends Application {
 		addMenuItem("Ndvi",(a)->doShowNdviTable(),menuConfiguracion);
 		//addMenuItem("Labores",(a)->doShowLaboresTable(),menuConfiguracion);
 
+		addMenuItem("Idioma",(a)->doChangeLocale(),menuConfiguracion);
 
 
 		MenuItem actualizarMI=addMenuItem("Actualizar !",null,menuConfiguracion);
@@ -1570,7 +1575,7 @@ public class JFXMain extends Application {
 
 		List<Ndvi> ndviActivos = DAH.getNdviActivos();
 		for(Ndvi ndvi : ndviActivos){
-			System.out.println("mostrando ndvi activo");
+			//System.out.println("mostrando ndvi activo");
 			doShowNDVI(ndvi);
 		}
 	}
@@ -1802,7 +1807,7 @@ public class JFXMain extends Application {
 	}
 	public void viewGoTo(Position position) {
 		if(position==null) return;
-		Configuracion config =Configuracion.getInstance();
+		//Configuracion config =Configuracion.getInstance();
 		config.setProperty(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LATITUDE, String.valueOf(position.getLatitude().degrees));
 		config.setProperty(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LONGITUDE,String.valueOf(position.getLongitude().degrees));
 		config.setProperty(GOV_NASA_WORLDWIND_AVKEY_INITIAL_ALTITUDE, "64000");
@@ -2399,16 +2404,17 @@ public class JFXMain extends Application {
 		SiembraLabor labor = new SiembraLabor();
 		LaborLayer layer = new LaborLayer();
 		labor.setLayer(layer);
-		Optional<SiembraLabor> cosechaConfigured= SiembraConfigDialogController.config(labor);
-		if(!cosechaConfigured.isPresent()){//
+		labor.setNombre(poli.getNombre()+" "+"Siembra");
+		Optional<SiembraLabor> siembraConfigured= SiembraConfigDialogController.config(labor);
+		if(!siembraConfigured.isPresent()){//
 			System.out.println("el dialogo termino con cancel asi que no continuo con la cosecha");
 			labor.dispose();//libero los recursos reservados
 			return;
 		}							
-
-		TextInputDialog anchoDialog = new TextInputDialog("Cantidad por Ha");
-		anchoDialog.setTitle("Cantidad por Ha");
-		anchoDialog.setContentText("Cantidad por Ha");
+//TODO modificar el dialogo para permitir ingresar la cantidad y la unidad incluyendo kg/ha plantas/m2 y miles de plantas/Ha
+		TextInputDialog anchoDialog = new TextInputDialog("Plantas por metro cuadrado objetivo");
+		anchoDialog.setTitle("Plantas por metro cuadrado objetivo");
+		anchoDialog.setContentText("ej trigo: 200");
 		Optional<String> anchoOptional = anchoDialog.showAndWait();
 		Double rinde = Double.valueOf(anchoOptional.get());
 		CrearSiembraMapTask umTask = new CrearSiembraMapTask(labor,poli,rinde);
@@ -3648,7 +3654,7 @@ public class JFXMain extends Application {
 				List<Polygon> flatPolygons = PolygonValidator.geometryToFlatPolygons(itemGeometry);
 				for(Polygon p : flatPolygons){
 					fb.add(p);
-					Double semilla = fi.getAmount();
+					Double semilla = fi.getDosisML()*10;///XXX aca hago magia para convertir de plantas por metro a plantas cada 10 metros
 					Double linea = fi.getDosisFertLinea();
 					Double costado = fi.getDosisFertCostado();
 
@@ -4182,6 +4188,22 @@ public class JFXMain extends Application {
 			tablaStage.show();	 
 		});	
 	}
+	
+	private void doChangeLocale() {
+		List<Locale> locales = Messages.getLocales();
+		Locale actual = Messages.getLocale();
+		
+		ChoiceDialog<Locale> dialog = new ChoiceDialog<>(actual, locales);
+		dialog.setTitle("Idioma");
+		dialog.setHeaderText("Idioma del sistema");
+		dialog.setContentText("Seleccione su idioma:");
+		dialog.initOwner(stage);
+		Optional<Locale> result = dialog.showAndWait();
+		// The Java 8 way to get the response value (with lambda expression).
+		result.ifPresent(newLocale -> Messages.setLocale(newLocale));
+		
+		//TODO redibujar la ventana principal con el nuevo locale
+	}
 
 	private void doConfigEstablecimiento() {
 		Platform.runLater(()->{
@@ -4288,7 +4310,7 @@ public class JFXMain extends Application {
 
 
 		File lastFile = null;
-		String lastFileName =  Configuracion.getInstance().getPropertyOrDefault(Configuracion.LAST_FILE,"");
+		String lastFileName =  config.getPropertyOrDefault(Configuracion.LAST_FILE,"");
 		if(lastFileName != ""){
 			lastFile = new File(lastFileName);
 		}
@@ -4416,7 +4438,7 @@ public class JFXMain extends Application {
 		fileChooser.setTitle("Seleccione un archivo");
 		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(f1, f2));
 
-		Configuracion config = Configuracion.getInstance();
+		//Configuracion config = Configuracion.getInstance();
 		File lastFile = null;
 
 		String lastFileName =config.getPropertyOrDefault(Configuracion.LAST_FILE,"");
@@ -4475,7 +4497,7 @@ public class JFXMain extends Application {
 				new FileChooser.ExtensionFilter("SHP", "*.shp"));
 
 		File lastFile = null;
-		Configuracion config =Configuracion.getInstance();
+		//Configuracion config =Configuracion.getInstance();
 		String lastFileName = config.getPropertyOrDefault(Configuracion.LAST_FILE,null);
 		if(lastFileName != null){
 			lastFile = new File(lastFileName);
@@ -4515,7 +4537,7 @@ public class JFXMain extends Application {
 				new FileChooser.ExtensionFilter("TIF", "*.tif"));
 
 		File lastFile = null;
-		Configuracion config =Configuracion.getInstance();
+		//Configuracion config =Configuracion.getInstance();
 		String lastFileName = config.getPropertyOrDefault(Configuracion.LAST_FILE,null);
 		if(lastFileName != null){
 			lastFile = new File(lastFileName);
@@ -4575,6 +4597,7 @@ public class JFXMain extends Application {
 
 		// Dropping over surface
 		scene.setOnDragDropped(new EventHandler<DragEvent>() {
+			//Configuracion config = Configuracion.getInstance();
 			@Override
 			public void handle(DragEvent event) {
 				Dragboard db = event.getDragboard();
@@ -4589,9 +4612,10 @@ public class JFXMain extends Application {
 						return !filter.accept(f);
 					});
 					// update Configuracion.lasfFile
+					
 					if(shpFiles.size()>0){
 						File lastFile = shpFiles.get(shpFiles.size()-1);
-						Configuracion config = Configuracion.getInstance();
+						
 						config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
 						config.save();
 						doOpenCosecha(shpFiles);//ok!
@@ -4603,9 +4627,10 @@ public class JFXMain extends Application {
 					List<File> tifFiles = db.getFiles();
 					tifFiles.removeIf(f->!tifFilter.accept(f));
 					// update Configuracion.lasfFile
+				//	Configuracion config = Configuracion.getInstance();
 					if(tifFiles.size()>0){
 						File lastFile = tifFiles.get(tifFiles.size()-1);
-						Configuracion config = Configuracion.getInstance();
+						
 						config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
 						config.save();
 						tifFiles.stream().forEach((f)->showNdviTiffFile(f,null,null));

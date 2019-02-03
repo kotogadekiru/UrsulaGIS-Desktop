@@ -3,7 +3,6 @@ package dao.utils;
 import java.io.IOException;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -20,7 +19,6 @@ import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.spatial.BBOX;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
-import com.google.api.client.util.Lists;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Polygon;
@@ -31,8 +29,6 @@ import dao.LaborItem;
 import utils.GeometryHelper;
 
 public class LaborDataStore<E> {
-
-	private static final int CACHE_MAX_SIZE = 10000;
 	public static List<String> getAvailableColumns(Labor<? extends LaborItem> labor) {
 		List<String> availableColumns = new ArrayList<String>();
 		SimpleFeatureType sch=null;
@@ -46,6 +42,7 @@ public class LaborDataStore<E> {
 
 			List<AttributeType> types = sch.getTypes();
 			for (AttributeType at : types) {
+				//at binding para Importe_ha es class java.lang.Double
 				System.out.println("at binding para "+at.getName() +" es "+at.getBinding());
 				availableColumns.add(at.getName().toString());
 			}

@@ -72,6 +72,8 @@
                               <TextField id="textPrecioGrano" fx:id="textNombre" prefHeight="25.0" prefWidth="147.0" GridPane.columnIndex="1" />
                               <DatePicker fx:id="datePickerFecha" GridPane.columnIndex="3" />
                               <Label text="Fecha" GridPane.columnIndex="2" />
+                              <Label fx:id="entreSurcoLabel" text="Entre Surco (m)" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+                              <TextField id="textEntreSurco" fx:id="textEntresurco" promptText=" ej: 0.19" GridPane.columnIndex="3" GridPane.rowIndex="4" />
                            </children>
                         </GridPane>
                      </children>

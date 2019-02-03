@@ -227,6 +227,7 @@ public class Poligono implements Comparable<Poligono>{
 
 	@Override
 	public int compareTo(Poligono p) {
+		if(p==null || p.getNombre()==null )return -1;
 		return this.getNombre().compareToIgnoreCase(p.getNombre());
 	}
 }

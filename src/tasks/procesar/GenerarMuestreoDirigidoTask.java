@@ -177,7 +177,7 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 		tooltipText=tooltipText.concat("Nitrogeno: "+ df.format(sueloItem.getPpmN()) + "Ppm\n");
 		tooltipText=tooltipText.concat("Azufre: "+ df.format(sueloItem.getPpmS()) + "Ppm\n");
 		tooltipText=tooltipText.concat("Potasio: "+ df.format(sueloItem.getPpmK()) + "Ppm\n");
-		tooltipText=tooltipText.concat("Materia Organica: "+ df.format(sueloItem.getPpmMO()) + "Ppm\n");
+		tooltipText=tooltipText.concat("Materia Organica: "+ df.format(sueloItem.getPorcMO()) + "Ppm\n");
 
 		tooltipText=tooltipText.concat("Elevacion: "+df.format(sueloItem.getElevacion() ) + "\n");
 		tooltipText=tooltipText.concat("Muestra Conjunta: "+df.format(sueloItem.getCategoria() ) + "\n");

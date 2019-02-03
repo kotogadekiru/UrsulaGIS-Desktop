@@ -36,7 +36,7 @@ public class NdviDatePickerDialog {
 		 
 		DateConverter dc = new DateConverter();		
 		Configuracion config = Configuracion.getInstance();
-		String configDate = config.getPropertyOrDefault("LAST_DATE", dc.toString(finalDate));
+		String configDate = config.getPropertyOrDefault("LAST_DATE", dc.toString(finalDate)); //$NON-NLS-1$
 		finalDate = dc.fromString(configDate);
 		if(fin!=null){
 			finalDate= fin;
@@ -56,7 +56,7 @@ public class NdviDatePickerDialog {
 		datePickerFechaDesde.setConverter(dc);
 		datePickerFechaDesde.valueProperty().bindBidirectional(iniLdp);
 		datePickerFechaDesde.valueProperty().addListener((n,old,ob)->{
-			System.out.println("date piker fecha desde cambio a "+datePickerFechaDesde.valueProperty().get()+" initial quedo en "+initialDate);
+			System.out.println("date piker fecha desde cambio a "+datePickerFechaDesde.valueProperty().get()+" initial quedo en "+initialDate); //$NON-NLS-1$ //$NON-NLS-2$
 		});
 		
 		DatePicker datePickerFechaHasta=new DatePicker();
@@ -67,18 +67,18 @@ public class NdviDatePickerDialog {
 		});
 		
 		VBox vb = new VBox();
-		vb.getChildren().add(new HBox(new Label("Fecha Hasta"),datePickerFechaHasta));
-		vb.getChildren().add(new HBox(new Label("Fecha Desde"),datePickerFechaDesde));
+		vb.getChildren().add(new HBox(new Label(Messages.getString("NdviDatePickerDialog.fechaHasta")),datePickerFechaHasta)); //$NON-NLS-1$
+		vb.getChildren().add(new HBox(new Label(Messages.getString("NdviDatePickerDialog.fechaDesde")),datePickerFechaDesde)); //$NON-NLS-1$
 		
 		
 
 		dateDialog.setGraphic(vb);
-		dateDialog.setTitle("Configure la fecha requerida");
+		dateDialog.setTitle(Messages.getString("NdviDatePickerDialog.ConfigureLasFechasDeseadas")); //$NON-NLS-1$
 		//dateDialog.setHeaderText("Fecha Desde");
 		dateDialog.initOwner(owner);
 		Optional<ButtonType> res = dateDialog.showAndWait();
 		if(res.get().equals(ButtonType.OK)){
-			config.setProperty("LAST_DATE", dc.toString(finLdp.get()));
+			config.setProperty("LAST_DATE", dc.toString(finLdp.get())); //$NON-NLS-1$
 			config.save();
 			
 			this.initialDate=iniLdp.get();

@@ -692,7 +692,7 @@ public class SmartTableView<T> extends TableView<T> {
 		try {
 			clazz.getMethod(setMethodName, fieldType);	//check method exists
 		} catch (Exception e) {	
-			e.printStackTrace();
+			//e.printStackTrace();
 			return;
 		}
 		

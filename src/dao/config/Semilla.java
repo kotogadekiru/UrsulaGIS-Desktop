@@ -35,6 +35,14 @@ public class Semilla {
 	@Id @GeneratedValue
 	private Long id=null;
 	private String nombre = new String();
+	/**
+	 * poder germinativo
+	 */
+	private Double PG = new Double(1);
+	/**
+	 * peso de mil granos en gramos
+	 */
+	private Double pesoDeMil = new Double(150);
 	
 	@ManyToOne(cascade=CascadeType.PERSIST)
 	private Cultivo cultivo = null;
