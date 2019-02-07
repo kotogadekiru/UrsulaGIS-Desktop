@@ -29,19 +29,19 @@ import utils.ProyectionConstants;
 
 public class CosechaHistoChart extends VBox {
 	// VBox root = new VBox();
-	private static final String ICON = "gisUI/1-512.png";
+	private static final String ICON = "gisUI/1-512.png"; //$NON-NLS-1$
 	public static final String[] colors = {
 		//	"rgb(158,1,66)",
 		//	"rgb(213,62,79)",
-			" rgb(244,109,67)", 
-			" rgb(253,174,97)",
-			" rgb(254,224,139)",
-			" rgb(255,255,191)",
-			" rgb(230,245,152)",
-			" rgb(171,221,164)",
-			"rgb(102,194,165)",
-			"rgb(50,136,189)",// "BLUE"};
-	"DARKBLUE" };
+			" rgb(244,109,67)",  //$NON-NLS-1$
+			" rgb(253,174,97)", //$NON-NLS-1$
+			" rgb(254,224,139)", //$NON-NLS-1$
+			" rgb(255,255,191)", //$NON-NLS-1$
+			" rgb(230,245,152)", //$NON-NLS-1$
+			" rgb(171,221,164)", //$NON-NLS-1$
+			"rgb(102,194,165)", //$NON-NLS-1$
+			"rgb(50,136,189)",// "BLUE"}; //$NON-NLS-1$
+	"DARKBLUE" }; //$NON-NLS-1$
 
 	// Color.rgb(94,79,162)};
  	@SuppressWarnings("unchecked")
@@ -56,9 +56,9 @@ public class CosechaHistoChart extends VBox {
 		
 
 		final CategoryAxis xAxis = new CategoryAxis();
-		xAxis.setLabel("Promedio/Ha");
+		xAxis.setLabel(Messages.getString("CosechaHistoChart.10")); //$NON-NLS-1$
 		final NumberAxis yAxis = new NumberAxis();
-		yAxis.setLabel("Superficie");
+		yAxis.setLabel(Messages.getString("CosechaHistoChart.11")); //$NON-NLS-1$
 		final BarChart<String, Number> chart = new BarChart<String, Number>(xAxis, yAxis);
 		chart.setTitle(labor.getNombre());
 //				{
@@ -124,17 +124,17 @@ public class CosechaHistoChart extends VBox {
 		chart.getData().add(series);
 		VBox.getVgrow(chart);
 		this.getChildren().add(chart);
-		DecimalFormat df = new DecimalFormat("#.00");
+		DecimalFormat df = new DecimalFormat("#.00"); //$NON-NLS-1$
 		BorderPane bottom = new BorderPane();
 		VBox left = new VBox();
 		left.getChildren().addAll(
-				new Label("Superficie Total: "+df.format(superficieTotal)),
-				new Label("Cantidad: "+df.format(produccionTotal)),
-				new Label("Cantidad/Ha: "+df.format(produccionTotal/superficieTotal))
+				new Label(Messages.getString("CosechaHistoChart.13")+df.format(superficieTotal)), //$NON-NLS-1$
+				new Label(Messages.getString("CosechaHistoChart.14")+df.format(produccionTotal)), //$NON-NLS-1$
+				new Label(Messages.getString("CosechaHistoChart.15")+df.format(produccionTotal/superficieTotal)) //$NON-NLS-1$
 				//,new Label("Entropia: "+df.format(entropia))
 				);
 		VBox right = new VBox();
-		Button exportButton = new Button("Exportar");
+		Button exportButton = new Button(Messages.getString("CosechaHistoChart.16")); //$NON-NLS-1$
 		exportButton.setOnAction(a->{doExportarExcell();});
 		right.getChildren().add(exportButton);
 		bottom.setCenter(left);
@@ -148,7 +148,7 @@ public class CosechaHistoChart extends VBox {
 	
 		
 	private void doExportarExcell() {
-		System.out.println("TODO implementar doExportarExcell");
+		System.out.println("TODO implementar doExportarExcell"); //$NON-NLS-1$
 		ExcelHelper xHelper = new ExcelHelper();
 		xHelper.exportSeries(series);
 		//TODO seleccionar archivo de destino
@@ -237,11 +237,11 @@ public class CosechaHistoChart extends VBox {
 				public void changed(ObservableValue<? extends Node> ov,
 						Node oldNode, Node newNode) {
 					if (newNode != null) {
-						newNode.setStyle("-fx-bar-fill: " + color + ";");
-						DecimalFormat df = new DecimalFormat("0.00");
+						newNode.setStyle("-fx-bar-fill: " + color + ";"); //$NON-NLS-1$ //$NON-NLS-2$
+						DecimalFormat df = new DecimalFormat("0.00"); //$NON-NLS-1$
 						df.setGroupingSize(3);
 						df.setGroupingUsed(true);
-						Tooltip.install(newNode, new Tooltip(df.format(cData.getYValue())+" Has"));
+						Tooltip.install(newNode, new Tooltip(df.format(cData.getYValue())+Messages.getString("CosechaHistoChart.21"))); //$NON-NLS-1$
 					}
 				}
 			});
