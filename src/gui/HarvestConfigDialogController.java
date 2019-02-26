@@ -46,7 +46,7 @@ import gui.utils.DateConverter;
 public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 	
 
-	private static final String HARVEST_CONFIG_DIALOG_FXML = "HarvestConfigDialog.fxml";
+	private static final String HARVEST_CONFIG_DIALOG_FXML = "HarvestConfigDialog.fxml"; //$NON-NLS-1$
 
 	@FXML
 	private VBox content;
@@ -165,9 +165,9 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 
 	public HarvestConfigDialogController() {
 		super();
-		System.out.println("construyendo el controller");
+		System.out.println("construyendo el controller"); //$NON-NLS-1$
 
-		this.setTitle("Configure las opciones para su cosecha");
+		this.setTitle(Messages.getString("HarvestConfigDialogController.title")); //$NON-NLS-1$
 		Stage stage = ((Stage)this.getDialogPane().getScene().getWindow());
 		stage.getIcons().add(new Image(JFXMain.ICON));
 
@@ -178,7 +178,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		final Button btOk = (Button) this.getDialogPane().lookupButton(ButtonType.OK);
 		btOk.addEventFilter(ActionEvent.ACTION, event -> {
 			if (!validarDialog()) {
-				System.out.println("la configuracion es incorrecta");
+				System.out.println("la configuracion es incorrecta"); //$NON-NLS-1$
 				event.consume();
 			}
 		});
@@ -204,19 +204,19 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		boolean isValid =true;
 
 		if(cols.indexOf(comboRend.getValue())==-1){
-			message.append("Debe seleccionar la columna Rinde\n");
+			message.append(Messages.getString("HarvestConfigDialogController.mensaje")); //$NON-NLS-1$
 			isValid=false;
 		}
 		if(cols.indexOf(comboAnch.getValue())==-1){
-			message.append("Debe seleccionar la columna Ancho\n");
+			message.append(Messages.getString("HarvestConfigDialogController.mensaje2")); //$NON-NLS-1$
 			isValid=false;
 		}
 		if(cols.indexOf(comboDist.getValue())==-1){
-			message.append("Debe seleccionar la columna Distancia\n");
+			message.append(Messages.getString("HarvestConfigDialogController.mensaje3")); //$NON-NLS-1$
 			isValid=false;
 		}
 		if(cols.indexOf(comboCurs.getValue())==-1){
-			message.append("Debe seleccionar la columna Curso\n");
+			message.append(Messages.getString("HarvestConfigDialogController.mensaje4")); //$NON-NLS-1$
 			isValid=false;
 		}
 
@@ -233,7 +233,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		if(!isValid){
 			Alert alert = new Alert(AlertType.ERROR, message.toString(), ButtonType.OK);
 			alert.initOwner(this.getDialogPane().getScene().getWindow());
-			alert.setTitle("Validar configuracion");
+			alert.setTitle(Messages.getString("HarvestConfigDialogController.title2")); //$NON-NLS-1$
 			alert.showAndWait();
 
 		}
@@ -335,11 +335,11 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 
 
 		//StringConverter<Number> converter = new NumberStringConverter();//FIXME corregir que el separador de miles
-		DecimalFormat converter = new DecimalFormat("0.00"){
+		DecimalFormat converter = new DecimalFormat("0.00"){ //$NON-NLS-1$
 	            @Override
 	            public Object parseObject(String source)  {
-	            	if("".equals(source)||source==null){
-	            		source="0.00";
+	            	if("".equals(source)||source==null){ //$NON-NLS-1$
+	            		source="0.00"; //$NON-NLS-1$
 	            	}
 	            	try {
 						return super.parseObject(source);
@@ -431,10 +431,10 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 
 		//TODO cambiar cbMetrosPorUnidad a ComboBox para que pueda ser editable
 		Map<String,Double> unidades = new HashMap<String,Double>();
-		unidades.put("metro",1d);
-		unidades.put("pulgada",0.0254);
-		unidades.put("centimetros",0.01d);
-		unidades.put("milimetros",0.001d);
+		unidades.put(Messages.getString("HarvestConfigDialogController.12"),1d); //$NON-NLS-1$
+		unidades.put(Messages.getString("HarvestConfigDialogController.13"),0.0254); //$NON-NLS-1$
+		unidades.put(Messages.getString("HarvestConfigDialogController.14"),0.01d); //$NON-NLS-1$
+		unidades.put(Messages.getString("HarvestConfigDialogController.15"),0.001d); //$NON-NLS-1$
 		
 		
 		this.cbMetrosPorUnidad.setItems(FXCollections.observableArrayList(unidades.keySet()));
@@ -504,7 +504,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		chkOutlayers.selectedProperty().bindBidirectional(labor.config.correccionOutlayersProperty());
 		chkAncho.selectedProperty().bindBidirectional(labor.config.correccionAnchoProperty());
 		chkDemora.selectedProperty().bindBidirectional(labor.config.correccionDemoraPesadaProperty());
-		chkDemora.setTooltip(new Tooltip("Permite adelantar o atrasar cada pesada y estirar la pesada de entrada en regimen"));
+		chkDemora.setTooltip(new Tooltip(Messages.getString("HarvestConfigDialogController.16"))); //$NON-NLS-1$
 		chkRinde.selectedProperty().bindBidirectional(cosechaConfig.correccionRindeProperty());
 		chkSuperposicion.selectedProperty().bindBidirectional(labor.config.correccionSuperposicionProperty());
 		chkDistancia.selectedProperty().bindBidirectional(cosechaConfig.correccionDistanciaProperty());
@@ -546,7 +546,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 			controller.init();
 			ret = controller.showAndWait();
 		} catch (IOException e1) {
-			System.err.println("no se pudo levantar el fxml "+HARVEST_CONFIG_DIALOG_FXML);
+			System.err.println("no se pudo levantar el fxml "+HARVEST_CONFIG_DIALOG_FXML); //$NON-NLS-1$
 			e1.printStackTrace();
 			System.exit(0);
 		}

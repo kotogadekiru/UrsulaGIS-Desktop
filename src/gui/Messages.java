@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 import dao.config.Configuracion;
 
@@ -64,10 +65,15 @@ public class Messages {
 		return false;
 	}
 	
+	public static ResourceBundle getBoundle() {
+		return RESOURCE_BUNDLE_CONTAINER.get();
+	}
+	
 	public static List<Locale> getLocales(){
 		 List<Locale> locales = new ArrayList<Locale>();
 		 locales.add(new Locale("ES"));
 		 locales.add(new Locale("EN"));
+		 locales.add(new Locale("PT"));
 		return locales;
 	}
 }

@@ -647,7 +647,7 @@ public class JFXMain extends Application {
 
 		poligonosP.add((layer)->{
 			if(layer==null){
-				return "Convertir a Siembra";  //$NON-NLS-1$
+				return Messages.getString("JFXMain.poligonToSiembraAction");  //$NON-NLS-1$ //"Convertir a Siembra";  //$NON-NLS-1$
 			} else {
 				Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 				if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){
@@ -4191,16 +4191,30 @@ public class JFXMain extends Application {
 	
 	private void doChangeLocale() {
 		List<Locale> locales = Messages.getLocales();
+		
+		Function<Locale,String> capitalizeLocale = (Locale loc) ->{
+			String key = loc.getDisplayLanguage(Messages.getLocale());
+			 key = key.substring(0, 1).toUpperCase() + key.substring(1);
+			return key;
+			};
+			
+		Map<String, Locale> displayLocales =
+				locales.stream().collect(Collectors.toMap(capitalizeLocale,
+						(Locale loc) -> loc));
 		Locale actual = Messages.getLocale();
 		
-		ChoiceDialog<Locale> dialog = new ChoiceDialog<>(actual, locales);
+		ChoiceDialog<String> dialog = new ChoiceDialog<>(capitalizeLocale.apply(actual), displayLocales.keySet());
 		dialog.setTitle(Messages.getString("JFXMain.383")); //$NON-NLS-1$
 		dialog.setHeaderText(Messages.getString("JFXMain.384")); //$NON-NLS-1$
 		dialog.setContentText(Messages.getString("JFXMain.385")); //$NON-NLS-1$
 		dialog.initOwner(stage);
-		Optional<Locale> result = dialog.showAndWait();
+		
+		Optional<String> result = dialog.showAndWait();
 		// The Java 8 way to get the response value (with lambda expression).
-		result.ifPresent(newLocale -> Messages.setLocale(newLocale));
+		result.ifPresent(newLocale -> {
+			Locale selected = displayLocales.get(newLocale);
+			Messages.setLocale(selected);	
+		});
 		
 		//TODO redibujar la ventana principal con el nuevo locale
 	}

@@ -15,6 +15,7 @@ import com.vividsolutions.jts.geom.Point;
 import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
+import gui.Messages;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
 
@@ -92,16 +93,16 @@ public class OpenSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 	@Override
 	protected ExtrudedPolygon getPathTooltip(Geometry poly, SueloItem si) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		DecimalFormat df = new DecimalFormat("#.00");
+		DecimalFormat df = new DecimalFormat(Messages.getString("OpenSoilMapTask.0")); //$NON-NLS-1$
 		String tooltipText = new String(
-				" Fosforo: "+ df.format(si.getPpmP()) +"Ppm\n"
-				+"Nitrogeno: "+ df.format(si.getPpmN()) +"Ppm\n"
+				Messages.getString("OpenSoilMapTask.1")+ df.format(si.getPpmP()) +Messages.getString("OpenSoilMapTask.2") //$NON-NLS-1$ //$NON-NLS-2$
+				+Messages.getString("OpenSoilMapTask.3")+ df.format(si.getPpmN()) +Messages.getString("OpenSoilMapTask.4") //$NON-NLS-1$ //$NON-NLS-2$
 		);
 
 		if(area<1){
-			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
+			tooltipText=tooltipText.concat( Messages.getString("OpenSoilMapTask.5")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("OpenSoilMapTask.6")); //$NON-NLS-1$ //$NON-NLS-2$
 		} else {
-			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
+			tooltipText=tooltipText.concat(Messages.getString("OpenSoilMapTask.7")+df.format(area ) + Messages.getString("OpenSoilMapTask.8")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
 		return super.getExtrudedPolygonFromGeom(poly, si,tooltipText);

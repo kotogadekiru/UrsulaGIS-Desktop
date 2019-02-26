@@ -33,7 +33,7 @@ import javafx.util.converter.NumberStringConverter;
  *
  */
 public class SueloConfigDialogController  extends Dialog<Suelo>{
-	private static final String CONFIG_DIALOG_FXML = "SueloConfigDialog.fxml";
+	private static final String CONFIG_DIALOG_FXML = "SueloConfigDialog.fxml"; //$NON-NLS-1$
 
 	@FXML
 	private VBox content;
@@ -87,9 +87,9 @@ public class SueloConfigDialogController  extends Dialog<Suelo>{
 
 	public SueloConfigDialogController() {
 		super();
-		System.out.println("construyendo el controller");
+		System.out.println("construyendo el controller"); //$NON-NLS-1$
 
-		this.setTitle("Configure las opciones para su fertilización");
+		this.setTitle(Messages.getString("SueloConfigDialogController.title")); //$NON-NLS-1$
 		Stage stage = ((Stage)this.getDialogPane().getScene().getWindow());
 		stage.getIcons().add(new Image(JFXMain.ICON));
 
@@ -100,7 +100,7 @@ public class SueloConfigDialogController  extends Dialog<Suelo>{
 		final Button btOk = (Button) this.getDialogPane().lookupButton(ButtonType.OK);
 		btOk.addEventFilter(ActionEvent.ACTION, event -> {
 			if (!validarDialog()) {
-				System.out.println("la configuracion es incorrecta");
+				System.out.println("la configuracion es incorrecta"); //$NON-NLS-1$
 				event.consume();
 			}
 		});
@@ -130,7 +130,7 @@ public class SueloConfigDialogController  extends Dialog<Suelo>{
 //				(cols.indexOf(comboDosis.getValue())>-1);
 		
 		if(cols.indexOf(comboPpmP.getValue())==-1){
-			message.append("Debe seleccionar la columna Dosis\n");
+			message.append(Messages.getString("SueloConfigDialogController.mensaje")); //$NON-NLS-1$
 			isValid=false;
 		}
 		if(cols.indexOf(comboPpmN.getValue())==-1){
@@ -222,13 +222,14 @@ public class SueloConfigDialogController  extends Dialog<Suelo>{
 		try{
 			FXMLLoader myLoader = new FXMLLoader(SueloConfigDialogController.class.getResource(
 					CONFIG_DIALOG_FXML));
+			myLoader.setResources(Messages.getBoundle());
 			myLoader.load();//aca se crea el constructor
 			SueloConfigDialogController controller = ((SueloConfigDialogController) myLoader.getController());
 			controller.setLabor(labor2);
 			controller.init();
 			ret = controller.showAndWait();
 		} catch (IOException e1) {
-			System.err.println("no se pudo levantar el fxml "+CONFIG_DIALOG_FXML);
+			System.err.println("no se pudo levantar el fxml "+CONFIG_DIALOG_FXML); //$NON-NLS-1$
 			e1.printStackTrace();
 			System.exit(0);
 		}

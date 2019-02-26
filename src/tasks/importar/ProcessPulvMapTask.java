@@ -28,6 +28,7 @@ import dao.pulverizacion.PulverizacionItem;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.siembra.SiembraItem;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
+import gui.Messages;
 
 public class ProcessPulvMapTask extends ProcessMapTask<PulverizacionItem,PulverizacionLabor> {
 	double distanciaAvanceMax = 0;
@@ -196,18 +197,18 @@ public class ProcessPulvMapTask extends ProcessMapTask<PulverizacionItem,Pulveri
 
 		double area = poly.getArea() * ProyectionConstants.A_HAS();
 
-		DecimalFormat df = new DecimalFormat("#.00");
-		String tooltipText = new String("Costo Agroquimicos: "
-				+ df.format(pulv.getPrecioInsumo()*pulv.getDosis()) + " U$S/Ha\n"
-				+ "Pulverizacion: " + df.format(pulv.getImporteHa())
-				+ " U$S/Ha\n" 
+		DecimalFormat df = new DecimalFormat(Messages.getString("ProcessPulvMapTask.0")); //$NON-NLS-1$
+		String tooltipText = new String(Messages.getString("ProcessPulvMapTask.1") //$NON-NLS-1$
+				+ df.format(pulv.getPrecioInsumo()*pulv.getDosis()) + Messages.getString("ProcessPulvMapTask.2") //$NON-NLS-1$
+				+ Messages.getString("ProcessPulvMapTask.3") + df.format(pulv.getImporteHa()) //$NON-NLS-1$
+				+ Messages.getString("ProcessPulvMapTask.4")  //$NON-NLS-1$
 		// +"feature: " + featureNumber
 		);
 		
 		if(area<1){
-			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
+			tooltipText=tooltipText.concat( Messages.getString("ProcessPulvMapTask.5")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("ProcessPulvMapTask.6")); //$NON-NLS-1$ //$NON-NLS-2$
 		} else {
-			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
+			tooltipText=tooltipText.concat(Messages.getString("ProcessPulvMapTask.7")+df.format(area ) + Messages.getString("ProcessPulvMapTask.8")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
 		return super.getExtrudedPolygonFromGeom(poly, pulv,tooltipText);

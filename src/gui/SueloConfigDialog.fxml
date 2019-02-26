@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
@@ -15,11 +19,11 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="content" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.SueloConfigDialogController">
+<VBox fx:id="content" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.SueloConfigDialogController">
    <children>
       <TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="361.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE">
         <tabs>
-          <Tab text="Columnas">
+          <Tab text="%SueloConfigDialog.columnasLabel">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
@@ -45,17 +49,17 @@
                            <children>
                               <ComboBox id="comboElev" fx:id="comboPpmN" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                               <ComboBox id="comboRend" fx:id="comboPpmP" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                              <Label text="Ppm N" GridPane.rowIndex="1">
+                              <Label text="%SueloConfigDialog.ppmNLabel" GridPane.rowIndex="1">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
-                              <Label text="Ppm P" GridPane.rowIndex="2">
+                              <Label text="%SueloConfigDialog.ppmPLabel" GridPane.rowIndex="2">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
-                              <Label text="Nombre">
+                              <Label text="%SueloConfigDialog.nombreLabel">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
@@ -63,37 +67,37 @@
                               <TextField id="textPrecioGrano" fx:id="textNombre" prefHeight="25.0" prefWidth="147.0" GridPane.columnIndex="1" />
                               <DatePicker fx:id="datePickerFecha" GridPane.columnIndex="3" />
                               <Label text="Fecha" GridPane.columnIndex="2" />
-                              <Label text="Ppm K" GridPane.rowIndex="3">
+                              <Label text="%SueloConfigDialog.ppmKLabel" GridPane.rowIndex="3">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
                               <ComboBox id="comboElev" fx:id="comboPpmK" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                              <Label text="Ppm S" GridPane.rowIndex="4">
+                              <Label text="%SueloConfigDialog.ppmSLabel" GridPane.rowIndex="4">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
                               <ComboBox id="comboElev" fx:id="comboPpmS" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                              <Label text="Ppm MO" GridPane.rowIndex="5">
+                              <Label text="%SueloConfigDialog.ppmMoLabel" GridPane.rowIndex="5">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
                               <ComboBox id="comboElev" fx:id="comboPpmMO" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                              <Label text="Prof Napa" GridPane.rowIndex="6">
+                              <Label text="%SueloConfigDialog.profNapaLabel" GridPane.rowIndex="6">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
                               <ComboBox id="comboElev" fx:id="comboProfNapa" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
-                              <Label text="Agua Util Perfil" GridPane.rowIndex="7">
+                              <Label text="%SueloConfigDialog.aguaUtilPerfilLabel" GridPane.rowIndex="7">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
                               <ComboBox id="comboElev" fx:id="comboAguaUtil" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="7" />
-                              <Label text="Elevacion *" GridPane.rowIndex="8">
+                              <Label text="%SueloConfigDialog.elevacionLabel" GridPane.rowIndex="8">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
@@ -105,7 +109,7 @@
                   </AnchorPane>
             </content>
           </Tab>
-          <Tab text="Opciones">
+          <Tab text="%SueloConfigDialog.opcionesLabel">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
@@ -128,10 +132,10 @@
                               <RowConstraints maxHeight="38.0" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
-                              <Label text="Corregir:" wrapText="true" />
-                              <Label text="Clasificador" wrapText="true" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                              <Label text="%SueloConfigDialog.corregirLabel" wrapText="true" />
+                              <Label text="%SueloConfigDialog.clasificadorLabel" wrapText="true" GridPane.columnIndex="2" GridPane.rowIndex="1" />
                               <ComboBox fx:id="comboClasificador" prefWidth="150.0" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-                              <Label text="Clases Clasificador" GridPane.rowIndex="1" />
+                              <Label text="%SueloConfigDialog.clasesClasificadorLabel" GridPane.rowIndex="1" />
                               <TextField id="textToleranciaCV" fx:id="textClasesClasificador" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                            </children>
                         </GridPane>
@@ -143,7 +147,7 @@
       </TabPane>
       <FlowPane alignment="CENTER_LEFT" prefHeight="35.0" prefWidth="600.0" rowValignment="TOP">
          <children>
-            <CheckBox id="chkMakeDefault" fx:id="chkMakeDefault" alignment="CENTER" mnemonicParsing="false" prefHeight="22.0" prefWidth="161.0" text="Guardar como default">
+            <CheckBox id="chkMakeDefault" fx:id="chkMakeDefault" alignment="CENTER" mnemonicParsing="false" prefHeight="22.0" prefWidth="161.0" text="%SueloConfigDialog.guardarComoLabel">
                <opaqueInsets>
                   <Insets />
                </opaqueInsets>

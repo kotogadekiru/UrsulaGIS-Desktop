@@ -33,7 +33,7 @@ public class AmountVsElevacionChart extends VBox {
 	private static final double TOLERANCIA = 0.01;
 	//	private static final double OPEN = 0.9;
 	//	private static final double CLOSE = 1.1;
-	private static final String ICON = "gisUI/1-512.png";
+	private static final String ICON = "gisUI/1-512.png"; //$NON-NLS-1$
 	//	private String[] colors = {
 	//			"rgb(158,1,66)",
 	//			"rgb(213,62,79)",
@@ -59,7 +59,7 @@ public class AmountVsElevacionChart extends VBox {
 		super();
 		TooltipUtil.setupCustomTooltipBehavior(50,100000,50);
 		this.grupos=grupos;
-		CandleStickChart chart = new CandleStickChart("Correlacion Rinde Vs Altura", createSeries(labor));
+		CandleStickChart chart = new CandleStickChart(Messages.getString("AmountVsElevacionChart.titulo"), createSeries(labor)); //$NON-NLS-1$
 		//chart.setAxisSortingPolicy(LineChart.SortingPolicy.X_AXIS);
 
 		//		@SuppressWarnings("unchecked")

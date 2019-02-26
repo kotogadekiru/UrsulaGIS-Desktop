@@ -21,6 +21,7 @@ import dao.LaborItem;
 import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
+import gui.Messages;
 import gui.nww.LaborLayer;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
@@ -47,7 +48,7 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 		this.cantidadMinimaDeMuestrasPoligonoAMuestrear=cantMaxPoly;
 
 
-		labor.setNombre("Muestreo Dirigido");//este es el nombre que se muestra en el progressbar
+		labor.setNombre(Messages.getString("GenerarMuestreoDirigidoTask.0"));//este es el nombre que se muestra en el progressbar //$NON-NLS-1$
 	}
 
 	/**
@@ -65,9 +66,9 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 		//List<SueloItem> features = Collections.synchronizedList(new ArrayList<SueloItem>());
 		for(Labor<? extends LaborItem> c:aMuestrear){			
 			if(nombre == null){
-				nombre=labor.getNombre()+" "+c.getNombre();	
+				nombre=labor.getNombre()+Messages.getString("GenerarMuestreoDirigidoTask.1")+c.getNombre();	 //$NON-NLS-1$
 			}else {
-				nombre+=" - "+c.getNombre();
+				nombre+=Messages.getString("GenerarMuestreoDirigidoTask.2")+c.getNombre(); //$NON-NLS-1$
 			}
 
 			FeatureReader<SimpleFeatureType, SimpleFeature> reader =c.outCollection.reader();
@@ -109,7 +110,7 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 //						Polygon random =centroid.getFactory().createPolygon(coords);//{new Coordinate(x,y),new Coordinate(x,y),new Coordinate(x,y),new Coordinate(x,y)});
 //						
 						if(geometry.contains(random)){
-							System.out.println("generando un punto random "+random);
+							System.out.println(Messages.getString("GenerarMuestreoDirigidoTask.3")+random); //$NON-NLS-1$
 							SueloItem muestra = new SueloItem();
 							muestra.setCategoria(categoria);
 							muestra.setId(labor.getNextID());
@@ -151,7 +152,7 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 
 
 		
-		System.out.println("items to show antes del runlater "+itemsToShow.size());
+		System.out.println(Messages.getString("GenerarMuestreoDirigidoTask.4")+itemsToShow.size()); //$NON-NLS-1$
 		runLater(itemsToShow);
 		updateProgress(0, featureCount);
 
@@ -171,25 +172,25 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
-		DecimalFormat df = new DecimalFormat("0.00");
+		DecimalFormat df = new DecimalFormat(Messages.getString("GenerarMuestreoDirigidoTask.5")); //$NON-NLS-1$
 
-		String tooltipText = new String("Fosforo: "+ df.format(sueloItem.getPpmP()) +"Ppm\n");
-		tooltipText=tooltipText.concat("Nitrogeno: "+ df.format(sueloItem.getPpmN()) + "Ppm\n");
-		tooltipText=tooltipText.concat("Azufre: "+ df.format(sueloItem.getPpmS()) + "Ppm\n");
-		tooltipText=tooltipText.concat("Potasio: "+ df.format(sueloItem.getPpmK()) + "Ppm\n");
-		tooltipText=tooltipText.concat("Materia Organica: "+ df.format(sueloItem.getPorcMO()) + "Ppm\n");
+		String tooltipText = new String(Messages.getString("GenerarMuestreoDirigidoTask.6")+ df.format(sueloItem.getPpmP()) +Messages.getString("GenerarMuestreoDirigidoTask.7")); //$NON-NLS-1$ //$NON-NLS-2$
+		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.8")+ df.format(sueloItem.getPpmN()) + Messages.getString("GenerarMuestreoDirigidoTask.9")); //$NON-NLS-1$ //$NON-NLS-2$
+		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.10")+ df.format(sueloItem.getPpmS()) + Messages.getString("GenerarMuestreoDirigidoTask.11")); //$NON-NLS-1$ //$NON-NLS-2$
+		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.12")+ df.format(sueloItem.getPpmK()) + Messages.getString("GenerarMuestreoDirigidoTask.13")); //$NON-NLS-1$ //$NON-NLS-2$
+		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.14")+ df.format(sueloItem.getPorcMO()) + Messages.getString("GenerarMuestreoDirigidoTask.15")); //$NON-NLS-1$ //$NON-NLS-2$
 
-		tooltipText=tooltipText.concat("Elevacion: "+df.format(sueloItem.getElevacion() ) + "\n");
-		tooltipText=tooltipText.concat("Muestra Conjunta: "+df.format(sueloItem.getCategoria() ) + "\n");
+		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.16")+df.format(sueloItem.getElevacion() ) + Messages.getString("GenerarMuestreoDirigidoTask.17")); //$NON-NLS-1$ //$NON-NLS-2$
+		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.18")+df.format(sueloItem.getCategoria() ) + Messages.getString("GenerarMuestreoDirigidoTask.19")); //$NON-NLS-1$ //$NON-NLS-2$
 
 
-		tooltipText=tooltipText.concat("Id: "+sueloItem.getId() + "\n");
-		tooltipText=tooltipText.concat("Coordenadas: "+sueloItem.getGeometry().getCoordinate() + "\n");
+		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.20")+sueloItem.getId() + Messages.getString("GenerarMuestreoDirigidoTask.21")); //$NON-NLS-1$ //$NON-NLS-2$
+		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.22")+sueloItem.getGeometry().getCoordinate() + Messages.getString("GenerarMuestreoDirigidoTask.23")); //$NON-NLS-1$ //$NON-NLS-2$
 		if(area<1){
-			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
+			tooltipText=tooltipText.concat( Messages.getString("GenerarMuestreoDirigidoTask.24")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("GenerarMuestreoDirigidoTask.25")); //$NON-NLS-1$ //$NON-NLS-2$
 			//	tooltipText=tooltipText.concat( "SupOrig: "+df.format(area2 ) + "m2\n");
 		} else {
-			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
+			tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.26")+df.format(area ) + Messages.getString("GenerarMuestreoDirigidoTask.27")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		//super.getRenderPolygonFromGeom(poly, cosechaItem,tooltipText);
 		return super.getExtrudedPolygonFromGeom(poly, sueloItem,tooltipText);
