@@ -15,6 +15,7 @@ import com.vividsolutions.jts.geom.Point;
 import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
+import gui.Messages;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
 
@@ -217,13 +218,13 @@ public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLab
 	@Override
 	public ExtrudedPolygon  getPathTooltip( Geometry poly,SiembraItem siembraFeature) {		
 		double area = poly.getArea() *ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		DecimalFormat df = new DecimalFormat("#.00"); 
+		DecimalFormat df = new DecimalFormat(Messages.getString("ProcessSiembraMapTask.0"));  //$NON-NLS-1$
 		
-		String tooltipText = new String("Densidad: "+ df.format(siembraFeature.getDosisML()) + " Sem/m\n");
-		tooltipText=tooltipText.concat("Kg: " + df.format(siembraFeature.getDosisHa()) + " kg/Ha\n");
+		String tooltipText = new String(Messages.getString("ProcessSiembraMapTask.1")+ df.format(siembraFeature.getDosisML()) + Messages.getString("ProcessSiembraMapTask.2")); //$NON-NLS-1$ //$NON-NLS-2$
+		tooltipText=tooltipText.concat(Messages.getString("ProcessSiembraMapTask.3") + df.format(siembraFeature.getDosisHa()) + Messages.getString("ProcessSiembraMapTask.4")); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		tooltipText=tooltipText.concat( "Fert: " + df.format(siembraFeature.getDosisFertLinea()) + " Kg/Ha\n"		);
-		tooltipText=tooltipText.concat( "Costo: " + df.format(siembraFeature.getImporteHa()) + " U$S/Ha\n"		);
+		tooltipText=tooltipText.concat( Messages.getString("ProcessSiembraMapTask.5") + df.format(siembraFeature.getDosisFertLinea()) + Messages.getString("ProcessSiembraMapTask.6")		); //$NON-NLS-1$ //$NON-NLS-2$
+		tooltipText=tooltipText.concat( Messages.getString("ProcessSiembraMapTask.7") + df.format(siembraFeature.getImporteHa()) + Messages.getString("ProcessSiembraMapTask.8")		); //$NON-NLS-1$ //$NON-NLS-2$
 		
 //		String tooltipText = new String(
 //				"Densidad: "+ df.format(siembraFeature.getDosisHa()) + " Kg/Ha\n"								
@@ -232,9 +233,9 @@ public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLab
 //		tooltipText=tooltipText.concat( "Costo: " + df.format(siembraFeature.getImporteHa()) + " U$S/Ha\n"		);
 
 		if(area<1){
-			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
+			tooltipText=tooltipText.concat( Messages.getString("ProcessSiembraMapTask.9")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("ProcessSiembraMapTask.10")); //$NON-NLS-1$ //$NON-NLS-2$
 		} else {
-			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
+			tooltipText=tooltipText.concat(Messages.getString("ProcessSiembraMapTask.11")+df.format(area ) + Messages.getString("ProcessSiembraMapTask.12")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		return super.getExtrudedPolygonFromGeom(poly, siembraFeature,tooltipText);	
 	}

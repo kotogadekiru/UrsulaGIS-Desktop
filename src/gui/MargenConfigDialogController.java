@@ -28,7 +28,7 @@ import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
 
 public class MargenConfigDialogController  extends Dialog<Margen>{
-	private static final String CONFIG_DIALOG_FXML = "MargenConfigDialog.fxml";
+	private static final String CONFIG_DIALOG_FXML = "MargenConfigDialog.fxml"; //$NON-NLS-1$
 	
 	
 	@FXML
@@ -69,9 +69,9 @@ public class MargenConfigDialogController  extends Dialog<Margen>{
 	
 	public MargenConfigDialogController() {
 		super();
-		System.out.println("construyendo el controller");
+		System.out.println("construyendo el controller"); //$NON-NLS-1$
 
-		this.setTitle("Configure las opciones para su mapa de rentabilidades");
+		this.setTitle(Messages.getString("MargenConfigDialogController.title")); //$NON-NLS-1$
 		Stage stage = ((Stage)this.getDialogPane().getScene().getWindow());
 		stage.getIcons().add(new Image(JFXMain.ICON));
 
@@ -82,7 +82,7 @@ public class MargenConfigDialogController  extends Dialog<Margen>{
 		final Button btOk = (Button) this.getDialogPane().lookupButton(ButtonType.OK);
 		btOk.addEventFilter(ActionEvent.ACTION, event -> {
 			if (!validarDialog()) {
-				System.out.println("la configuracion es incorrecta");
+				System.out.println("la configuracion es incorrecta"); //$NON-NLS-1$
 				event.consume();
 			}
 		});
@@ -145,7 +145,7 @@ public class MargenConfigDialogController  extends Dialog<Margen>{
 		//textCostoLaborHa
 		Bindings.bindBidirectional(this.textFlete.textProperty(), labor.costoFleteProperty, converter);
 		
-		List<String> options = Arrays.asList("Rentabilidad","Margen");
+		List<String> options = Arrays.asList(Messages.getString("MargenConfigDialogController.list"),Messages.getString("MargenConfigDialogController.list2")); //$NON-NLS-1$ //$NON-NLS-2$
 		this.comboAmount.setItems(FXCollections.observableArrayList(options));
 		if(Margen.COLUMNA_RENTABILIDAD.equalsIgnoreCase(labor.colAmount.get())){				
 			this.comboAmount.getSelectionModel().select(0);
@@ -153,17 +153,17 @@ public class MargenConfigDialogController  extends Dialog<Margen>{
 			this.comboAmount.getSelectionModel().select(1);
 		}
 		this.comboAmount.valueProperty().addListener((o,s,s2)->{
-			System.out.println("cambiando colAmount a "+s2);
+			System.out.println("cambiando colAmount a "+s2); //$NON-NLS-1$
 			if(options.get(0).equalsIgnoreCase(s2)){				
 				labor.colAmount.set(Margen.COLUMNA_RENTABILIDAD);
-				String n = textNombre.textProperty().get().replace("Margen","Renta");;
+				String n = textNombre.textProperty().get().replace(Messages.getString("MargenConfigDialogController.texto"),Messages.getString("MargenConfigDialogController.texto2"));; //$NON-NLS-1$ //$NON-NLS-2$
 			
 				
-				System.out.println("nombre despues de reemplazar renta es "+n);
+				System.out.println("nombre despues de reemplazar renta es "+n); //$NON-NLS-1$
 				textNombre.textProperty().set(n);
 			} else{
 				labor.colAmount.set(Margen.COLUMNA_MARGEN);
-				String n = textNombre.textProperty().get().replace("Renta","Margen");;
+				String n = textNombre.textProperty().get().replace(Messages.getString("MargenConfigDialogController.property"),Messages.getString("MargenConfigDialogController.property2"));; //$NON-NLS-1$ //$NON-NLS-2$
 				
 				textNombre.textProperty().set(n);
 			}
@@ -196,7 +196,7 @@ public class MargenConfigDialogController  extends Dialog<Margen>{
 			controller.init();
 			ret = controller.showAndWait();
 		} catch (IOException e1) {
-			System.err.println("no se pudo levantar el fxml "+CONFIG_DIALOG_FXML);
+			System.err.println("no se pudo levantar el fxml "+CONFIG_DIALOG_FXML); //$NON-NLS-1$
 			e1.printStackTrace();
 			System.exit(0);
 		}

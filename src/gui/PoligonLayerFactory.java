@@ -111,11 +111,11 @@ public class PoligonLayerFactory {
 
 		Alert supDialog = new Alert(Alert.AlertType.INFORMATION);
 		//supDialog.initOwner(this.stage);
-		supDialog.setTitle("Medir Superficie");
-		supDialog.setHeaderText("Superficie");
+		supDialog.setTitle(Messages.getString("PoligonLayerFactory.title")); //$NON-NLS-1$
+		supDialog.setHeaderText(Messages.getString("PoligonLayerFactory.texto")); //$NON-NLS-1$
 		Text t = new Text();
 		TextField nombreTF = new TextField();
-		nombreTF.setPromptText("Nombre");
+		nombreTF.setPromptText(Messages.getString("PoligonLayerFactory.2texto2")); //$NON-NLS-1$
 		VBox vb = new VBox();
 		vb.getChildren().addAll(nombreTF,t);
 		supDialog.setGraphic(vb);
@@ -140,12 +140,12 @@ public class PoligonLayerFactory {
 			else if(event.getPropertyName().equals(MeasureTool.EVENT_POSITION_REPLACE) ||
 					event.getPropertyName().equals(MeasureTool.EVENT_POSITION_ADD) ||
 					event.getPropertyName().equals(MeasureTool.EVENT_POSITION_REMOVE) ){// no sirve EVENT_POSITION_REPLACE porque al agregar un punto no se dispara la actualizacion
-				DecimalFormat dc = new DecimalFormat("0.00");
+				DecimalFormat dc = new DecimalFormat(Messages.getString("PoligonLayerFactory.3")); //$NON-NLS-1$
 				dc.setGroupingSize(3);
 				dc.setGroupingUsed(true);
 				double	value = measureTool.getArea()/ProyectionConstants.METROS2_POR_HA;
 				if(value != valueProperty.doubleValue() && value > 0){
-					String formated = dc.format(value)+" Ha";
+					String formated = dc.format(value)+Messages.getString("PoligonLayerFactory.4"); //$NON-NLS-1$
 					t.textProperty().set(formated);
 
 
@@ -155,7 +155,7 @@ public class PoligonLayerFactory {
 
 					//System.out.println("nombre poli :"+poli.getNombre());
 					poli.setLayer(surfaceLayer);
-					surfaceLayer.setName(poli.getNombre()+" "+formated);
+					surfaceLayer.setName(poli.getNombre()+" "+formated); //$NON-NLS-1$
 					//ArrayList<? extends Position> positions = measureTool.getPositions();
 					surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, poli);
 					//surfaceLayer.setValue("POSITIONS", poli.getPositions());

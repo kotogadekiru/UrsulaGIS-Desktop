@@ -19,6 +19,7 @@ import dao.config.Configuracion;
 import dao.cosecha.CosechaLabor;
 import dao.utils.PropertyHelper;
 import gov.nasa.worldwind.geom.Position;
+import gui.Messages;
 import javafx.concurrent.Task;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -31,7 +32,7 @@ import javafx.scene.paint.Color;
 import utils.ProyectionConstants;
 
 public class ExtraerPoligonosDeLaborTask extends Task<List<Poligono>> {
-	private static final String TASK_CLOSE_ICON = "/gui/event-close.png";
+	private static final String TASK_CLOSE_ICON = Messages.getString("ExtraerPoligonosDeLaborTask.0"); //$NON-NLS-1$
 
 	private ProgressBar progressBarTask;
 	private Pane progressPane;
@@ -62,7 +63,7 @@ public class ExtraerPoligonosDeLaborTask extends Task<List<Poligono>> {
 				if(has>supMin) {//0.2){//cada poli mayor a 10m2
 				Poligono poli = featureToPoligono(next);
 
-				poli.setNombre(labor.getNombre()+" "+index);
+				poli.setNombre(labor.getNombre()+Messages.getString("ExtraerPoligonosDeLaborTask.1")+index); //$NON-NLS-1$
 				GeometryFactory fact = ((Geometry)next.getDefaultGeometry()).getFactory();
 				List<Position> positions = poli.getPositions();
 
@@ -88,7 +89,7 @@ public class ExtraerPoligonosDeLaborTask extends Task<List<Poligono>> {
 					}
 					poligonos.add(poli);
 				} else{
-					System.out.println("el poligono es chico "+has);
+					System.out.println(Messages.getString("ExtraerPoligonosDeLaborTask.2")+has); //$NON-NLS-1$
 				}
 				//}
 				index++;
@@ -211,7 +212,7 @@ public class ExtraerPoligonosDeLaborTask extends Task<List<Poligono>> {
 
 		Button cancel = new Button();
 		cancel.setOnAction(ae->{
-			System.out.println("cancelando el ProcessMapTask");
+			System.out.println(Messages.getString("ExtraerPoligonosDeLaborTask.3")); //$NON-NLS-1$
 			this.cancel();
 			this.uninstallProgressBar();
 		});

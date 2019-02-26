@@ -32,6 +32,7 @@ import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
+import gui.Messages;
 import javafx.geometry.Point2D;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
@@ -91,7 +92,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			List<AttributeType> descriptors = labor.getInStore().getSchema().getTypes();
 			for(AttributeType att:descriptors){
 			String colName = att.getName().toString();
-				if("Mappable".equalsIgnoreCase(colName)){
+				if(Messages.getString("ProcessHarvestMapTask.0").equalsIgnoreCase(colName)){ //$NON-NLS-1$
 				mappableColumn=colName;	
 				}
 			}
@@ -99,7 +100,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		} else{
 			if(labor.getInCollection() == null){//solo cambio la inCollection por la outCollection la primera vez
 				labor.setInCollection(labor.outCollection);
-				labor.outCollection=  new DefaultFeatureCollection("internal",labor.getType());
+				labor.outCollection=  new DefaultFeatureCollection(Messages.getString("ProcessHarvestMapTask.1"),labor.getType()); //$NON-NLS-1$
 			}
 			//XXX cuando es una grilla los datos estan en outstore y instore es null
 			//FIXME si leo del outCollection y luego escribo en outCollection me quedo sin memoria
@@ -274,7 +275,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 					labor.insertFeature(ci);//featureTree.insert(geom.getEnvelopeInternal(), cosechaFeature);
 				} else{
 					//System.out.println("no inserto la feature "+ci+" "+empty+" "+valid+" "+big );
-					System.out.println("no inserto el feature "+featureNumber+" porque tiene una geometria empty="+empty+" valid ="+valid+" big="+big);
+					System.out.println(Messages.getString("ProcessHarvestMapTask.2")+featureNumber+Messages.getString("ProcessHarvestMapTask.3")+empty+Messages.getString("ProcessHarvestMapTask.4")+valid+Messages.getString("ProcessHarvestMapTask.5")+big); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 				}
 
 			} else { // no es point. Estoy abriendo una cosecha de poligonos.
@@ -303,7 +304,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		labor.clearCache();
 		reader.close();
 
-		System.out.println(+puntosEliminados+" puntos eliminados por punto duplicado");
+		System.out.println(+puntosEliminados+Messages.getString("ProcessHarvestMapTask.6")); //$NON-NLS-1$
 		//TODO antes de corregir outliers usar el criterio de los cuartiles para determinar el minimo y maximo de los outliers
 		//
 		/**
@@ -313,10 +314,10 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		 * LímSup = Q3 + 1.5(Q3-Q1)
 		 */
 		if(labor.getConfiguracion().correccionOutlayersEnabled()){
-			System.out.println("corriegiendo outlayers con CV Max "+toleranciaCoeficienteVariacion);
+			System.out.println(Messages.getString("ProcessHarvestMapTask.7")+toleranciaCoeficienteVariacion); //$NON-NLS-1$
 			corregirOutlayersParalell();		
 		} else { 
-			System.out.println("no corrijo outlayers");
+			System.out.println(Messages.getString("ProcessHarvestMapTask.8")); //$NON-NLS-1$
 		}
 		if(((CosechaConfig)labor.config).calibrarRindeProperty().get()){
 			//TODO obtener el promedio ponderado por la superficie y calcular el 
@@ -421,7 +422,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 
 		// ahora que tenemos las colecciones con las categorias solo hace falta juntar las geometrias y sacar los promedios	
 		List<CosechaItem> itemsCategoria = new ArrayList<CosechaItem>();//es la lista de los items que representan a cada categoria y que devuelvo
-		DefaultFeatureCollection newOutcollection =  new DefaultFeatureCollection("internal",labor.getType());		
+		DefaultFeatureCollection newOutcollection =  new DefaultFeatureCollection(Messages.getString("ProcessHarvestMapTask.9"),labor.getType());		 //$NON-NLS-1$
 		//TODO pasar esto a parallel streams
 		//XXX por cada categoria 
 		for(int i=0;i<labor.clasificador.getNumClasses();i++){
@@ -459,7 +460,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 					buffered = colectionCat.union();
 					buffered =buffered.buffer(bufer);
 				}catch(Exception e){
-					System.out.println("hubo una excepcion uniendo las geometrias. Procediendo con precision");
+					System.out.println(Messages.getString("ProcessHarvestMapTask.10")); //$NON-NLS-1$
 					//java.lang.IllegalArgumentException: Comparison method violates its general contract!
 					try{
 					buffered= EnhancedPrecisionOp.buffer(colectionCat, bufer);//java.lang.IllegalArgumentException: Comparison method violates its general contract!
@@ -639,19 +640,19 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 						//This method is safe to be called from any thread.	
 						//updateProgress((list.size()+featureCount)/2, featureCount);
 					} else{
-						System.out.println("la query devolvio cero elementos");
+						System.out.println(Messages.getString("ProcessHarvestMapTask.11")); //$NON-NLS-1$
 					}
 					}catch(Exception e){
-						System.err.println("error en corregirOutliersParalell");
+						System.err.println(Messages.getString("ProcessHarvestMapTask.12")); //$NON-NLS-1$
 						e.printStackTrace();
 					}
 				},	(list1, list2) -> list1.addAll(list2));
 		//XXX esto termina bien. filteredFeatures tiene 114275 elementos como corresponde
 		
-		DefaultFeatureCollection newOutcollection =  new DefaultFeatureCollection("internal",labor.getType());		
+		DefaultFeatureCollection newOutcollection =  new DefaultFeatureCollection(Messages.getString("ProcessHarvestMapTask.13"),labor.getType());		 //$NON-NLS-1$
 		boolean res =	newOutcollection.addAll(filteredFeatures);
 		if(!res){
-			System.out.println("fallo el addAll(filteredFeatures)");
+			System.out.println(Messages.getString("ProcessHarvestMapTask.14")); //$NON-NLS-1$
 		}
 		//labor.cachedEnvelopes.clear();
 		labor.clearCache();
@@ -685,7 +686,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		
 		int endtOutCollectionSize = newOutcollection.size();
 		if(initOutCollectionSize !=endtOutCollectionSize){
-			System.err.println("se perdieron elementos al hacer el filtro de outlayers. init="+initOutCollectionSize+" end="+endtOutCollectionSize);
+			System.err.println(Messages.getString("ProcessHarvestMapTask.15")+initOutCollectionSize+Messages.getString("ProcessHarvestMapTask.16")+endtOutCollectionSize); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		labor.setOutCollection(newOutcollection);
 		featureCount=labor.outCollection.size();
@@ -753,7 +754,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 	 * pero que genera un resultado de cuadricula en vez de ondas suaves
 	 */
 	private void corregirOutlayersSquare(){
-		DefaultFeatureCollection newOutcollection =  new DefaultFeatureCollection("internal",labor.getType());
+		DefaultFeatureCollection newOutcollection =  new DefaultFeatureCollection(Messages.getString("ProcessHarvestMapTask.17"),labor.getType()); //$NON-NLS-1$
 		double ancho = labor.getConfiguracion().getAnchoFiltroOutlayers();		
 		double anchoLongLat = ancho*ProyectionConstants.metersToLat();
 		ReferencedEnvelope bounds = labor.outCollection.getBounds();
@@ -795,7 +796,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 						SimpleFeature f = cosecha.getFeature(labor.featureBuilder);
 						boolean res = newOutcollection.add(f);
 						if(!res){
-							System.out.println("no se pudo reinsertar la cosecha en corregirOutlayers");
+							System.out.println(Messages.getString("ProcessHarvestMapTask.18")); //$NON-NLS-1$
 						}
 					}
 				}
@@ -921,7 +922,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			double distancia =geo.distance(geo2)/ProyectionConstants.metersToLat();
 			
 			double distanciaInvert = (ancho-distancia);
-			if(distanciaInvert<0)System.out.println("distancia-1 es menor a cero "+distanciaInvert);
+			if(distanciaInvert<0)System.out.println(Messages.getString("ProcessHarvestMapTask.19")+distanciaInvert); //$NON-NLS-1$
 			//los pesos van de ~ancho^2 para los mas cercanos a 0 para los mas lejanos
 			double weight =  Math.pow(distanciaInvert,2);
 			//System.out.println("distancia="+distancia+" distanciaInvert="+distanciaInvert+" weight="+weight);
@@ -945,8 +946,8 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 //			promedioRinde = Math.max(promedioRinde,labor.minRindeProperty.doubleValue());
 			promedioAltura = sumatoriaAltura/divisor;
 		}else{
-			System.out.println("divisor es <0 "+ divisor);
-			System.out.println("sumatoria de rindes = "+sumatoriaRinde);
+			System.out.println(Messages.getString("ProcessHarvestMapTask.20")+ divisor); //$NON-NLS-1$
+			System.out.println(Messages.getString("ProcessHarvestMapTask.21")+sumatoriaRinde); //$NON-NLS-1$
 		}
 		//4) obtener la varianza (LA DIF ABSOLUTA DEL DATO Y EL PROM DE LA MUESTRA) (EJ. ABS(10-9.3)/9.3 = 13%)
 		//SI 13% ES MAYOR A TOLERANCIA CV% REEMPLAZAR POR PROMEDIO SINO NO
@@ -989,24 +990,24 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
-		DecimalFormat df = new DecimalFormat("#.00");
+		DecimalFormat df = new DecimalFormat(Messages.getString("ProcessHarvestMapTask.22")); //$NON-NLS-1$
 
-		String tooltipText = new String("Rinde: "
-				+ df.format(cosechaItem.getAmount()) + " Tn/Ha\n"
+		String tooltipText = new String(Messages.getString("ProcessHarvestMapTask.23") //$NON-NLS-1$
+				+ df.format(cosechaItem.getAmount()) + Messages.getString("ProcessHarvestMapTask.24") //$NON-NLS-1$
 				//	+ "Area: "+ df.format(area * ProyectionConstants.METROS2_POR_HA)+ " m2\n" + 
 
 				);
 
-		tooltipText=tooltipText.concat("Elevacion: "+df.format(cosechaItem.getElevacion() ) + "\n");
+		tooltipText=tooltipText.concat(Messages.getString("ProcessHarvestMapTask.25")+df.format(cosechaItem.getElevacion() ) + Messages.getString("ProcessHarvestMapTask.26")); //$NON-NLS-1$ //$NON-NLS-2$
 
-		tooltipText=tooltipText.concat("Ancho: "+df.format(cosechaItem.getAncho() ) + "\n");
-		tooltipText=tooltipText.concat("Rumbo: "+df.format(cosechaItem.getRumbo() ) + "\n");
-		tooltipText=tooltipText.concat("feature: "+cosechaItem.getId() + "\n");
+		tooltipText=tooltipText.concat(Messages.getString("ProcessHarvestMapTask.27")+df.format(cosechaItem.getAncho() ) + Messages.getString("ProcessHarvestMapTask.28")); //$NON-NLS-1$ //$NON-NLS-2$
+		tooltipText=tooltipText.concat(Messages.getString("ProcessHarvestMapTask.29")+df.format(cosechaItem.getRumbo() ) + Messages.getString("ProcessHarvestMapTask.30")); //$NON-NLS-1$ //$NON-NLS-2$
+		tooltipText=tooltipText.concat(Messages.getString("ProcessHarvestMapTask.31")+cosechaItem.getId() + Messages.getString("ProcessHarvestMapTask.32")); //$NON-NLS-1$ //$NON-NLS-2$
 		if(area<1){
-			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
+			tooltipText=tooltipText.concat( Messages.getString("ProcessHarvestMapTask.33")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("ProcessHarvestMapTask.34")); //$NON-NLS-1$ //$NON-NLS-2$
 			//	tooltipText=tooltipText.concat( "SupOrig: "+df.format(area2 ) + "m2\n");
 		} else {
-			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
+			tooltipText=tooltipText.concat(Messages.getString("ProcessHarvestMapTask.35")+df.format(area ) + Messages.getString("ProcessHarvestMapTask.36")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		//super.getRenderPolygonFromGeom(poly, cosechaItem,tooltipText);
 		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText);
@@ -1156,7 +1157,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		lastC = poly.getCoordinates()[2];
 		lastD = poly.getCoordinates()[3];
 		if(poly.getNumPoints()<3){
-			System.out.println("numpoints menor a 3");//esto es porque A y B son iguales y C y D son iguales porque l es (0,0) porque ancho es 0
+			System.out.println(Messages.getString("ProcessHarvestMapTask.37"));//esto es porque A y B son iguales y C y D son iguales porque l es (0,0) porque ancho es 0 //$NON-NLS-1$
 			//	return null;
 		}
 
@@ -1227,7 +1228,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		//		}
 
 		if(difGeom instanceof Point){
-			System.out.println("difGeom es POINT "+difGeom );
+			System.out.println(Messages.getString("ProcessHarvestMapTask.38")+difGeom ); //$NON-NLS-1$
 		}
 
 		//	cosechaFeature.setGeometry(difGeom);
@@ -1246,7 +1247,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 	 * @return una lista de poligonos que representa una grilla con un 100% de superposiocion
 	 */
 	public List<Polygon> construirGrilla(BoundingBox bounds,double ancho) {
-		System.out.println("construyendo grilla");
+		System.out.println(Messages.getString("ProcessHarvestMapTask.39")); //$NON-NLS-1$
 		List<Polygon> polygons = new ArrayList<Polygon>();
 		//convierte los bounds de longlat a metros
 		

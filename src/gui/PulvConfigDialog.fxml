@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
@@ -15,11 +19,11 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="content" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.PulverizacionConfigDialogController">
+<VBox fx:id="content" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.PulverizacionConfigDialogController">
    <children>
       <TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="361.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE">
         <tabs>
-          <Tab text="Columnas">
+          <Tab text="%PulvConfigDialog.columnasLabel">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
@@ -43,36 +47,36 @@
                           </rowConstraints>
                            <children>
                               <ComboBox id="comboRend" fx:id="comboDosis" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                              <Label text="Precio Insumo" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                              <Label text="%PulvConfigDialog.precioInsumoLabel" GridPane.columnIndex="2" GridPane.rowIndex="1">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
-                              <Label text="Dosis" GridPane.rowIndex="1">
+                              <Label text="%PulvConfigDialog.dosisLabel" GridPane.rowIndex="1">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
                               <TextField id="textPrecioGrano" fx:id="textPrecioInsumo" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-                              <Label text="Costo Lab. por Ha" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                              <Label text="%PulvConfigDialog.costoLabHaLabel" GridPane.columnIndex="2" GridPane.rowIndex="2" />
                               <TextField id="textCostoCosechaHa" fx:id="textCostoLaborHa" GridPane.columnIndex="3" GridPane.rowIndex="2" />
-                              <Label text="Insumo" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-                              <ComboBox id="comboCultivo" fx:id="comboInsumo" prefWidth="150.0" promptText="Insumo" GridPane.columnIndex="3" GridPane.rowIndex="3" />
-                              <Label text="Nombre">
+                              <Label text="%PulvConfigDialog.insumoLabel" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                              <ComboBox id="comboCultivo" fx:id="comboInsumo" prefWidth="150.0" promptText="%PulvConfigDialog.insumoMenuLabel" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+                              <Label text="%PulvConfigDialog.nombreLabel">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
                               <TextField id="textPrecioGrano" fx:id="textNombre" prefHeight="25.0" prefWidth="147.0" GridPane.columnIndex="1" />
                               <DatePicker fx:id="datePickerFecha" GridPane.columnIndex="3" />
-                              <Label text="Fecha" GridPane.columnIndex="2" />
+                              <Label text="%PulvConfigDialog.fechaLabel" GridPane.columnIndex="2" />
                            </children>
                         </GridPane>
                      </children>
                   </AnchorPane>
             </content>
           </Tab>
-          <Tab text="Opciones">
+          <Tab text="%PulvConfigDialog.opcionesLabel">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
@@ -95,10 +99,10 @@
                               <RowConstraints maxHeight="38.0" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
-                              <Label text="Corregir:" wrapText="true" />
-                              <Label text="Clasificador" wrapText="true" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                              <Label text="%PulvConfigDialog.corregirLabel" wrapText="true" />
+                              <Label text="%PulvConfigDialog.clasificadorLabel" wrapText="true" GridPane.columnIndex="2" GridPane.rowIndex="1" />
                               <ComboBox fx:id="comboClasificador" prefWidth="150.0" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-                              <Label text="Clases Clasificador" GridPane.rowIndex="1" />
+                              <Label text="%PulvConfigDialog.clasesClasificardorLabel" GridPane.rowIndex="1" />
                               <TextField id="textToleranciaCV" fx:id="textClasesClasificador" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                            </children>
                         </GridPane>
@@ -110,7 +114,7 @@
       </TabPane>
       <FlowPane alignment="CENTER_LEFT" prefHeight="35.0" prefWidth="600.0" rowValignment="TOP">
          <children>
-            <CheckBox id="chkMakeDefault" fx:id="chkMakeDefault" alignment="CENTER" mnemonicParsing="false" prefHeight="22.0" prefWidth="161.0" text="Guardar como default">
+            <CheckBox id="chkMakeDefault" fx:id="chkMakeDefault" alignment="CENTER" mnemonicParsing="false" prefHeight="22.0" prefWidth="161.0" text="%PulvConfigDialog.guardarComoLabel">
                <opaqueInsets>
                   <Insets />
                </opaqueInsets>

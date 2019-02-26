@@ -51,7 +51,7 @@ public class ColumnSelectDialog extends Dialog<Map<String, String>> {
 			ComboBox<String> cb = new ComboBox<String>();
 			cb.setItems(FXCollections.observableArrayList(availableColums));
 			
-			  cb.setPromptText("Seleccionar");
+			  cb.setPromptText(Messages.getString("ColumnSelectDialog.seleccionar")); //$NON-NLS-1$
 		        cb.setEditable(true);        
 //		        cb.valueProperty().addListener(new ChangeListener<String>() {
 //		            @Override 
@@ -110,7 +110,7 @@ public class ColumnSelectDialog extends Dialog<Map<String, String>> {
 		//	content.getChildren().add(hb);
 
 		}
-		this.setTitle("Seleccionar Las columnas correspondientes");
+		this.setTitle(Messages.getString("ColumnSelectDialog.title")); //$NON-NLS-1$
 		this.getDialogPane().setContent(gp);
 		this.getDialogPane().getButtonTypes().add(ButtonType.OK);
 		this.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);

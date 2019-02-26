@@ -28,6 +28,7 @@ import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
+import gui.Messages;
 import gui.nww.LaborLayer;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
@@ -71,7 +72,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		
 		
 		
-		labor.setNombre("Grilla cosechas");//este es el nombre que se muestra en el progressbar
+		labor.setNombre(Messages.getString("GrillarCosechasMapTask.0"));//este es el nombre que se muestra en el progressbar //$NON-NLS-1$
 	}
 
 	/**
@@ -100,9 +101,9 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 				cultivo=c.getCultivo();//.getValue();
 			}
 			if(nombre == null){
-				nombre=labor.getNombre()+" "+c.getNombre();	
+				nombre=labor.getNombre()+Messages.getString("GrillarCosechasMapTask.1")+c.getNombre();	 //$NON-NLS-1$
 			}else {
-				nombre+=" - "+c.getNombre();
+				nombre+=Messages.getString("GrillarCosechasMapTask.2")+c.getNombre(); //$NON-NLS-1$
 			}
 
 			ReferencedEnvelope b = c.outCollection.getBounds();
@@ -119,7 +120,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		List<Polygon>  grilla = construirGrilla(unionEnvelope, ancho);
 		//List<Polygon>  grilla = construirGrillaTriangular(unionEnvelope, ancho);
 		//double elementos = grilla.size();
-		System.out.println("creando una grilla con "+grilla.size()+" elementos");
+		System.out.println(Messages.getString("GrillarCosechasMapTask.3")+grilla.size()+Messages.getString("GrillarCosechasMapTask.4")); //$NON-NLS-1$ //$NON-NLS-2$
 		// 3 recorrer cada pixel de la grilla promediando los valores y generando los nuevos items de la cosecha
 
 		featureCount = grilla.size();
@@ -157,7 +158,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 								//	synchronized(this){
 										boolean res = features.add(f);
 										if(!res){
-											System.out.println("no se pudo agregar la feature "+f);
+											System.out.println(Messages.getString("GrillarCosechasMapTask.5")+f); //$NON-NLS-1$
 										}
 								//	}
 
@@ -167,7 +168,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 							updateProgress( this.featureNumber, featureCount);
 
 						}catch(Exception e){
-							System.err.println("error al construir un elemento de la grilla");
+							System.err.println(Messages.getString("GrillarCosechasMapTask.6")); //$NON-NLS-1$
 							e.printStackTrace();
 						}
 						},
@@ -208,16 +209,16 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		//			updateProgress( this.featureNumber, featureCount);
 		//		});
 
-		System.out.println("cree una union de "+byPolygon.size()+" elementos");
+		System.out.println(Messages.getString("GrillarCosechasMapTask.7")+byPolygon.size()+Messages.getString("GrillarCosechasMapTask.8")); //$NON-NLS-1$ //$NON-NLS-2$
 
 //FIXME esto hace que la grilla no tenga memoria
 		if(labor.inCollection == null){
-			labor.inCollection = new DefaultFeatureCollection("internal",labor.getType());
+			labor.inCollection = new DefaultFeatureCollection(Messages.getString("GrillarCosechasMapTask.9"),labor.getType()); //$NON-NLS-1$
 		}
 		labor.inCollection.addAll(features);
 		boolean ret= labor.outCollection.addAll(features);
 		if(!ret){//XXX si esto falla es provablemente porque se estan creando mas de una feature con el mismo id
-			System.out.println("no se pudieron agregar las features al outCollection");
+			System.out.println(Messages.getString("GrillarCosechasMapTask.10")); //$NON-NLS-1$
 		}
 
 		//TODO 4 mostrar la cosecha sintetica creada
@@ -226,7 +227,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		runLater(byPolygon.values());
 		updateProgress(0, featureCount);
 		long time=System.currentTimeMillis()-init;
-		System.out.println("tarde "+time+" milisegundos en unir las cosechas. es "+time/featureCount+" milisegundos por poligono");
+		System.out.println(Messages.getString("GrillarCosechasMapTask.11")+time+Messages.getString("GrillarCosechasMapTask.12")+time/featureCount+Messages.getString("GrillarCosechasMapTask.13")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	/**
@@ -261,7 +262,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 				intersections.add(g);
 			
 			}catch(Exception e){
-				System.err.println("no se pudo hacer la interseccion entre\n"+poly+"\n y\n"+g);
+				System.err.println(Messages.getString("GrillarCosechasMapTask.14")+poly+Messages.getString("GrillarCosechasMapTask.15")+g); //$NON-NLS-1$ //$NON-NLS-2$
 			}		
 		}
 
@@ -349,7 +350,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 	 * @return una lista de poligonos que representa una grilla con un 100% de superposiocion
 	 */
 	public static List<Polygon> construirGrilla(BoundingBox bounds,double ancho) {
-		System.out.println("construyendo grilla");
+		System.out.println(Messages.getString("GrillarCosechasMapTask.16")); //$NON-NLS-1$
 		List<Polygon> polygons = new ArrayList<Polygon>();
 		//convierte los bounds de longlat a metros
 		Double minX = bounds.getMinX()/ProyectionConstants.metersToLong() - ancho/2;
@@ -404,12 +405,12 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 	 * @return una lista de poligonos que representa una grilla con un 100% de superposiocion
 	 */
 	private List<Polygon> construirGrillaTriangular(BoundingBox bounds,double ancho) {
-		System.out.println("construyendo grilla de triangulos");
+		System.out.println(Messages.getString("GrillarCosechasMapTask.17")); //$NON-NLS-1$
 		List<Polygon> polygons = new ArrayList<Polygon>();
 		Double sen60 = Math.sin(Math.toRadians(60));
 		Double h=ancho*sen60;
 		
-		System.out.println("creando una grilla triangular con ancho= "+ancho+" y alto= "+h);
+		System.out.println(Messages.getString("GrillarCosechasMapTask.18")+ancho+Messages.getString("GrillarCosechasMapTask.19")+h); //$NON-NLS-1$ //$NON-NLS-2$
 		//convierte los bounds de longlat a metros
 		Double minX = bounds.getMinX()/ProyectionConstants.metersToLong() - ancho/2;
 		Double minY = bounds.getMinY()/ProyectionConstants.metersToLat() - h/2;
@@ -456,24 +457,24 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
-		DecimalFormat df = new DecimalFormat("0.00");
+		DecimalFormat df = new DecimalFormat(Messages.getString("GrillarCosechasMapTask.20")); //$NON-NLS-1$
 
-		String tooltipText = new String("Rinde: "
-				+ df.format(cosechaItem.getAmount()) + " Tn/Ha\n"
+		String tooltipText = new String(Messages.getString("GrillarCosechasMapTask.21") //$NON-NLS-1$
+				+ df.format(cosechaItem.getAmount()) + Messages.getString("GrillarCosechasMapTask.22") //$NON-NLS-1$
 				//	+ "Area: "+ df.format(area * ProyectionConstants.METROS2_POR_HA)+ " m2\n" + 
 
 				);
 
-		tooltipText=tooltipText.concat("Elevacion: "+df.format(cosechaItem.getElevacion() ) + "\n");
+		tooltipText=tooltipText.concat(Messages.getString("GrillarCosechasMapTask.23")+df.format(cosechaItem.getElevacion() ) + Messages.getString("GrillarCosechasMapTask.24")); //$NON-NLS-1$ //$NON-NLS-2$
 
-		tooltipText=tooltipText.concat("Ancho: "+df.format(cosechaItem.getAncho() ) + "\n");
-		tooltipText=tooltipText.concat("Rumbo: "+df.format(cosechaItem.getRumbo() ) + "\n");
-		tooltipText=tooltipText.concat("feature: "+cosechaItem.getId() + "\n");
+		tooltipText=tooltipText.concat(Messages.getString("GrillarCosechasMapTask.25")+df.format(cosechaItem.getAncho() ) + Messages.getString("GrillarCosechasMapTask.26")); //$NON-NLS-1$ //$NON-NLS-2$
+		tooltipText=tooltipText.concat(Messages.getString("GrillarCosechasMapTask.27")+df.format(cosechaItem.getRumbo() ) + Messages.getString("GrillarCosechasMapTask.28")); //$NON-NLS-1$ //$NON-NLS-2$
+		tooltipText=tooltipText.concat(Messages.getString("GrillarCosechasMapTask.29")+cosechaItem.getId() + Messages.getString("GrillarCosechasMapTask.30")); //$NON-NLS-1$ //$NON-NLS-2$
 		if(area<1){
-			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
+			tooltipText=tooltipText.concat( Messages.getString("GrillarCosechasMapTask.31")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("GrillarCosechasMapTask.32")); //$NON-NLS-1$ //$NON-NLS-2$
 			//	tooltipText=tooltipText.concat( "SupOrig: "+df.format(area2 ) + "m2\n");
 		} else {
-			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
+			tooltipText=tooltipText.concat(Messages.getString("GrillarCosechasMapTask.33")+df.format(area ) + Messages.getString("GrillarCosechasMapTask.34")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		//super.getRenderPolygonFromGeom(poly, cosechaItem,tooltipText);
 		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText);

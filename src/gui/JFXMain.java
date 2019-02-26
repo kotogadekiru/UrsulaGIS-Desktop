@@ -647,7 +647,7 @@ public class JFXMain extends Application {
 
 		poligonosP.add((layer)->{
 			if(layer==null){
-				return "Convertir a Siembra";  //$NON-NLS-1$
+				return Messages.getString("JFXMain.poligonToSiembraAction");  //$NON-NLS-1$ //"Convertir a Siembra";  //$NON-NLS-1$
 			} else {
 				Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 				if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){

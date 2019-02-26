@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ChoiceBox?>
@@ -16,11 +20,11 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="content" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.MargenConfigDialogController">
+<VBox fx:id="content" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.MargenConfigDialogController">
    <children>
       <TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="361.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE">
         <tabs>
-          <Tab text="Columnas">
+          <Tab text="%MargenConfigDialog.columnasLabel">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
@@ -43,13 +47,13 @@
                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
-                              <Label text="Costo Fijo por Tn" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                              <Label text="%MargenConfigDialog.costoFijoTnLabel" GridPane.columnIndex="2" GridPane.rowIndex="1">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
                               <TextField id="textPrecioGrano" fx:id="textCostoTn" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-                              <Label text="Costo Fijo por Ha" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                              <Label text="%MargenConfigDialog.costoFijoHaLabel" GridPane.columnIndex="2" GridPane.rowIndex="2" />
                               <TextField id="textCostoCosechaHa" fx:id="textCostoHa" GridPane.columnIndex="3" GridPane.rowIndex="2" />
                               <Label text="Nombre">
                                  <opaqueInsets>
@@ -58,15 +62,15 @@
                               </Label>
                               <TextField id="textPrecioGrano" fx:id="textNombre" prefHeight="25.0" prefWidth="147.0" GridPane.columnIndex="1" />
                               <DatePicker fx:id="datePickerFecha" GridPane.columnIndex="3" />
-                              <Label text="Fecha" GridPane.columnIndex="2" />
-                              <Label text="Flete por Tn" GridPane.rowIndex="1">
+                              <Label text="%MargenConfigDialog.fechaLabel" GridPane.columnIndex="2" />
+                              <Label text="%MargenConfigDialog.fleteLabel" GridPane.rowIndex="1">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
                               <TextField id="textPrecioGrano" fx:id="textFlete" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                               <ChoiceBox fx:id="comboAmount" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                              <Label fx:id="comboCampo" text="Dibujar" GridPane.rowIndex="2">
+                              <Label fx:id="comboCampo" text="%MargenConfigDialog.dibujarLabel" GridPane.rowIndex="2">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
@@ -77,7 +81,7 @@
                   </AnchorPane>
             </content>
           </Tab>
-          <Tab text="Opciones">
+          <Tab text="%MargenConfigDialog.opcionesLabel">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
@@ -100,9 +104,9 @@
                               <RowConstraints maxHeight="38.0" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
-                              <Label text="Clasificador" wrapText="true" GridPane.columnIndex="2" />
+                              <Label text="%MargenConfigDialog.clasificadorLabel" wrapText="true" GridPane.columnIndex="2" />
                               <ComboBox fx:id="comboClasificador" prefWidth="150.0" GridPane.columnIndex="3" />
-                              <Label text="Clases Clasificador" />
+                              <Label text="%MargenConfigDialog.clasesClasificadorLabel" />
                               <TextField id="textToleranciaCV" fx:id="textClasesClasificador" GridPane.columnIndex="1" />
                            </children>
                         </GridPane>
@@ -114,7 +118,7 @@
       </TabPane>
       <FlowPane alignment="CENTER_LEFT" prefHeight="35.0" prefWidth="600.0" rowValignment="TOP">
          <children>
-            <CheckBox id="chkMakeDefault" fx:id="chkMakeDefault" alignment="CENTER" mnemonicParsing="false" prefHeight="22.0" prefWidth="161.0" text="Guardar como default">
+            <CheckBox id="chkMakeDefault" fx:id="chkMakeDefault" alignment="CENTER" mnemonicParsing="false" prefHeight="22.0" prefWidth="161.0" text="%MargenConfigDialog.guardarComoLabel">
                <opaqueInsets>
                   <Insets />
                </opaqueInsets>

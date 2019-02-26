@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
@@ -15,11 +19,11 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="content" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.SiembraConfigDialogController">
+<VBox fx:id="content" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.SiembraConfigDialogController">
    <children>
       <TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="361.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE">
         <tabs>
-          <Tab text="Columnas">
+          <Tab text="%SiembraConfigDialog.columnasLabel">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
@@ -44,35 +48,35 @@
                            <children>
                               <ComboBox id="comboElev" fx:id="comboElev" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                               <ComboBox id="comboRend" fx:id="comboDosis" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                              <Label text="Precio Semilla" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                              <Label text="%SiembraConfigDialog.precioSemillaLabel" GridPane.columnIndex="2" GridPane.rowIndex="1">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
-                              <Label text="Elevacion *" GridPane.rowIndex="2">
+                              <Label text="%SiembraConfigDialog.elevacionLabel" GridPane.rowIndex="2">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
-                              <Label text="Rate" GridPane.rowIndex="1">
+                              <Label text="%SiembraConfigDialog.rateLabel" GridPane.rowIndex="1">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
                               <TextField id="textPrecioGrano" fx:id="textPrecioFert" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-                              <Label text="Costo Lab. por Ha" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                              <Label text="%SiembraConfigDialog.costoLabHaLabel" GridPane.columnIndex="2" GridPane.rowIndex="2" />
                               <TextField id="textCostoCosechaHa" fx:id="textCostoLaborHa" GridPane.columnIndex="3" GridPane.rowIndex="2" />
-                              <Label text="Semilla" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-                              <ComboBox id="comboCultivo" fx:id="comboInsumo" prefWidth="150.0" promptText="Semilla" GridPane.columnIndex="3" GridPane.rowIndex="3" />
-                              <Label text="Nombre">
+                              <Label text="%SiembraConfigDialog.semillaLabel" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                              <ComboBox id="comboCultivo" fx:id="comboInsumo" prefWidth="150.0" promptText="%SiembraConfigDialog.semillaMenuLabel" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+                              <Label text="%SiembraConfigDialog.nombreLabel">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
                               <TextField id="textPrecioGrano" fx:id="textNombre" prefHeight="25.0" prefWidth="147.0" GridPane.columnIndex="1" />
                               <DatePicker fx:id="datePickerFecha" GridPane.columnIndex="3" />
-                              <Label text="Fecha" GridPane.columnIndex="2" />
-                              <Label fx:id="entreSurcoLabel" text="Entre Surco (m)" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+                              <Label text="%SiembraConfigDialog.fechaLabel" GridPane.columnIndex="2" />
+                              <Label fx:id="entreSurcoLabel" text="%SiembraConfigDialog.entreSurcoLabel" GridPane.columnIndex="2" GridPane.rowIndex="4" />
                               <TextField id="textEntreSurco" fx:id="textEntresurco" promptText=" ej: 0.19" GridPane.columnIndex="3" GridPane.rowIndex="4" />
                            </children>
                         </GridPane>
@@ -80,7 +84,7 @@
                   </AnchorPane>
             </content>
           </Tab>
-          <Tab text="Opciones">
+          <Tab text="%SiembraConfigDialog.opcionesLabel">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
@@ -103,10 +107,10 @@
                               <RowConstraints maxHeight="38.0" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
-                              <Label text="Corregir:" wrapText="true" />
-                              <Label text="Clasificador" wrapText="true" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                              <Label text="%SiembraConfigDialog.corregirLabel" wrapText="true" />
+                              <Label text="%SiembraConfigDialog.clasificadorLabel" wrapText="true" GridPane.columnIndex="2" GridPane.rowIndex="1" />
                               <ComboBox fx:id="comboClasificador" prefWidth="150.0" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-                              <Label text="Clases Clasificador" GridPane.rowIndex="1" />
+                              <Label text="%SiembraConfigDialog.clasesClasificardorLabel" GridPane.rowIndex="1" />
                               <TextField id="textToleranciaCV" fx:id="textClasesClasificador" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                            </children>
                         </GridPane>
@@ -118,7 +122,7 @@
       </TabPane>
       <FlowPane alignment="CENTER_LEFT" prefHeight="35.0" prefWidth="600.0" rowValignment="TOP">
          <children>
-            <CheckBox id="chkMakeDefault" fx:id="chkMakeDefault" alignment="CENTER" mnemonicParsing="false" prefHeight="22.0" prefWidth="161.0" text="Guardar como default">
+            <CheckBox id="chkMakeDefault" fx:id="chkMakeDefault" alignment="CENTER" mnemonicParsing="false" prefHeight="22.0" prefWidth="161.0" text="%SiembraConfigDialog.guardarComoLabel">
                <opaqueInsets>
                   <Insets />
                </opaqueInsets>

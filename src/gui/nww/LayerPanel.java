@@ -17,6 +17,7 @@ import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.WorldWindow;
 import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.RenderableLayer;
+import gui.Messages;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.collections.ObservableList;
@@ -135,21 +136,21 @@ public class LayerPanel extends VBox {
 				item.getChildren().clear();
 			}
 		}
-		String nombre ="";
+		String nombre =""; //$NON-NLS-1$
 		for (Layer layer : wwd.getModel().getLayers()) {
 			//LayerAction action = new LayerAction(layer, wwd, layer.isEnabled());
 			nombre = layer.getName();
-			if("Stars".equalsIgnoreCase(nombre)||
-					"Atmosphere".equalsIgnoreCase(nombre)||	
-					"Blue Marble May 2004".equalsIgnoreCase(nombre)||
-					"i-cubed landsat".equalsIgnoreCase(nombre)||
-					"bing imagery".equalsIgnoreCase(nombre)||
-					"Place Names".equalsIgnoreCase(nombre)||
-					"World Map".equalsIgnoreCase(nombre)||
-					"Scale Bar".equalsIgnoreCase(nombre)||
-					"View Controls".equalsIgnoreCase(nombre)||
-					"Annotations".equalsIgnoreCase(nombre)||
-					"Compass".equalsIgnoreCase(nombre))continue;
+			if("Stars".equalsIgnoreCase(nombre)|| //$NON-NLS-1$
+					"Atmosphere".equalsIgnoreCase(nombre)||	 //$NON-NLS-1$
+					"Blue Marble May 2004".equalsIgnoreCase(nombre)|| //$NON-NLS-1$
+					"i-cubed landsat".equalsIgnoreCase(nombre)|| //$NON-NLS-1$
+					"bing imagery".equalsIgnoreCase(nombre)|| //$NON-NLS-1$
+					"Place Names".equalsIgnoreCase(nombre)|| //$NON-NLS-1$
+					"World Map".equalsIgnoreCase(nombre)|| //$NON-NLS-1$
+					"Scale Bar".equalsIgnoreCase(nombre)|| //$NON-NLS-1$
+					"View Controls".equalsIgnoreCase(nombre)|| //$NON-NLS-1$
+					"Annotations".equalsIgnoreCase(nombre)|| //$NON-NLS-1$
+					"Compass".equalsIgnoreCase(nombre))continue; //$NON-NLS-1$
 			//CheckBox jcb = new CheckBox();
 			final CheckBoxTreeItem<Layer> checkBoxTreeItem = new CheckBoxTreeItem<Layer>(layer);
 
@@ -174,13 +175,13 @@ public class LayerPanel extends VBox {
 			}else if(value != null){
 				TreeItem<Layer> knownItem=null;
 
-				String rootItemName ="unknown";
+				String rootItemName ="unknown"; //$NON-NLS-1$
 
 				if(value instanceof String){
 					rootItemName=(String) value;
 
 				} else if(value instanceof Object){//margen y lo que pueda suceder mas adelante
-					rootItemName=  value.getClass().getSimpleName();
+					rootItemName=  Messages.getString("LayerPanel.rootItemName"+value.getClass().getSimpleName());
 				} else {
 					continue;
 				}
@@ -231,7 +232,7 @@ public class LayerPanel extends VBox {
 
 				if(labor1 != null && labor1 instanceof Ndvi && 
 						labor2 != null && labor2 instanceof Ndvi &&
-						l1Name.startsWith(l2Name.substring(0, l2Name.length()-"02-01-2018".length()))){
+						l1Name.startsWith(l2Name.substring(0, l2Name.length()-"02-01-2018".length()))){ //$NON-NLS-1$
 					try {
 					Date fecha1 = ((Ndvi)labor1).getFecha().getTime();
 					Date fecha2 = ((Ndvi)labor2).getFecha().getTime();
@@ -259,7 +260,7 @@ public class LayerPanel extends VBox {
 			});
 			}catch(Exception e){
 				e.printStackTrace();
-				System.out.println("no se pudo ordenar");
+				System.out.println("no se pudo ordenar"); //$NON-NLS-1$
 			}
 		}
 		if(tree==null){
@@ -276,19 +277,19 @@ public class LayerPanel extends VBox {
 	@SuppressWarnings("unchecked")
 	private void constructRootItem() {
 		RenderableLayer rootLayer = new RenderableLayer();
-		rootLayer.setName("Capas");
+		rootLayer.setName(Messages.getString("LayerPanel.layerRootLabel")); //$NON-NLS-1$
 		rootItem = new CheckBoxTreeItem<Layer>(rootLayer);
 		RenderableLayer pulvLayer = new RenderableLayer();
-		pulvLayer.setName("Pulverizaciones");
+		pulvLayer.setName(Messages.getString("LayerPanel.pulvLabel")); //$NON-NLS-1$
 		pulverizacionesItem = new CheckBoxTreeItem<Layer>(pulvLayer);
 		RenderableLayer fertLayer = new RenderableLayer();
-		fertLayer.setName("Fertilizaciones");
+		fertLayer.setName(Messages.getString("LayerPanel.fertLabel")); //$NON-NLS-1$
 		fertilizacionestItem = new CheckBoxTreeItem<Layer>(fertLayer);
 		RenderableLayer siembrLayer = new RenderableLayer();
-		siembrLayer.setName("Siembras");
+		siembrLayer.setName(Messages.getString("LayerPanel.SiembLabel")); //$NON-NLS-1$
 		siembrasItem = new CheckBoxTreeItem<Layer>(siembrLayer);		
 		RenderableLayer cosechLayer = new RenderableLayer();
-		cosechLayer.setName("Cosechas");
+		cosechLayer.setName(Messages.getString("LayerPanel.cosechLabel")); //$NON-NLS-1$
 		cosechasItem = new CheckBoxTreeItem<Layer>(cosechLayer);
 		//		RenderableLayer ndviLayer = new RenderableLayer();
 		//		ndviLayer.setName("Ndvi");
@@ -309,13 +310,13 @@ public class LayerPanel extends VBox {
 		//tendria que poner acciones en los nodos y buscar los subitems seleccionados y ahi aplicar
 
 		tree.setEditable(false);
-		tree.setStyle("-fx-background-color:transparent;");//-fx-focus-color: -fx-control-inner-background ; -fx-faint-focus-color: -fx-control-inner-background ;
+		tree.setStyle("-fx-background-color:transparent;");//-fx-focus-color: -fx-control-inner-background ; -fx-faint-focus-color: -fx-control-inner-background ; //$NON-NLS-1$
 		//tree.setShowRoot(false);
 		// tree.setCellFactory(CheckBoxTreeCell.<String>forTreeView());   
 
 		tree.setCellFactory((treeView) ->{
 			CheckBoxTreeCell<Layer> cell = (CheckBoxTreeCell<Layer>) CheckBoxTreeCell.<Layer>forTreeView().call(treeView);
-			cell.setStyle("-fx-faint-focus-color: -fx-control-inner-background;");//-fx-focus-color: -fx-control-inner-background ; -fx-faint-focus-color: -fx-control-inner-background ;-fx-background-color:transparent;
+			cell.setStyle("-fx-faint-focus-color: -fx-control-inner-background;");//-fx-focus-color: -fx-control-inner-background ; -fx-faint-focus-color: -fx-control-inner-background ;-fx-background-color:transparent; //$NON-NLS-1$
 
 
 			cell.setConverter(new StringConverter<TreeItem<Layer>>(){
@@ -324,7 +325,7 @@ public class LayerPanel extends VBox {
 					if(object.getValue()!=null){
 						return object.getValue().getName();
 					}
-					return "item sin layer";
+					return "item sin layer"; //$NON-NLS-1$
 				}
 
 				@Override
@@ -364,7 +365,7 @@ public class LayerPanel extends VBox {
 								){
 							Function<Layer, String> multiAct = (layer)->{
 								if(layer==null){
-									return act.apply(null) + " Seleccionados";
+									return act.apply(null) + Messages.getString("LayerPanel.23"); //$NON-NLS-1$
 								} else{
 									for(TreeItem<Layer> item: children){
 										Layer itemLayer = item.getValue();

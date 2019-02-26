@@ -37,7 +37,7 @@ import utils.DAH;
  *
  */
 public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
-	private static final String FERT_CONFIG_DIALOG_FXML = "SiembraConfigDialog.fxml";
+	private static final String FERT_CONFIG_DIALOG_FXML = "SiembraConfigDialog.fxml"; //$NON-NLS-1$
 
 	@FXML
 	private VBox content;
@@ -90,9 +90,9 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 
 	public SiembraConfigDialogController() {
 		super();
-		System.out.println("construyendo el controller");
+		System.out.println("construyendo el controller"); //$NON-NLS-1$
 
-		this.setTitle("Configure las opciones para su fertilización");
+		this.setTitle(Messages.getString("SiembraConfigDialogController.title")); //$NON-NLS-1$
 		Stage stage = ((Stage)this.getDialogPane().getScene().getWindow());
 		stage.getIcons().add(new Image(JFXMain.ICON));
 
@@ -103,7 +103,7 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 		final Button btOk = (Button) this.getDialogPane().lookupButton(ButtonType.OK);
 		btOk.addEventFilter(ActionEvent.ACTION, event -> {
 			if (!validarDialog()) {
-				System.out.println("la configuracion es incorrecta");
+				System.out.println("la configuracion es incorrecta"); //$NON-NLS-1$
 				event.consume();
 			}
 		});
@@ -133,7 +133,7 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 //				(cols.indexOf(comboDosis.getValue())>-1);
 		
 		if(cols.indexOf(comboDosis.getValue())==-1){
-			message.append("Debe seleccionar la columna Dosis\n");
+			message.append(Messages.getString("SiembraConfigDialogController.mensaje")); //$NON-NLS-1$
 			isValid=false;
 		}
 		if(cols.indexOf(comboElev.getValue())==-1){
@@ -145,7 +145,7 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 		if(!isValid){
 			Alert alert = new Alert(AlertType.ERROR, message.toString(), ButtonType.OK);
 			alert.initOwner(this.getDialogPane().getScene().getWindow());
-			alert.setTitle("Validar configuracion");
+			alert.setTitle(Messages.getString("SiembraConfigDialogController.title2")); //$NON-NLS-1$
 			alert.showAndWait();
 
 		}
@@ -255,7 +255,7 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 			controller.init();
 			ret = controller.showAndWait();
 		} catch (IOException e1) {
-			System.err.println("no se pudo levantar el fxml "+FERT_CONFIG_DIALOG_FXML);
+			System.err.println("no se pudo levantar el fxml "+FERT_CONFIG_DIALOG_FXML); //$NON-NLS-1$
 			e1.printStackTrace();
 			System.exit(0);
 		}
