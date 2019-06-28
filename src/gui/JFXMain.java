@@ -220,12 +220,15 @@ import utils.ProyectionConstants;
 public class JFXMain extends Application {
 
 
+	private static final String PREFERED_TREE_WIDTH_KEY = "PREFERED_TREE_WIDTH";
 	private static final String GOV_NASA_WORLDWIND_AVKEY_INITIAL_ALTITUDE = "gov.nasa.worldwind.avkey.InitialAltitude"; //$NON-NLS-1$
 	private static final String GOV_NASA_WORLDWIND_AVKEY_INITIAL_LONGITUDE = "gov.nasa.worldwind.avkey.InitialLongitude"; //$NON-NLS-1$
 	private static final String GOV_NASA_WORLDWIND_AVKEY_INITIAL_LATITUDE = "gov.nasa.worldwind.avkey.InitialLatitude"; //$NON-NLS-1$
 	//	private static final double MAX_VALUE = 1.0;
 	//	private static final double MIN_VALUE = 0.2;
-	public static final String VERSION = "0.2.24 dev"; //$NON-NLS-1$
+	public static Configuracion config = Configuracion.getInstance();
+	
+	public static final String VERSION = "0.2.24"; //$NON-NLS-1$
 	private static final String TITLE_VERSION = "Ursula GIS-v"+VERSION; //$NON-NLS-1$
 	private static final String BUILD_INFO=Messages.getString("JFXMain.info1") //$NON-NLS-1$
 			+Messages.getString("JFXMain.info2") //$NON-NLS-1$
@@ -238,7 +241,7 @@ public class JFXMain extends Application {
 	private Stage stage=null;
 	private Scene scene=null;
 	
-	private static Configuracion config = Configuracion.getInstance();
+	
 
 	private Dimension canvasSize = new Dimension(1500, 800);
 
@@ -294,6 +297,7 @@ public class JFXMain extends Application {
 
 		primaryStage.setOnHiding((e)-> {
 			Platform.runLater(()->{
+				JFXMain.config.save();
 				DAH.closeEm();
 				System.out.println("em Closed"); //$NON-NLS-1$
 				System.out.println("Application Closed by click to Close Button(X)"); //$NON-NLS-1$
@@ -368,9 +372,12 @@ public class JFXMain extends Application {
 
 		pfMapTask.setOnSucceeded(handler -> {			
 			wwNode = (Node) handler.getSource().getValue();
+			if(wwNode!=null) {
 			vBox1.getChildren().add( wwNode);
 			this.wwjPanel.repaint();	
-
+			}else {
+				System.err.println("fallo la iniciacion del worldwind node");
+			}
 
 		});
 		executorPool.execute(pfMapTask);
@@ -398,10 +405,7 @@ public class JFXMain extends Application {
 
 		setAccionesTreePanel();
 
-		this.stage.widthProperty().addListener((o,old,nu)->{
-			this.wwjPanel.setPreferredSize(new Dimension(nu.intValue(),(int)stage.getWidth()));
-			this.wwjPanel.repaint();
-		});
+
 
 		this.stage.heightProperty().addListener((o,old,nu)->{
 			this.wwjPanel.setPreferredSize(new Dimension((int)stage.getHeight(),nu.intValue()));
@@ -415,7 +419,26 @@ public class JFXMain extends Application {
 
 		SplitPane sp = new SplitPane();
 		sp.getItems().addAll(layerPanel, wwSwingNode);
-		sp.setDividerPositions(0.15f);//15% de la pantalla
+		
+		double initSplitPaneWidth = Double.valueOf(JFXMain.config.getPropertyOrDefault(PREFERED_TREE_WIDTH_KEY,Double.toString(stage.getWidth()*0.15f)));
+		
+		sp.setDividerPositions(initSplitPaneWidth/stage.getWidth());//15% de la pantalla de 1245 es 186px ; 1552.0 es fullscreen
+		sp.getDividers().get(0).positionProperty().addListener((o,ov,nu)->{
+			//divider position changed to nu
+			//System.out.println("changing Width to "+nu);//hanging Width to 1245.0
+			double newPreferredSplitPaneWidth = stage.getWidth()*nu.doubleValue();
+			JFXMain.config.setProperty(PREFERED_TREE_WIDTH_KEY, Double.toString(newPreferredSplitPaneWidth));
+		});
+		
+		this.stage.widthProperty().addListener((o,old,nu)->{
+			double splitPaneWidth = Double.valueOf(JFXMain.config.getPropertyOrDefault(PREFERED_TREE_WIDTH_KEY,Double.toString(initSplitPaneWidth)));
+			sp.setDividerPositions(splitPaneWidth/nu.doubleValue());
+			//System.out.println("changing div to "+splitPaneWidth/nu.doubleValue());//hanging Width to 1245.0
+			//15% es 
+			this.wwjPanel.setPreferredSize(new Dimension(nu.intValue(),(int)stage.getWidth()));
+			this.wwjPanel.repaint();
+		});
+		
 		//TODO modificar esto para que cuando sea full screen mantenga el tamanio del arbol en vez de estirarlo
 		//hbox.set(layerPanel);
 		//		wwSwingNode.setScaleX(1.5);
@@ -424,12 +447,12 @@ public class JFXMain extends Application {
 
 		// Create and install the view controls layer and register a controller
 		// for it with the World Window.
-		ViewControlsLayer viewControlsLayer = new ViewControlsLayer();
-		insertBeforeCompass(getWwd(), viewControlsLayer);
-		this.getWwd()
-		.addSelectListener(
-				new ViewControlsSelectListener(this.getWwd(),
-						viewControlsLayer));
+		//ViewControlsLayer viewControlsLayer = new ViewControlsLayer();
+		//insertBeforeCompass(getWwd(), viewControlsLayer);
+//		this.getWwd()
+//		.addSelectListener(
+//				new ViewControlsSelectListener(this.getWwd(),
+//						viewControlsLayer));
 
 		// Register a rendering exception listener that's notified when
 		// exceptions occur during rendering.

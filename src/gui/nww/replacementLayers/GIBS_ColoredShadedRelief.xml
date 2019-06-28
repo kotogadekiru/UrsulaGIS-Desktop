@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Blue Marble 2004 from NASA Scientific Visualization Studio (SVS)-->
+<Layer version="1" layerType="TiledImageLayer">
+    <DisplayName>Shaded Relief (Color)</DisplayName>
+    <Service serviceName="OGC:WMS" version="1.3">
+        <GetCapabilitiesURL>https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi?SERVICE=WMS</GetCapabilitiesURL>
+        <GetMapURL>https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi?SERVICE=WMS</GetMapURL>
+        <LayerNames>ASTER_GDEM_Color_Shaded_Relief</LayerNames>
+    </Service>
+    <RetrievePropertiesFromService>true</RetrievePropertiesFromService>
+    <DataCacheName>Earth/GIBS/GIBS_ShadedReliefColor</DataCacheName>
+    <ImageFormat>image/png</ImageFormat>
+    <AvailableImageFormats>
+        <ImageFormat>image/png</ImageFormat>
+    </AvailableImageFormats>
+    <FormatSuffix>.dds</FormatSuffix>
+    <TileOrigin>
+        <LatLon units="degrees" latitude="-90" longitude="-180"/>
+    </TileOrigin>
+    <LevelZeroTileDelta>
+        <LatLon units="degrees" latitude="36" longitude="36"/>
+    </LevelZeroTileDelta>
+    <TileSize>
+        <Dimension width="512" height="512"/>
+    </TileSize>
+    <Sector>
+        <SouthWest>
+            <LatLon units="degrees" latitude="-90" longitude="-180"/>
+        </SouthWest>
+        <NorthEast>
+            <LatLon units="degrees" latitude="90" longitude="180"/>
+        </NorthEast>
+    </Sector>
+    <RetrievalTimeouts>
+        <ReadTimeout>
+            <Time units="milliseconds" value="30000"/>
+        </ReadTimeout>
+    </RetrievalTimeouts>
+</Layer>

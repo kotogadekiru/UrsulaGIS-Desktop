@@ -101,7 +101,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 	//el controller de la configuracion. creo que setea las variables pero nunca las graba a menos 
 	//que las grabe el controller
 	protected void initConfig() {
-		System.out.println("iniciando la configuracion de CosechLabor");
+		//System.out.println("iniciando la configuracion de CosechLabor");
 		List<String> availableColums = this.getAvailableColumns();		
 		Configuracion properties = getConfigLabor().getConfigProperties();
 

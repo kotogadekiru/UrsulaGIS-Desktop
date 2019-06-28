@@ -43,7 +43,7 @@ public class LaborDataStore<E> {
 			List<AttributeType> types = sch.getTypes();
 			for (AttributeType at : types) {
 				//at binding para Importe_ha es class java.lang.Double
-				System.out.println("at binding para "+at.getName() +" es "+at.getBinding());
+				//System.out.println("at binding para "+at.getName() +" es "+at.getBinding());
 				availableColumns.add(at.getName().toString());
 			}
 

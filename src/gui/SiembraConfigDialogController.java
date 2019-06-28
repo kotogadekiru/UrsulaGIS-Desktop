@@ -37,7 +37,7 @@ import utils.DAH;
  *
  */
 public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
-	private static final String FERT_CONFIG_DIALOG_FXML = "SiembraConfigDialog.fxml"; //$NON-NLS-1$
+	private static final String SEED_CONFIG_DIALOG_FXML = "SiembraConfigDialog.fxml"; //$NON-NLS-1$
 
 	@FXML
 	private VBox content;
@@ -248,7 +248,7 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 		Optional<SiembraLabor> ret = Optional.empty();
 		try{
 			FXMLLoader myLoader = new FXMLLoader(SiembraConfigDialogController.class.getResource(
-					FERT_CONFIG_DIALOG_FXML));
+					SEED_CONFIG_DIALOG_FXML));
 			myLoader.setResources(Messages.getBoundle());
 			myLoader.load();//aca se crea el constructor
 			SiembraConfigDialogController controller = ((SiembraConfigDialogController) myLoader.getController());
@@ -256,7 +256,7 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 			controller.init();
 			ret = controller.showAndWait();
 		} catch (IOException e1) {
-			System.err.println("no se pudo levantar el fxml "+FERT_CONFIG_DIALOG_FXML); //$NON-NLS-1$
+			System.err.println("no se pudo levantar el fxml "+SEED_CONFIG_DIALOG_FXML); //$NON-NLS-1$
 			e1.printStackTrace();
 			System.exit(0);
 		}

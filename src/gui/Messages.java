@@ -3,7 +3,6 @@ package gui;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import dao.config.Configuracion;
@@ -11,17 +10,21 @@ import dao.config.Configuracion;
 public class Messages {
 	private static final String LOCALE_NOT_SET = "LOCALE_NOT_SET";
 	private static final String LOCALE_KEY = "LOCALE_KEY";
-	private static final String BUNDLE_NAME = "gui.messages"; //$NON-NLS-1$
+	private static final String BUNDLE_NAME ="/gui/messages";//"gui.MyResources";//"gui.messages";// "gui.messages"; //$NON-NLS-1$
 	
-	private static Configuracion conf = Configuracion.getInstance();
+	private static Configuracion conf = JFXMain.config;
 	
 	private static Locale locale = new Locale("ES");
 	//private static final ResourceBundle RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME,new Locale("EN"));
-	private static final ResourceBoundleContainer RESOURCE_BUNDLE_CONTAINER = new ResourceBoundleContainer(BUNDLE_NAME,locale);
+	private static final ResourceBoundleContainer RESOURCE_BUNDLE_CONTAINER = new ResourceBoundleContainer();
 	//	private static final ResourceBundle RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME);
 	static {
-		String loc = Configuracion.getInstance().getPropertyOrDefault(LOCALE_KEY, LOCALE_NOT_SET);
-		
+//		try {
+//			RESOURCE_BUNDLE_CONTAINER.set(BUNDLE_NAME,locale);
+//		} catch(Exception e ) {
+//			e.printStackTrace();
+//		}
+		String loc = conf.getPropertyOrDefault(LOCALE_KEY, LOCALE_NOT_SET);
 		
 		Locale defaultLoc = Locale.getDefault();
 		System.out.println("default language es \""+defaultLoc.getLanguage()+ "\" supported? "+supports(defaultLoc.getLanguage()));
@@ -39,7 +42,7 @@ public class Messages {
 	public static String getString(String key) {
 		try {
 			return RESOURCE_BUNDLE_CONTAINER.get().getString(key);
-		} catch (MissingResourceException e) {
+		} catch (Exception e) {
 			return '!' + key + '!';
 		}
 	}
@@ -50,6 +53,8 @@ public class Messages {
 		
 		conf.setProperty(LOCALE_KEY, locale.getLanguage());
 		conf.save();
+		
+		System.out.println("guardando el nuevo locale "+locale.getLanguage());
 	}
 	
 	public static Locale getLocale() {
@@ -66,6 +71,8 @@ public class Messages {
 	}
 	
 	public static ResourceBundle getBoundle() {
+	
+		
 		return RESOURCE_BUNDLE_CONTAINER.get();
 	}
 	

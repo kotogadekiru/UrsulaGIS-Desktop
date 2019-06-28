@@ -15,6 +15,7 @@ import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
+import gui.Messages;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
 
@@ -72,14 +73,14 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		DecimalFormat df = new DecimalFormat("#.00");
 		String tooltipText = new String(
-				" Fosforo: "+ df.format(si.getPpmP()) +"Ppm\n"
-				+"Nitrogeno: "+ df.format(si.getPpmN()) +"Ppm\n"
+				Messages.getString("CrearSueloMapTask.fosforo")+": " +df.format(si.getPpmP()) +"Ppm\n"
+				+Messages.getString("CrearSueloMapTask.nitrogeno")+": "+ df.format(si.getPpmN()) +"Ppm\n"
 				);
 
 		if(area<1){
-			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
+			tooltipText=tooltipText.concat( Messages.getString("CrearSueloMapTask.sup")+": "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
 		} else {
-			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
+			tooltipText=tooltipText.concat(Messages.getString("CrearSueloMapTask.sup")+": "+df.format(area ) + "Has\n");
 		}
 
 		return super.getExtrudedPolygonFromGeom(poly, si,tooltipText);

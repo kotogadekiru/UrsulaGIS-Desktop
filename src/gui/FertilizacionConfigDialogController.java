@@ -231,6 +231,7 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 		try{
 			FXMLLoader myLoader = new FXMLLoader(FertilizacionConfigDialogController.class.getResource(
 					FERT_CONFIG_DIALOG_FXML));
+			myLoader.setResources(Messages.getBoundle());
 			myLoader.load();//aca se crea el constructor
 			FertilizacionConfigDialogController controller = ((FertilizacionConfigDialogController) myLoader.getController());
 			controller.setLabor(labor2);

@@ -540,6 +540,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		try{
 			FXMLLoader myLoader = new FXMLLoader(HarvestConfigDialogController.class.getResource(
 					HARVEST_CONFIG_DIALOG_FXML));
+			myLoader.setResources(Messages.getBoundle());
 			myLoader.load();//aca se crea el constructor
 			HarvestConfigDialogController controller = ((HarvestConfigDialogController) myLoader.getController());
 			controller.setLabor(labor);

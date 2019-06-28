@@ -61,7 +61,7 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 	private static final String BASE_URL = "http://gee-api-helper.herokuapp.com";
 	//private static final String BASE_URL = "http://localhost:5001";
 
-	private static final String HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3 = BASE_URL+"/ndvi_v4";
+	private static final String HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3 = BASE_URL+"/ndvi_v4";//ndvi_v5
 	private static final String HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3PNG = BASE_URL+"/ndvi_v4PNG";
 	private static final String HTTPS_GEE_API_HELPER_HEROKUAPP_COM_S2_PRODUCT_FINDER = BASE_URL+"/s2_product_finder_v3";
 	private static final String GEE_POLYGONS_GET_REQUEST_KEY = "polygons";

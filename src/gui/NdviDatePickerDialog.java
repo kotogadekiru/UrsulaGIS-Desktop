@@ -35,7 +35,7 @@ public class NdviDatePickerDialog {
 		 
 		 
 		DateConverter dc = new DateConverter();		
-		Configuracion config = Configuracion.getInstance();
+		Configuracion config = JFXMain.config;
 		String configDate = config.getPropertyOrDefault("LAST_DATE", dc.toString(finalDate)); //$NON-NLS-1$
 		finalDate = dc.fromString(configDate);
 		if(fin!=null){

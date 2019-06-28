@@ -4,15 +4,26 @@ import gov.nasa.worldwind.Model;
 import gov.nasa.worldwind.WorldWind;
 import gov.nasa.worldwind.WorldWindow;
 import gov.nasa.worldwind.avlist.AVKey;
+import gov.nasa.worldwind.avlist.AVList;
+import gov.nasa.worldwind.avlist.AVListImpl;
 import gov.nasa.worldwind.awt.WorldWindowGLCanvas;
 import gov.nasa.worldwind.awt.WorldWindowGLJPanel;
 import gov.nasa.worldwind.event.SelectEvent;
 import gov.nasa.worldwind.globes.ElevationModel;
+import gov.nasa.worldwind.layers.CompassLayer;
 import gov.nasa.worldwind.layers.WorldMapLayer;
+import gov.nasa.worldwind.layers.mercator.BasicMercatorTiledImageLayer;
 import gov.nasa.worldwind.terrain.ZeroElevationModel;
+import gov.nasa.worldwind.util.LevelSet;
 import gov.nasa.worldwind.util.StatusBar;
+import gov.nasa.worldwind.util.WWXML;
+import gov.nasa.worldwind.wms.WMSTiledImageLayer;
 import gov.nasa.worldwindx.examples.ClickAndGoSelectListener;
 import gov.nasa.worldwindx.examples.util.HighlightController;
+import gui.nww.replacementLayers.GIBS_PlaceLabels;
+import gui.nww.replacementLayers.GoogleLayer;
+import gui.nww.replacementLayers.GoogleTiledImageLayer;
+import gui.nww.replacementLayers.Sentinel2Layer;
 import javafx.scene.layout.BorderPane;
 
 import java.awt.BorderLayout;
@@ -33,7 +44,8 @@ public class WWPanel extends JPanel {
 	public WWPanel(Dimension canvasSize, boolean includeStatusBar) {
 		super(new BorderLayout());
 
-		this.wwd = this.createWorldWindow();
+		this.wwd =new WorldWindowGLJPanel();// this.createWorldWindow();
+		
 	//	((Component) this.wwd).setSize((int)canvasSize.getWidth()/4,(int) canvasSize.getHeight()/4);
 		((Component) this.wwd).setPreferredSize(canvasSize);
 
@@ -43,8 +55,50 @@ public class WWPanel extends JPanel {
 				.createConfigurationComponent(AVKey.MODEL_CLASS_NAME);
 //		final ElevationModel elevationModel = new ZeroElevationModel(){
 //		m.getGlobe().setElevationModel(elevationModel);
-		this.wwd.setModel(m);
+		
+		m.getLayers().clear();//TODO remover esto que es debug
+		AVList crs = new AVListImpl();
+		crs.setValue(AVKey.COORDINATE_SYSTEM, "EPSG:4326");
 
+	
+//		
+		//
+		
+//		https://emxsys.net/worldwind25/wms
+//			https://emxsys.net/worldwind26/elev
+//			https://emxsys.net/worldwind27/wms/virtualearth
+				
+		//m.getLayers().add(new GIBS_PlaceLabels());
+	
+		m.getLayers().add(
+				new WMSTiledImageLayer(
+						WWXML.openDocumentFile("gui/nww/replacementLayers/GIBS_BlueMarble.xml", null),
+				null));
+		m.getLayers().add(new Sentinel2Layer());
+
+		m.getLayers().add(
+				new WMSTiledImageLayer(
+						WWXML.openDocumentFile("gui/nww/replacementLayers/BingImageryEmxsys.xml", null),
+				null));
+		//m.getLayers().add(new GoogleLayer(GoogleLayer.Type.SATELLITE));
+		
+//		m.getLayers().add(
+//				new WMSTiledImageLayer(
+//						WWXML.openDocumentFile("gui/nww/replacementLayers/GIBS_PlaceLabels.xml", null),
+//				crs.copy()));//add city names and such
+//		m.getLayers().add(
+//				new WMSTiledImageLayer(
+//						WWXML.openDocumentFile("gui/nww/replacementLayers/GIBS_ReferenceFeatures.xml", null),
+//				null));//add roads and political boundaries
+		
+//		m.getLayers().add(	new BasicMercatorTiledImageLayer(WWXML.openDocumentFile("gui/nww/replacementLayers/GoogleTiledImage.xml", null),
+//				null));//add roads and political boundaries
+		
+		m.getLayers().add(new CompassLayer());		
+		this.wwd.setModel(m);
+		
+		
+		
 		// Setup a select listener for the worldmap click-and-go feature
 		this.wwd.addSelectListener(new ClickAndGoSelectListener(this
 				.getWwd(), WorldMapLayer.class));
@@ -74,11 +128,11 @@ public class WWPanel extends JPanel {
 
 	}
 
-	protected WorldWindow createWorldWindow() {//Este es el unico metodo de cambie de AppPanel porque sino no andaba con JavaFX
-		//return new WorldWindowGLCanvas();
-		return new WorldWindowGLJPanel();
-		//return new WorldWindow();
-	}
+//	protected WorldWindow createWorldWindow() {//Este es el unico metodo de cambie de AppPanel porque sino no andaba con JavaFX
+//		//return new WorldWindowGLCanvas();
+//		return new WorldWindowGLJPanel();
+//		//return new WorldWindow();
+//	}
 
 	public WorldWindow getWwd() {
 		return wwd;
