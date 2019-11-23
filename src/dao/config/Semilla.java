@@ -11,6 +11,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
+import dao.OrdenDeCompra.Producto;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,10 +22,10 @@ import lombok.AccessLevel;
 @Setter(value = AccessLevel.PUBLIC)
 @Entity //@Access(AccessType.PROPERTY)
 @NamedQueries({
-	@NamedQuery(name=Semilla.FIND_ALL, query="SELECT o FROM Semilla o") ,
+	@NamedQuery(name=Semilla.FIND_ALL, query="SELECT o FROM Semilla o ORDER BY lower(o.nombre)") ,
 	@NamedQuery(name=Semilla.FIND_NAME, query="SELECT o FROM Semilla o where o.nombre = :name") ,
 }) 
-public class Semilla {
+public class Semilla extends Producto{
 	public static final String FIND_ALL="Semilla.findAll";
 	public static final String FIND_NAME="Semilla.findName";
 	
@@ -67,20 +68,20 @@ public class Semilla {
 		//productoProperty.setValue(producto);
 	}
 
-	/**
-	 * @return the id
-	 */
-	
-	public long getId() {
-		return id;
-	}
-
-	/**
-	 * @param id the id to set
-	 */
-	public void setId(long id) {
-		this.id = id;
-	}
+//	/**
+//	 * @return the id
+//	 */
+//	
+//	public long getId() {
+//		return id;
+//	}
+//
+//	/**
+//	 * @param id the id to set
+//	 */
+//	public void setId(long id) {
+//		this.id = id;
+//	}
 	
 //	public String getNombre(){
 //		return this.nombre.get();

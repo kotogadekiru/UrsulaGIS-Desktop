@@ -31,8 +31,8 @@ public class CosechaHistoChart extends VBox {
 	// VBox root = new VBox();
 	private static final String ICON = "gisUI/1-512.png"; //$NON-NLS-1$
 	public static final String[] colors = {
-		//	"rgb(158,1,66)",
-		//	"rgb(213,62,79)",
+			//	"rgb(158,1,66)",
+			//	"rgb(213,62,79)",
 			" rgb(244,109,67)",  //$NON-NLS-1$
 			" rgb(253,174,97)", //$NON-NLS-1$
 			" rgb(254,224,139)", //$NON-NLS-1$
@@ -44,16 +44,16 @@ public class CosechaHistoChart extends VBox {
 	"DARKBLUE" }; //$NON-NLS-1$
 
 	// Color.rgb(94,79,162)};
- 	@SuppressWarnings("unchecked")
- 	private	XYChart.Series<String, Number> series =null;
- 	private Double superficieTotal= new Double(0);
- 	private Double produccionTotal= new Double(0);
+	@SuppressWarnings("unchecked")
+	private	XYChart.Series<String, Number> series =null;
+	private Double superficieTotal= new Double(0);
+	private Double produccionTotal= new Double(0);
 	//private Double entropia= new Double(0);
 	private int numClasses;
 
 	public CosechaHistoChart(Labor<?> labor) {
 		super();
-		
+
 
 		final CategoryAxis xAxis = new CategoryAxis();
 		xAxis.setLabel(Messages.getString("CosechaHistoChart.10")); //$NON-NLS-1$
@@ -61,65 +61,65 @@ public class CosechaHistoChart extends VBox {
 		yAxis.setLabel(Messages.getString("CosechaHistoChart.11")); //$NON-NLS-1$
 		final BarChart<String, Number> chart = new BarChart<String, Number>(xAxis, yAxis);
 		chart.setTitle(labor.getNombre());
-//				{
-//			 /** @inheritDoc */
-//		    @Override 
-//		    protected void layoutPlotChildren() {
-//		        double catSpace = xAxis.getCategorySpacing();
-//		        // calculate bar spacing
-//		        final double avilableBarSpace = catSpace - (getCategoryGap() + getBarGap());
-//		        double barWidth = (avilableBarSpace / getData().size()) - getBarGap();
-//		        final double barOffset = -((catSpace - getCategoryGap()) / 2);
-//		        final double zeroPos = (yAxis.getLowerBound() > 0) ? 
-//		        		yAxis.getDisplayPosition(yAxis.getLowerBound()) : yAxis.getZeroPosition();
-//		        // RT-24813 : if the data in a series gets too large, barWidth can get negative.
-//		        if (barWidth <= 0) barWidth = 1;
-//		        // update bar positions and sizes
-//		        int catIndex = 0;
-//		        for (String category : xAxis.getCategories()) {
-//		            int index = 0;
-//		            for (Iterator<Series<String, Number>> sit = getDisplayedSeriesIterator(); sit.hasNext(); ) {
-//		                Series<String, Number> series = sit.next();
-//		                final Data<String, Number> item = getDataItem(series, index, catIndex, category);
-//		                if (item != null) {
-//		                    final Node bar = item.getNode();
-//		                    final double categoryPos;
-//		                    final double valPos;
-//		                    if (orientation == Orientation.VERTICAL) {
-//		                        categoryPos = getXAxis().getDisplayPosition(item.getCurrentX());
-//		                        valPos = getYAxis().getDisplayPosition(item.getCurrentY());
-//		                    } else {
-//		                        categoryPos = getYAxis().getDisplayPosition(item.getCurrentY());
-//		                        valPos = getXAxis().getDisplayPosition(item.getCurrentX());
-//		                    }
-//		                    if (Double.isNaN(categoryPos) || Double.isNaN(valPos)) {
-//		                        continue;
-//		                    }
-//		                    final double bottom = Math.min(valPos,zeroPos);
-//		                    final double top = Math.max(valPos,zeroPos);
-//		                    bottomPos = bottom;
-//		                    if (orientation == Orientation.VERTICAL) {
-//		                        bar.resizeRelocate( categoryPos + barOffset + (barWidth + getBarGap()) * index,
-//		                                            bottom, barWidth, top-bottom);
-//		                    } else {
-//		                        //noinspection SuspiciousNameCombination
-//		                        bar.resizeRelocate( bottom, categoryPos + barOffset + (barWidth + getBarGap()) * index,
-//		                                            top-bottom, barWidth);
-//		                    }
-//
-//		                    index++;
-//		                }
-//		            }
-//		            catIndex++;
-//		        }
-//		    }
-//		};
+		//				{
+		//			 /** @inheritDoc */
+		//		    @Override 
+		//		    protected void layoutPlotChildren() {
+		//		        double catSpace = xAxis.getCategorySpacing();
+		//		        // calculate bar spacing
+		//		        final double avilableBarSpace = catSpace - (getCategoryGap() + getBarGap());
+		//		        double barWidth = (avilableBarSpace / getData().size()) - getBarGap();
+		//		        final double barOffset = -((catSpace - getCategoryGap()) / 2);
+		//		        final double zeroPos = (yAxis.getLowerBound() > 0) ? 
+		//		        		yAxis.getDisplayPosition(yAxis.getLowerBound()) : yAxis.getZeroPosition();
+		//		        // RT-24813 : if the data in a series gets too large, barWidth can get negative.
+		//		        if (barWidth <= 0) barWidth = 1;
+		//		        // update bar positions and sizes
+		//		        int catIndex = 0;
+		//		        for (String category : xAxis.getCategories()) {
+		//		            int index = 0;
+		//		            for (Iterator<Series<String, Number>> sit = getDisplayedSeriesIterator(); sit.hasNext(); ) {
+		//		                Series<String, Number> series = sit.next();
+		//		                final Data<String, Number> item = getDataItem(series, index, catIndex, category);
+		//		                if (item != null) {
+		//		                    final Node bar = item.getNode();
+		//		                    final double categoryPos;
+		//		                    final double valPos;
+		//		                    if (orientation == Orientation.VERTICAL) {
+		//		                        categoryPos = getXAxis().getDisplayPosition(item.getCurrentX());
+		//		                        valPos = getYAxis().getDisplayPosition(item.getCurrentY());
+		//		                    } else {
+		//		                        categoryPos = getYAxis().getDisplayPosition(item.getCurrentY());
+		//		                        valPos = getXAxis().getDisplayPosition(item.getCurrentX());
+		//		                    }
+		//		                    if (Double.isNaN(categoryPos) || Double.isNaN(valPos)) {
+		//		                        continue;
+		//		                    }
+		//		                    final double bottom = Math.min(valPos,zeroPos);
+		//		                    final double top = Math.max(valPos,zeroPos);
+		//		                    bottomPos = bottom;
+		//		                    if (orientation == Orientation.VERTICAL) {
+		//		                        bar.resizeRelocate( categoryPos + barOffset + (barWidth + getBarGap()) * index,
+		//		                                            bottom, barWidth, top-bottom);
+		//		                    } else {
+		//		                        //noinspection SuspiciousNameCombination
+		//		                        bar.resizeRelocate( bottom, categoryPos + barOffset + (barWidth + getBarGap()) * index,
+		//		                                            top-bottom, barWidth);
+		//		                    }
+		//
+		//		                    index++;
+		//		                }
+		//		            }
+		//		            catIndex++;
+		//		        }
+		//		    }
+		//		};
 
 
-		
-		
-	series = createSeries(labor);
-		
+
+
+		series = createSeries(labor);
+
 		chart.legendVisibleProperty().setValue(false);
 		chart.getData().add(series);
 		VBox.getVgrow(chart);
@@ -141,12 +141,12 @@ public class CosechaHistoChart extends VBox {
 		bottom.setRight(right);//getChildren().addAll(left,right);
 		bottom.setPadding(new Insets(5,5,5,5));
 		this.getChildren().add(bottom);
-		
+
 
 
 	}
-	
-		
+
+
 	private void doExportarExcell() {
 		System.out.println("TODO implementar doExportarExcell"); //$NON-NLS-1$
 		ExcelHelper xHelper = new ExcelHelper();
@@ -155,15 +155,15 @@ public class CosechaHistoChart extends VBox {
 		//TODO crear una columna de strings y una columna de nummeros
 		for(Data<String, Number> data:series.getData()){
 			//todo agregar datos a las columnas
-			
+
 		}
 		//TODO guardar el archivo
-		
+
 	}
 
 
 	private XYChart.Series<String, Number> createSeries(Labor<?> labor) {	
-		 numClasses = labor.clasificador.getNumClasses();
+		numClasses = labor.clasificador.getNumClasses();
 		Double[] superficies = null;
 		Double[] producciones = null;
 		if(numClasses<colors.length){
@@ -188,41 +188,41 @@ public class CosechaHistoChart extends VBox {
 			if (prod == null) prod = new Double(0);
 			superficies[categoria] = sup + area;	
 			producciones[categoria] = prod + rinde*area;	
-			
+
 			this.produccionTotal+=rinde*area;
 			this.superficieTotal+=area;
 		}
 		it.close();
-		
-//		this.entropia=new Double(0);
-//		for(int i=0;i<superficies.length;i++){
-//			Double s = superficies[i];
-//			if(superficieTotal>0&&s!=null&&s>0){
-//			double p = superficies[i]/this.superficieTotal;
-//			entropia-=p*Math.log(p)/Math.log(2);
-//			}
-//		}
+
+		//		this.entropia=new Double(0);
+		//		for(int i=0;i<superficies.length;i++){
+		//			Double s = superficies[i];
+		//			if(superficieTotal>0&&s!=null&&s>0){
+		//			double p = superficies[i]/this.superficieTotal;
+		//			entropia-=p*Math.log(p)/Math.log(2);
+		//			}
+		//		}
 
 
 		XYChart.Series<String, Number> series = new XYChart.Series<>();
 
 		// Create a XYChart.Data object for each month. Add it to the series.
-	
+
 		for (int j = 0; j <numClasses; j++) {
 			//FIXME esto solo funciona despues de pedir una cosecha. en otro caso el clasifier se cambia y muestra datos equivocados
-			
+
 			String label =labor.getClasificador().getCategoryNameFor(j);//classifier.getTitle(j);
 			//String rangoFin = classifier.getTitle(j+1);
 			//System.out.println("rangoIni: "+rangoIni);//rangoIni: 1.0146282563539477..1.208709021558479		
 			//System.out.println("rangoFin: "+rangoFin);//rangoFin: 1.208709021558479..1.2725564427424458
-			
-		
-		//	String [] partesFin = rangoFin.split("\\.");
-			
-		
-//			String label = df.format(new Double(partesIni[0]))+"~"+df.format(new Double(partesIni[1]));// +"-"+histograma[j+1];
-			
-			
+
+
+			//	String [] partesFin = rangoFin.split("\\.");
+
+
+			//			String label = df.format(new Double(partesIni[0]))+"~"+df.format(new Double(partesIni[1]));// +"-"+histograma[j+1];
+
+
 			Number superficie = superficies[j];
 			if (superficie == null)		superficie = new Double(0);
 			Number produccion = producciones[j];
@@ -246,13 +246,9 @@ public class CosechaHistoChart extends VBox {
 				}
 			});
 			series.getData().add(cData);
-
-			// series.getData().add(new XYChart.Data<>(label, 33));
-
 		}
 
 		return series;
-
 	}
 
 

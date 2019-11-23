@@ -1,19 +1,28 @@
 package dao;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
+import org.geotools.data.FeatureReader;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.factory.CommonFactoryFinder;
+import org.geotools.feature.DefaultFeatureCollection;
+import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.filter.function.Classifier;
 import org.geotools.filter.function.JenksNaturalBreaksFunction;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.expression.Literal;
 import org.opengis.filter.expression.PropertyName;
+
+import com.vividsolutions.jts.geom.Geometry;
 
 import utils.ProyectionConstants;
 import javafx.beans.property.IntegerProperty;
@@ -23,6 +32,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.paint.Color;
 import lombok.Data;
+import tasks.ProcessMapTask;
 @Data
 public class Clasificador {
 	public static final String NUMERO_CLASES_CLASIFICACION = "NUMERO_CLASES_CLASIFICACION";
@@ -141,6 +151,10 @@ public class Clasificador {
 		JenksNaturalBreaksFunction func = (JenksNaturalBreaksFunction) ff.function("Jenks", expr,
 				classes);
 
+		
+		
+		//TODO construir una colleccion equivalente pero donde cada feature tenga la misma superficie
+		//10m^2 para que tengan el mismo peso relativo
 		if(collection.size()>0){
 			System.out.println("evaluando la colleccion para poder hacer jenkins");
 			clasifier = (Classifier) func.evaluate(collection);//XXX esto demora unos segundos!
@@ -204,10 +218,12 @@ public class Clasificador {
 
 			double desvios = new Double(0);
 			for(LaborItem dao: elementosItem){
-				//Double area = dao.getGeometry().getArea()*ProyectionConstants.A_HAS;
-				desvios += Math.abs(dao.getAmount()-average);
+				Double area = dao.getGeometry().getArea()*ProyectionConstants.A_HAS();
+				desvios += area*Math.abs(dao.getAmount()-average);
+				//desvios += Math.abs(dao.getAmount()-average);
 			}
-			desvioEstandar= desvios/(elementosItem.size());
+			desvioEstandar= desvios/sup;
+			//desvioEstandar= desvios/(elementosItem.size());
 		}
 
 		//	System.out.println("termine de ordenar los elementos en constructHistogram");
@@ -271,7 +287,48 @@ public class Clasificador {
 		System.out.println("constructClasificador "+nombreClasif);
 		if (Clasificador.CLASIFICADOR_JENKINS.equalsIgnoreCase(nombreClasif)) {
 			System.out.println("construyendo clasificador jenkins "+labor.colAmount.get());
+			
+			//*** nuevo codigo para tomar en cuenta el area de los poligonos
+//			SimpleFeatureCollection areaInvariantCol = new DefaultFeatureCollection("internal",labor.getType());
+//			
+//			FeatureReader<SimpleFeatureType, SimpleFeature> reader=null;
+//			try {
+//				reader = labor.getInCollection().reader();
+//			} catch (IOException e) {
+//				
+//				e.printStackTrace();
+//			}
+//			
+//			SimpleFeatureBuilder fb = labor.featureBuilder;
+//			
+//			int id=0;
+//			final double minArea=10;
+//			while (ProcessMapTask.readerHasNext(reader)) {
+//				SimpleFeature feature=null;
+//				try {
+//					feature = reader.next();
+//					
+//					Double area = ProyectionConstants.getHasFeature(feature)							
+//							*ProyectionConstants.METROS2_POR_HA;
+//					System.out.println("multiplicando el feature con area original "+ area+" id "+id);//16.11?
+//					while(area > 0) {
+//						areaInvariantCol.add(fb.buildFeature("\\."+id, feature.getAttributes().toArray()));
+//						area=area-minArea;
+//						id++;
+//					}
+//					
+//				} catch (Exception e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}				
+//			}
+//			System.out.println("haciendo jenkins con la nueva collection de "+id+" features");
+//			this.constructJenksClasifier(areaInvariantCol,labor.colAmount.get());
+//			areaInvariantCol.clear();
+			//** fin del nuevo codigo para tomar en cuenta el area de los poligonos
+			
 			this.constructJenksClasifier(labor.outCollection,labor.colAmount.get());
+		
 		} else {//if(Clasificador.CLASIFICADOR_DESVIOSTANDAR.equalsIgnoreCase(nombreClasif)) {
 			System.out.println("no hay jenks Classifier falling back to histograma");
 			List<LaborItem> items = new ArrayList<LaborItem>();

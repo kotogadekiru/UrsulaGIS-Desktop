@@ -21,7 +21,7 @@ import lombok.Data;
 @Data
 @Entity //@Access(AccessType.PROPERTY)
 @NamedQueries({
-	@NamedQuery(name=Cultivo.FIND_ALL, query="SELECT c FROM Cultivo c") ,
+	@NamedQuery(name=Cultivo.FIND_ALL, query="SELECT c FROM Cultivo c ORDER BY lower(c.nombre)") ,
 	@NamedQuery(name=Cultivo.FIND_NAME, query="SELECT o FROM Cultivo o where o.nombre = :name") ,
 	@NamedQuery(name=Cultivo.COUNT_ALL, query="SELECT COUNT(o) FROM Cultivo o") ,
 	

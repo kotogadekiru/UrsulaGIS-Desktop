@@ -47,6 +47,7 @@ public class PoligonLayerFactory {
 		poli.setLayer(surfaceLayer);
 	//	poli.setLayer(surfaceLayer);		
 		surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, poli);
+		surfaceLayer.setValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR, poli.getClass());
 		MeasureTool measureTool = createMeasureTool(wwd, surfaceLayer);
 		
 		List<Position> positions = poli.getPositions();
@@ -158,6 +159,7 @@ public class PoligonLayerFactory {
 					surfaceLayer.setName(poli.getNombre()+" "+formated); //$NON-NLS-1$
 					//ArrayList<? extends Position> positions = measureTool.getPositions();
 					surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, poli);
+					surfaceLayer.setValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR, poli.getClass());
 					//surfaceLayer.setValue("POSITIONS", poli.getPositions());
 
 					valueProperty.setValue(value);

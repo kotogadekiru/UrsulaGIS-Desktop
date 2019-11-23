@@ -30,9 +30,9 @@ import utils.ProyectionConstants;
 @Data
 @Entity @Access(AccessType.PROPERTY)
 @NamedQueries({
-	@NamedQuery(name=Poligono.FIND_ALL, query="SELECT c FROM Poligono c") ,
+	@NamedQuery(name=Poligono.FIND_ALL, query="SELECT c FROM Poligono c ORDER BY lower(c.nombre)") ,
 	@NamedQuery(name=Poligono.FIND_NAME, query="SELECT o FROM Poligono o where o.nombre = :name") ,
-	@NamedQuery(name=Poligono.FIND_ACTIVOS, query="SELECT o FROM Poligono o where o.activo = true") ,
+	@NamedQuery(name=Poligono.FIND_ACTIVOS, query="SELECT o FROM Poligono o where o.activo = true ORDER BY lower(o.nombre)") ,
 }) 
 public class Poligono implements Comparable<Poligono>{
 	private static final String COORDINATE_CLOSE = "}";

@@ -12,17 +12,20 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Transient;
 
+import dao.OrdenDeCompra.Producto;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper=false)
 @Entity @Access(AccessType.FIELD)
 @NamedQueries({
-	@NamedQuery(name=Agroquimico.FIND_ALL, query="SELECT o FROM Agroquimico o") ,
+	@NamedQuery(name=Agroquimico.FIND_ALL, query="SELECT o FROM Agroquimico o ORDER BY lower(o.nombre)") ,
 	@NamedQuery(name=Agroquimico.FIND_NAME, query="SELECT o FROM Agroquimico o where o.nombre = :name") ,
 }) 
-public class Agroquimico implements Comparable<Agroquimico>{
+public class Agroquimico extends Producto implements Comparable<Agroquimico>{
 	public static final String FIND_ALL="Agroquimico.findAll";
 	public static final String FIND_NAME="Agroquimico.findName";
 	

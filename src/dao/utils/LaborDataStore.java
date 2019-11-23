@@ -221,6 +221,7 @@ public class LaborDataStore<E> {
 
 		if(labor.layer!=null){
 			labor.layer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, null);
+			labor.layer.setValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR, null);
 			labor.layer.removeAllRenderables();
 			labor.layer.dispose();
 			labor.layer.getValues().clear();

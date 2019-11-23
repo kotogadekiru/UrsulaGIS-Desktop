@@ -281,6 +281,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			} else { // no es point. Estoy abriendo una cosecha de poligonos.
 				List<Polygon> mp = getPolygons(ci);
 			//	for(Polygon p : mp){
+				if(mp.size()>0) {
 					Polygon p = mp.get(0);
 
 					for(Coordinate c :p.getCoordinates()){
@@ -296,7 +297,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 					if(has>supMinimaHas){
 						labor.insertFeature(ci);//XXX es posible que no se inserte si ya existe el id
 					}
-			//	}
+				}
 			}
 			
 		}// fin del while que recorre las features
@@ -391,14 +392,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 	//		}
 	//	}
 
-	private boolean readerHasNext(FeatureReader<SimpleFeatureType, SimpleFeature> reader) {
-		try{
-			return reader.hasNext();
-		}catch(Exception e ){
-			e.printStackTrace();
-			return false;
-		}
-	}
+
 
 	private List<CosechaItem> resumirGeometrias() {
 		//TODO antes de proceder a dibujar las features
@@ -471,7 +465,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 
 				SimpleFeature fIn = colections.get(i).get(0);
 				//TODO recorrer buffered y crear una feature por cada geometria de la geometry collection
-				for(int igeom=0;igeom<buffered.getNumGeometries();igeom++){
+				for(int igeom=0;buffered!=null && igeom<buffered.getNumGeometries();igeom++){//null pointer exception at tasks.importar.ProcessHarvestMapTask.resumirGeometrias(ProcessHarvestMapTask.java:468)
 					Geometry g = buffered.getGeometryN(igeom);
 				
 					CosechaItem ci=labor.constructFeatureContainerStandar(fIn,true);
@@ -990,7 +984,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
-		DecimalFormat df = new DecimalFormat(Messages.getString("ProcessHarvestMapTask.22")); //$NON-NLS-1$
+		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
 
 		String tooltipText = new String(Messages.getString("ProcessHarvestMapTask.23") //$NON-NLS-1$
 				+ df.format(cosechaItem.getAmount()) + Messages.getString("ProcessHarvestMapTask.24") //$NON-NLS-1$

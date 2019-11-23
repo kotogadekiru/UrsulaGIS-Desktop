@@ -137,10 +137,10 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 					//Double kgNHa= (Double) item.getPpmN()*suelo.getDensidad();
 				//	double kgSueloHa = ProyectionConstants.METROS2_POR_HA*0.6*suelo.getDensidad();
 					Double kgNHa=suelo.getKgNHa(item);// (Double) item.getPpmN()*kgSueloHa*Fertilizante.porcN_NO3/1000000;
-					double porcOrgDisponible =1/3;
-					if(estival)porcOrgDisponible=2/3;
+					double porcOrgDisponible = (1d/3);// esto era 0.0 porque estaba inicializado con la division entera de 1/3 que es 0. //que feo!
+					if(estival)porcOrgDisponible=(2d/3);
 					Double kgNOrganicoHa= suelo.getKgNOrganicoHa(item)*porcOrgDisponible;//divido la mineralizacion anual a la mitad. pero depende del cultivo
-					
+
 					Geometry geom = item.getGeometry();				
 					geom= PolygonValidator.validate(geom);
 					if(!geom.intersects(geometry))return DoubleStream.of(0.0);
@@ -171,7 +171,7 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 
 			double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 			//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
-			DecimalFormat df = new DecimalFormat("#.00");
+			DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
 
 			String tooltipText = new String(// TODO ver si se puede instalar un
 					// boton

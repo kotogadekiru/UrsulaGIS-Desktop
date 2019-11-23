@@ -98,7 +98,7 @@ public class OpenMargenMapTask extends ProcessMapTask<MargenItem,Margen> {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 
 
-		DecimalFormat df = new DecimalFormat(Messages.getString("OpenMargenMapTask.0")); //$NON-NLS-1$
+		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
 		df.setGroupingSize(3);
 		
 		df.setGroupingUsed(true);

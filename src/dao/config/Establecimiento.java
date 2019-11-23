@@ -12,11 +12,12 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 
+import dao.Poligono;
 import lombok.Data;
 @Data
 @Entity
 @NamedQueries({
-	@NamedQuery(name=Establecimiento.FIND_ALL, query="SELECT o FROM Establecimiento o"),
+	@NamedQuery(name=Establecimiento.FIND_ALL, query="SELECT o FROM Establecimiento o ORDER BY lower(o.nombre)"),
 	@NamedQuery(name=Establecimiento.FIND_NAME, query="SELECT o FROM Establecimiento o where o.nombre = :name") ,
 }) 
 public class Establecimiento implements Comparable<Establecimiento> {
@@ -27,8 +28,17 @@ public class Establecimiento implements Comparable<Establecimiento> {
 	private Long id=null;
 	
 	public String nombre=new String();
+	
+	public Double superficieTotal= new Double(0.0);
+	public Double superficieAgricola=new Double(0.0);
+	public Double superficieGanadera=new Double(0.0);
+	public Double superficieDesperdicio=new Double(0.0);
+	
 	@ManyToOne
 	private Empresa empresa;
+	
+	@ManyToOne
+	private Poligono contorno;
 	
 	@OneToMany(cascade=CascadeType.ALL, mappedBy="establecimiento")
 	private List<Lote> lotes;

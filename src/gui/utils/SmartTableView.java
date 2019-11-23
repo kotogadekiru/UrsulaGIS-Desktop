@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
@@ -18,6 +19,7 @@ import org.controlsfx.control.table.TableFilter;
 import org.controlsfx.control.table.TableFilter.Builder;
 
 import dao.Poligono;
+import dao.OrdenDeCompra.Producto;
 import dao.config.Agroquimico;
 import dao.config.Campania;
 import dao.config.Cultivo;
@@ -50,6 +52,9 @@ import utils.DAH;
 public class SmartTableView<T> extends TableView<T> {
 	private Supplier<T> onDoubleClick=null;
 	private Consumer<T> onShowClick=null;
+	
+	private List<String> rejectedColumns=new ArrayList<>();
+	private List<String> orderColumns=new ArrayList<>();
 //	public HBox filters = new HBox();
 //	private FilteredList<T> filteredData=null;
 	//i18n FilterTable Strings
@@ -58,9 +63,22 @@ public class SmartTableView<T> extends TableView<T> {
 	//"filterpanel.none.button"
 	//"filterpanel.all.button"
 	//"filterpanel.resetall.button"
+	public SmartTableView(ObservableList<T> data,List<String> rejectedColumns,List<String> order){
+		super(data);
+		this.rejectedColumns=rejectedColumns;
+		this.orderColumns=order;
+		construct(data);
+		
+	}
 	
 	public SmartTableView(ObservableList<T> data){//,ObservableList<T> observable){
 		super(data);
+		construct(data);
+		
+
+	}
+
+	private void construct(ObservableList<T> data) {
 		impl.org.controlsfx.i18n.Localization.setLocale(Locale.forLanguageTag("es-ES"));//XXX en java 10 falla; pasar al controlsfx-9.0.0.jar
 	
 		//filteredData = new FilteredList<>(observable, p -> true);
@@ -160,17 +178,34 @@ public class SmartTableView<T> extends TableView<T> {
 		        return false;
 		    }
 		});
-		
-
 	}
 
+	private String getMethodName(Method method) {
+		String name = method.getName();
+	
+		name = name.replace("get", "");
+		name = name.replace("set", "");
+		name = name.replace("is", "");
+		
+		return name;
+		
+	}
 
 	private void populateColumns(Class<?> clazz) {
 		Method[] methods = clazz.getMethods();//ok esto me trae todos los metodos heredados
 		List<Method> methodList = Arrays.asList(methods);
+		
 		methodList.sort((a,b)->{
-			String nameA = a.getName();
-			String nameB = b.getName();
+			
+			String nameA = getMethodName(a);//.getName();
+			String nameB =  getMethodName(b);//b.getName();
+			if(orderColumns.contains(nameA)&&orderColumns.contains(nameB)) {
+				return Integer.compare(orderColumns.indexOf(nameA),orderColumns.indexOf(nameB));
+			} else 	if(orderColumns.contains(nameA)&&!orderColumns.contains(nameB)) {
+				return -1;
+			}  else if(!orderColumns.contains(nameA)&&orderColumns.contains(nameB)) {
+				return 1;
+			} 
 			return nameA.compareToIgnoreCase(nameB);
 		});
 	//	System.out.print("creando tabla para "+ clazz+" con los metodos\n"+methodList);
@@ -198,6 +233,7 @@ public class SmartTableView<T> extends TableView<T> {
 				}
 				
 				name = name.replace("get", "");
+				if(this.rejectedColumns.contains(name)) {continue;}
 				if(String.class.isAssignableFrom(fieldType)){
 					getStringColumn(clazz,method, name, fieldType, setMethodName);
 				} else 	if(StringProperty.class.isAssignableFrom(fieldType)  ){
@@ -230,6 +266,8 @@ public class SmartTableView<T> extends TableView<T> {
 					getFertilizanteColumn(clazz, method, name, fieldType, setMethodName);
 				}else if(Poligono.class.isAssignableFrom(fieldType)){
 					getPoligonoColumn(clazz, method, name, fieldType, setMethodName);
+				}else if(Producto.class.isAssignableFrom(fieldType)){
+					getProductoColumn(clazz, method, name, fieldType, setMethodName);
 				}
 //				else {//no quiero que muestre los metodos class ni id
 //					getStringColumn(clazz,method, name, fieldType, setMethodName);
@@ -375,6 +413,8 @@ public class SmartTableView<T> extends TableView<T> {
 
 	}
 
+
+	
 	private void getAgroquimicoColumn(Class<?> clazz, Method method, String name, Class<?> fieldType,
 			String setMethodName) {
 		String propName = name.replace("Property", "");
@@ -517,7 +557,7 @@ public class SmartTableView<T> extends TableView<T> {
 					
 					return new SimpleStringProperty(stringValue);	
 					}catch(Exception e){
-						System.out.println("La creacion de SimpleStringProperty en getStringColumn "+name +" con valor: "+stringValue);
+						//System.out.println("La creacion de SimpleStringProperty en getStringColumn "+name +" con valor: "+stringValue);
 						
 						return new SimpleStringProperty("sin datos");
 					}
@@ -546,6 +586,54 @@ public class SmartTableView<T> extends TableView<T> {
 
 	}
 
+	
+	private void getProductoColumn(Class<?> clazz,Method getMethod, String name, Class<?> fieldType, String setMethodName) {
+		//System.out.println("Obteniendo stringColumn para "+name);
+		//TODO obtener el nombre de la columna de un bundle de idiomas o de un archivo de configuracion
+		String propName = name.replace("Property", "");
+		TableColumn<T,String> column = new TableColumn<T,String>(propName);
+		column.setEditable(false);
+		column.setCellFactory(TextFieldTableCell.forTableColumn());
+		column.setCellValueFactory(//new PropertyValueFactory<>(propName)
+				cellData ->{
+					String stringValue = null;
+					try{
+					 stringValue =((Producto)  getMethod.invoke(cellData.getValue(), (Object[])null)).getNombre();
+					
+					
+					return new SimpleStringProperty(stringValue);	
+					}catch(Exception e){
+						//System.out.println("La creacion de SimpleStringProperty en getStringColumn "+name +" con valor: "+stringValue);
+						
+						return new SimpleStringProperty("sin datos");
+					}
+				});
+		try {
+			Method setMethod = clazz.getMethod(setMethodName, fieldType);
+			if(setMethod!=null){
+				column.setOnEditCommit(cellEditingEvent -> { 
+					int row = cellEditingEvent.getTablePosition().getRow();
+					T p = cellEditingEvent.getTableView().getItems().get(row);
+					try {
+						((Producto)  getMethod.invoke(p, (Object[])null)).setNombre(cellEditingEvent.getNewValue());
+						//((OrdenCompraItem)p).getProducto()
+						//setMethod.invoke(p,cellEditingEvent.getNewValue());
+						DAH.save(p);
+						refresh();
+					} catch (Exception e) {	e.printStackTrace();}
+				});
+			}
+
+		} catch (NoSuchMethodException e1) {
+			//XXX el metodo es solo de tipo get
+		} catch (SecurityException e1) {
+			e1.printStackTrace();
+		}
+
+		this.getColumns().add(column);
+
+	}
+	
 	
 	private void getJPAStringPropertyColumn(Class<?> clazz, Method method, String name, Class<?> fieldType,
 			String setMethodName) {

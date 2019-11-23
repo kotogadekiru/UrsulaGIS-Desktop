@@ -93,7 +93,7 @@ public class OpenSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 	@Override
 	protected ExtrudedPolygon getPathTooltip(Geometry poly, SueloItem si) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		DecimalFormat df = new DecimalFormat(Messages.getString("OpenSoilMapTask.0")); //$NON-NLS-1$
+		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
 		String tooltipText = new String(
 				Messages.getString("OpenSoilMapTask.1")+ df.format(si.getPpmP()) +Messages.getString("OpenSoilMapTask.2") //$NON-NLS-1$ //$NON-NLS-2$
 				+Messages.getString("OpenSoilMapTask.3")+ df.format(si.getPpmN()) +Messages.getString("OpenSoilMapTask.4") //$NON-NLS-1$ //$NON-NLS-2$

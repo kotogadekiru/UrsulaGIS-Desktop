@@ -457,7 +457,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
-		DecimalFormat df = new DecimalFormat(Messages.getString("GrillarCosechasMapTask.20")); //$NON-NLS-1$
+		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
 
 		String tooltipText = new String(Messages.getString("GrillarCosechasMapTask.21") //$NON-NLS-1$
 				+ df.format(cosechaItem.getAmount()) + Messages.getString("GrillarCosechasMapTask.22") //$NON-NLS-1$

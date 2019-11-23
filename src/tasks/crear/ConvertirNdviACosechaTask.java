@@ -205,8 +205,7 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
-		DecimalFormat df = new DecimalFormat("#.00");
-
+		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
 		String tooltipText = new String("Rinde: "
 				+ df.format(cosechaItem.getAmount()) + " Tn/Ha\n"
 				//	+ "Area: "+ df.format(area * ProyectionConstants.METROS2_POR_HA)+ " m2\n" + 

@@ -217,7 +217,7 @@ public class Suelo extends Labor<SueloItem>{
 	public double calcPpmNHaKg(Double kgNHa) {
 		//double kgSueloHa = ProyectionConstants.METROS2_POR_HA*0.6*this.getDensidad();
 		//Double ppmN= (Double) kgNHa*1000000/(kgSueloHa*Fertilizante.porcN_NO3);
-		return kgToPpm(kgNHa,0.6)/Fertilizante.porcN_NO3;//convierto de n elemento a N03 para poder comparar con los analisis de laboratorio		
+		return kgToPpm(kgNHa,0.6);// /Fertilizante.porcN_NO3;//convierto de n elemento a N03 para poder comparar con los analisis de laboratorio		
 	}
 	
 	//MATERIA ORGANICA
@@ -239,16 +239,17 @@ public class Suelo extends Labor<SueloItem>{
 		return kgNorganicoHa;
 	}
 	
+	//FIXME no dividir por el peso del pentoxido. todos los pesos son de kg de P
 	// FOSFORO
 	public double getKgPHa(SueloItem item) {
 		//double kgSueloHa = ProyectionConstants.METROS2_POR_HA*0.2*this.getDensidad();
 		//Double kgNHa= (Double) item.getPpmP()*kgSueloHa*Fertilizante.porcP_PO4/1000000;
-		return ppmToKg(item.getPpmP(),0.2)*Fertilizante.porcP_PO4;		
+		return ppmToKg(item.getPpmP(),0.2);//*Fertilizante.porcP_PO4;		
 	}
 	
 	public double calcPpmPHaKg(Double kgPHa) {
 		//double kgSueloHa = ProyectionConstants.METROS2_POR_HA*0.2*this.getDensidad();
 		//Double ppmP= (Double) kgPHa*1000000/(kgSueloHa*Fertilizante.porcP_PO4);
-		return  kgToPpm(kgPHa,0.2)/Fertilizante.porcP_PO4;	
+		return  kgToPpm(kgPHa,0.2);// /Fertilizante.porcP_PO4;	
 	}
 }

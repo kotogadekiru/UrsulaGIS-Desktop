@@ -15,7 +15,7 @@ import lombok.Data;
 @Data
 @Entity
 @NamedQueries({
-	@NamedQuery(name=Empresa.FIND_ALL, query="SELECT o FROM Empresa o"),
+	@NamedQuery(name=Empresa.FIND_ALL, query="SELECT o FROM Empresa o ORDER BY lower(o.nombre)"),
 	@NamedQuery(name=Empresa.FIND_NAME, query="SELECT o FROM Empresa o where o.nombre = :name") ,
 }) 
 public class Empresa implements Comparable<Empresa>{

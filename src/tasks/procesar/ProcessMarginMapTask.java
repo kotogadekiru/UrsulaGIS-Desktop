@@ -32,6 +32,7 @@ import dao.margen.MargenItem;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
+import gui.Messages;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
 
@@ -398,34 +399,57 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 
 
-		DecimalFormat df = new DecimalFormat("0.00");
-		df.setGroupingSize(3);
-		
-		df.setGroupingUsed(true);
-
-		String tooltipText = new String(
-				"Rentabilidad: "+ df.format(renta.getRentabilidadHa())+ "%\n\n" 
-						+"Margen: "+ df.format(renta.getMargenPorHa())	+ "U$S/Ha\n" 
-						+ "Costo: "	+ df.format(renta.getCostoPorHa())		+ "U$S/Ha\n\n"
-						+ "Fertilizacion: "	+ df.format(renta.getImporteFertHa())+ "U$S/Ha\n" 
-						+ "Pulverizacion: "	+ df.format(renta.getImportePulvHa())	+ "U$S/Ha\n"
-						+ "Siembra: "	+ df.format(renta.getImporteSiembraHa())+ "U$S/Ha\n"
-						+ "Fijo: "	+ df.format(renta.getCostoFijoPorHa())+ "U$S/Ha\n"
-						+ "Cosecha: "	+ df.format(renta.getImporteCosechaHa()) + "U$S/Ha\n" 
-						//		+ df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n"
-						// +"feature: " + featureNumber
-				);
-
-		if(area<1){
-			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
-		} else {
-			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
-		}
+//		DecimalFormat df = new DecimalFormat("0.00");
+//		df.setGroupingSize(3);
+//		
+//		df.setGroupingUsed(true);
+//
+//		String tooltipText = new String(
+//				"Rentabilidad: "+ df.format(renta.getRentabilidadHa())+ "%\n\n" 
+//						+"Margen: "+ df.format(renta.getMargenPorHa())	+ "U$S/Ha\n" 
+//						+ "Costo: "	+ df.format(renta.getCostoPorHa())		+ "U$S/Ha\n\n"
+//						+ "Fertilizacion: "	+ df.format(renta.getImporteFertHa())+ "U$S/Ha\n" 
+//						+ "Pulverizacion: "	+ df.format(renta.getImportePulvHa())	+ "U$S/Ha\n"
+//						+ "Siembra: "	+ df.format(renta.getImporteSiembraHa())+ "U$S/Ha\n"
+//						+ "Fijo: "	+ df.format(renta.getCostoFijoPorHa())+ "U$S/Ha\n"
+//						+ "Cosecha: "	+ df.format(renta.getImporteCosechaHa()) + "U$S/Ha\n" 
+//						//		+ df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n"
+//						// +"feature: " + featureNumber
+//				);
+//
+//		if(area<1){
+//			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
+//		} else {
+//			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
+//		}
 
 //		ArrayList<Object> ret = new ArrayList<Object>();
 //		ret.add(path);
 //		ret.add(tooltipText);
 		//return ret;
+		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
+		df.setGroupingSize(3);
+		
+		df.setGroupingUsed(true);
+
+		String tooltipText = new String(
+				Messages.getString("OpenMargenMapTask.1")+ df.format(renta.getRentabilidadHa())+ Messages.getString("OpenMargenMapTask.2")  //$NON-NLS-1$ //$NON-NLS-2$
+						+Messages.getString("OpenMargenMapTask.3")+ df.format(renta.getMargenPorHa())	+ Messages.getString("OpenMargenMapTask.4")  //$NON-NLS-1$ //$NON-NLS-2$
+						+ Messages.getString("OpenMargenMapTask.5")	+ df.format(renta.getCostoPorHa())		+ Messages.getString("OpenMargenMapTask.6") //$NON-NLS-1$ //$NON-NLS-2$
+						+ Messages.getString("OpenMargenMapTask.7")	+ df.format(renta.getImporteFertHa())+ Messages.getString("OpenMargenMapTask.8")  //$NON-NLS-1$ //$NON-NLS-2$
+						+ Messages.getString("OpenMargenMapTask.9")	+ df.format(renta.getImportePulvHa())	+ Messages.getString("OpenMargenMapTask.10") //$NON-NLS-1$ //$NON-NLS-2$
+						+ Messages.getString("OpenMargenMapTask.11")	+ df.format(renta.getImporteSiembraHa())+ Messages.getString("OpenMargenMapTask.12") //$NON-NLS-1$ //$NON-NLS-2$
+						+ Messages.getString("OpenMargenMapTask.13")	+ df.format(renta.getCostoFijoPorHa())+ Messages.getString("OpenMargenMapTask.14") //$NON-NLS-1$ //$NON-NLS-2$
+						+ Messages.getString("OpenMargenMapTask.15")	+ df.format(renta.getImporteCosechaHa()) + Messages.getString("OpenMargenMapTask.16")  //$NON-NLS-1$ //$NON-NLS-2$
+						//		+ df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n"
+						// +"feature: " + featureNumber
+				);
+
+		if(area<1){
+			tooltipText=tooltipText.concat( Messages.getString("OpenMargenMapTask.17")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("OpenMargenMapTask.18")); //$NON-NLS-1$ //$NON-NLS-2$
+		} else {
+			tooltipText=tooltipText.concat(Messages.getString("OpenMargenMapTask.19")+df.format(area ) + Messages.getString("OpenMargenMapTask.20")); //$NON-NLS-1$ //$NON-NLS-2$
+		}
 		return super.getExtrudedPolygonFromGeom(poly, renta,tooltipText);
 	}
 

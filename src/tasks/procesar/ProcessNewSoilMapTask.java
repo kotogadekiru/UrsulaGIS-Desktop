@@ -22,6 +22,7 @@ import dao.fertilizacion.FertilizacionLabor;
 import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
+import gui.Messages;
 import gui.nww.LaborLayer;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
@@ -447,16 +448,28 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 	@Override
 	protected ExtrudedPolygon getPathTooltip(Geometry poly, SueloItem si) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+//		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
+//		String tooltipText = new String(
+//				" PpmFosforo/Ha: "+ df.format(si.getPpmP()) +"\n"
+//				+"PpmNitrogeno/Ha: "+ df.format(si.getPpmN()) +"\n"
+//				);
+//
+//		if(area<1){
+//			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
+//		} else {
+//			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
+//		}
+		
 		DecimalFormat df = new DecimalFormat("#.00");
 		String tooltipText = new String(
-				" PpmFosforo/Ha: "+ df.format(si.getPpmP()) +"\n"
-				+"PpmNitrogeno/Ha: "+ df.format(si.getPpmN()) +"\n"
+				Messages.getString("CrearSueloMapTask.fosforo")+": " +df.format(si.getPpmP()) +"Ppm\n"
+				+Messages.getString("CrearSueloMapTask.nitrogeno")+": "+ df.format(si.getPpmN()) +"Ppm\n"
 				);
 
 		if(area<1){
-			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
+			tooltipText=tooltipText.concat( Messages.getString("CrearSueloMapTask.sup")+": "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
 		} else {
-			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
+			tooltipText=tooltipText.concat(Messages.getString("CrearSueloMapTask.sup")+": "+df.format(area ) + "Has\n");
 		}
 		return super.getExtrudedPolygonFromGeom(poly, si,tooltipText);
 	}

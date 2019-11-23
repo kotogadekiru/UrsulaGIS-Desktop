@@ -71,7 +71,7 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 	@Override
 	public  ExtrudedPolygon  getPathTooltip( Geometry poly,SueloItem si) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		DecimalFormat df = new DecimalFormat("#.00");
+		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
 		String tooltipText = new String(
 				Messages.getString("CrearSueloMapTask.fosforo")+": " +df.format(si.getPpmP()) +"Ppm\n"
 				+Messages.getString("CrearSueloMapTask.nitrogeno")+": "+ df.format(si.getPpmN()) +"Ppm\n"

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalDouble;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.geotools.geometry.jts.ReferencedEnvelope;
@@ -121,21 +122,29 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 
 		//XXX byPolygon contiene un map con la categoria de destino y todos los simplefeatures
 		List<Object[]> resumidas = resumirGeometrias(byBicluster);
+		
+		double entresurco = siembra.getEntreSurco();
+		double pesoSemilla = siembra.getSemilla().getPesoDeMil()/1000000;//141
+		double metrosLHA = ProyectionConstants.METROS2_POR_HA/entresurco;//23,809.52
+		
 
 		List<SiembraItem> itemsToShow = new ArrayList<SiembraItem>();
 		Double id = 0d;
 		for(Object[] value :resumidas) {
-			SiembraItem ci = new SiembraItem();
-			ci.setId(id);
+			SiembraItem si = new SiembraItem();
+			si.setId(id);
 			id++;
-			ci.setDosisHa((Double)value[1]);
-			ci.setDosisFertLinea((Double)value[2]);
-			labor.setPropiedadesLabor(ci);
-			ci.setGeometry((Geometry)value[0]);
+		
+			si.setDosisHa((Double)value[1]);
+		
+			si.setDosisML((si.getDosisHa()/pesoSemilla)/metrosLHA);
+			si.setDosisFertLinea((Double)value[2]);
+			labor.setPropiedadesLabor(si);
+			si.setGeometry((Geometry)value[0]);
 			
 			//System.out.println("termine de crear una siembra resumida : "+ci.toString());
-			labor.insertFeature(ci);
-			itemsToShow.add(ci);		
+			labor.insertFeature(si);
+			itemsToShow.add(si);		
 		}
 
 		labor.constructClasificador();
@@ -303,16 +312,21 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 
 
 
+		//siembrasPoly.stream().mapToDouble(LaborItem::getAmount).average();
 		double amountProm=0;
-		int n=0;
-		for(LaborItem li : siembrasPoly){
-			n++;
-			amountProm+=li.getAmount();
+		OptionalDouble opt = siembrasPoly.stream().mapToDouble(LaborItem::getAmount).average();
+		if(opt.isPresent()) {
+			amountProm=opt.getAsDouble();
 		}
-		amountProm=amountProm/n;
-		
+		//		int n=0;
+		//		for(LaborItem li : siembrasPoly){
+		//			n++;
+		//			amountProm+=li.getAmount();
+		//		}
+		//		amountProm=amountProm/n;
+
 		ret[1]=amountProm;
-		
+
 		return ret;
 	}
 	
@@ -443,7 +457,7 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 	@Override
 	public ExtrudedPolygon  getPathTooltip( Geometry poly,SiembraItem siembraFeature) {		
 		double area = poly.getArea() *ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		DecimalFormat df = new DecimalFormat("#.00"); 
+		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
 		
 		String tooltipText = new String("Densidad: "+ df.format(siembraFeature.getDosisML()) + " Sem/m\n");
 		tooltipText=tooltipText.concat("Kg: " + df.format(siembraFeature.getDosisHa()) + " kg/Ha\n");

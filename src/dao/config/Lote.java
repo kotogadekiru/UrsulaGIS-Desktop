@@ -7,13 +7,14 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
+import dao.Poligono;
 import lombok.Data;
 
 
 @Data
 @Entity
 @NamedQueries({
-	@NamedQuery(name=Lote.FIND_ALL, query="SELECT o FROM Lote o"),
+	@NamedQuery(name=Lote.FIND_ALL, query="SELECT o FROM Lote o ORDER BY lower(o.nombre)"),
 	@NamedQuery(name=Lote.FIND_NAME, query="SELECT o FROM Lote o where o.nombre = :name") ,
 }) 
 public class Lote implements Comparable<Lote> {
@@ -26,6 +27,9 @@ public class Lote implements Comparable<Lote> {
 	public String nombre= new String();
 
 	public Double superficie=new Double(0.0);
+	
+	@ManyToOne
+	private Poligono contorno=null;
 	
 	@ManyToOne
 	private Establecimiento establecimiento=null;

@@ -9,21 +9,22 @@ import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
+import dao.OrdenDeCompra.Producto;
 import lombok.Data;
 @Data
 @Entity
 @NamedQueries({
-	@NamedQuery(name=Fertilizante.FIND_ALL, query="SELECT o FROM Fertilizante o") ,
+	@NamedQuery(name=Fertilizante.FIND_ALL, query="SELECT o FROM Fertilizante o ORDER BY lower(o.nombre)") ,
 	@NamedQuery(name=Fertilizante.FIND_NAME, query="SELECT o FROM Fertilizante o where o.nombre = :name") ,
 }) 
-public class Fertilizante implements Comparable<Fertilizante>{
+public class Fertilizante extends Producto implements Comparable<Fertilizante>{
 	public static final String SUPERFOSFATO_TRIPLE_SPT = "Superfosfato Triple (SPT)";
 	public static final String SUPERFOSFATO_SIMPLE = "Superfosfato Simple";
 	public static final String FOSFATO_MONOAMONICO_MAP = "Fosfato Monoamonico (MAP)";
 	public static final String FOSFATO_DIAMONICO_DAP = "Fosfato Diamonico (DAP)";//se usa en fertilizacion labor para seleccionar el default
 	
 	public static final Double porcN_NO3=0.2259;//necesario para convertir de ppm Nitratos NO3 a kgN
-	public static final Double porcP_PO4=0.3231;
+	public static final Double porcP_PO4=0.3231;// la informacion que estoy ingresando esta en ppm P no P204 
 	
 	public static final Double porcN_MO=0.04;
 	public static final Double porcMO_DISP_Campania=0.02;

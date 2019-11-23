@@ -32,6 +32,7 @@ import dao.Labor;
 import dao.Poligono;
 import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
+import gui.JFXMain;
 import gui.utils.DateConverter;
 import javafx.concurrent.Task;
 import javafx.scene.control.Button;
@@ -46,6 +47,9 @@ import utils.UnzipUtility;
 
 
 public class GetNDVI2ForLaborTask extends Task<List<File>>{
+	//private static final String URSULA_TOKEN = "ursulaToken";
+	private static final String URSULA_GIS_TOKEN = "ursulaGIS"+JFXMain.VERSION;//"ursulaGISv23";
+	private static final String TOKEN = "token";
 	private static final String MMG_GUI_EVENT_CLOSE_PNG = "/gui/event-close.png";
 	public static final String ZOOM_TO_KEY = "ZOOM_TO";
 	int MAX_URL_LENGHT = 4443;//2048 segun un stackoverflow //4443 segun pruevas con chrome// corresponde a 129 puntos
@@ -59,9 +63,10 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 	private HBox progressContainer;
 
 	private static final String BASE_URL = "http://gee-api-helper.herokuapp.com";
-	//private static final String BASE_URL = "http://localhost:5001";
+	//private static final String BASE_URL = "http://www.ursulagis.com/api/ndvi/v4/SR/";
+	//private static final String BASE_URL = "http://localhost:5000";
 
-	private static final String HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3 = BASE_URL+"/ndvi_v4";//ndvi_v5
+	private static final String HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3 = BASE_URL+"/ndvi_v4";//+"/gndvi_v4_SR";//"/ndvi_v3";//ndvi_v5
 	private static final String HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3PNG = BASE_URL+"/ndvi_v4PNG";
 	private static final String HTTPS_GEE_API_HELPER_HEROKUAPP_COM_S2_PRODUCT_FINDER = BASE_URL+"/s2_product_finder_v3";
 	private static final String GEE_POLYGONS_GET_REQUEST_KEY = "polygons";
@@ -113,18 +118,18 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 		req_data.put(GEE_POLYGONS_GET_REQUEST_KEY, polygons);		
 		req_data.put(BEGIN, sBegin);
 		req_data.put(END, sEnd);
-		req_data.put("token", "ursulaToken");
+		req_data.put(TOKEN, URSULA_GIS_TOKEN);
 
 		final HttpContent req_content = new JsonHttpContent(new JacksonFactory(), req_data);
 
 		HttpResponse response = makePostRequest(url,req_content);//response pueded ser null
 		if(response==null)return  new ArrayList<LocalDate>();
 		try {
-			System.out.println("assets data response:");
+			
 			GenericJson content = response.parseAs(GenericJson.class);
 			//@SuppressWarnings("unchecked")
 			//ArrayMap<String,Object> data = ((ArrayMap<String, Object>) content.get(DATA));
-			System.out.println( content);
+			System.out.println("assets data response: "+ content);
 			response.disconnect();
 			return parseAssetsData(content);
 
@@ -180,11 +185,22 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 			//ArrayMap<String,Object> values = (ArrayMap<String,Object>) data.get(key);
 			String path2 = feature.get(PATH2);
 			if(path2!=""){
-			System.out.println("path2 "+path2);
-			File tiffFile = downloadGoogleTifFile(path2);
-			files.add(tiffFile);
-			observableList.add(tiffFile);
-			}else {
+				System.out.println("path2 "+path2);
+				File tiffFile = downloadGoogleTifFile(path2);
+
+				//esto no funciona porque los nombres duplicados se le agrega un numero.
+				//	String filePath2 = filePath.substring(0,dotIndex)+"("+i+")"+filePath.substring(dotIndex);
+				if(tiffFile!=null) {
+//					String baseName = tiffFile.getName().split("\\(")[0];
+//					if(!files.stream().anyMatch(f->f.getName().startsWith(baseName))) {
+
+						files.add(tiffFile);
+						//observableList.add(tiffFile);
+//					} else {						
+//						System.out.println(tiffFile +" ya existe en la lista de files!");
+//					}
+				}
+			}else {//path2 es ""
 				System.out.println("path1 "+feature.get("path1"));
 			}
 			//updateProgress(observableList.size(), data.size());
@@ -239,14 +255,13 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 
 		//IntegerProperty i=new SimpleIntegerProperty(0);
 		List<LocalDate> processed = Collections.synchronizedList(new ArrayList<LocalDate>());
-		List<File>  resFiles = uniqueDates.parallelStream().collect(
-				()->new  ArrayList<File>(),
+		List<File>  resFiles = uniqueDates.stream().collect( ()->new  ArrayList<File>(),
 				(tiffFiles, assetDate) ->{
 
 
 					String sEnd = format1.format(assetDate.plusDays(1));
 					String sBegin = format1.format(assetDate.minusDays(1));
-					//System.out.println("buscando los ndvi entre "+sBegin+" y "+sEnd);
+					System.out.println("buscando los ndvi entre "+sBegin+" y "+sEnd);
 
 					GenericUrl url = new GenericUrl(HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3);
 
@@ -254,7 +269,7 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 					req_data.put(GEE_POLYGONS_GET_REQUEST_KEY, polygons);
 					req_data.put(BEGIN, sBegin);
 					req_data.put(END, sEnd);
-					req_data.put("token", "ursulaGISv23");
+					req_data.put(TOKEN, URSULA_GIS_TOKEN);
 
 					final HttpContent req_content = new JsonHttpContent(new JacksonFactory(), req_data);
 
@@ -262,7 +277,7 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 					assets=["COPERNICUS/S2/20161221T141042_20161221T142209_T20HLG"]
 					polygons=[[[[-64.69101905822754,-34.860017354204885],[-64.69058990478516,-34.86705989785682],[-64.67016220092773,-34.86515847050267],[-64.67265129089355,-34.86198932721536]]]]
 					 */
-					//System.out.println("calling url: "+url);
+					System.out.println("calling url: "+url);
 					//for(int i=0;i<3;i++) {
 					HttpResponse response = makePostRequest(url,req_content);
 
@@ -272,12 +287,17 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 						
 						response.disconnect();
 						if(tiffResponse.size()>0) {
-							observableList.addAll(tiffFiles);
-							tiffFiles.addAll(observableList);
-							updateProgress(processed.size(), uniqueDates.size());
+							//observableList.addAll(tiffFiles);
+							//tiffFiles.addAll(observableList);
+							
+							observableList.addAll(tiffResponse);//agrego a la lista de observables para que se vayan mostrando
+							tiffFiles.addAll(tiffResponse);//agrego a la coleccion final
 							processed.add(assetDate);
+							updateProgress(processed.size(), uniqueDates.size());
+							
 					//		break;//salgo del for retry
 						}else {//retry
+							System.out.println("no hay files para agregar");
 							// no descargo porque estaba nublada
 							//Thread.sleep(1000);//esperar a seguir operando
 						}
@@ -395,9 +415,9 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 			try {
 				Thread.sleep(tries*1000);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			tries++;
 		}
 		System.err.println("saliendo despues de intentar 5 veces sin exito");
 		return null;

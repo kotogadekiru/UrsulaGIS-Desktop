@@ -2,10 +2,13 @@ package utils;
 
 import java.awt.geom.Point2D;
 
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.PrecisionModel;
 
 import org.geotools.referencing.GeodeticCalculator;
+import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.geometry.primitive.Point;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -112,6 +115,19 @@ public class ProyectionConstants {
 	    public abstract int getSRID(); 
 	}
 
+	/**
+	 * 
+	 * @param feature
+	 * @return la superficie en has de la geometria default tomando en cuenta la latitudo de la primera coordenada
+	 */
+	
+		public static double getHasFeature(SimpleFeature feature) {
+			Geometry geom =((Geometry)feature.getDefaultGeometry());
+			Coordinate[] c = geom.getCoordinates();
+			setLatitudCalculo(c[0].y);
+			return A_HAS(geom.getArea());
+			
+		}
 	/**
 	 * 
 	 * @param area area en grados al cuadrado como viene de Geometry.getArea();

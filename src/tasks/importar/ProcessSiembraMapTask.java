@@ -218,7 +218,7 @@ public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLab
 	@Override
 	public ExtrudedPolygon  getPathTooltip( Geometry poly,SiembraItem siembraFeature) {		
 		double area = poly.getArea() *ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		DecimalFormat df = new DecimalFormat(Messages.getString("ProcessSiembraMapTask.0"));  //$NON-NLS-1$
+		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
 		
 		String tooltipText = new String(Messages.getString("ProcessSiembraMapTask.1")+ df.format(siembraFeature.getDosisML()) + Messages.getString("ProcessSiembraMapTask.2")); //$NON-NLS-1$ //$NON-NLS-2$
 		tooltipText=tooltipText.concat(Messages.getString("ProcessSiembraMapTask.3") + df.format(siembraFeature.getDosisHa()) + Messages.getString("ProcessSiembraMapTask.4")); //$NON-NLS-1$ //$NON-NLS-2$

@@ -71,12 +71,13 @@ import lombok.Setter;
 	@NamedQuery(name=Labor.FIND_ACTIVOS, query="SELECT o FROM Labor o where o.activo = true") ,
 }) 
 public abstract class Labor<E extends LaborItem>  {
-	public static final String FIND_ALL="Labor.findAll";
-	public static final String FIND_NAME = "Labor.findName";
-	public static final String FIND_ACTIVOS = "Labor.findActivos";
+	@Transient public static final String FIND_ALL="Labor.findAll";
+	@Transient public static final String FIND_NAME = "Labor.findName";
+	@Transient public static final String FIND_ACTIVOS = "Labor.findActivos";
 	
-	public static final String NONE_SELECTED = "Ninguna";
-	public static final String LABOR_LAYER_IDENTIFICATOR = "LABOR";
+	@Transient public static final String NONE_SELECTED = "Ninguna";
+	@Transient public static final String LABOR_LAYER_IDENTIFICATOR = "LABOR";
+	@Transient public static final String LABOR_LAYER_CLASS_IDENTIFICATOR = "LABOR_LAYER_CLASS_IDENTIFICATOR";
 	
 	
 	
@@ -112,6 +113,7 @@ public abstract class Labor<E extends LaborItem>  {
 
 	@Transient private static final String ANCHO_DEFAULT = "ANCHO_DEFAULT";
 	@Transient private static final String FECHA_KEY = "FECHA_KEY";
+
 
 	
 	@Transient public Clasificador clasificador=null;	
@@ -398,6 +400,7 @@ public abstract class Labor<E extends LaborItem>  {
 	public void setLayer(LaborLayer renderableLayer) {		
 		this.layer = renderableLayer;
 		renderableLayer.setValue(LABOR_LAYER_IDENTIFICATOR, this);//usar esto para no tener el layer dentro de la cosecha
+		renderableLayer.setValue(LABOR_LAYER_CLASS_IDENTIFICATOR, this.getClass());
 		//this.nombreProperty.addListener((o,old,nu)->{this.layer.setName(nu);});
 		renderableLayer.setName(getNombre());//this.nombreProperty.get());
 	}

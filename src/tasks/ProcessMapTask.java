@@ -14,7 +14,10 @@ import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.geotools.data.FeatureReader;
 import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.geometry.BoundingBox;
 
 import com.vividsolutions.jts.geom.Coordinate;
@@ -796,6 +799,15 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		layer.setPickEnabled(false);
 
 		return layer;
+	}
+	
+	public static boolean readerHasNext(FeatureReader<SimpleFeatureType, SimpleFeature> reader) {
+		try{
+			return reader.hasNext();
+		}catch(Exception e ){
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
 	/**

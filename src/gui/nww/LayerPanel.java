@@ -1,12 +1,12 @@
 package gui.nww;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import dao.Labor;
 import dao.Ndvi;
@@ -20,7 +20,6 @@ import gov.nasa.worldwind.layers.RenderableLayer;
 import gui.Messages;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyDoubleProperty;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.CheckBoxTreeItem;
@@ -30,6 +29,8 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.cell.CheckBoxTreeCell;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
@@ -39,37 +40,23 @@ import javafx.scene.paint.Color;
 import javafx.util.StringConverter;
 
 public class LayerPanel extends VBox {
-	//public static final String TODOS_ACTION = "todos";
-	//public static final String LABOR_ACTION = "labor";
-	//public static final String COSECHA_ACTION = "cosecha";
-	//public static final String FERTILIZACION_ACTION = "fertilizacion";
-	//public static final String SIEMBRA_ACTION = "siembra";
-	//public static final String PULVERIZACION_ACTION = "pulverizacion";
 
 	protected ScrollPane scrollPane;
-	private Map<Class<?>, List<Function<Layer, String>>> actions;
 
 	private VBox layersPanel = new VBox();
 
 	private TreeView<Layer> tree=null;
+
 	private CheckBoxTreeItem<Layer> rootItem=null;
-	private CheckBoxTreeItem<Layer> pulverizacionesItem;
-	private CheckBoxTreeItem<Layer> fertilizacionestItem;
-	private CheckBoxTreeItem<Layer> siembrasItem;
-	private CheckBoxTreeItem<Layer> cosechasItem;
-	//private CheckBoxTreeItem<Layer> ndviItem;
-	/**
-	 * Create a panel with the default size.
-	 *
-	 * @param wwd
-	 *            WorldWindow to supply the layer list.
-	 */
-	//	public LayerPanel(WorldWindow wwd) {
-	//		// Make a panel at a default size.
-	//		//	super(new BorderPane());
-	//
-	//		this.makePanel(wwd, new SimpleDoubleProperty(210), new SimpleDoubleProperty(500));
-	//	}
+
+	private Map<Class<?>,  CheckBoxTreeItem<Layer>> rootItems= new HashMap<Class<?>,  CheckBoxTreeItem<Layer>>();
+//	private CheckBoxTreeItem<Layer> pulverizacionesItem;
+//	private CheckBoxTreeItem<Layer> fertilizacionestItem;
+//	private CheckBoxTreeItem<Layer> siembrasItem;
+//	private CheckBoxTreeItem<Layer> cosechasItem;
+
+	private Map<Class<?>, List<Function<Layer, String>>> actions;
+	private Map<Class<?>, List<LayerAction>> layerActions= new HashMap<Class<?>, List<LayerAction>>();
 
 	/**
 	 * Create a panel with a size.
@@ -86,12 +73,6 @@ public class LayerPanel extends VBox {
 	}
 
 	protected void makePanel(WorldWindow wwd, ReadOnlyDoubleProperty width,ReadOnlyDoubleProperty height){//, Dimension size)
-		// Make and fill the panel holding the layer titles.
-		//		this.layersPanel = new VBox();//(new GridLayout(0, 1, 0, 4));//rows,cols,hgap,vgap
-		//		layersPanel.setPadding(new Insets(5));
-		//		this.layersPanel.prefHeightProperty().bind(height);
-		//this.layersPanel.getStyleClass().add("-fx-border-color: black;");
-
 		this.fill(wwd);
 
 		// Must put the layer grid in a container to prevent scroll panel from stretching their vertical spacing.
@@ -102,27 +83,16 @@ public class LayerPanel extends VBox {
 		this.layersPanel.prefWidthProperty().bind(width);
 		this.layersPanel.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
 
-		//		   vbox.backgroundProperty().bind(Bindings.when(toggle.selectedProperty())
-		//	                .then(new Background(new BackgroundFill(Color.CORNFLOWERBLUE, CornerRadii.EMPTY, Insets.EMPTY)))
-		//	                .otherwise(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY))));
-
-
 		// Put the name panel in a scroll bar.
 		this.scrollPane = new ScrollPane(this.layersPanel);
 		scrollPane.setFitToHeight(true);
 		scrollPane.setFitToWidth(true);
-		//	this.scrollPane.getStyleClass().add("-fx-border-color: black;");
-
-
-		//		this.scrollPane.prefHeightProperty().bind(height);
-		//		this.scrollPane.prefWidthProperty().bind(width);
 
 		this.getChildren().add(scrollPane);
 	}
 
 	public void setMenuItems(Map<Class<?>,List<Function<Layer,String>>> actions){
 		this.actions= actions;
-		//contextMenu.getItems().setAll(items);
 	}
 
 	protected void fill(WorldWindow wwd) {
@@ -155,71 +125,44 @@ public class LayerPanel extends VBox {
 			final CheckBoxTreeItem<Layer> checkBoxTreeItem = new CheckBoxTreeItem<Layer>(layer);
 
 			Object value = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-			//TODO crear un map que mantenga la configuracion del usuario respecto de que ramas estan expandidas
-			if(value != null && value instanceof CosechaLabor){				
-				cosechasItem.getChildren().add(checkBoxTreeItem);
-				//	cosechasItem.setExpanded(true);
-			}else if(value != null && value instanceof SiembraLabor){				
-				siembrasItem.getChildren().add(checkBoxTreeItem);
-				//	siembrasItem.setExpanded(true);
-			}else if(value != null && value instanceof PulverizacionLabor){				
-				pulverizacionesItem.getChildren().add(checkBoxTreeItem);
-				//	pulverizacionesItem.setExpanded(true);
-			}else if(value != null && value instanceof FertilizacionLabor){				
-				fertilizacionestItem.getChildren().add(checkBoxTreeItem);
-				//	fertilizacionestItem.setExpanded(true);
-				//			}else if(value != null && value instanceof Margen){				
-				//					margenesItem.getChildren().add(checkBoxTreeItem);
-				//					margenesItem.setExpanded(true);
-
-			}else if(value != null){
-				TreeItem<Layer> knownItem=null;
-
-				String rootItemName ="unknown"; //$NON-NLS-1$
-
-				if(value instanceof String){
-					rootItemName=(String) value;
-
-				} else if(value instanceof Object){//margen y lo que pueda suceder mas adelante
-					rootItemName=  Messages.getString("LayerPanel.rootItemName"+value.getClass().getSimpleName());
-				} else {
-					continue;
-				}
-
-				for(TreeItem<Layer> item :rootItem.getChildren()){
-					if(item.getValue().getName().equals(rootItemName)){//antes comparaba con value en vez de rootItem
-						knownItem=item;		
-					}
-				}
-				if(knownItem==null){//si esto tira un falso positivo se me generan los layers duplicados
-					RenderableLayer rootLayer = new RenderableLayer();
-					rootLayer.setName(rootItemName);
-					knownItem = new CheckBoxTreeItem<Layer>(rootLayer);
-					//	knownItem.setExpanded(true);
-					rootItem.getChildren().add(knownItem);
-				}
-
-				knownItem.getChildren().add(checkBoxTreeItem);
-
-
-
+			Object clazz = layer.getValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR);
+			Class<?> layerClass =null;
+			if(value!=null) {
+				layerClass = value.getClass();
+			}else if(clazz!=null) {
+				layerClass = (Class<?>) clazz;
 			}
+			
+			CheckBoxTreeItem<Layer> item = rootItems.get(layerClass);
+			if(item!=null) {
+				item.getChildren().add(checkBoxTreeItem);
+			}else if(layerClass != null){
+				
+				//crear el nuevo rootItem y agregarlo a la lista de rootItems
+				String rootItemName = "unknown";
+				if(value instanceof String) {
+					rootItemName = (String)value;//caso especial para las capas de distancia
+				} else {
+					rootItemName = Messages.getString("LayerPanel.rootItemName"+layerClass.getSimpleName());
+				}
+
+				RenderableLayer rootLayer = new RenderableLayer();
+				rootLayer.setName(rootItemName);
+				rootLayer.setValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR,layerClass);
+				
+				CheckBoxTreeItem<Layer> newRootItem = new CheckBoxTreeItem<Layer>(rootLayer);
+				setGraphic(newRootItem,"map.png");
+				rootItems.put(layerClass,newRootItem);
+				rootItem.getChildren().add(newRootItem);
+				newRootItem.getChildren().add(checkBoxTreeItem);
+			}
+
 			checkBoxTreeItem.setSelected(layer.isEnabled());
 			checkBoxTreeItem.selectedProperty().addListener((ob,old,nu)->{
 				layer.setEnabled(nu);//aca se repinta el layer?
 			});
-
-
-			//this.layersPanel.getChildren().add(jcb);
 		}
 
-		//		List<TreeItem<Layer>> aQuitar = new ArrayList<>();
-		//		for(TreeItem<Layer> item :rootItem.getChildren()){
-		//			if(item.getChildren().size()==0){
-		//				aQuitar.add(item);
-		//			}
-		//		}
-		//		rootItem.getChildren().removeAll(aQuitar);
 
 		for(TreeItem<Layer> item : rootItem.getChildren()){
 			try{ item.getChildren().sort((c1,c2)->{
@@ -234,27 +177,14 @@ public class LayerPanel extends VBox {
 						labor2 != null && labor2 instanceof Ndvi &&
 						l1Name.startsWith(l2Name.substring(0, l2Name.length()-"02-01-2018".length()))){ //$NON-NLS-1$
 					try {
-					Date fecha1 = ((Ndvi)labor1).getFecha().getTime();
-					Date fecha2 = ((Ndvi)labor2).getFecha().getTime();
-					return fecha1.compareTo(fecha2);
+						Date fecha1 = ((Ndvi)labor1).getFecha().getTime();
+						Date fecha2 = ((Ndvi)labor2).getFecha().getTime();
+						return fecha1.compareTo(fecha2);
 					}catch(Exception e) {
 						return l1Name.compareToIgnoreCase(l2Name);
 					}
 				} else {
 
-
-
-					//			//TODO comparar por el valor del layer en vez del nombre del layer
-					//			DateFormat df =new  SimpleDateFormat("dd-MM-yyyy");
-					//			
-					//			try{
-					//				Date d1 = df.parse(l1Name);
-					//				Date d2 = df.parse(l2Name);
-					//				return d1.compareTo(d2);
-					//			} catch(Exception e){
-					//				//no se pudo parsear como fecha entonces lo interpreto como string.
-					//				//e.printStackTrace();
-					//			}
 					return l1Name.compareToIgnoreCase(l2Name);
 				}
 			});
@@ -274,35 +204,58 @@ public class LayerPanel extends VBox {
 
 	}
 
-	@SuppressWarnings("unchecked")
+
 	private void constructRootItem() {
 		RenderableLayer rootLayer = new RenderableLayer();
 		rootLayer.setName(Messages.getString("LayerPanel.layerRootLabel")); //$NON-NLS-1$
 		rootItem = new CheckBoxTreeItem<Layer>(rootLayer);
+
 		RenderableLayer pulvLayer = new RenderableLayer();
 		pulvLayer.setName(Messages.getString("LayerPanel.pulvLabel")); //$NON-NLS-1$
-		pulverizacionesItem = new CheckBoxTreeItem<Layer>(pulvLayer);
+		pulvLayer.setValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR, PulverizacionLabor.class);
+		CheckBoxTreeItem<Layer>pulverizacionesItem = new CheckBoxTreeItem<Layer>(pulvLayer);
+		setGraphic(pulverizacionesItem,"pulv.png");
+		rootItems.put(PulverizacionLabor.class, pulverizacionesItem);
+		rootItem.getChildren().add(pulverizacionesItem);
+
 		RenderableLayer fertLayer = new RenderableLayer();
 		fertLayer.setName(Messages.getString("LayerPanel.fertLabel")); //$NON-NLS-1$
-		fertilizacionestItem = new CheckBoxTreeItem<Layer>(fertLayer);
+		fertLayer.setValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR, FertilizacionLabor.class);
+		CheckBoxTreeItem<Layer>fertilizacionestItem = new CheckBoxTreeItem<Layer>(fertLayer);
+		setGraphic(fertilizacionestItem,"ferti.png");
+		rootItems.put(FertilizacionLabor.class, fertilizacionestItem);
+		rootItem.getChildren().add(fertilizacionestItem);
+
 		RenderableLayer siembrLayer = new RenderableLayer();
 		siembrLayer.setName(Messages.getString("LayerPanel.SiembLabel")); //$NON-NLS-1$
-		siembrasItem = new CheckBoxTreeItem<Layer>(siembrLayer);		
+		siembrLayer.setValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR, SiembraLabor.class);
+		CheckBoxTreeItem<Layer>siembrasItem = new CheckBoxTreeItem<Layer>(siembrLayer);	
+		setGraphic(siembrasItem,"siemb.png");
+		rootItems.put(SiembraLabor.class, siembrasItem);
+		rootItem.getChildren().add(siembrasItem);
+
 		RenderableLayer cosechLayer = new RenderableLayer();
 		cosechLayer.setName(Messages.getString("LayerPanel.cosechLabel")); //$NON-NLS-1$
-		cosechasItem = new CheckBoxTreeItem<Layer>(cosechLayer);
-		//		RenderableLayer ndviLayer = new RenderableLayer();
-		//		ndviLayer.setName("Ndvi");
-		//		ndviItem = new CheckBoxTreeItem<Layer>(ndviLayer);
+		cosechLayer.setValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR, CosechaLabor.class);
+		CheckBoxTreeItem<Layer>cosechasItem = new CheckBoxTreeItem<Layer>(cosechLayer);
+		setGraphic(cosechasItem,"cose.png");
+		rootItems.put(CosechaLabor.class, cosechasItem);
+		rootItem.getChildren().add(cosechasItem);
 
-
-
-		//TODO agregar un menu contextual con acciones para los root Items como quitar todas
-
-		rootItem.getChildren().addAll(pulverizacionesItem,fertilizacionestItem,siembrasItem,cosechasItem);
+		//rootItem.getChildren().addAll(rootItems.values());//pulverizacionesItem,fertilizacionestItem,siembrasItem,cosechasItem);
 		rootItem.setExpanded(true);
 	}
 
+	private void setGraphic(CheckBoxTreeItem<Layer> item,String iconUrl) {
+		ImageView mv = new ImageView();		
+		mv.setImage(new Image(this.getClass().getResourceAsStream(iconUrl)));		
+		mv.setFitWidth(20);
+		mv.setPreserveRatio(true);
+		mv.setSmooth(true);
+		mv.setCache(true);
+		item.setGraphic(mv);
+		
+	}
 	private TreeView<Layer> constructTreeView(CheckBoxTreeItem<Layer> rootItem) {
 		final TreeView<Layer> tree = new TreeView<Layer>(rootItem);  
 		//tree.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -317,7 +270,7 @@ public class LayerPanel extends VBox {
 		tree.setCellFactory((treeView) ->{
 			CheckBoxTreeCell<Layer> cell = (CheckBoxTreeCell<Layer>) CheckBoxTreeCell.<Layer>forTreeView().call(treeView);
 			cell.setStyle("-fx-faint-focus-color: -fx-control-inner-background;");//-fx-focus-color: -fx-control-inner-background ; -fx-faint-focus-color: -fx-control-inner-background ;-fx-background-color:transparent; //$NON-NLS-1$
-
+			
 
 			cell.setConverter(new StringConverter<TreeItem<Layer>>(){
 				@Override
@@ -343,48 +296,40 @@ public class LayerPanel extends VBox {
 					menu.getItems().clear();
 				}
 				if(nuLayer==null)return;//nuLayer no puede ser null
-				Object value = nuLayer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-				if(value == null){
-					String rootLayerName = nuLayer.getName();
-					List<Function<Layer, String>> cosechasP = new ArrayList<Function<Layer,String>>();
-					for(Function<Layer, String> act : actions.get(Object.class)){
+				Object layerObject = nuLayer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+				Object layerObjectClass = nuLayer.getValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR);
 
-						CheckBoxTreeItem<Layer> actTreeItem = null;
-						for(TreeItem<Layer> item :rootItem.getChildren()){
-							if(item.getValue().getName().equals(rootLayerName)){//antes comparaba con value en vez de rootItem
-								actTreeItem=(CheckBoxTreeItem<Layer>) item;		
-							}
+
+
+				if(layerObject == null ){//es un layer vacio
+				
+					if(layerObjectClass instanceof Class) {//estoy cargando las acciones genericas
+						Class<? extends Object> valueClass = (Class<?>) layerObjectClass;
+						List<Function<Layer, String>> layersP = new ArrayList<Function<Layer,String>>();
+
+						//System.out.println("creando el menu para la clase "+valueClass);//falla con dao.Poligono
+						int size = rootItems.get(valueClass).getChildren().size();
+						//System.out.println("size "+valueClass+" es "+size);//falla con dao.Poligono
+						List<LayerAction> layerActionsForClass = layerActions.get(valueClass);
+						if(layerActionsForClass!=null) {
+						List<Function<Layer, String>> filtered =  layerActionsForClass.stream().filter(p->
+						p.minElementsRequired<=size).collect(Collectors.toList());
+						
+						layersP.addAll(filtered);
 						}
-						if(actTreeItem==null)continue;
-						ObservableList<TreeItem<Layer>> children = actTreeItem.getChildren();
-						if(children.size()>0 
-						//		&& (
-						//		actTreeItem.isSelected() //selected no parece andar
-						//	actTreeItem.isIndeterminate() //tampoco anda :(
-						//		)
-								){
-							Function<Layer, String> multiAct = (layer)->{
-								if(layer==null){
-									return act.apply(null) + Messages.getString("LayerPanel.23"); //$NON-NLS-1$
-								} else{
-									for(TreeItem<Layer> item: children){
-										Layer itemLayer = item.getValue();
-										if(itemLayer.isEnabled()){
-											act.apply(itemLayer);
-										}
-									}
-									return act.apply(null);	
-								}};
-								cosechasP.add(multiAct);
-								constructMenuItem(nuLayer, menu, cosechasP );
+						if(size>0) {
+							actions.get(Object.class).forEach(a->layersP.add(
+									constructAllSelectedPredicate(a, rootItems.get(valueClass).getChildren())
+									));	
 						}
-					}						
-
-
+						
+						constructMenuItem(nuLayer, menu, layersP);
+					}
+	
 				} else {
 
-					Class<? extends Object> valueClass = value.getClass();
-
+					Class<? extends Object> valueClass = layerObject.getClass();
+					
 					for(Class<?> key : actions.keySet()){
 						if(key.isAssignableFrom(valueClass)
 								|| (key==null && valueClass==null)){						
@@ -403,6 +348,34 @@ public class LayerPanel extends VBox {
 		return tree;
 	}
 
+//	private CheckBoxTreeItem<Layer> buscarTreeItemConNombre(String rootLayerName) {
+//		CheckBoxTreeItem<Layer> actTreeItem = null;
+//		for(TreeItem<Layer> item :rootItem.getChildren()){
+//			if(item.getValue().getName().equals(rootLayerName)){//antes comparaba con value en vez de rootItem
+//				actTreeItem=(CheckBoxTreeItem<Layer>) item;		
+//			}
+//		}
+//		return actTreeItem;
+//	}
+	private Function<Layer, String> constructAllSelectedPredicate( Function<Layer, String> act,List<TreeItem<Layer>> children){
+		Function<Layer, String> removeSelected = (layer)->{//creo un predicado que devuelve "Remove Selected" como nombre y al ser ejecutado corre la accion de remover en todos los hijos de este nodo
+			if(layer==null){
+
+				//System.out.println("ejetutando una accion de un treeItem sin Layer viendo si tengo que aplicar "+act.apply(null)+ " en "+rootLayerName);
+
+				return act.apply(null) + Messages.getString("LayerPanel.23"); //$NON-NLS-1$
+			} else{
+				for(TreeItem<Layer> item: children){
+					Layer itemLayer = item.getValue();
+					if(itemLayer.isEnabled()){
+						act.apply(itemLayer);
+					}
+				}
+				return act.apply(null);	
+			}};
+			return removeSelected;
+	}
+
 	private void constructMenuItem(Layer nuLayer, ContextMenu menu, List<Function<Layer, String>> actions) {
 		for(Function<Layer,String> p :actions){
 			MenuItem cut = new MenuItem(p.apply(null));
@@ -419,15 +392,19 @@ public class LayerPanel extends VBox {
 	 */
 	public void update(WorldWindow wwd) {
 		//	this.layersPanel.getChildren().clear();
-		Platform.runLater(()->		this.fill(wwd));
-
-
+		Platform.runLater(()->	this.fill(wwd));
 	}
 
 
 	public void addToScrollPaneBottom(Node node){
 		this.layersPanel.getChildren().add(node);
 	}
+
+
+	public void addAccionesClase(List<LayerAction> cosechasP,Class<?> clazz) {
+		layerActions.put(clazz, cosechasP);
+	}
+
 
 }
 

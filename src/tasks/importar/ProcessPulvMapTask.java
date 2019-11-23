@@ -197,8 +197,9 @@ public class ProcessPulvMapTask extends ProcessMapTask<PulverizacionItem,Pulveri
 
 		double area = poly.getArea() * ProyectionConstants.A_HAS();
 
-		DecimalFormat df = new DecimalFormat(Messages.getString("ProcessPulvMapTask.0")); //$NON-NLS-1$
+		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
 		String tooltipText = new String(Messages.getString("ProcessPulvMapTask.1") //$NON-NLS-1$
+				+Messages.getString("PulvConfigDialog.dosisLabel")+": "+pulv.getDosis()+"\n"
 				+ df.format(pulv.getPrecioInsumo()*pulv.getDosis()) + Messages.getString("ProcessPulvMapTask.2") //$NON-NLS-1$
 				+ Messages.getString("ProcessPulvMapTask.3") + df.format(pulv.getImporteHa()) //$NON-NLS-1$
 				+ Messages.getString("ProcessPulvMapTask.4")  //$NON-NLS-1$

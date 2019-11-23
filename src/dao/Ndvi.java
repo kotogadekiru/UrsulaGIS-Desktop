@@ -27,7 +27,7 @@ import lombok.Setter;
 @Setter(value = AccessLevel.PUBLIC)
 @Entity @Access(AccessType.FIELD)
 @NamedQueries({
-	@NamedQuery(name=Ndvi.FIND_ALL, query="SELECT c FROM Ndvi c") ,
+	@NamedQuery(name=Ndvi.FIND_ALL, query="SELECT c FROM Ndvi c ORDER BY lower(c.nombre)") ,
 	@NamedQuery(name=Ndvi.FIND_NAME, query="SELECT o FROM Ndvi o where o.nombre = :name") ,
 	@NamedQuery(name=Ndvi.FIND_ACTIVOS, query="SELECT o FROM Ndvi o where o.activo = true") ,
 }) 
