@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.geotools.data.FeatureReader;
+import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -997,15 +998,24 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 
 	private void updateStatsLabor(Collection<FC> itemsToShow){
-		double min = Double.MAX_VALUE;
-		double max = -Double.MAX_VALUE;
-		Iterator<FC> it = itemsToShow.iterator();
-		while(it.hasNext()){//int i =0;i<itemsToShow.size();i++){
-			FC fc=	it.next();
+		labor.minAmount= Double.MAX_VALUE;
+		labor.maxAmount = -Double.MAX_VALUE;
+		
+		labor.setCantidadLabor(new Double(0.0));
+		labor.setCantidadInsumo(new Double(0.0));
+		
+		itemsToShow.parallelStream().forEach(fc->{
 			Geometry g = fc.getGeometry();
-			//geomArray[i]=g;
-			min=Math.min(min,fc.getAmount());
-			max=Math.max(max,fc.getAmount());
+			
+			Double rinde = fc.getAmount();//labor.colAmount.get()
+			
+			Double a = g.getArea() * ProyectionConstants.A_HAS();
+					
+			labor.setCantidadLabor(labor.getCantidadLabor()+a);
+			labor.setCantidadInsumo(labor.getCantidadInsumo()+rinde*a);
+			
+			labor.minAmount=Math.min(labor.minAmount,fc.getAmount());
+			labor.maxAmount=Math.max(labor.maxAmount,fc.getAmount());
 
 			labor.minElev=Math.min(labor.minElev,fc.getElevacion());
 			labor.maxElev=Math.max(labor.maxElev,fc.getElevacion());
@@ -1044,22 +1054,73 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				}
 				
 			}
-			
-			//System.out.println("actualizando las estadisticas con "+centroid);
-
-	
-
-			//	labor.minX = Math.min(labor.minX, envelopeInternal.getMinX());
-			//	labor.minY = Math.min(labor.minY, envelopeInternal.getMinY());
-			//	labor.maxX = Math.max(labor.maxX, envelopeInternal.getMaxX());
-			//	labor.maxY = Math.max(labor.maxY, envelopeInternal.getMaxY());
-		}
-
-
-		labor.minAmount=min;
-		labor.maxAmount=max;
+		});//
+		
+//		Iterator<FC> it = itemsToShow.iterator();
+//		while(it.hasNext()){//int i =0;i<itemsToShow.size();i++){
+//			FC fc=	it.next();
+//			Geometry g = fc.getGeometry();
+//			
+//			Double rinde = fc.getAmount();//labor.colAmount.get()
+//			
+//			Double a = g.getArea() * ProyectionConstants.A_HAS();
+//			area+=a;
+//			cantidad+=rinde*a;
+//			
+//			//geomArray[i]=g;
+//			min=Math.min(min,fc.getAmount());
+//			max=Math.max(max,fc.getAmount());
+//
+//			labor.minElev=Math.min(labor.minElev,fc.getElevacion());
+//			labor.maxElev=Math.max(labor.maxElev,fc.getElevacion());
+//
+//			// aproximar el envelope con un rectangulo
+//			//arribaIzq es la coordenada x,y del que tenga max y? 
+//		
+//			if(g instanceof Point){
+//				Point centroid =(Point) g;
+//				if(labor.minX==null || labor.minX.getLongitude().degrees>centroid.getX()){
+//					labor.minX=Position.fromDegrees(centroid.getY(), centroid.getX());
+//				}
+//				if(labor.minY==null ||labor.minY.getLatitude().degrees>centroid.getY()){
+//					labor.minY=Position.fromDegrees(centroid.getY(), centroid.getX());
+//				}
+//				if(labor.maxX==null ||labor.maxX.getLongitude().degrees<centroid.getX()){
+//					labor.maxX=Position.fromDegrees(centroid.getY(), centroid.getX());
+//				}
+//				if(labor.maxY==null ||labor.maxY.getLatitude().degrees<centroid.getY()){
+//					labor.maxY=Position.fromDegrees(centroid.getY(), centroid.getX());
+//				}
+//			}else{
+//				Envelope envelope = g.getEnvelopeInternal();//si la geometria es grande esto falla?
+//				
+//				if(labor.minX==null || labor.minX.getLongitude().degrees>envelope.getMinX()){
+//					labor.minX=Position.fromDegrees(envelope.centre().y, envelope.getMinX());
+//				}
+//				if(labor.minY==null ||labor.minY.getLatitude().degrees>envelope.getMinY()){
+//					labor.minY=Position.fromDegrees(envelope.getMinY(), envelope.centre().x);
+//				}
+//				if(labor.maxX==null ||labor.maxX.getLongitude().degrees<envelope.getMaxX()){
+//					labor.maxX=Position.fromDegrees(envelope.centre().y, envelope.getMaxX());
+//				}
+//				if(labor.maxY==null ||labor.maxY.getLatitude().degrees<envelope.getMaxY()){
+//					labor.maxY=Position.fromDegrees(envelope.getMaxY(), envelope.centre().x);
+//				}
+//				
+//			}
+//			
+//			//System.out.println("actualizando las estadisticas con "+centroid);
+//
+//	
+//
+//			//	labor.minX = Math.min(labor.minX, envelopeInternal.getMinX());
+//			//	labor.minY = Math.min(labor.minY, envelopeInternal.getMinY());
+//			//	labor.maxX = Math.max(labor.maxX, envelopeInternal.getMaxX());
+//			//	labor.maxY = Math.max(labor.maxY, envelopeInternal.getMaxY());
+//		}
+		
 		System.out.println("(maxElev, minElev)= ("+labor.maxElev+" , "+labor.minElev+")");
-		System.out.println("(min, max) = ("+min+" , "+max+")");//(min,max) = (203.0 , 203.0)
+		System.out.println("(min, max) = ("+labor.minAmount+" , "+labor.maxAmount+")");//(min,max) = (203.0 , 203.0)
 	}
 
 	protected void runLater(Collection<FC> itemsToShow) {	

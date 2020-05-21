@@ -1,46 +1,36 @@
 package dao;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.Locale;
 
-import org.geotools.data.FeatureReader;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.factory.CommonFactoryFinder;
-import org.geotools.feature.DefaultFeatureCollection;
-import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.filter.function.Classifier;
 import org.geotools.filter.function.JenksNaturalBreaksFunction;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.expression.Literal;
 import org.opengis.filter.expression.PropertyName;
 
-import com.vividsolutions.jts.geom.Geometry;
-
-import utils.ProyectionConstants;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.paint.Color;
 import lombok.Data;
-import tasks.ProcessMapTask;
+import utils.ProyectionConstants;
 @Data
 public class Clasificador {
 	public static final String NUMERO_CLASES_CLASIFICACION = "NUMERO_CLASES_CLASIFICACION";
-	public static final String CLASIFICADOR_JENKINS = "JENKINS";
-	public static final String CLASIFICADOR_DESVIOSTANDAR = "DESVIO_STANDAR";
+	private static final String CLASIFICADOR_JENKINS = "Jenkins";
+	private static final String CLASIFICADOR_DESVIOSTANDAR = "Desvio Standar";
 	public static final String TIPO_CLASIFICADOR = "CLASIFICADOR";
 
-	public static final  String[] clasficicadores = {"Jenkins","Desvio Standar"};
+	public static final  String[] clasficicadores = {CLASIFICADOR_DESVIOSTANDAR,CLASIFICADOR_JENKINS};
 	public static Color[] colors = {
 			//Color.rgb(158,1,66),//0
 			//Color.rgb(213,62,79),//1
@@ -69,7 +59,7 @@ public class Clasificador {
 	public String getCategoryNameFor(int index) {		
 		String rangoIni = null;
 		DecimalFormat df = new DecimalFormat("0.00");
-
+		df.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(new Locale("EN")));
 		df.setGroupingSize(3);
 		df.setGroupingUsed(true);
 		if(histograma != null){

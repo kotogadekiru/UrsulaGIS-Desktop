@@ -17,6 +17,8 @@ import org.opengis.feature.type.AttributeType;
 import dao.Labor;
 import dao.LaborConfig;
 import dao.LaborItem;
+import dao.OrdenDeCompra.Producto;
+import dao.OrdenDeCompra.ProductoLabor;
 import dao.config.Configuracion;
 import dao.config.Cultivo;
 import dao.utils.PropertyHelper;
@@ -27,6 +29,7 @@ import javafx.beans.property.StringProperty;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import utils.DAH;
 import utils.ProyectionConstants;
 
 
@@ -67,8 +70,8 @@ public class CosechaLabor extends Labor<CosechaItem> {
 	public static final String PRODUCTO_DEFAULT = "CultivoDefault";
 	public static final String COLUMNA_COSTO_LB_HA = "CostoLbTn";
 	public static final String COLUMNA_COSTO_LB_TN = "CostoLbHa";
-	
 	}
+	
 	public StringProperty colRendimiento= new SimpleStringProperty();
 	 
 	public Cultivo cultivo= null;//FIXME producto no se puede guardar como una property
@@ -101,6 +104,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 	//el controller de la configuracion. creo que setea las variables pero nunca las graba a menos 
 	//que las grabe el controller
 	protected void initConfig() {
+		this.productoLabor=DAH.getProductoLabor(ProductoLabor.LABOR_DE_COSECHA);
 		//System.out.println("iniciando la configuracion de CosechLabor");
 		List<String> availableColums = this.getAvailableColumns();		
 		Configuracion properties = getConfigLabor().getConfigProperties();
@@ -149,6 +153,8 @@ public class CosechaLabor extends Labor<CosechaItem> {
 	//	return initDoubleProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,"0",config.getConfigProperties());
 	}
 
+	
+	
 	@Override
 	@Transient
 	public String getTypeDescriptors() {

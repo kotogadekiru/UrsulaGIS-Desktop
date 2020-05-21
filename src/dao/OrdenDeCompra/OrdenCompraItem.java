@@ -2,12 +2,13 @@ package dao.OrdenDeCompra;
 
 import javax.persistence.Access;
 import javax.persistence.AccessType;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-
+import javax.persistence.OneToMany;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -32,10 +33,12 @@ public class OrdenCompraItem {
 	@ManyToOne
 	private OrdenCompra ordenCompra =null;
 	
-	@ManyToOne
+	@ManyToOne//(cascade=CascadeType.DETACH)
 	private Producto producto =null;
 	
-	private Double cantidad=null;
+	private Double cantidad = 0.0;
+	private Double precio = 0.0;
+	private Double importe = 0.0;
 	
 	public OrdenCompraItem() {
 		
@@ -45,5 +48,9 @@ public class OrdenCompraItem {
 		this.producto=producto2;
 		this.cantidad=cantidad2;
 	}
-
+	
+	public double getImporte() {
+		this.importe = cantidad*precio;
+		return this.importe;
+	}
 }

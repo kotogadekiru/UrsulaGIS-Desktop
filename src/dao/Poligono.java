@@ -22,6 +22,8 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 
 import javax.persistence.AccessType;
+
+import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.layers.Layer;
 import lombok.Data;
@@ -63,7 +65,7 @@ public class Poligono implements Comparable<Poligono>{
 		NumberFormat nf = NumberFormat.getNumberInstance(Locale.ENGLISH);
 		lonLatFormat = (DecimalFormat)nf;
 		//lonLatFormat = new DecimalFormat("#0.00000000;-#0.00000000");
-		System.out.println("inicializando lonLanFormat");
+		//System.out.println("inicializando lonLanFormat");
 		lonLatFormat.getDecimalFormatSymbols().setDecimalSeparator('.');
 		lonLatFormat.getDecimalFormatSymbols().setGroupingSeparator(',');
 		lonLatFormat.setMinimumFractionDigits(8);
@@ -229,5 +231,28 @@ public class Poligono implements Comparable<Poligono>{
 	public int compareTo(Poligono p) {
 		if(p==null || p.getNombre()==null )return -1;
 		return this.getNombre().compareToIgnoreCase(p.getNombre());
+	}
+	
+//	@Override
+//	public boolean equals(Object o) {
+//		if(o!= null || ! (o instanceof Poligono)) return false;
+//		return this.getPoligonoToString().equals(((Poligono)o).positionsString);
+//	}
+	
+	public String getPoligonoToString() {
+		List<? extends Position> positions = this.getPositions();
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("[[[");
+		for(Position p:positions){	
+			Angle lon= p.getLongitude();
+			Angle lat = p.getLatitude();
+			sb.append("["+lon.degrees+","+lat.degrees+"],");
+		}
+		sb.deleteCharAt(sb.length()-1);
+
+		sb.append("]]]");
+		String polygons=sb.toString();
+		return polygons;
 	}
 }

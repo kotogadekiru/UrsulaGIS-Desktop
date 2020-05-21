@@ -68,7 +68,7 @@ public class CosechaConfig extends LaborConfig{
 	public CosechaConfig(){
 		super(Configuracion.getInstance());
 		//Configuracion config =  super.getConfigProperties();//levanto el archivo de propiedades default pero puedo guardarlo en otro archivo seteando el fileURL
-		DecimalFormat df = new DecimalFormat("#.0000");
+		//DecimalFormat df = new DecimalFormat("#.0000");
 		try{
 
 		correccionRindeProperty = new SimpleBooleanProperty(

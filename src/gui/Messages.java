@@ -2,6 +2,7 @@ package gui;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListResourceBundle;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -30,6 +31,7 @@ public class Messages {
 		System.out.println("default language es \""+defaultLoc.getLanguage()+ "\" supported? "+supports(defaultLoc.getLanguage()));
 		if(loc.equals(LOCALE_NOT_SET) && Messages.supports(defaultLoc.getLanguage())) {
 			locale=defaultLoc;
+			
 		} else if(!loc.equals(LOCALE_NOT_SET) ){
 			locale =  new Locale(loc);
 		} else {
@@ -84,3 +86,24 @@ public class Messages {
 		return locales;
 	}
 }
+
+
+/* ejemplo de como cargar un bundre en menoria
+import java.util.ListResourceBundle;
+
+public class MyResources extends ListResourceBundle {
+
+	@Override
+	protected Object[][] getContents() {
+		
+		return new Object[][] {
+            // LOCALIZE THE SECOND STRING OF EACH ARRAY (e.g., "OK")
+            {"OkKey", "OK"},
+            {"CancelKey", "Cancel"},
+            {"JFXMain.importar","Importar"},
+            // END OF MATERIAL TO LOCALIZE
+       };
+	}
+
+}
+*/

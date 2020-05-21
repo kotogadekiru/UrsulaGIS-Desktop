@@ -19,7 +19,12 @@ import gov.nasa.worldwindx.examples.ApplicationTemplate;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.*;
+import java.io.File;
 import java.util.Arrays;
+
+import org.openimaj.image.MBFImage;
+import org.openimaj.video.Video;
+import org.openimaj.video.xuggle.XuggleVideo;
 
 /**
  * This example illustrates how you might show video on the globe's surface. It uses a {@link
@@ -42,10 +47,10 @@ public class VideoOnTerrain extends ApplicationTemplate
     // These corners do not form a Sector, so SurfaceImage must generate a texture rather than simply using the source
     // image.
     protected static final java.util.List<LatLon> CORNERS = Arrays.asList(
-        LatLon.fromDegrees(37.8313, -105.0653),
-        LatLon.fromDegrees(37.8313, -105.0396),
-        LatLon.fromDegrees(37.8539, -105.04),
-        LatLon.fromDegrees(37.8539, -105.0653)
+    		LatLon.fromDegrees(-34.0121, -62.1040),
+    		 LatLon.fromDegrees(-34.0121, -62.1016),
+    		 LatLon.fromDegrees(-34.0104, -62.1016),
+    		 LatLon.fromDegrees(-34.0104, -62.1040) 
     );
 
     /**
@@ -75,6 +80,11 @@ public class VideoOnTerrain extends ApplicationTemplate
             final SurfaceImage surfaceImage = new SurfaceImage(makeImage(), CORNERS);
             surfaceImage.setOpacity(IMAGE_OPACITY);
             layer.addRenderable(surfaceImage);
+            
+            Video<MBFImage> video=null;
+    		//	video = new XuggleVideo(new File("C:/Users/quero/Downloads/keyboardcat.flv"));
+    			video = new XuggleVideo(new File("C:/Users/quero/Downloads/dronSmall.flv"));
+    		
 
             javax.swing.Timer timer = new javax.swing.Timer(50, new ActionListener()
             {
@@ -178,9 +188,9 @@ public class VideoOnTerrain extends ApplicationTemplate
 
     public static void main(String[] args)
     {
-        Configuration.setValue(AVKey.INITIAL_LATITUDE, 37.8432);
-        Configuration.setValue(AVKey.INITIAL_LONGITUDE, -105.0527);
-        Configuration.setValue(AVKey.INITIAL_ALTITUDE, 7000);
+        Configuration.setValue(AVKey.INITIAL_LATITUDE, -34.0105);
+        Configuration.setValue(AVKey.INITIAL_LONGITUDE, -62.1041);
+        Configuration.setValue(AVKey.INITIAL_ALTITUDE, 1000);
         ApplicationTemplate.start("World Wind Video on Terrain", AppFrame.class);
     }
 }

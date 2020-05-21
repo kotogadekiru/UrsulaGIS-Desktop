@@ -183,8 +183,13 @@ public class LaborDataStore<E> {
 		labor.treeCacheEnvelope=new Envelope();
 		
 		//TODO cargar todas las features en memoria pero en guardarlas indexadas en cachedEnvelopes
-		@SuppressWarnings("unchecked")
+		
 		//	Collection<SimpleFeature> items= Lists.newArrayList(labor.outCollection.iterator());
+		if(labor.outCollection==null) {
+			System.err.println("No se puede iterar sobre outCollection porque es null en "+labor.getNombre());
+			return;
+		}
+		@SuppressWarnings("unchecked")
 		Iterator<SimpleFeature> iterator = labor.outCollection.iterator();
 		iterator.forEachRemaining((it)->{//java.util.ConcurrentModificationException
 			Geometry g =(Geometry) it.getDefaultGeometry();

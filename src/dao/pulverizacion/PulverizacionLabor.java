@@ -12,6 +12,7 @@ import dao.Clasificador;
 import dao.Labor;
 import dao.LaborConfig;
 import dao.LaborItem;
+import dao.OrdenDeCompra.ProductoLabor;
 import dao.config.Agroquimico;
 import dao.config.Configuracion;
 import dao.config.Cultivo;
@@ -25,6 +26,7 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
+import utils.DAH;
 
 @Getter
 @Setter(value = AccessLevel.PUBLIC)
@@ -59,6 +61,7 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 	//el controller de la configuracion. creo que setea las variables pero nunca las graba a menos 
 	//que las grabe el controller
 	private void initConfig() {
+		this.productoLabor=DAH.getProductoLabor(ProductoLabor.LABOR_DE_PULVERIZACION);
 		List<String> availableColums = this.getAvailableColumns();		
 
 		//config = new PulverizacionConfig();
@@ -147,7 +150,7 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 	public void constructClasificador() {
 		super.constructClasificador(config.getConfigProperties()
 				.getPropertyOrDefault(Clasificador.TIPO_CLASIFICADOR,
-						Clasificador.CLASIFICADOR_JENKINS));
+						Clasificador.clasficicadores[0]));
 	}
 
 	public PulverizacionConfig getConfiguracion() {

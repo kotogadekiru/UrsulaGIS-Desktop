@@ -5,6 +5,8 @@ import java.io.File;
 import java.text.DecimalFormat;
 import java.text.Format;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.ConsoleHandler;
@@ -58,6 +60,7 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 	public static final double MAX_VALUE = 1.0;//1.0;//con soja en floracion no pasa de 0.9
 	public static final double MIN_VALUE =0.1;// 0.2;
 	public static final double TRANSPARENT_VALUE = 0.000000001;// 0.2;
+	private static final String YYYY_MM_DD = "dd-MM-yyyy";//"yyyy-MM-dd";
 	/*
 	-The values between –1 and 0 correspond to non-plant surfaces that have a reflectance in the Red that is greater than the
 	reflectance in the Near Infrared: water, snow, or even clouds. 
@@ -99,7 +102,7 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 						+"-"+fileName.substring("2017".length(), "201703".length())
 						+"-"+fileName.substring(0, "2017".length());
 			}
-			//en este punto fileName tiene la fecha en formato 20170328 es decir YYMMdd
+			//en este punto fileName tiene la fecha en formato 2017-03-28 es decir dd-MM-yyyy
 			
 			String fechaString = new String (fileName);
 
@@ -252,17 +255,21 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 				ndvi.setNombre(fileName);
 				ndvi.setF(file);				
 				ndvi.setContorno(ownerPoli);
-				
+				String ymd = fechaString.substring(0,"2017-03-28".length());
+				System.out.println("formateando la fecha con string "+ymd);
+				DateTimeFormatter format1 = DateTimeFormatter.ofPattern(YYYY_MM_DD);	
 				//04-01-2018
-				SimpleDateFormat format1 = new SimpleDateFormat("dd-MM-yyyy");
+				//SimpleDateFormat format1 = new SimpleDateFormat("dd-MM-yyyy");
 				//System.out.println("convirtiendo fechaString "+fechaString);
 				//convirtiendo fechaString 04-01-2018
-				Date fecha = null;
+				LocalDate fecha = null;
 				try{
-					fecha = format1.parse(fechaString);//java.text.ParseException: Unparseable date: "Jag 20 30-08-20175528033450897731504"
-					ndvi.getFecha().setTime(fecha);
+					//formateando la fecha con string 06-02-2020
+					fecha = LocalDate.parse(ymd, format1);//.parse(fechaString);//java.text.ParseException: Unparseable date: "Jag 20 30-08-20175528033450897731504"
+					ndvi.setFecha(fecha);
 				}catch(Exception e){
-					
+					e.printStackTrace();
+					System.err.println("no se pudo cargar la fecha del ndvi para "+ymd);
 				}
 			}
 			ndvi.setPixelArea(pixelArea);//pixelArea);

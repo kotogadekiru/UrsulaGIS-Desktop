@@ -141,24 +141,12 @@ public class CosechaHistoChart extends VBox {
 		bottom.setRight(right);//getChildren().addAll(left,right);
 		bottom.setPadding(new Insets(5,5,5,5));
 		this.getChildren().add(bottom);
-
-
-
 	}
 
 
 	private void doExportarExcell() {
-		System.out.println("TODO implementar doExportarExcell"); //$NON-NLS-1$
 		ExcelHelper xHelper = new ExcelHelper();
 		xHelper.exportSeries(series);
-		//TODO seleccionar archivo de destino
-		//TODO crear una columna de strings y una columna de nummeros
-		for(Data<String, Number> data:series.getData()){
-			//todo agregar datos a las columnas
-
-		}
-		//TODO guardar el archivo
-
 	}
 
 
@@ -205,6 +193,7 @@ public class CosechaHistoChart extends VBox {
 
 
 		XYChart.Series<String, Number> series = new XYChart.Series<>();
+		series.setName("Histograma");
 
 		// Create a XYChart.Data object for each month. Add it to the series.
 

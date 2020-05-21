@@ -173,6 +173,8 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 						}
 						},
 						(map1, map2) -> map1.putAll(map2)
+						// putAll reemplaza los valores de map1 con los de map 2 si los poligonos counciden
+						// pero no deberia haber poligonos que coincidan.
 						);
 		//Limpio la cache de las labores despues de hacer las querys
 		for(CosechaLabor c:cosechas){

@@ -186,6 +186,7 @@ public abstract class LaborItem implements Comparable<Object>{
 				e.printStackTrace();
 			}
 		}else{
+			//es por que estoy leyendo una columna que no existe en ese feature. como ancho en una prescripcion.
 			System.err.println("no se pudo leer la cantidad de " +o);//no se pudo leer la cantidad de L3:CARG0003
 
 		}

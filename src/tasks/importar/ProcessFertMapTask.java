@@ -1,37 +1,25 @@
 package tasks.importar;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.index.quadtree.Quadtree;
-
-import dao.LaborItem;
-import dao.cosecha.CosechaItem;
-import dao.fertilizacion.FertilizacionItem;
-import dao.fertilizacion.FertilizacionLabor;
-import gov.nasa.worldwind.render.ExtrudedPolygon;
-import gui.Messages;
-import javafx.scene.Group;
-import javafx.scene.shape.Path;
-import tasks.ProcessMapTask;
-
-import org.geotools.data.DataUtilities;
-import org.geotools.data.FeatureReader;
-import org.geotools.data.FileDataStore;
-import org.geotools.data.simple.SimpleFeatureCollection;
-import org.geotools.data.simple.SimpleFeatureIterator;
-import org.geotools.data.simple.SimpleFeatureSource;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
-
-import utils.ProyectionConstants;
-
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.geotools.data.DataUtilities;
+import org.geotools.data.FeatureReader;
+import org.geotools.data.simple.SimpleFeatureIterator;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
+
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Point;
+
+import dao.fertilizacion.FertilizacionItem;
+import dao.fertilizacion.FertilizacionLabor;
+import gov.nasa.worldwind.render.ExtrudedPolygon;
+import gui.Messages;
+import tasks.ProcessMapTask;
+import utils.ProyectionConstants;
 
 /**
  *   Cuando el ingreso marginal es igual al costo unitario el beneficio ($/Ha) de agregar N es máximo

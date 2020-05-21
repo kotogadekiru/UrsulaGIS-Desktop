@@ -6,8 +6,6 @@ import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.FutureTask;
 
 import org.geotools.data.DefaultTransaction;
 import org.geotools.data.Transaction;
@@ -19,7 +17,6 @@ import org.geotools.referencing.crs.DefaultGeographicCRS;
 
 import dao.Labor;
 import dao.config.Configuracion;
-import dao.cosecha.CosechaLabor;
 import javafx.concurrent.Task;
 
 
@@ -27,13 +24,7 @@ public class ExportLaborMapTask extends Task<File>{
 	Labor<?> laborToExport=null;
 	File shapeFile=null;
 	
-	public ExportLaborMapTask(Labor<?> _laborToExport,File _shapeFile){
-//		super(new Callable<File>(){
-//			@Override
-//			public File call() throws Exception {
-//				return this.call();
-//			}});
-		
+	public ExportLaborMapTask(Labor<?> _laborToExport,File _shapeFile){		
 		 laborToExport=_laborToExport;
 		 shapeFile=_shapeFile;
 	}
@@ -77,7 +68,6 @@ public class ExportLaborMapTask extends Task<File>{
 			featureSource = newDataStore.getFeatureSource(typeName);
 			//	System.out.println("cree new featureSource "+featureSource.getInfo());
 		} catch (IOException e) {
-			
 			e.printStackTrace();
 		}
 

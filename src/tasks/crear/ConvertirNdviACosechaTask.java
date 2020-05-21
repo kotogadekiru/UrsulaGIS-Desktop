@@ -99,10 +99,12 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 		double id=0;
 		
 		
-		//lineal
+		//lineal r=a*ndvi+b
+		//a=(r2-r1)/(ndvi2-ndvi1)=(rProm-0)/(ndviProm-0.1)
 		double pendienteNdviRinde=averageNdvi>NDVI_RINDE_CERO?rindeProm/(averageNdvi-NDVI_RINDE_CERO):1;
-		double origenNdviRinde = -pendienteNdviRinde*NDVI_RINDE_CERO;
-		Function<Double,Double> calcRinde = (r)->pendienteNdviRinde*r+origenNdviRinde;
+		//b=0-a*0.1
+		double origenNdviRinde = 0-pendienteNdviRinde*NDVI_RINDE_CERO;
+		Function<Double,Double> calcRinde = (ndvi)->pendienteNdviRinde*ndvi+origenNdviRinde;
 		
 		//logaritmica
 //		double pendienteNdviRinde=averageNdvi>NDVI_RINDE_CERO?Math.log(rindeProm)/(Math.log(averageNdvi)-Math.log(NDVI_RINDE_CERO)):1;

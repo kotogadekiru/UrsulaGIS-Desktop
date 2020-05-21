@@ -2,7 +2,10 @@ package gui;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.FieldPosition;
+import java.text.Format;
 import java.text.ParseException;
+import java.text.ParsePosition;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -414,8 +417,23 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		//textPorcCorreccion
 		Bindings.bindBidirectional(this.textPorcCorreccion.textProperty(), labor.correccionCosechaProperty, converter);
 
+	
 		//textMaxRinde
-		Bindings.bindBidirectional(this.textMaxRinde.textProperty(), labor.maxRindeProperty, converter);
+		Bindings.bindBidirectional(this.textMaxRinde.textProperty(), labor.maxRindeProperty, new DecimalFormat() {
+			   @Override
+	            public Object parseObject(String source)  {
+				   try {
+					Number val = converter.parse(source);
+					if(val.equals(new Double(0.0))) {
+						val = Double.MAX_VALUE;
+					}
+					return val;
+				} catch (ParseException e) {
+					return Double.MAX_VALUE;
+				}
+	            }
+		});
+
 
 		//textMinRinde
 		Bindings.bindBidirectional(this.textMinRinde.textProperty(), labor.minRindeProperty, converter);

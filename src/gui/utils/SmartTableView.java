@@ -29,21 +29,25 @@ import dao.config.Fertilizante;
 import dao.config.Lote;
 import dao.utils.JPAStringProperty;
 import gui.JFXMain;
+import gui.Messages;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import utils.DAH;
 
@@ -55,6 +59,7 @@ public class SmartTableView<T> extends TableView<T> {
 	
 	private List<String> rejectedColumns=new ArrayList<>();
 	private List<String> orderColumns=new ArrayList<>();
+	private boolean permiteEliminar=true;
 //	public HBox filters = new HBox();
 //	private FilteredList<T> filteredData=null;
 	//i18n FilterTable Strings
@@ -98,8 +103,8 @@ public class SmartTableView<T> extends TableView<T> {
 		}
 
 		ContextMenu contextMenu = new ContextMenu();
-		MenuItem mostrarItem = new MenuItem("Cargar");
-		MenuItem eliminarItem = new MenuItem("Eliminar");
+		MenuItem mostrarItem = new MenuItem(Messages.getString("SmartTableView.Cargar"));//"Cargar"
+		MenuItem eliminarItem = new MenuItem(Messages.getString("SmartTableView.Eliminar"));//Eliminar
 
 		this.setContextMenu(contextMenu);
 
@@ -108,7 +113,7 @@ public class SmartTableView<T> extends TableView<T> {
 			T rowData = this.getSelectionModel().getSelectedItem();
 			if(rowData != null ){
 				if(onShowClick!=null) contextMenu.getItems().add(mostrarItem);
-				contextMenu.getItems().add(eliminarItem);
+				if(permiteEliminar)   contextMenu.getItems().add(eliminarItem);
 
 				if ( MouseButton.PRIMARY.equals(event.getButton()) && event.getClickCount() == 2) {
 					if(onDoubleClick!=null){
@@ -125,8 +130,8 @@ public class SmartTableView<T> extends TableView<T> {
 						Stage stage = (Stage) alert.getDialogPane().getScene().getWindow();
 
 						stage.getIcons().add(new Image(JFXMain.ICON));
-						alert.setTitle("Borrar registro");
-						alert.setHeaderText("Esta accion borrara permanentemente el registro. Desea Continuar?");
+						alert.setTitle(Messages.getString("SmartTableView.BorrarRegistro"));//"Borrar registro"
+						alert.setHeaderText(Messages.getString("SmartTableView.BorrarRegistroWarning"));//"Esta accion borrara permanentemente el registro. Desea Continuar?");
 						Optional<ButtonType> res = alert.showAndWait();
 						if(res.get().equals(ButtonType.OK) && rowData!=null){
 							try{
@@ -140,8 +145,8 @@ public class SmartTableView<T> extends TableView<T> {
 								Alert eliminarFailAlert = new Alert(AlertType.ERROR);
 								((Stage) eliminarFailAlert.getDialogPane().getScene().getWindow()).
 										getIcons().add(new Image(JFXMain.ICON));
-								eliminarFailAlert.setTitle("Borrar registro");
-								eliminarFailAlert.setHeaderText("No se pudo borrar el registro");
+								eliminarFailAlert.setTitle(Messages.getString("SmartTableView.BorrarRegistro"));//"Borrar registro");
+								eliminarFailAlert.setHeaderText(Messages.getString("SmartTableView.BorrarRegistroError"));//"No se pudo borrar el registro");
 								eliminarFailAlert.setContentText(e.getMessage());
 								eliminarFailAlert.show();
 							}							
@@ -276,7 +281,22 @@ public class SmartTableView<T> extends TableView<T> {
 
 			}//fin del if method name starts with get
 
-		}
+		}//fin del method list
+		this.getColumns().stream().forEach(c->{
+			javafx.scene.layout.StackPane graphic = (StackPane) c.getGraphic();
+			double maxWidth =0;
+			if(graphic==null)return;
+			for(Node child:graphic.getChildren()) {
+				if(child instanceof Label) {
+				javafx.scene.control.Label l = (Label) child;
+				l.setWrapText(false);
+				maxWidth=Math.max(maxWidth, l.getWidth());
+				}
+			//System.out.println(child.getClass().getName());//javafx.scene.Parent$2
+			}
+			//c.setPrefWidth(maxWidth+20);
+		});
+		//this.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
 
 	}
 
@@ -808,7 +828,9 @@ public class SmartTableView<T> extends TableView<T> {
 		this.onShowClick = onShowClick;
 	}
 
-
+	public void setPermiteEliminar(boolean b) {
+		this.permiteEliminar=b;
+	}
 	/**
 	 * @return the onDoubleClick
 	 */

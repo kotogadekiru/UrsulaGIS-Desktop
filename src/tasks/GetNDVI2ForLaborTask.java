@@ -48,8 +48,7 @@ import utils.UnzipUtility;
 
 public class GetNDVI2ForLaborTask extends Task<List<File>>{
 	//private static final String URSULA_TOKEN = "ursulaToken";
-	private static final String URSULA_GIS_TOKEN = "ursulaGIS"+JFXMain.VERSION;//"ursulaGISv23";
-	private static final String TOKEN = "token";
+	
 	private static final String MMG_GUI_EVENT_CLOSE_PNG = "/gui/event-close.png";
 	public static final String ZOOM_TO_KEY = "ZOOM_TO";
 	int MAX_URL_LENGHT = 4443;//2048 segun un stackoverflow //4443 segun pruevas con chrome// corresponde a 129 puntos
@@ -61,10 +60,14 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 	private Pane progressPane;
 	private Label progressBarLabel;
 	private HBox progressContainer;
+	
+	private static final String URSULA_GIS_TOKEN = "ursulaGIS"+JFXMain.VERSION;//"ursulaGISv23";
+	private static final String TOKEN = "token";
 
+	
 	private static final String BASE_URL = "http://gee-api-helper.herokuapp.com";
 	//private static final String BASE_URL = "http://www.ursulagis.com/api/ndvi/v4/SR/";
-	//private static final String BASE_URL = "http://localhost:5000";
+	//private static final String BASE_URL = "http://localhost:5001";
 
 	private static final String HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3 = BASE_URL+"/ndvi_v4";//+"/gndvi_v4_SR";//"/ndvi_v3";//ndvi_v5
 	private static final String HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3PNG = BASE_URL+"/ndvi_v4PNG";
@@ -96,7 +99,7 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 	 * @param placementObject
 	 * @return
 	 */
-	private List<LocalDate> getSentinellAssets(Object placementObject){			
+	public List<LocalDate> getSentinellAssets(Object placementObject){			
 		String polygons =getPolygonsFromLabor(placementObject);
 
 		if(placementObject instanceof Labor){
@@ -110,7 +113,7 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 		DateTimeFormatter format1 = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		String sEnd = format1.format(this.end);
 		String sBegin = format1.format(this.begin);
-		System.out.println("buscando los ndvi entre "+sBegin+" y "+sEnd);
+		//System.out.println("buscando los ndvi entre "+sBegin+" y "+sEnd);
 
 		GenericUrl url = new GenericUrl(HTTPS_GEE_API_HELPER_HEROKUAPP_COM_S2_PRODUCT_FINDER);
 
@@ -127,9 +130,10 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 		try {
 			
 			GenericJson content = response.parseAs(GenericJson.class);
+			
 			//@SuppressWarnings("unchecked")
 			//ArrayMap<String,Object> data = ((ArrayMap<String, Object>) content.get(DATA));
-			System.out.println("assets data response: "+ content);
+		//	System.out.println("assets data response: "+ content);
 			response.disconnect();
 			return parseAssetsData(content);
 
@@ -142,11 +146,13 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 
 	private List<LocalDate> parseAssetsData(GenericJson content){//data.get("features")
 		List<LocalDate> assets = new ArrayList<LocalDate>();
-		System.out.println("productFinderv5 content = "+content);
+		if(content == null)return assets;
+	//	System.out.println("productFinderv5 content = "+content);
+		
 		//@SuppressWarnings("unchecked")
 		//ArrayMap<String,Object> data = ((ArrayMap<String, Object>) content;
 		Object features = content.get(DATA);
-		System.out.println("features:"+features);
+	//	System.out.println("features:"+features);
 
 		if(features instanceof List){
 			int i=0;
@@ -173,7 +179,11 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 	@SuppressWarnings("unchecked")
 	private  List<File> parseNDVIResponse(HttpResponse response) throws IOException {
 		List<File> files = new ArrayList<File>();
+		//String s = response.parseAsString();		
+		//System.out.println("ndvi content as string"+ s);//XXX ndvi content {"data":[]}
+		
 		GenericJson content = response.parseAs(GenericJson.class);
+		if(content == null)return files;
 		System.out.println("ndvi content "+ content);//XXX ndvi content {"data":[]}
 		Object features = content.get(DATA);
 		
@@ -257,8 +267,6 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 		List<LocalDate> processed = Collections.synchronizedList(new ArrayList<LocalDate>());
 		List<File>  resFiles = uniqueDates.stream().collect( ()->new  ArrayList<File>(),
 				(tiffFiles, assetDate) ->{
-
-
 					String sEnd = format1.format(assetDate.plusDays(1));
 					String sBegin = format1.format(assetDate.minusDays(1));
 					System.out.println("buscando los ndvi entre "+sBegin+" y "+sEnd);

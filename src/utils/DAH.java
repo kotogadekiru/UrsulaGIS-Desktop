@@ -19,6 +19,7 @@ import static org.eclipse.persistence.config.PersistenceUnitProperties.*;
 import dao.Labor;
 import dao.Ndvi;
 import dao.Poligono;
+import dao.OrdenDeCompra.ProductoLabor;
 import dao.config.Agroquimico;
 import dao.config.Campania;
 import dao.config.Configuracion;
@@ -164,6 +165,48 @@ public class DAH {
 			em.remove(entidad);	
 		}
 
+	}
+	
+	/**
+	 * 
+	 * @param laborName
+	 * @return el producto existente en la base de datos o crea uno nuevo con ese nombre y lo devuelve
+	 */
+	public static ProductoLabor getProductoLabor(String laborName) {	
+//		EntityManager em = em();
+//		TypedQuery<Producto> query =
+//				em.createQuery("SELECT p FROM Producto p where p.nombre like '"+cultivoName+"'", Producto.class);
+		Number count = (Number)em().createNamedQuery(ProductoLabor.COUNT_ALL).getSingleResult();
+		System.out.print("hay "+count+" cultivos en la base de datos");
+		if(count.intValue() ==0) {
+			List<ProductoLabor> results = getAllProductosLabores(DAH.em());//getAll crea los cultivos default
+		}
+
+		TypedQuery<ProductoLabor> query = em().createNamedQuery(
+				ProductoLabor.FIND_NAME, ProductoLabor.class);
+		query.setParameter("name", laborName);
+		
+		ProductoLabor result = null;
+		if(query.getResultList().size()>0){
+			result = query.getSingleResult();
+		}  
+//		else {
+//			result = new Cultivo(cultivoName);
+//			DAH.save(result);
+//		}
+		return result;
+	}
+	
+	public static List<ProductoLabor> getAllProductosLabores(EntityManager em) {
+		TypedQuery<ProductoLabor> query = em.createNamedQuery(
+				ProductoLabor.FIND_ALL, ProductoLabor.class);
+		List<ProductoLabor> results = query.getResultList();
+		
+		if(results.size()==0){
+			ProductoLabor.laboresDefault.values().forEach((d)->DAH.save(d));
+			results.addAll(ProductoLabor.laboresDefault.values());
+		}
+		return results;
 	}
 
 	public static List<Establecimiento> getAllEstablecimientos(EntityManager em) {

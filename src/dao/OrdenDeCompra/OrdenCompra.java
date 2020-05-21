@@ -23,7 +23,21 @@ public class OrdenCompra {
 	@javax.persistence.Id @GeneratedValue
 	private Long id=null;
 	
+	private String description=null;
+	
 	@OneToMany(cascade=CascadeType.ALL, mappedBy="ordenCompra")
 	private List<OrdenCompraItem> items=new ArrayList<OrdenCompraItem>();
+	
+	private Double importeTotal=null;
+	
+	public void setItems(List<OrdenCompraItem> _items) {
+		this.items=_items;
+	}
 
+
+	
+	public Double getImporteTotal() {
+		this.importeTotal=items.stream().mapToDouble(i->i.getImporte()).sum(); 
+		return importeTotal;
+	}
 }

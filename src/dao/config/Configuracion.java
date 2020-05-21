@@ -42,7 +42,7 @@ public class Configuracion{
 
 	private Configuracion() {		
 		String currentUsersHomeDir =System.getenv(APPDATA);
-	//	System.out.println("obtuve la direccion de appData : "+currentUsersHomeDir);
+		//System.out.println("obtuve la direccion de appData : "+currentUsersHomeDir);
 		//obtuve la direccion de appData : C:\Users\quero\AppData\Roaming
 		 ursulaGISFolder = currentUsersHomeDir + File.separator + URSULA_GIS_APPDATA_FOLDER;
 		 //seteo el path para el log de objectdb

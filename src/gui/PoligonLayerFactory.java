@@ -141,7 +141,7 @@ public class PoligonLayerFactory {
 			else if(event.getPropertyName().equals(MeasureTool.EVENT_POSITION_REPLACE) ||
 					event.getPropertyName().equals(MeasureTool.EVENT_POSITION_ADD) ||
 					event.getPropertyName().equals(MeasureTool.EVENT_POSITION_REMOVE) ){// no sirve EVENT_POSITION_REPLACE porque al agregar un punto no se dispara la actualizacion
-				DecimalFormat dc = new DecimalFormat(Messages.getString("PoligonLayerFactory.3")); //$NON-NLS-1$
+				DecimalFormat dc = new DecimalFormat("0.00"); //$NON-NLS-1$
 				dc.setGroupingSize(3);
 				dc.setGroupingUsed(true);
 				double	value = measureTool.getArea()/ProyectionConstants.METROS2_POR_HA;

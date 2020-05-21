@@ -13,11 +13,13 @@ import java.util.Map;
 
 import javax.persistence.Access;
 import javax.persistence.AccessType;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Temporal;
@@ -32,10 +34,13 @@ import org.geotools.feature.SchemaException;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.feature.type.AttributeDescriptor;
 
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
+import dao.OrdenDeCompra.Producto;
+import dao.OrdenDeCompra.ProductoLabor;
 import dao.config.Configuracion;
 import dao.utils.LaborDataStore;
 import dao.utils.PropertyHelper;
@@ -74,31 +79,36 @@ public abstract class Labor<E extends LaborItem>  {
 	@Transient public static final String FIND_ALL="Labor.findAll";
 	@Transient public static final String FIND_NAME = "Labor.findName";
 	@Transient public static final String FIND_ACTIVOS = "Labor.findActivos";
-	
+
 	@Transient public static final String NONE_SELECTED = "Ninguna";
 	@Transient public static final String LABOR_LAYER_IDENTIFICATOR = "LABOR";
 	@Transient public static final String LABOR_LAYER_CLASS_IDENTIFICATOR = "LABOR_LAYER_CLASS_IDENTIFICATOR";
-	
-	
-	
+
+
 	@Id @GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id=null;
 	private boolean activo=false;
 	//public StringProperty nombreProperty = new SimpleStringProperty();
 	public String nombre = new String();
+
 	@Temporal(TemporalType.DATE)
 	public Date fecha = new Date();
+
 	public Double precioLabor=new Double(0);
 	public Double precioInsumo=new Double(0);
-	
-	
+	public Double cantidadInsumo=new Double(0);
+	public Double cantidadLabor=new Double(0);
+
+	@ManyToOne(cascade=CascadeType.PERSIST)
+	public ProductoLabor productoLabor= null;
+
 	public Property<LocalDate> fechaProperty=new SimpleObjectProperty<LocalDate>();	
 	//public DoubleProperty precioLaborProperty=new SimpleDoubleProperty();	//precio es el costo por hectarea de la labor
 	//public DoubleProperty precioInsumoProperty=new SimpleDoubleProperty();
-	
-	
+
+
 	public DoubleProperty anchoDefaultProperty= new SimpleDoubleProperty();
-	
+
 	@Transient public FileDataStore inStore = null;
 	//public ShapefileDataStore outStore = null;	
 	@Transient public DefaultFeatureCollection outCollection=null;	
@@ -115,13 +125,13 @@ public abstract class Labor<E extends LaborItem>  {
 	@Transient private static final String FECHA_KEY = "FECHA_KEY";
 
 
-	
+
 	@Transient public Clasificador clasificador=null;	
 	@Transient public SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(getType());
-	
+
 	@Transient  public StringProperty colAmount=null; //usada por el clasificador para leer el outstore tiene que ser parte de TYPE
 	//columnas configuradas para leer el instore
-	
+
 	@Transient public StringProperty colElevacion=new SimpleStringProperty();	
 	@Transient public StringProperty colAncho=new SimpleStringProperty();	
 	@Transient public StringProperty colCurso=new SimpleStringProperty();	
@@ -132,14 +142,14 @@ public abstract class Labor<E extends LaborItem>  {
 	@Transient public Quadtree treeCache = null;
 	@Transient public Envelope treeCacheEnvelope = null;
 	@Transient public LocalTime cacheLastRead = null;
-	
+
 	@Transient public LaborConfig config = null;
-	
+
 	public Double minElev=Double.MAX_VALUE;
 	public Double maxElev=-Double.MAX_VALUE;
 	public Double minAmount=Double.MAX_VALUE;
 	public Double maxAmount=-Double.MAX_VALUE;
-	
+
 	//no se puede cambiar por un referencedEnvelope porque son positions no cotas norte sur este oeste.
 	@Transient	public Position minX = null;//Position.fromDegrees(Double.MAX_VALUE, Double.MAX_VALUE);
 	@Transient public Position minY = null;//Position.fromDegrees(Double.MAX_VALUE, Double.MAX_VALUE);// null; //Double.MAX_VALUE;
@@ -170,53 +180,53 @@ public abstract class Labor<E extends LaborItem>  {
 		colAncho = PropertyHelper.initStringProperty(COLUMNA_ANCHO, properties, availableColums);
 		colCurso = PropertyHelper.initStringProperty(COLUMNA_CURSO, properties, availableColums);
 		colDistancia = PropertyHelper.initStringProperty(COLUMNA_DISTANCIA, properties, availableColums);
-//		colElevacion = new SimpleStringProperty(properties.getPropertyOrDefault(COLUMNA_ELEVACION,COLUMNA_ELEVACION));
-//		if(!availableColums.contains(colElevacion.get()) && availableColums.contains(COLUMNA_ELEVACION)){
-//			colElevacion.setValue(COLUMNA_ELEVACION);
-//		}
-//		colElevacion.addListener((obs, bool1, bool2) -> {
-//			properties.setProperty(COLUMNA_ELEVACION, bool2.toString());
-//		});
-//
-//		colAncho = new SimpleStringProperty(properties.getPropertyOrDefault(
-//				CosechaLabor.COLUMNA_ANCHO, CosechaLabor.COLUMNA_ANCHO));
-//		if(!availableColums.contains(colAncho.get()) 
-//				&& availableColums.contains(CosechaLabor.COLUMNA_ANCHO)){
-//			colAncho.setValue(CosechaLabor.COLUMNA_ANCHO);
-//		} 
-//		colAncho.addListener((obs, bool1, bool2) -> {
-//			properties.setProperty(CosechaLabor.COLUMNA_ANCHO, bool2);
-//		});// bool2 es un string asi que no necesito convertirlo
-//
-//		
-//		colCurso = new SimpleStringProperty(properties.getPropertyOrDefault(
-//				CosechaLabor.COLUMNA_CURSO, CosechaLabor.COLUMNA_CURSO));
-//		if(!availableColums.contains(colCurso.get())&&availableColums.contains(CosechaLabor.COLUMNA_CURSO)){
-//			colCurso.setValue(CosechaLabor.COLUMNA_CURSO);
-//		}
-//		colCurso.addListener((obs, bool1, bool2) -> {
-//			properties.setProperty(CosechaLabor.COLUMNA_CURSO, bool2.toString());
-//		});
-//
-//		colDistancia = new SimpleStringProperty(
-//				properties.getPropertyOrDefault(CosechaLabor.COLUMNA_DISTANCIA,
-//						CosechaLabor.COLUMNA_DISTANCIA));
-//		if(!availableColums.contains(colDistancia.get())&&availableColums.contains(CosechaLabor.COLUMNA_DISTANCIA)){
-//			colDistancia.setValue(CosechaLabor.COLUMNA_DISTANCIA);
-//		}
-//		colDistancia.addListener((obs, bool1, bool2) -> {
-//			properties.setProperty(CosechaLabor.COLUMNA_DISTANCIA,
-//					bool2.toString());
-//		});
-		
+		//		colElevacion = new SimpleStringProperty(properties.getPropertyOrDefault(COLUMNA_ELEVACION,COLUMNA_ELEVACION));
+		//		if(!availableColums.contains(colElevacion.get()) && availableColums.contains(COLUMNA_ELEVACION)){
+		//			colElevacion.setValue(COLUMNA_ELEVACION);
+		//		}
+		//		colElevacion.addListener((obs, bool1, bool2) -> {
+		//			properties.setProperty(COLUMNA_ELEVACION, bool2.toString());
+		//		});
+		//
+		//		colAncho = new SimpleStringProperty(properties.getPropertyOrDefault(
+		//				CosechaLabor.COLUMNA_ANCHO, CosechaLabor.COLUMNA_ANCHO));
+		//		if(!availableColums.contains(colAncho.get()) 
+		//				&& availableColums.contains(CosechaLabor.COLUMNA_ANCHO)){
+		//			colAncho.setValue(CosechaLabor.COLUMNA_ANCHO);
+		//		} 
+		//		colAncho.addListener((obs, bool1, bool2) -> {
+		//			properties.setProperty(CosechaLabor.COLUMNA_ANCHO, bool2);
+		//		});// bool2 es un string asi que no necesito convertirlo
+		//
+		//		
+		//		colCurso = new SimpleStringProperty(properties.getPropertyOrDefault(
+		//				CosechaLabor.COLUMNA_CURSO, CosechaLabor.COLUMNA_CURSO));
+		//		if(!availableColums.contains(colCurso.get())&&availableColums.contains(CosechaLabor.COLUMNA_CURSO)){
+		//			colCurso.setValue(CosechaLabor.COLUMNA_CURSO);
+		//		}
+		//		colCurso.addListener((obs, bool1, bool2) -> {
+		//			properties.setProperty(CosechaLabor.COLUMNA_CURSO, bool2.toString());
+		//		});
+		//
+		//		colDistancia = new SimpleStringProperty(
+		//				properties.getPropertyOrDefault(CosechaLabor.COLUMNA_DISTANCIA,
+		//						CosechaLabor.COLUMNA_DISTANCIA));
+		//		if(!availableColums.contains(colDistancia.get())&&availableColums.contains(CosechaLabor.COLUMNA_DISTANCIA)){
+		//			colDistancia.setValue(CosechaLabor.COLUMNA_DISTANCIA);
+		//		}
+		//		colDistancia.addListener((obs, bool1, bool2) -> {
+		//			properties.setProperty(CosechaLabor.COLUMNA_DISTANCIA,
+		//					bool2.toString());
+		//		});
+
 		/********************** inicializo las propiedades de la labor propiamente dichas********************************/
 		//fechaProperty = new SimpleObjectProperty<LocalDate>();
 		DateConverter dc = new DateConverter(); 		
 		String defaultDate = properties.getPropertyOrDefault(Labor.FECHA_KEY,	dc.toString(LocalDate.now()));	
 		//LocalDate ld = dc.fromString(dc.toString(LocalDate.now()));		
 		DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
-		
-		
+
+
 		try {
 			this.fecha = df.parse(defaultDate);// Unparseable date: "30/04/2018"
 		} catch (ParseException e) {
@@ -224,15 +234,15 @@ public abstract class Labor<E extends LaborItem>  {
 			System.out.println("fallo el parse de la fecha default");
 			e.printStackTrace();
 		}
-//		LocalDate ld = dc.fromString(defaultDate);		
-//		fechaProperty.setValue(ld);
-//		fechaProperty.addListener((obs, bool1, bool2) -> {
-//			System.out.println("cambiando la fecha a "+bool2);
-//			properties.setProperty(Labor.FECHA_KEY,dc.toString(bool2));
-//				//	bool2.toString());
-//		});
+		//		LocalDate ld = dc.fromString(defaultDate);		
+		//		fechaProperty.setValue(ld);
+		//		fechaProperty.addListener((obs, bool1, bool2) -> {
+		//			System.out.println("cambiando la fecha a "+bool2);
+		//			properties.setProperty(Labor.FECHA_KEY,dc.toString(bool2));
+		//				//	bool2.toString());
+		//		});
 
-		
+
 		precioLabor = initPrecioLaborHa();// initDoubleProperty(CosechaLabor.COSTO_COSECHA_HA, properties);
 		precioInsumo = initPrecioInsumo(); //initDoubleProperty(FertilizacionLabor.COLUMNA_PRECIO_FERT,  "0", properties);	
 
@@ -240,7 +250,7 @@ public abstract class Labor<E extends LaborItem>  {
 		anchoDefaultProperty = PropertyHelper.initDoubleProperty(ANCHO_DEFAULT, "8", properties);
 
 		clasificador.tipoClasificadorProperty.set(
-				properties.getPropertyOrDefault(Clasificador.TIPO_CLASIFICADOR,	Clasificador.CLASIFICADOR_JENKINS));
+				properties.getPropertyOrDefault(Clasificador.TIPO_CLASIFICADOR,	Clasificador.clasficicadores[0]));
 		clasificador.tipoClasificadorProperty
 		.addListener((obs, bool1, bool2) -> {
 			properties.setProperty(Clasificador.TIPO_CLASIFICADOR,
@@ -254,65 +264,65 @@ public abstract class Labor<E extends LaborItem>  {
 
 
 	}
-	
+
 
 
 
 	/**
 	 * @return the precioLaborProperty
 	 */
-	
-//	public Double getPrecioLabor() {
-//		return precioLaborProperty.get();
-//	}
-//
-//
-//	/**
-//	 * @param precioLaborProperty the precioLaborProperty to set
-//	 */
-//	public void setPrecioLabor(Double precioLabor) {
-//		if(precioLabor==null)precioLabor=0.0;
-//		this.precioLaborProperty.set(precioLabor); 
-//	}
-//
-//
-//	
-//	public Double getPrecioInsumo() {
-//		if(precioInsumoProperty==null) {
-//			precioInsumoProperty=	new SimpleDoubleProperty();
-//		}
-//		return precioInsumoProperty.get();
-//	}
-//	public void setPrecioInsumo(Double precioInsumo) {
-//		if(precioInsumoProperty==null) {
-//			precioInsumoProperty=	new SimpleDoubleProperty();
-//		}
-//		if(precioInsumo==null)precioInsumo=0.0;
-//		this.precioInsumoProperty.set(precioInsumo); 
-//	}
-	
-//	//@Temporal(TemporalType.DATE)
-//	public Date getFecha() {
-//		LocalDate lDate = this.fechaProperty.getValue();
-//		Date date = null;
-//		if(lDate !=null) {
-//			date = Date.from(lDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-//		}
-//		return date ;
-//	}
-//	
-//	public void setFecha(Date date) {	
-////		Calendar cal = Calendar.getInstance();
-////		if(date !=null)		cal.setTime(date);	
-//		LocalDate lDate = null;
-//		if(date!=null) {
-//			DateConverter dc = new DateConverter(); 		
-//			String defaultDate = date.toString();//config.getConfigProperties().getPropertyOrDefault(Labor.FECHA_KEY,	dc.toString(LocalDate.now()));	
-//			//LocalDate ld = dc.fromString(dc.toString(LocalDate.now()));		
-//			lDate = dc.fromString(defaultDate);		
-//		}
-//		this.fechaProperty = new SimpleObjectProperty<LocalDate>(lDate);
-//	}
+
+	//	public Double getPrecioLabor() {
+	//		return precioLaborProperty.get();
+	//	}
+	//
+	//
+	//	/**
+	//	 * @param precioLaborProperty the precioLaborProperty to set
+	//	 */
+	//	public void setPrecioLabor(Double precioLabor) {
+	//		if(precioLabor==null)precioLabor=0.0;
+	//		this.precioLaborProperty.set(precioLabor); 
+	//	}
+	//
+	//
+	//	
+	//	public Double getPrecioInsumo() {
+	//		if(precioInsumoProperty==null) {
+	//			precioInsumoProperty=	new SimpleDoubleProperty();
+	//		}
+	//		return precioInsumoProperty.get();
+	//	}
+	//	public void setPrecioInsumo(Double precioInsumo) {
+	//		if(precioInsumoProperty==null) {
+	//			precioInsumoProperty=	new SimpleDoubleProperty();
+	//		}
+	//		if(precioInsumo==null)precioInsumo=0.0;
+	//		this.precioInsumoProperty.set(precioInsumo); 
+	//	}
+
+	//	//@Temporal(TemporalType.DATE)
+	//	public Date getFecha() {
+	//		LocalDate lDate = this.fechaProperty.getValue();
+	//		Date date = null;
+	//		if(lDate !=null) {
+	//			date = Date.from(lDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+	//		}
+	//		return date ;
+	//	}
+	//	
+	//	public void setFecha(Date date) {	
+	////		Calendar cal = Calendar.getInstance();
+	////		if(date !=null)		cal.setTime(date);	
+	//		LocalDate lDate = null;
+	//		if(date!=null) {
+	//			DateConverter dc = new DateConverter(); 		
+	//			String defaultDate = date.toString();//config.getConfigProperties().getPropertyOrDefault(Labor.FECHA_KEY,	dc.toString(LocalDate.now()));	
+	//			//LocalDate ld = dc.fromString(dc.toString(LocalDate.now()));		
+	//			lDate = dc.fromString(defaultDate);		
+	//		}
+	//		this.fechaProperty = new SimpleObjectProperty<LocalDate>(lDate);
+	//	}
 
 
 	/**
@@ -321,14 +331,13 @@ public abstract class Labor<E extends LaborItem>  {
 	 */
 	@Transient
 	protected abstract Double initPrecioLaborHa() ;
-	
+
 	/**
 	 * metodo que devuelve el costo de la labor por hectarea de acuerdo a la configuracion del tipo de labor que implemente
 	 * @return DoubleProperty
 	 */
 	@Transient
 	protected abstract Double initPrecioInsumo() ;
-
 
 
 	/**
@@ -338,19 +347,19 @@ public abstract class Labor<E extends LaborItem>  {
 	 * @param availableColums la lista de opsiones para configurar las propiedades
 	 * @return devuelve una nueva StringProperty inicializada con el valor correspondiente de las availableColums o la key proporcionada
 	 */
-//	public static SimpleStringProperty initStringProperty(String key,Configuracion properties,List<String> availableColums){
-//		SimpleStringProperty sProperty = new SimpleStringProperty(
-//				properties.getPropertyOrDefault(key, key));
-//
-//		if(availableColums!=null && !availableColums.contains(sProperty.get()) && availableColums.contains(key)){
-//			sProperty.setValue(key);
-//		}
-//
-//		sProperty.addListener((obs, bool1, bool2) -> {
-//			properties.setProperty(key,	bool2.toString());
-//		});
-//		return sProperty;
-//	}
+	//	public static SimpleStringProperty initStringProperty(String key,Configuracion properties,List<String> availableColums){
+	//		SimpleStringProperty sProperty = new SimpleStringProperty(
+	//				properties.getPropertyOrDefault(key, key));
+	//
+	//		if(availableColums!=null && !availableColums.contains(sProperty.get()) && availableColums.contains(key)){
+	//			sProperty.setValue(key);
+	//		}
+	//
+	//		sProperty.addListener((obs, bool1, bool2) -> {
+	//			properties.setProperty(key,	bool2.toString());
+	//		});
+	//		return sProperty;
+	//	}
 
 	@Transient
 	public abstract  String getTypeDescriptors();
@@ -406,21 +415,21 @@ public abstract class Labor<E extends LaborItem>  {
 	}
 
 
-//	public StringProperty getNombreProperty(){
-//		return nombreProperty;
-//	}
+	//	public StringProperty getNombreProperty(){
+	//		return nombreProperty;
+	//	}
 
 	public void setNombre(String n) {
 		if(layer!=null)this.layer.setName(n);
 		this.nombre = n;
 	}
-	
+
 	public void setOutCollection(DefaultFeatureCollection newOutcollection) {
 		this.outCollection=newOutcollection;		
 		this.clearCache();
 	}
-	
-	
+
+
 	@Transient
 	public Double getNextID() {
 		Double nextID=this.nextID;
@@ -428,78 +437,78 @@ public abstract class Labor<E extends LaborItem>  {
 		return nextID;
 	}
 
-//	public List<E> cachedOutStoreQueryOLD(Envelope envelope){
-//		List<E> objects = new ArrayList<E>();
-//		Envelope cachedEnvelope=null;
-//
-//		CoordinateReferenceSystem targetCRS=null;
-//		synchronized(cachedEnvelopes){//tengo que poner todo el metodo en synchro sino pierdo valores al hacer el filtro outlayers
-//			if(cachedEnvelopes.size()>0){
-//
-//				for(Envelope ce : cachedEnvelopes.keySet()){
-//					if(ce.contains(envelope))cachedEnvelope=ce;
-//				}
-//			}
-//
-//			if( cachedEnvelope==null ){
-//				cachedEnvelope = updateCachedEnvelope(envelope);
-//				FeatureType schema = this.outCollection.getSchema();			    
-//				targetCRS = schema.getGeometryDescriptor().getCoordinateReferenceSystem();		
-//			}
-//		}
-//		ReferencedEnvelope bbox = new ReferencedEnvelope(envelope,targetCRS);		
-//		Polygon boundsPolygon = constructPolygon(bbox);
-//		List<E> cachedObjects = cachedEnvelopes.get(cachedEnvelope);
-//
-//		for(E cachedObject : cachedObjects){
-//			Geometry geomEnvelope = cachedObject.getGeometry();
-//			boolean intersects = false;
-//			if(geomEnvelope!=null){
-//				intersects = geomEnvelope.intersects(boundsPolygon);
-//			}
-//			if(intersects){
-//				objects.add(cachedObject);
-//			}
-//		}
-//
-//		return objects;
-//	}
-	
+	//	public List<E> cachedOutStoreQueryOLD(Envelope envelope){
+	//		List<E> objects = new ArrayList<E>();
+	//		Envelope cachedEnvelope=null;
+	//
+	//		CoordinateReferenceSystem targetCRS=null;
+	//		synchronized(cachedEnvelopes){//tengo que poner todo el metodo en synchro sino pierdo valores al hacer el filtro outlayers
+	//			if(cachedEnvelopes.size()>0){
+	//
+	//				for(Envelope ce : cachedEnvelopes.keySet()){
+	//					if(ce.contains(envelope))cachedEnvelope=ce;
+	//				}
+	//			}
+	//
+	//			if( cachedEnvelope==null ){
+	//				cachedEnvelope = updateCachedEnvelope(envelope);
+	//				FeatureType schema = this.outCollection.getSchema();			    
+	//				targetCRS = schema.getGeometryDescriptor().getCoordinateReferenceSystem();		
+	//			}
+	//		}
+	//		ReferencedEnvelope bbox = new ReferencedEnvelope(envelope,targetCRS);		
+	//		Polygon boundsPolygon = constructPolygon(bbox);
+	//		List<E> cachedObjects = cachedEnvelopes.get(cachedEnvelope);
+	//
+	//		for(E cachedObject : cachedObjects){
+	//			Geometry geomEnvelope = cachedObject.getGeometry();
+	//			boolean intersects = false;
+	//			if(geomEnvelope!=null){
+	//				intersects = geomEnvelope.intersects(boundsPolygon);
+	//			}
+	//			if(intersects){
+	//				objects.add(cachedObject);
+	//			}
+	//		}
+	//
+	//		return objects;
+	//	}
+
 	@SuppressWarnings("unchecked")
 	public List<E> cachedOutStoreQuery(Envelope envelope){
 		return (List<E>) LaborDataStore.cachedOutStoreQuery(envelope, this);
-//		List<E> objects = new ArrayList<E>();
-//		synchronized(this){
-//			//si la cache crecio mucho la limito a un tamanio
-////			if(treeCache!=null && treeCache.size()>50*1000){//71053 se limpia todo el timepo
-////				System.out.println("limpiando cache con size = "+treeCache.size()+" envelope = "+envelope.toString());
-////				treeCache=null;
-////			}//esto no sirve porque updateAllCachedEnvelopes carga todas las features no solo las del envelope
-//			//TODO poner un timer si no se uso el treeCache en x segundos limpiarlo.
-//			if( treeCache==null){			
-//				updateAllCachedEnvelopes(envelope);			
-//			} 
-//		}
-//		@SuppressWarnings("unchecked")
-//		List<SimpleFeature> cachedObjects = treeCache.query(envelope);//FIXME Exception in thread "pool-2-thread-5" java.util.ConcurrentModificationException
-//		//el error se produjo al convertir un ndvi a cosecha
-//
-//		FeatureType schema = this.outCollection.getSchema();			    
-//		CoordinateReferenceSystem targetCRS = schema.getGeometryDescriptor().getCoordinateReferenceSystem();		
-//		ReferencedEnvelope bbox = new ReferencedEnvelope(envelope,targetCRS);		
-//		Geometry geoEnv = GeometryHelper.constructPolygon(bbox);
-//		for(SimpleFeature sf : cachedObjects){
-//			Geometry sfGeom = (Geometry) sf.getDefaultGeometry();
-//			boolean intersects = false;
-//			if(sfGeom!=null){
-//				intersects = geoEnv.intersects(sfGeom);
-//			}
-//			if(intersects){
-//				objects.add(constructFeatureContainerStandar(sf,false));
-//			}
-//		}
-//
-//		return objects;
+		//		List<E> objects = new ArrayList<E>();
+		//		synchronized(this){
+		//			//si la cache crecio mucho la limito a un tamanio
+		////			if(treeCache!=null && treeCache.size()>50*1000){//71053 se limpia todo el timepo
+		////				System.out.println("limpiando cache con size = "+treeCache.size()+" envelope = "+envelope.toString());
+		////				treeCache=null;
+		////			}//esto no sirve porque updateAllCachedEnvelopes carga todas las features no solo las del envelope
+		//			//TODO poner un timer si no se uso el treeCache en x segundos limpiarlo.
+		//			if( treeCache==null){			
+		//				updateAllCachedEnvelopes(envelope);			
+		//			} 
+		//		}
+		//		@SuppressWarnings("unchecked")
+		//		List<SimpleFeature> cachedObjects = treeCache.query(envelope);//FIXME Exception in thread "pool-2-thread-5" java.util.ConcurrentModificationException
+		//		//el error se produjo al convertir un ndvi a cosecha
+		//
+		//		FeatureType schema = this.outCollection.getSchema();			    
+		//		CoordinateReferenceSystem targetCRS = schema.getGeometryDescriptor().getCoordinateReferenceSystem();		
+		//		ReferencedEnvelope bbox = new ReferencedEnvelope(envelope,targetCRS);		
+		//		Geometry geoEnv = GeometryHelper.constructPolygon(bbox);
+		//		for(SimpleFeature sf : cachedObjects){
+		//			Geometry sfGeom = (Geometry) sf.getDefaultGeometry();
+		//			boolean intersects = false;
+		//			if(sfGeom!=null){
+		//				intersects = geoEnv.intersects(sfGeom);
+		//			}
+		//			if(intersects){
+		//				objects.add(constructFeatureContainerStandar(sf,false));
+		//			}
+		//		}
+		//
+		//		return objects;
 	}
 
 	public void clearCache(){
@@ -509,116 +518,116 @@ public abstract class Labor<E extends LaborItem>  {
 		treeCache = null;
 		treeCacheEnvelope=null;
 	}
-//	private Envelope updateCachedEnvelope(Envelope envelope){
-//		Envelope cachedEnvelope = new Envelope(envelope);
-//		double height = cachedEnvelope.getHeight();
-//		double width = cachedEnvelope.getHeight();
-//		cachedEnvelope.expandBy(width*4, height*4);
-//		cachedEnvelopes.put(cachedEnvelope, outStoreQuery(cachedEnvelope));
-//		return cachedEnvelope;
-//	}
-	
-//	private void updateAllCachedEnvelopes(Envelope envelope){
-//		treeCache=new Quadtree();
-////TODO cargar todas las features en memoria pero en guardarlas indexadas en cachedEnvelopes
-//		@SuppressWarnings("unchecked")
-//		Collection<SimpleFeature> items= Lists.newArrayList(outCollection.iterator());
-//		items.forEach((it)->{
-//			Geometry g =(Geometry) it.getDefaultGeometry();
-//			treeCache.insert(g.getEnvelopeInternal(), it);
-//		});
-//	}
+	//	private Envelope updateCachedEnvelope(Envelope envelope){
+	//		Envelope cachedEnvelope = new Envelope(envelope);
+	//		double height = cachedEnvelope.getHeight();
+	//		double width = cachedEnvelope.getHeight();
+	//		cachedEnvelope.expandBy(width*4, height*4);
+	//		cachedEnvelopes.put(cachedEnvelope, outStoreQuery(cachedEnvelope));
+	//		return cachedEnvelope;
+	//	}
+
+	//	private void updateAllCachedEnvelopes(Envelope envelope){
+	//		treeCache=new Quadtree();
+	////TODO cargar todas las features en memoria pero en guardarlas indexadas en cachedEnvelopes
+	//		@SuppressWarnings("unchecked")
+	//		Collection<SimpleFeature> items= Lists.newArrayList(outCollection.iterator());
+	//		items.forEach((it)->{
+	//			Geometry g =(Geometry) it.getDefaultGeometry();
+	//			treeCache.insert(g.getEnvelopeInternal(), it);
+	//		});
+	//	}
 
 	@SuppressWarnings("unchecked")
 	public List<E> outStoreQuery(Envelope envelope){
 		return (List<E>) LaborDataStore.outStoreQuery(envelope,this);
-//		List<E> objects = new ArrayList<E>();
-//		//TODO tratar de cachear todo lo posible para evitar repetir trabajo en querys consecutivas.
-//		//una udea es cachear un sector del out collection y solo hacer la query si el envelope esta fuera de lo cacheado
-//		if(this.outCollection.getBounds().intersects(envelope)){//solo hago la query si el bounds esta dentro del mapa
-//			FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2( GeoTools.getDefaultHints() );
-//			FeatureType schema = this.outCollection.getSchema();
-//
-//			// usually "THE_GEOM" for shapefiles
-//			String geometryPropertyName = schema.getGeometryDescriptor().getLocalName();
-//			CoordinateReferenceSystem targetCRS = schema.getGeometryDescriptor().getCoordinateReferenceSystem();
-//
-//			ReferencedEnvelope bbox = new ReferencedEnvelope(envelope,targetCRS);		
-//
-//			BBOX filter = ff.bbox(ff.property(geometryPropertyName), bbox);
-//
-//			SimpleFeatureCollection features = this.outCollection.subCollection(filter);//OK!! esto funciona
-//			// System.out.println("encontre "+features.size()+" que se intersectan con "+ bbox );
-//
-//			Polygon boundsPolygon = GeometryHelper.constructPolygon(bbox);
-//
-//			SimpleFeatureIterator featuresIterator = features.features();
-//			while(featuresIterator.hasNext()){
-//				SimpleFeature next = featuresIterator.next();
-//				Object obj = next.getDefaultGeometry();
-//
-//				Geometry geomEnvelope = null;
-//				if(obj instanceof Geometry){					
-//					geomEnvelope =(Geometry)obj;					 
-//				} 
-//
-//				boolean intersects = false;
-//				if(geomEnvelope!=null){
-//					intersects = geomEnvelope.intersects(boundsPolygon );
-//				}
-//				if(intersects){
-//					objects.add(constructFeatureContainerStandar(next,false));
-//				}
-//			}
-//			featuresIterator.close();
-//		}
-//
-//		return objects;
+		//		List<E> objects = new ArrayList<E>();
+		//		//TODO tratar de cachear todo lo posible para evitar repetir trabajo en querys consecutivas.
+		//		//una udea es cachear un sector del out collection y solo hacer la query si el envelope esta fuera de lo cacheado
+		//		if(this.outCollection.getBounds().intersects(envelope)){//solo hago la query si el bounds esta dentro del mapa
+		//			FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2( GeoTools.getDefaultHints() );
+		//			FeatureType schema = this.outCollection.getSchema();
+		//
+		//			// usually "THE_GEOM" for shapefiles
+		//			String geometryPropertyName = schema.getGeometryDescriptor().getLocalName();
+		//			CoordinateReferenceSystem targetCRS = schema.getGeometryDescriptor().getCoordinateReferenceSystem();
+		//
+		//			ReferencedEnvelope bbox = new ReferencedEnvelope(envelope,targetCRS);		
+		//
+		//			BBOX filter = ff.bbox(ff.property(geometryPropertyName), bbox);
+		//
+		//			SimpleFeatureCollection features = this.outCollection.subCollection(filter);//OK!! esto funciona
+		//			// System.out.println("encontre "+features.size()+" que se intersectan con "+ bbox );
+		//
+		//			Polygon boundsPolygon = GeometryHelper.constructPolygon(bbox);
+		//
+		//			SimpleFeatureIterator featuresIterator = features.features();
+		//			while(featuresIterator.hasNext()){
+		//				SimpleFeature next = featuresIterator.next();
+		//				Object obj = next.getDefaultGeometry();
+		//
+		//				Geometry geomEnvelope = null;
+		//				if(obj instanceof Geometry){					
+		//					geomEnvelope =(Geometry)obj;					 
+		//				} 
+		//
+		//				boolean intersects = false;
+		//				if(geomEnvelope!=null){
+		//					intersects = geomEnvelope.intersects(boundsPolygon );
+		//				}
+		//				if(intersects){
+		//					objects.add(constructFeatureContainerStandar(next,false));
+		//				}
+		//			}
+		//			featuresIterator.close();
+		//		}
+		//
+		//		return objects;
 	}
 
 
 	@SuppressWarnings("unchecked")
 	public List<E> inStoreQuery(Envelope envelope) throws IOException{
 		return (List<E>) LaborDataStore.inStoreQuery(envelope,this);
-//		List<E> objects = new ArrayList<E>();
-//		FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2( GeoTools.getDefaultHints() );
-//		FeatureType schema = this.inStore.getSchema();
-//
-//		// usually "THE_GEOM" for shapefiles
-//		String geometryPropertyName = schema.getGeometryDescriptor().getLocalName();
-//		CoordinateReferenceSystem targetCRS = schema.getGeometryDescriptor()
-//				.getCoordinateReferenceSystem();
-//
-//		ReferencedEnvelope bbox = new ReferencedEnvelope(envelope,targetCRS);		    
-//		BBOX filter = ff.bbox(ff.property(geometryPropertyName), bbox);
-//
-//
-//		SimpleFeatureCollection features = this.inStore.getFeatureSource().getFeatures(filter);//OK!! esto funciona
-//
-//
-//		SimpleFeatureIterator featuresIterator = features.features();
-//		while(featuresIterator.hasNext()){
-//			objects.add(constructFeatureContainer(featuresIterator.next()));
-//		}
-//		featuresIterator.close();
-//		return objects;
+		//		List<E> objects = new ArrayList<E>();
+		//		FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2( GeoTools.getDefaultHints() );
+		//		FeatureType schema = this.inStore.getSchema();
+		//
+		//		// usually "THE_GEOM" for shapefiles
+		//		String geometryPropertyName = schema.getGeometryDescriptor().getLocalName();
+		//		CoordinateReferenceSystem targetCRS = schema.getGeometryDescriptor()
+		//				.getCoordinateReferenceSystem();
+		//
+		//		ReferencedEnvelope bbox = new ReferencedEnvelope(envelope,targetCRS);		    
+		//		BBOX filter = ff.bbox(ff.property(geometryPropertyName), bbox);
+		//
+		//
+		//		SimpleFeatureCollection features = this.inStore.getFeatureSource().getFeatures(filter);//OK!! esto funciona
+		//
+		//
+		//		SimpleFeatureIterator featuresIterator = features.features();
+		//		while(featuresIterator.hasNext()){
+		//			objects.add(constructFeatureContainer(featuresIterator.next()));
+		//		}
+		//		featuresIterator.close();
+		//		return objects;
 	}
 
-	
+
 
 
 	public void insertFeature(E laborItem) {
 		LaborDataStore.insertFeature(laborItem,this);
-//		Geometry cosechaGeom = laborItem.getGeometry();
-//		Envelope geomEnvelope=cosechaGeom.getEnvelopeInternal();
-//
-//		synchronized(featureBuilder){
-//			SimpleFeature fe = laborItem.getFeature(featureBuilder);
-//			if(treeCache!=null){
-//				treeCache.insert(geomEnvelope, fe);
-//			}
-//			this.insertFeature(fe);
-//		}
+		//		Geometry cosechaGeom = laborItem.getGeometry();
+		//		Envelope geomEnvelope=cosechaGeom.getEnvelopeInternal();
+		//
+		//		synchronized(featureBuilder){
+		//			SimpleFeature fe = laborItem.getFeature(featureBuilder);
+		//			if(treeCache!=null){
+		//				treeCache.insert(geomEnvelope, fe);
+		//			}
+		//			this.insertFeature(fe);
+		//		}
 	}
 
 	public void insertFeature(SimpleFeature f){
@@ -707,11 +716,11 @@ public abstract class Labor<E extends LaborItem>  {
 		}
 		return type;
 	}
-//este metodo estaba en cosechaLabor y lo traje a Labor para generalizarlo.
+	//este metodo estaba en cosechaLabor y lo traje a Labor para generalizarlo.
 	public void changeFeature(SimpleFeature old, LaborItem ci) {
 		LaborDataStore.changeFeature(old,ci,this);
 	}
-	
+
 	public void constructFeatureContainerStandar(LaborItem ci, SimpleFeature harvestFeature, Boolean newIDS) {
 		ci.id = LaborItem.getDoubleFromObj(LaborItem.getID(harvestFeature));
 		if(ci.id ==null || newIDS){// flag que me permita ignorar el id del feature y asignar uno nuevo
@@ -730,55 +739,73 @@ public abstract class Labor<E extends LaborItem>  {
 				.getAttribute(COLUMNA_ELEVACION));
 	}
 
+	/**
+	 * 
+	 * @param feature
+	 * @param attribute
+	 * @return devuelve true si el feature tiene el attrinute
+	 */
+	public boolean contieneAtributte(SimpleFeature feature,String attribute) {
+		if( attribute==null)return false;
+		for(AttributeDescriptor att:feature.getType().getAttributeDescriptors()) {
+			if(att!=null&&attribute.equals(att.getLocalName())) {
+				return true;
+			}
+		}
+		return false;	
+	}
+
 	public void constructFeatureContainer(LaborItem ci, SimpleFeature harvestFeature) {
 		ci.setId(getNextID());
 
 		String idString = LaborItem.getID(harvestFeature);
 		ci.setId(LaborItem.getDoubleFromObj(idString));
 
-		double toMetros = getConfigLabor().valorMetrosPorUnidadDistanciaProperty()
-				.doubleValue();
+		double toMetros = getConfigLabor().valorMetrosPorUnidadDistanciaProperty().doubleValue();
 
-		String anchoColumn = colAncho.get();
-		ci.setAncho(LaborItem.getDoubleFromObj(harvestFeature
-				.getAttribute(anchoColumn)));
-		ci.setAncho(ci.getAncho() * toMetros);
-
+		if(contieneAtributte(harvestFeature,colAncho.get())) {
+			ci.setAncho(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colAncho.get())));
+			ci.setAncho(ci.getAncho() * toMetros);
+		}
 		String distColumn = colDistancia.get();// getColumn(COLUMNA_DISTANCIA);//TODO
-		// pasar el constructor de
-		// cosechaItem a la labor
-		try {//para permitir editar la distancia
-			ci.setDistancia(new Double(distColumn));
-		} catch (Exception e) {//si distColumn no es un numero procedo a parsear el contenido
-			Object distAttribute = harvestFeature.getAttribute(distColumn);
+		if(contieneAtributte(harvestFeature,distColumn)) {
+			try {//para permitir editar la distancia
+				ci.setDistancia(new Double(distColumn));
+			} catch (Exception e) {//si distColumn no es un numero procedo a parsear el contenido
+				Object distAttribute = harvestFeature.getAttribute(distColumn);
 
-			ci.setDistancia(LaborItem.getDoubleFromObj(distAttribute)
-					* toMetros);
+				ci.setDistancia(LaborItem.getDoubleFromObj(distAttribute)
+						* toMetros);
+			}
+		}
+		if(contieneAtributte(harvestFeature,colCurso.get())) {
+			ci.setRumbo(LaborItem.getDoubleFromObj(harvestFeature
+					.getAttribute(colCurso.get())));
 		}
 
-		ci.setRumbo(LaborItem.getDoubleFromObj(harvestFeature
-				.getAttribute(colCurso.get())));
 
 		if(!colElevacion.get().equals(Labor.NONE_SELECTED)){
-			Double elevacion =  LaborItem.getDoubleFromObj(harvestFeature
-					.getAttribute(colElevacion.get()));
 
-			ci.setElevacion(elevacion);
+			if(contieneAtributte(harvestFeature,colElevacion.get())) {
+				Double elevacion =  LaborItem.getDoubleFromObj(harvestFeature
+						.getAttribute(colElevacion.get()));
+
+				ci.setElevacion(elevacion);
+			}
 		} else{
 			ci.setElevacion(1.0);
 		}
-
 	}
-	
-	
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(Labor.class.isAssignableFrom(o.getClass()))) return false;
-        Labor<E> lab = (Labor<E>) o;
-        return id != null && id.equals((lab).id);
-    }
-    
+
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(Labor.class.isAssignableFrom(o.getClass()))) return false;
+		Labor<E> lab = (Labor<E>) o;
+		return id != null && id.equals((lab).id);
+	}
+
 	/**
 	 * metodo que construye una feature leyendo las columnas estandar definidas para el tipo de labor
 	 * @param next
@@ -795,5 +822,5 @@ public abstract class Labor<E extends LaborItem>  {
 	public abstract E constructFeatureContainer(SimpleFeature next) ;
 
 	public abstract LaborConfig getConfigLabor();
-	
+
 }

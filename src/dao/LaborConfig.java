@@ -1,6 +1,8 @@
 package dao;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 
 import dao.config.Configuracion;
 import dao.utils.PropertyHelper;
@@ -77,6 +79,7 @@ public class LaborConfig {
 		
 		
 		DecimalFormat df = new DecimalFormat("#.0000");
+		df.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(new Locale("EN")));
 		try{
 		
 		//XXX ver si me conviene actualizar el archivo de propiedades on the fly o on demand

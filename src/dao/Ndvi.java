@@ -3,10 +3,13 @@ package dao;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.time.LocalDate;
 import java.util.Calendar;
 
 import javax.persistence.Access;
 import javax.persistence.AccessType;
+import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Lob;
@@ -18,6 +21,7 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import dao.config.Configuracion;
+import dao.utils.LocalDateAttributeConverter;
 import gov.nasa.worldwindx.examples.analytics.ExportableAnalyticSurface;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -41,10 +45,15 @@ public class Ndvi {
 	private String nombre=null;
 
 	@Temporal(TemporalType.DATE)
-	private Calendar fecha=Calendar.getInstance();
+	@Convert(converter = LocalDateAttributeConverter.class)
+	private LocalDate fecha=LocalDate.now();
+	
+	private Double meanNDVI=null;
+	private Double porcNubes=null;
 	
 	@Transient
 	private File f=null;
+	
 	@ManyToOne
 	private Poligono contorno = null;
 	@Lob
@@ -97,10 +106,12 @@ public class Ndvi {
 			 fos.close();
 //FIXME por alguna razon esto no funciona en el ejecutable parece que devuelve null.
         } catch (Exception e) {
-	     e.printStackTrace();
+        	e.printStackTrace();
         } 
 		if(this.pixelArea==0) {
-			this.pixelArea=0.008084403745300213;
+			this.pixelArea=0.001;//0.008084403745300213;
 		}
 	}
+
+
 }

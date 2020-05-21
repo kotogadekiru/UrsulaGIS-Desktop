@@ -16,6 +16,7 @@ import dao.Clasificador;
 import dao.Labor;
 import dao.LaborConfig;
 import dao.LaborItem;
+import dao.OrdenDeCompra.ProductoLabor;
 import dao.config.Configuracion;
 import dao.config.Semilla;
 import dao.utils.PropertyHelper;
@@ -24,6 +25,7 @@ import javafx.beans.property.StringProperty;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import utils.DAH;
 
 @Getter
 @Setter(value = AccessLevel.PUBLIC)
@@ -81,6 +83,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 
 
 	private void initConfig() {
+		this.productoLabor=DAH.getProductoLabor(ProductoLabor.LABOR_DE_SIEMBRA);
 		List<String> availableColums = this.getAvailableColumns();		
 
 		Configuracion properties = getConfigLabor().getConfigProperties();
@@ -174,7 +177,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 	public void constructClasificador() {
 		super.constructClasificador(config.getConfigProperties()
 				.getPropertyOrDefault(Clasificador.TIPO_CLASIFICADOR,
-						Clasificador.CLASIFICADOR_JENKINS));
+						Clasificador.clasficicadores[0]));
 	}
 
 	@Transient

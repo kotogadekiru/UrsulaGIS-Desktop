@@ -59,7 +59,7 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 	@Override
 	protected void doProcess() throws IOException {
 	
-		Random rand=new Random();
+		
 
 		String nombre =null;
 
@@ -80,13 +80,21 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 				Integer categoria =c.getClasificador().getCategoryFor(container.getAmount());
 				//System.out.println("categoria para Amount "+container.getAmount()+" es: "+categoria);//OK! categoria para Amount 12.28167988386877 es: 1
 				
+				
+				
 				//TODO si el area del poligono es mayor que la superficieMinimaAMuestrear
-
+				boolean insertCentroid=true;
 				Point centroid = geometry.getCentroid();
 				ProyectionConstants.setLatitudCalculo(centroid.getY());
 				double areaPoly = ProyectionConstants.A_HAS(geometry.getArea());
 				if(areaPoly>superficieMinimaAMuestrear){
 					List<SueloItem> puntosGenerados = new ArrayList<SueloItem>();
+					Random rand = new Random();
+					double sigmaX = geometry.getEnvelopeInternal().getWidth()/2;
+					double sigmaY = geometry.getEnvelopeInternal().getHeight()/2;
+					//double sigma = Math.sqrt(geometry.getArea())/3;//area en longLat
+					System.out.println("creando un muestreo con sigma = "+sigmaX+" , "+sigmaY);
+					
 					//TODO mientas que la cantidad de puntos generados para el poligono sea menor que la cantidadMinimaDeMuestrasPoligonoAMuestrear o la densidad de muestras sea menor que densidadDeMuestrasDeseada
 					while(puntosGenerados.size()<cantidadMinimaDeMuestrasPoligonoAMuestrear || densidadDeMuestrasDeseada > (puntosGenerados.size()/areaPoly)  ){
 
@@ -94,12 +102,20 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 						/*
 						 *if you want mean 1 hour and std-deviance 15 minutes you'll need to call it as nextGaussian()*15+60*/
 						//TODO los puntos generados pueden tener una distribucion normal al rededor del centroide del poligono y desvio relacionado al area del poligono
+						
+						Point random =null;
+						if(!insertCentroid) {
+							double x =rand.nextGaussian()*sigmaX+centroid.getX();
+							double y =rand.nextGaussian()*sigmaY+centroid.getY();
 
-						double sigma = Math.sqrt(geometry.getArea());
-						double x =rand.nextGaussian()*sigma+centroid.getX();
-						double y =rand.nextGaussian()*sigma+centroid.getY();
+							random =centroid.getFactory().createPoint(new Coordinate(x,y));
+						} else {
+							random =centroid;
+							insertCentroid=false;
+						}
+						
 
-						Point random =centroid.getFactory().createPoint(new Coordinate(x,y));
+						
 //						Coordinate[] coords = new Coordinate[5];
 //						double width = ProyectionConstants.metersToLongLat(10/2);
 //						coords[0]=new Coordinate(x-width,y+width);
@@ -110,7 +126,7 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 //						Polygon random =centroid.getFactory().createPolygon(coords);//{new Coordinate(x,y),new Coordinate(x,y),new Coordinate(x,y),new Coordinate(x,y)});
 //						
 						if(geometry.contains(random)){
-							System.out.println(Messages.getString("GenerarMuestreoDirigidoTask.3")+random); //$NON-NLS-1$
+						//	System.out.println(Messages.getString("GenerarMuestreoDirigidoTask.3")+random); //$NON-NLS-1$
 							SueloItem muestra = new SueloItem();
 							muestra.setCategoria(categoria);
 							muestra.setId(labor.getNextID());

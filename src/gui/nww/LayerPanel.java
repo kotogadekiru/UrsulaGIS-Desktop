@@ -1,5 +1,6 @@
 package gui.nww;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -177,8 +178,8 @@ public class LayerPanel extends VBox {
 						labor2 != null && labor2 instanceof Ndvi &&
 						l1Name.startsWith(l2Name.substring(0, l2Name.length()-"02-01-2018".length()))){ //$NON-NLS-1$
 					try {
-						Date fecha1 = ((Ndvi)labor1).getFecha().getTime();
-						Date fecha2 = ((Ndvi)labor2).getFecha().getTime();
+						LocalDate fecha1 = ((Ndvi)labor1).getFecha();
+						LocalDate fecha2 = ((Ndvi)labor2).getFecha();
 						return fecha1.compareTo(fecha2);
 					}catch(Exception e) {
 						return l1Name.compareToIgnoreCase(l2Name);

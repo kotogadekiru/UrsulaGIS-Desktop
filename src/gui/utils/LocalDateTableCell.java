@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -22,12 +23,14 @@ import javafx.util.StringConverter;
 
 public class LocalDateTableCell<T> extends TableCell<T, LocalDate> {
 
-	private final SimpleDateFormat formatter ;
+	private static final String DD_MM_YYYY = "dd/MM/yyyy";
+	private DateTimeFormatter formater=null;
+	//private final SimpleDateFormat formatter ;
 	private final DatePicker datePicker ;
 
 	public LocalDateTableCell() {
-
-		formatter = new SimpleDateFormat("dd/MM/yyyy");
+		formater = DateTimeFormatter.ofPattern(DD_MM_YYYY);	
+		//formatter = new SimpleDateFormat(DD_MM_YYYY);
 		datePicker = new DatePicker() ;
 
 		// Commit edit on Enter and cancel on Escape.
@@ -61,12 +64,12 @@ public class LocalDateTableCell<T> extends TableCell<T, LocalDate> {
 		@Override
 		public LocalDate fromString(String sd) {		
 			try {
-				Date item =  formatter.parse(sd);
+				LocalDate item =  LocalDate.parse(sd, formater);//formater.parse(sd);
 				if(item==null)return null;
-				Instant instant = Instant.ofEpochMilli(item.getTime());
-				LocalDate res = LocalDateTime.ofInstant(instant, ZoneId.systemDefault()).toLocalDate();
-				return res;
-			} catch (ParseException e) {
+				//Instant instant = Instant.ofEpochMilli(item.getgetTime());
+				//LocalDate res = LocalDateTime.ofInstant(instant, ZoneId.systemDefault()).toLocalDate();
+				return item;
+			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
@@ -75,9 +78,9 @@ public class LocalDateTableCell<T> extends TableCell<T, LocalDate> {
 
 		@Override
 		public String toString(LocalDate ld) {
-			Instant instant = ld.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
-			Date res1 = Date.from(instant);
-			return formatter.format(res1);
+			//Instant instant = ld.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
+			//Date res1 = Date.from(instant);
+			return formater.format(ld);
 		}
 		
 	});
@@ -130,11 +133,13 @@ public class LocalDateTableCell<T> extends TableCell<T, LocalDate> {
 			setText(null);
 			setGraphic(null);
 		} else {
-			String stringDate = formatter.format(birthday);
+			String stringDate = formater.format(birthday);
 			setText(stringDate);
 			setGraphic(datePicker);
 		}
 		}catch(Exception e){
+			setText(birthday.toString());
+			setGraphic(null);
 			e.printStackTrace();
 		}
 	}

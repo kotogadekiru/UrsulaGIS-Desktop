@@ -12,6 +12,7 @@ import org.opengis.feature.simple.SimpleFeature;
 import dao.Labor;
 import dao.LaborConfig;
 import dao.LaborItem;
+import dao.OrdenDeCompra.ProductoLabor;
 import dao.config.Configuracion;
 import dao.config.Fertilizante;
 import dao.utils.PropertyHelper;
@@ -22,6 +23,7 @@ import javafx.beans.property.StringProperty;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import utils.DAH;
 
 @Getter
 @Setter(value = AccessLevel.PUBLIC)
@@ -31,7 +33,9 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 	public static final String COLUMNA_PRECIO_FERT = "Precio Kg Fert";
 	public static final String COLUMNA_PRECIO_PASADA = "Precio labor/Ha";	
 	public static final String COLUMNA_IMPORTE_HA = "importe_ha";
-
+	
+	public static final String COLUMNA_DOSIS="Rate";
+	
 	private static final String FERTILIZANTE_DEFAULT = "FERTILIZANTE_DEFAULT";
 
 	private static final String COSTO_LABOR_FERTILIZACION = "costoLaborFertilizacion";
@@ -50,6 +54,7 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 	}
 
 	private void initConfig() {
+		this.productoLabor=DAH.getProductoLabor(ProductoLabor.LABOR_DE_FERTILIZACION);
 		List<String> availableColums = this.getAvailableColumns();		
 		Configuracion properties = getConfigLabor().getConfigProperties();
 
@@ -87,8 +92,14 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 	public FertilizacionItem constructFeatureContainer(SimpleFeature next) {
 		FertilizacionItem fi = new FertilizacionItem(next);
 		super.constructFeatureContainer(fi,next);
-		fi.setDosistHa( LaborItem.getDoubleFromObj(next
-				.getAttribute(colKgHaProperty.get())));
+		String kgHaCol = colKgHaProperty.get();
+		Object o = next.getAttribute(kgHaCol);
+		if(o!=null) {
+			fi.setDosistHa( LaborItem.getDoubleFromObj(o));
+		} else {
+			fi.setDosistHa( 0.0);
+			System.err.print("leyendo la columna "+kgHaCol+" devolvio null?=> "+o+"  "+next);
+		}
 		setPropiedadesLabor(fi);
 		return fi;
 	}
@@ -103,8 +114,17 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 			SimpleFeature next, boolean newIDS) {
 		FertilizacionItem fi = new FertilizacionItem(next);
 		super.constructFeatureContainerStandar(fi,next,newIDS);
+		String kgHaCol = COLUMNA_KG_HA;
+		Object o = next.getAttribute(kgHaCol);
+		if(o!=null) {
+			fi.setDosistHa( LaborItem.getDoubleFromObj(o));
+		} else {
+			fi.setDosistHa( 0.0);
+			System.err.print("leyendo la columna "+kgHaCol+" devolvio null?=> "+o+"  "+next);
+		}
+		
 
-		fi.setDosistHa( LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_KG_HA)));		
+	//	fi.setDosistHa( LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_KG_HA)));		
 //		fi.setPrecioInsumo( LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_PRECIO_FERT)));
 //		fi.setCostoLaborHa(LaborItem.getDoubleFromObj(next.getAttribute(COSTO_LABOR_FERTILIZACION)));
 //		fi.setImporteHa(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_IMPORTE_HA)));

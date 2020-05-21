@@ -33,6 +33,10 @@ import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import dao.Ndvi;
+import dao.Poligono;
+import dao.OrdenDeCompra.OrdenCompra;
+import dao.OrdenDeCompra.OrdenCompraItem;
 import dao.config.Configuracion;
 
 
@@ -63,8 +67,12 @@ public class ExcelHelper {
 			lastFile=File.listRoots()[0];
 		} 
 		//if(lastFile != null && lastFile.exists()){
+		String initFileName = lastFile.getName();
+		if(initFileName.contains(".")) {
+			initFileName=initFileName.substring(0, initFileName.lastIndexOf('.'));
+		}
 		fileChooser.setInitialDirectory(lastFile.getParentFile());
-		fileChooser.setInitialFileName(lastFile.getName());
+		fileChooser.setInitialFileName(initFileName);
 				
 		config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
 		
@@ -320,5 +328,106 @@ public class ExcelHelper {
 			}
 
 
+		}
+
+		public void exportData(String nombre ,Map<String, Object[]> data) {//OK!
+			File outFile = getNewExcelFile();
+
+			XSSFWorkbook workbook = new XSSFWorkbook();							
+			String sheetName = nombre;
+			
+			XSSFSheet sheet = workbook.createSheet(sheetName);	
+
+			// Iterate over data and write to sheet
+			writeDataToSheet( sheet, data);
+			
+			try {
+				// Write the workbook in file system
+				FileOutputStream out = new FileOutputStream(outFile);
+				workbook.write(out);
+				out.close();
+				workbook.close();
+				System.out
+				.println("el backup del fue guardado con exito.");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+
+		}
+
+		public void exportOrdenCompra(OrdenCompra oc) {
+			File outFile = getNewExcelFile();
+
+			XSSFWorkbook workbook = new XSSFWorkbook();				
+			//				Calendar periodoCalendar = Calendar.getInstance();
+			//				int sec = periodoCalendar.get(Calendar.SECOND);
+			//				int min = periodoCalendar.get(Calendar.MINUTE);
+			//				int hour = periodoCalendar.get(Calendar.HOUR_OF_DAY);
+			//				int day = periodoCalendar.get(Calendar.DAY_OF_MONTH);
+			//				int mes = periodoCalendar.get(Calendar.MONTH);//, Calendar.SHORT_FORMAT, Locale.getDefault());
+			//				int anio = periodoCalendar.get(Calendar.YEAR);//, Calendar.SHORT_FORMAT, Locale.getDefault());
+			//
+			//				String periodoName = String.valueOf(anio)+"-"+String.valueOf(mes)+"-"+String.valueOf(day)+"-"+String.valueOf(hour)+String.valueOf(min)+String.valueOf(sec);
+			//				// Create a blank sheet
+
+			String sheetName = oc.getDescription();
+			if(sheetName ==null){
+				sheetName="OrdenCompra";
+			}
+			XSSFSheet sheet = workbook.createSheet(sheetName);
+
+			// This data needs to be written (Object[])
+			Map<String, Object[]> data = new TreeMap<String, Object[]>();
+
+			List<OrdenCompraItem> datos =oc.getItems();
+			data.put("0", new Object[] {
+					"Producto",
+					"Cantidad",
+					"Precio",
+					"Importe"
+			});
+
+			
+			for(int i =0;i<datos.size();i++){
+				OrdenCompraItem item = datos.get(i);
+				String productoNombre = item.getProducto().getNombre();
+				Number cantidad = item.getCantidad();
+				Number precio = item.getPrecio();
+				Number importe = item.getImporte();
+				
+				data.put(String.valueOf(i+1),
+						new Object[] {
+					productoNombre,
+					cantidad,
+					precio,
+					importe
+				});
+			}
+			
+			data.put(String.valueOf(datos.size()+1), new Object[] {
+					"Total",
+					"",
+					"",
+					oc.getImporteTotal()
+
+			});
+			
+			// Iterate over data and write to sheet
+			writeDataToSheet( sheet, data);
+
+			try {
+				// Write the workbook in file system
+				FileOutputStream out = new FileOutputStream(outFile);
+				workbook.write(out);
+				out.close();
+				workbook.close();
+				System.out
+				.println("el backup del fue guardado con exito.");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			
 		}
 	}

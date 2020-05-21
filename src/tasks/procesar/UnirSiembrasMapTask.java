@@ -1,0 +1,219 @@
+package tasks.procesar;
+
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.OptionalDouble;
+
+import org.geotools.data.FeatureReader;
+import org.geotools.data.simple.SimpleFeatureIterator;
+import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
+
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
+
+import dao.cosecha.CosechaItem;
+import dao.cosecha.CosechaLabor;
+import dao.siembra.SiembraItem;
+import dao.siembra.SiembraLabor;
+import gov.nasa.worldwind.render.ExtrudedPolygon;
+import gui.Messages;
+import gui.nww.LaborLayer;
+import tasks.ProcessMapTask;
+import utils.ProyectionConstants;
+
+public class UnirSiembrasMapTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
+	/**
+	 * la lista de las cosechas a unir
+	 */
+	private List<SiembraLabor> siembras;
+	//private boolean calibrar;
+
+	public UnirSiembrasMapTask(List<SiembraLabor> _siembras){//RenderableLayer layer, FileDataStore store, double d, Double correccionRinde) {
+		this.siembras=new ArrayList<SiembraLabor>();
+		for(SiembraLabor l:_siembras){
+			if(l.getLayer().isEnabled()){
+				this.siembras.add(l);
+			}
+		};
+
+		super.labor = new SiembraLabor();
+		//TODO asignar las columnas a  los valores estanar
+		labor.colAmount.set(SiembraLabor.COLUMNA_DOSIS_SEMILLA);
+		labor.colDosisSemilla.set(SiembraLabor.COLUMNA_DOSIS_SEMILLA);
+		labor.colAncho.set(SiembraLabor.COLUMNA_ANCHO);
+		labor.colCurso.set(SiembraLabor.COLUMNA_CURSO);
+		labor.colDistancia.set(SiembraLabor.COLUMNA_DISTANCIA);
+		labor.colElevacion.set(SiembraLabor.COLUMNA_ELEVACION);
+		//labor.colVelocidad.set(CosechaLabor.COLUMNA_VELOCIDAD);
+		//labor.colPasada.set(CosechaLabor.COLUMNA_ANCHO);
+
+		labor.getConfiguracion().valorMetrosPorUnidadDistanciaProperty().set(1.0);
+		labor.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
+		String nombreProgressBar = "clonar cosecha";
+		if(_siembras.size()>1){
+			nombreProgressBar = "unir cosechas";
+		}
+		labor.setNombre(nombreProgressBar);//este es el nombre que se muestra en el progressbar
+	}
+
+	/**
+	 * proceso que toma una lista de cosechas y las une sin tener en cuenta superposiciones ni nada
+	 */
+	@Override
+	protected void doProcess() throws IOException {
+		long init = System.currentTimeMillis();
+		// TODO 1 obtener el bounds general que cubre a todas las cosechas
+		//	ReferencedEnvelope unionEnvelope = null;
+		//double ancho = labor.getConfiguracion().getAnchoFiltroOutlayers();
+		String nombre =null;
+		String prefijo = "Clon";
+		if(siembras.size()>1){
+			prefijo = "Union";
+		}
+		int featuresInsertadas=0;
+		//TODO agregar una etapa de calibracion de cosechas
+		//buscar las cosechas que mayor superposicion tienen
+		//tirar puntos al azar dentro del area superpuesta y calcular el promedio de los puntos de las 2 cosechas en ese area y el coeficiente de conversion entre una cosecha y la otra.
+	
+		
+		for(SiembraLabor c:siembras){
+			if(nombre == null){
+				nombre=prefijo+" "+c.getNombre();	
+			}else {
+				nombre+=" - "+c.getNombre();
+			}
+			//TODO preguntar si se desea calibrar las cosechas
+		//	Double coeficienteConversion =calcCoeficientesConversion(c);	//XXX calibrar elevacion tambien?
+			
+			
+			FeatureReader<SimpleFeatureType, SimpleFeature> reader = c.outCollection.reader();
+			while(reader.hasNext()){
+				SimpleFeature f = reader.next();
+				SiembraItem ci = labor.constructFeatureContainerStandar(f,true);
+				//TODO multiplicar ci.rinde por el coeficiente de conversion
+			
+				//ci.setDosisML(ci.getDosisML());
+				SimpleFeature nf=ci.getFeature(labor.featureBuilder);
+				
+				boolean ret = labor.outCollection.add(nf);
+				featuresInsertadas++;
+				if(!ret){
+					System.out.println("no se pudo agregar la feature "+f);
+				}
+			}
+			
+			reader.close();
+		}
+		
+		System.out.println("inserte "+featuresInsertadas+" elementos");
+		int elementosContiene = labor.outCollection.getCount();
+		System.out.println("la labor contiene "+elementosContiene+" elementos");
+		if(featuresInsertadas!=elementosContiene){
+			System.out.println("no se insertaron todos los elementos con exito.");
+		}
+		labor.setNombre(nombre);
+		labor.setLayer(new LaborLayer());
+
+
+		//TODO 4 mostrar la cosecha sintetica creada
+//		if(cosechas.size()==1){
+//			CosechaLabor original = cosechas.get(0);
+//			Clasificador co=original.getClasificador();
+//			 labor.clasificador=co.clone();
+//			
+//		} else{
+			labor.constructClasificador();
+//		}
+
+		List<SiembraItem> itemsToShow = new ArrayList<SiembraItem>();
+
+			SimpleFeatureIterator it = labor.outCollection.features();
+			while(it.hasNext()){
+				SimpleFeature f=it.next();
+				itemsToShow.add(labor.constructFeatureContainerStandar(f,false));
+			}
+			it.close();
+		
+			siembras.forEach((c)->c.getLayer().setEnabled(false));
+
+
+		runLater(itemsToShow);
+		updateProgress(0, featureCount);
+		long time=System.currentTimeMillis()-init;
+		System.out.println("tarde "+time+" milisegundos en unir las cosechas.");
+	}
+
+
+	
+
+
+	@Override
+	public  ExtrudedPolygon  getPathTooltip( Geometry poly,SiembraItem siembraFeature) {
+	//	Path path = getPathFromGeom(poly,siembraFeature);		
+		
+		double area = poly.getArea() *ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+//	DecimalFormat df = new DecimalFormat("0.00"); 
+//		
+//		String tooltipText = new String("Densidad: "+ df.format(siembraFeature.getDosisML()) + " Sem/m\n");
+//		tooltipText=tooltipText.concat("Kg: " + df.format(siembraFeature.getDosisHa()) + " kg/Ha\n");
+//		
+//		tooltipText=tooltipText.concat( "Fert: " + df.format(siembraFeature.getDosisFertLinea()) + " Kg/Ha\n"		);
+//		tooltipText=tooltipText.concat( "Costo: " + df.format(siembraFeature.getImporteHa()) + " U$S/Ha\n"		);
+//		
+//		
+////		String tooltipText = new String(
+////				"Densidad: "+ df.format(siembraFeature.getDosisML()) + " Sem/m\n"
+////				+"Kg: " + df.format(siembraFeature.getDosisHa()) + " kg/Ha\n"				
+////				+"Costo: " + df.format(siembraFeature.getImporteHa()) + " U$S/Ha\n"				
+////			//	+"Sup: " +  df.format(area*ProyectionConstants.METROS2_POR_HA) + " m2\n"
+////		//		+"feature: " + featureNumber						
+////		);
+////		
+//		if(area<1){
+//			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
+//		} else {
+//			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
+//		}
+		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
+		String tooltipText = new String(Messages.getString("ProcessSiembraMapTask.1")+ df.format(siembraFeature.getDosisML()) + Messages.getString("ProcessSiembraMapTask.2")); //$NON-NLS-1$ //$NON-NLS-2$
+		tooltipText=tooltipText.concat(Messages.getString("ProcessSiembraMapTask.3") + df.format(siembraFeature.getDosisHa()) + Messages.getString("ProcessSiembraMapTask.4")); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		tooltipText=tooltipText.concat( Messages.getString("ProcessSiembraMapTask.5") + df.format(siembraFeature.getDosisFertLinea()) + Messages.getString("ProcessSiembraMapTask.6")		); //$NON-NLS-1$ //$NON-NLS-2$
+		tooltipText=tooltipText.concat( Messages.getString("ProcessSiembraMapTask.7") + df.format(siembraFeature.getImporteHa()) + Messages.getString("ProcessSiembraMapTask.8")		); //$NON-NLS-1$ //$NON-NLS-2$
+		
+//		String tooltipText = new String(
+//				"Densidad: "+ df.format(siembraFeature.getDosisHa()) + " Kg/Ha\n"								
+//				);
+//		tooltipText=tooltipText.concat( "Fert: " + df.format(siembraFeature.getDosisFertLinea()) + " Kg/Ha\n"		);
+//		tooltipText=tooltipText.concat( "Costo: " + df.format(siembraFeature.getImporteHa()) + " U$S/Ha\n"		);
+
+		if(area<1){
+			tooltipText=tooltipText.concat( Messages.getString("ProcessSiembraMapTask.9")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("ProcessSiembraMapTask.10")); //$NON-NLS-1$ //$NON-NLS-2$
+		} else {
+			tooltipText=tooltipText.concat(Messages.getString("ProcessSiembraMapTask.11")+df.format(area ) + Messages.getString("ProcessSiembraMapTask.12")); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		return super.getExtrudedPolygonFromGeom(poly, siembraFeature,tooltipText);
+	//	return ret;		
+	}
+
+
+	@Override
+	protected int getAmountMin() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	protected int gerAmountMax() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+
+}

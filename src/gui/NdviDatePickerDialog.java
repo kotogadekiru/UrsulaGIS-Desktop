@@ -33,7 +33,6 @@ public class NdviDatePickerDialog {
 		 initialDate = LocalDate.now();
 		 finalDate = LocalDate.now();
 		 
-		 
 		DateConverter dc = new DateConverter();		
 		Configuracion config = JFXMain.config;
 		String configDate = config.getPropertyOrDefault("LAST_DATE", dc.toString(finalDate)); //$NON-NLS-1$
@@ -56,7 +55,7 @@ public class NdviDatePickerDialog {
 		datePickerFechaDesde.setConverter(dc);
 		datePickerFechaDesde.valueProperty().bindBidirectional(iniLdp);
 		datePickerFechaDesde.valueProperty().addListener((n,old,ob)->{
-			System.out.println("date piker fecha desde cambio a "+datePickerFechaDesde.valueProperty().get()+" initial quedo en "+initialDate); //$NON-NLS-1$ //$NON-NLS-2$
+			System.out.println("date picker fecha desde cambio a "+datePickerFechaDesde.valueProperty().get()+" initial quedo en "+initialDate); //$NON-NLS-1$ //$NON-NLS-2$
 		});
 		
 		DatePicker datePickerFechaHasta=new DatePicker();
@@ -83,6 +82,7 @@ public class NdviDatePickerDialog {
 			
 			this.initialDate=iniLdp.get();
 			this.finalDate=finLdp.get();
+			//this.finalDate=this.finalDate.plusDays(1);//le agrego un dia para que sea inclusive
 					
 			return finLdp.get();
 		} else {

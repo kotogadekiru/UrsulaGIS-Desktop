@@ -26,6 +26,7 @@ import com.vividsolutions.jts.index.quadtree.Quadtree;
 import dao.LaborItem;
 import dao.config.Configuracion;
 import dao.fertilizacion.FertilizacionItem;
+import dao.fertilizacion.FertilizacionLabor;
 import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
 import gui.Messages;
@@ -42,44 +43,34 @@ import utils.PolygonValidator;
  *
  */
 
-public class ExportarPrescripcionSiembraTask {
-	public static void run(SiembraLabor laborToExport,File shapeFile) {
+public class ExportarPrescripcionFertilizacionTask {
+
+	public static void run(FertilizacionLabor laborToExport,File shapeFile) {
 		SimpleFeatureType type = null;
-		//*the_geom:    												:srid=4326,
-		//	String typeDescriptor = Messages.getString("JFXMain.341")+Polygon.class.getCanonicalName()+Messages.getString("JFXMain.342") //$NON-NLS-1$ //$NON-NLS-2$
-		//
-		//		+ SiembraLabor.COLUMNA_DOSIS_LINEA + Messages.getString("JFXMain.343") //$NON-NLS-1$ :java.lang.Long,
-		//		+ SiembraLabor.COLUMNA_DOSIS_COSTADO + Messages.getString("JFXMain.344") //$NON-NLS-1$ :java.lang.Long,
-		//		//seeding
-		//		+ Messages.getString("JFXMain.345") + Messages.getString("JFXMain.346"); //$NON-NLS-1$ :java.lang.Long
 
-		String typeDescriptor = "*the_geom:"+Polygon.class.getCanonicalName()+":srid=4326,"//$NON-NLS-1$
-				+ SiembraLabor.COLUMNA_DOSIS_LINEA + ":java.lang.Long,"//$NON-NLS-1$
-				+ SiembraLabor.COLUMNA_DOSIS_COSTADO +":java.lang.Long,"//$NON-NLS-1$
-				+SiembraLabor.COLUMNA_SEM_10METROS+":java.lang.Long";//$NON-NLS-1$ semilla siempre tiene que ser la 3ra columna
-
+		String typeDescriptor = "*the_geom:"+Polygon.class.getCanonicalName()+":srid=4326,"
+				+ FertilizacionLabor.COLUMNA_DOSIS + ":java.lang.Long";
+		
 		System.out.println("creando type con: "+typeDescriptor); //$NON-NLS-1$ the_geom:Polygon:srid=4326,Fert L:java.lang.Long,Fert C:java.lang.Long,seeding:java.lang.Long
 		System.out.println("Long.SIZE="+Long.SIZE);//64bits=16bytes. ok!! //$NON-NLS-1$
 		try {
-			//type = DataUtilities.createType(Messages.getString("JFXMain.349"), typeDescriptor); //$NON-NLS-1$
 			type = DataUtilities.createType("PrescType", typeDescriptor); //$NON-NLS-1$
 		} catch (SchemaException e) {
 			e.printStackTrace();
 		}
+
 		System.out.println("PrescType: "+DataUtilities.spec(type));//PrescType: the_geom:Polygon,Rate:java.lang.Long //$NON-NLS-1$
 
-
 		List<LaborItem> items = new ArrayList<LaborItem>();
-
+	
 		SimpleFeatureIterator it = laborToExport.outCollection.features();
 		while(it.hasNext()){
-			SiembraItem fi = laborToExport.constructFeatureContainerStandar(it.next(),false);
+			FertilizacionItem fi = laborToExport.constructFeatureContainerStandar(it.next(),false);
 			items.add(fi);
 		}
 		it.close();
-
+		
 		int zonas = items.size();
-
 		if(zonas>=100) {
 			reabsorverZonasChicas(items);
 		}
@@ -88,19 +79,16 @@ public class ExportarPrescripcionSiembraTask {
 		SimpleFeatureBuilder fb = new SimpleFeatureBuilder(type);//ok
 
 		for(LaborItem i:items) {//(it.hasNext()){
-			SiembraItem fi=(SiembraItem) i;
+			FertilizacionItem fi=(FertilizacionItem) i;
 			Geometry itemGeometry=fi.getGeometry();
 			List<Polygon> flatPolygons = PolygonValidator.geometryToFlatPolygons(itemGeometry);
+			
 			for(Polygon p : flatPolygons){
 				fb.add(p);
-				Double semilla = fi.getDosisML()*10;///XXX aca hago magia para convertir de plantas por metro a plantas cada 10 metros
-				Double linea = fi.getDosisFertLinea();
-				Double costado = fi.getDosisFertCostado();
+				Double dosisHa = fi.getDosistHa();
 
-				//System.out.println("presc Dosis ="+semilla); //$NON-NLS-1$
-				fb.add(linea);
-				fb.add(costado);
-				fb.add(semilla.longValue());
+			
+				fb.add(dosisHa.longValue());
 
 				SimpleFeature exportFeature = fb.buildFeature(fi.getId().toString());
 				exportFeatureCollection.add(exportFeature);
@@ -149,19 +137,18 @@ public class ExportarPrescripcionSiembraTask {
 			}
 		}		
 
-		System.out.println(Messages.getString("JFXMain.355")+ shapeFile); //$NON-NLS-1$
+		System.out.println("despues de guardar el shp el schema es: "+ shapeFile); //$NON-NLS-1$
 		Configuracion config = Configuracion.getInstance();
 		config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
 		config.save();
 	}
-
 
 	public static void reabsorverZonasChicas( List<LaborItem> items) {
 		//TODO reabsorver zonas mas chicas a las mas grandes vecinas
 		System.out.println("tiene mas de 100 zonas, reabsorviendo..."); //$NON-NLS-1$
 		//TODO tomar las 100 zonas mas grandes y reabsorver las otras en estas
 
-
+	
 
 		items.sort((i1,i2)->-1*Double.compare(i1.getGeometry().getArea(), i2.getGeometry().getArea()));					
 		List<LaborItem> itemsAgrandar =items.subList(0,100-1);
@@ -203,4 +190,85 @@ public class ExportarPrescripcionSiembraTask {
 		items.addAll((List<LaborItem>)tree.queryAll());
 	}
 
+//	public void exe(FertilizacionLabor laborToExport,File shapeFile)  {
+//		SimpleFeatureType type = null;
+//		String typeDescriptor = "*the_geom:"+Polygon.class.getCanonicalName()+":srid=4326,"
+//				+ FertilizacionLabor.COLUMNA_DOSIS + ":java.lang.Long";
+//		
+//		System.out.println("creando type con: "+typeDescriptor); //$NON-NLS-1$ 
+//		System.out.println("Long.SIZE="+Long.SIZE);//64bits=16bytes. ok!! //$NON-NLS-1$
+//		try {
+//			type = DataUtilities.createType("PrescType", typeDescriptor); //$NON-NLS-1$
+//		} catch (SchemaException e) {
+//			e.printStackTrace();
+//		}
+//
+//		System.out.println("PrescType:"+DataUtilities.spec(type));//PrescType: the_geom:Polygon,Rate:java.lang.Long //$NON-NLS-1$
+//
+//		SimpleFeatureIterator it = laborToExport.outCollection.features();
+//		DefaultFeatureCollection exportFeatureCollection =  new DefaultFeatureCollection("PrescType",type); //$NON-NLS-1$
+//		SimpleFeatureBuilder fb = new SimpleFeatureBuilder(type);//ok
+//		while(it.hasNext()){
+//			FertilizacionItem fi = laborToExport.constructFeatureContainerStandar(it.next(),false);
+//			Geometry itemGeometry=fi.getGeometry();
+//			List<Polygon> flatPolygons = PolygonValidator.geometryToFlatPolygons(itemGeometry);
+//			for(Polygon p : flatPolygons){
+//				fb.add(p);
+//				Double dosisHa = fi.getDosistHa();
+//
+//				System.out.println("presc Dosis = "+dosisHa); //$NON-NLS-1$
+//				fb.add(dosisHa.longValue());
+//
+//				SimpleFeature exportFeature = fb.buildFeature(fi.getId().toString());
+//				exportFeatureCollection.add(exportFeature);
+//			}
+//		}
+//		it.close();
+//
+//		ShapefileDataStore newDataStore = FileHelper.createShapefileDataStore(shapeFile,type);//aca el type es GeometryDescriptorImpl the_geom <MultiPolygon:MultiPolygon> nillable 0:1 
+//		SimpleFeatureSource featureSource = null;
+//		try {
+//			String typeName = newDataStore.getTypeNames()[0];
+//			featureSource = newDataStore.getFeatureSource(typeName);
+//		} catch (IOException e) {
+//
+//			e.printStackTrace();
+//		}
+//
+//
+//		if (featureSource instanceof SimpleFeatureStore) {
+//			SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;//aca es de tipo polygonFeature(the_geom:MultiPolygon,Rate:Rate)
+//			Transaction transaction = new DefaultTransaction("create"); //$NON-NLS-1$
+//			featureStore.setTransaction(transaction);
+//
+//			/*
+//			 * SimpleFeatureStore has a method to add features from a
+//			 * SimpleFeatureCollection object, so we use the
+//			 * ListFeatureCollection class to wrap our list of features.
+//			 */
+//
+//			try {
+//				featureStore.setFeatures(exportFeatureCollection.reader());
+//				try {
+//					transaction.commit();
+//				} catch (Exception e1) {
+//					e1.printStackTrace();
+//				}finally {
+//					try {
+//						transaction.close();
+//						//System.out.println("closing transaction");
+//					} catch (IOException e) {
+//						e.printStackTrace();
+//					}
+//				}
+//			} catch (Exception e1) {
+//				e1.printStackTrace();
+//			}
+//		}		
+//
+//		System.out.println("despues de guardar el shp el schema es: "+ shapeFile); //$NON-NLS-1$
+//		Configuracion config = Configuracion.getInstance();
+//		config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
+//		config.save();
+//	}
 }

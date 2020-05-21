@@ -27,7 +27,7 @@ import gui.nww.LaborLayer;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
 
-public class ProcessNewSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
+public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> {
 	//public Group map = new Group();
 
 	
@@ -45,7 +45,7 @@ public class ProcessNewSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 	private List<FertilizacionLabor> fertilizaciones;
 
 
-	public ProcessNewSoilMapTask(List<Suelo> suelos,List<CosechaLabor> cosechas,List<FertilizacionLabor> fertilizaciones) {
+	public ProcessBalanceDeNutrientes(List<Suelo> suelos,List<CosechaLabor> cosechas,List<FertilizacionLabor> fertilizaciones) {
 		this.suelos=suelos;
 		this.fertilizaciones=fertilizaciones;
 		this.cosechas =cosechas;

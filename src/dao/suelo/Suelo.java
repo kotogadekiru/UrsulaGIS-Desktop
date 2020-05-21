@@ -217,7 +217,7 @@ public class Suelo extends Labor<SueloItem>{
 	public double calcPpmNHaKg(Double kgNHa) {
 		//double kgSueloHa = ProyectionConstants.METROS2_POR_HA*0.6*this.getDensidad();
 		//Double ppmN= (Double) kgNHa*1000000/(kgSueloHa*Fertilizante.porcN_NO3);
-		return kgToPpm(kgNHa,0.6);// /Fertilizante.porcN_NO3;//convierto de n elemento a N03 para poder comparar con los analisis de laboratorio		
+		return kgToPpm(kgNHa,0.6)/Fertilizante.porcN_NO3;//convierto de n elemento a N03 para poder comparar con los analisis de laboratorio		
 	}
 	
 	//MATERIA ORGANICA

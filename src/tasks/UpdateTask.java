@@ -7,8 +7,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
@@ -285,6 +287,9 @@ public class UpdateTask  extends Task<File>{
 		
 		
 		DecimalFormat dc = new DecimalFormat("0,000");
+		dc.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(new Locale("EN")));
+		dc.setGroupingUsed(true);
+		
 		String userString = dc.format(Math.random()*1000000);
 		Configuracion conf = Configuracion.getInstance();
 		String usr = conf.getPropertyOrDefault("USER", userString);//si no existia la clave se crea una nueva
@@ -358,7 +363,12 @@ public class UpdateTask  extends Task<File>{
 			ret=ret.concat(v[i]);
 		}
 		try{
-			return Double.parseDouble(ret);
+			DecimalFormat dc = new DecimalFormat("0.####");
+			dc.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(new Locale("EN")));
+			dc.setGroupingUsed(true);
+			//System.out.println("versionAsDouble "+ dc.parse(ret).doubleValue());//versionAsDouble 0.2241
+			return dc.parse(ret).doubleValue();
+			//return Double.parseDouble(ret);//ret contiene 0.224111 etc
 		}catch(Exception e){
 			e.printStackTrace();
 			return -1.0;

@@ -50,64 +50,81 @@ public class GenerarOCTask  extends Task<OrdenCompra>{
 		this.pulverizaciones=_pulverizaciones;
 	}
 	public OrdenCompra call()  {
-		
-		
-		Map<Producto,Double> prodCantidadMap = new HashMap<Producto,Double>();
-		
+		Map<Producto,OrdenCompraItem> prodCantidadMap = new HashMap<Producto,OrdenCompraItem>();
+		StringBuilder description = new StringBuilder();
 		this.siembras.forEach(l->{
+			description.append(l.getNombre());
 			Producto producto =l.getSemilla();
-			Double cantidadItem = getOrdenCompraLabor(l);
-			putItem(prodCantidadMap, producto, cantidadItem);
+			
+			Double cantidadItem = l.getCantidadInsumo();
+			putItem(prodCantidadMap, producto, cantidadItem,l.getPrecioInsumo());
+			putItem(prodCantidadMap, l.getProductoLabor(), l.getCantidadLabor(),l.getPrecioLabor());
 			
 		});
 		this.fertilizaciones.forEach(l->{
+			description.append(l.getNombre());
 			Producto producto =l.getFertilizanteProperty().getValue();
-			Double cantidadItem = getOrdenCompraLabor(l);
-			putItem(prodCantidadMap, producto, cantidadItem);
+			
+			Double cantidadItem = l.getCantidadInsumo();
+			putItem(prodCantidadMap, producto, cantidadItem,l.getPrecioInsumo());
+			putItem(prodCantidadMap, l.getProductoLabor(), l.getCantidadLabor(),l.getPrecioLabor());
 		});
 		this.pulverizaciones.forEach(l->{
+			description.append(l.getNombre());
 			Producto producto =l.getAgroquimico().getValue();
-			Double cantidadItem = getOrdenCompraLabor(l);
-			putItem(prodCantidadMap, producto, cantidadItem);
+			
+			Double cantidadItem = l.getCantidadInsumo();
+			putItem(prodCantidadMap, producto, cantidadItem,l.getPrecioInsumo());
+			putItem(prodCantidadMap, l.getProductoLabor(), l.getCantidadLabor(),l.getPrecioLabor());
 		});
 		
-		List<OrdenCompraItem> itemsOC = new ArrayList<>();
-		prodCantidadMap.forEach((producto,cantidad)->{
-			itemsOC.add(new OrdenCompraItem(producto,cantidad));
-		});
+		//reduzco la list
+//		List<OrdenCompraItem> itemsOC = new ArrayList<>();
+//		prodCantidadMap.forEach((producto,cantidad)->{
+//			OrdenCompraItem item = new OrdenCompraItem(producto,cantidad);
+//			itemsOC.add(item);
+//		});
 	
 		OrdenCompra oc=new OrdenCompra();		
-		oc.setItems(itemsOC);
+		oc.setDescription(description.toString());
+		oc.setItems(new ArrayList<OrdenCompraItem>(prodCantidadMap.values()));
 		
 		return oc;
 	}
 	
-	private void putItem(Map<Producto, Double> items, Producto producto, Double cantidad) {
+	private void putItem(Map<Producto, OrdenCompraItem> items, Producto producto, Double cantidad,Double precio) {
 		if(items.containsKey(producto)) {
-			Double existente = items.get(producto);
-			items.put(producto, existente+cantidad);
+			OrdenCompraItem existente = items.get(producto);
+			existente.setPrecio((existente.getImporte()+precio*cantidad)/(existente.getCantidad()+cantidad));
+			existente.setCantidad(existente.getCantidad()+cantidad);
+			items.put(producto, existente);
 		} else {
-			items.put(producto,cantidad);
+			OrdenCompraItem item =new OrdenCompraItem(producto,cantidad);
+			item.setPrecio(precio);
+			items.put(producto,item);
 		}
 	}
 	
 
-	private Double getOrdenCompraLabor(final Labor<?> labor) {
-		Double cantidad = new Double(0.0);
-		SimpleFeatureIterator it = labor.outCollection.features();
-		while(it.hasNext()){
-			SimpleFeature f = it.next();
-			Double rinde = LaborItem.getDoubleFromObj(f.getAttribute(labor.colAmount.get()));//labor.colAmount.get()
-			Geometry geometry = (Geometry) f.getDefaultGeometry();
-			Double area = geometry.getArea() * ProyectionConstants.A_HAS();
-		
-			cantidad+=rinde*area;
-			
-		}
-		it.close();
-		
-		return cantidad;
-	}
+//	private Double getOrdenCompraLabor(final Labor<?> labor) {
+//		Double cantidad = new Double(0.0);
+//		Double area = new Double(0.0);
+//		SimpleFeatureIterator it = labor.outCollection.features();
+//		while(it.hasNext()){
+//			SimpleFeature f = it.next();
+//			Double rinde = LaborItem.getDoubleFromObj(f.getAttribute(labor.colAmount.get()));//labor.colAmount.get()
+//			Geometry geometry = (Geometry) f.getDefaultGeometry();
+//			Double a = geometry.getArea() * ProyectionConstants.A_HAS();
+//			area+=a;
+//			cantidad+=rinde*a;
+//			
+//		}
+//		it.close();
+//		labor.setCantidadLabor(area);
+//		labor.setCantidadInsumo(cantidad);
+//		
+//		return cantidad;
+//	}
 	
 	public void installProgressBar(Pane progressBox) {
 		this.progressPane= progressBox;

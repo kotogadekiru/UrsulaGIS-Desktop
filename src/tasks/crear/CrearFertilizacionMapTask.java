@@ -59,6 +59,7 @@ public class CrearFertilizacionMapTask extends ProcessMapTask<FertilizacionItem,
 //		ci.setCostoLaborHa(labor.precioLaborProperty.get());
 		labor.setPropiedadesLabor(ci);
 		GeometryFactory fact = new GeometryFactory();
+		
 		List<? extends Position> positions = poli.getPositions();
 		Coordinate[] coordinates = new Coordinate[positions.size()];
 		for(int i=0;i<positions.size();i++){
@@ -72,6 +73,7 @@ public class CrearFertilizacionMapTask extends ProcessMapTask<FertilizacionItem,
 
 		ci.setGeometry(poly);
 		
+		labor.setNombre(poli.getNombre());
 		labor.insertFeature(ci);
 				
 		labor.constructClasificador();
