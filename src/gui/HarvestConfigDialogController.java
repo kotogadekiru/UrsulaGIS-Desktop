@@ -32,6 +32,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
+import javafx.util.converter.PercentageStringConverter;
 import utils.DAH;
 import dao.Clasificador;
 import dao.Labor;
@@ -47,22 +48,22 @@ import gui.utils.DateConverter;
  *
  */
 public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
-	
+
 
 	private static final String HARVEST_CONFIG_DIALOG_FXML = "HarvestConfigDialog.fxml"; //$NON-NLS-1$
 
 	@FXML
 	private VBox content;
 
-//	@FXML
-//	private ComboBox<String> comboVelo;//ok
+	//	@FXML
+	//	private ComboBox<String> comboVelo;//ok
 
 	@FXML
 	private ComboBox<String> comboRend;//ok
 
 	@FXML
 	private TextField textPrecioGrano;//ok
-	
+
 	@FXML
 	private DatePicker datePickerFecha;//ok
 
@@ -224,15 +225,15 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		}
 
 		if(cols.indexOf(comboElev.getValue())==-1){
-//			message.append("Debe seleccionar la columna Elevacion\n");
-//			isValid=false;
+			//			message.append("Debe seleccionar la columna Elevacion\n");
+			//			isValid=false;
 			labor.colElevacion.set(Labor.NONE_SELECTED);
 		}
-//		if(cols.indexOf(comboVelo.getValue())==-1){
-////			message.append("Debe seleccionar la columna velocidad\n");
-////			isValid=false;
-//			labor.colVelocidad.set(Labor.NONE_SELECTED);
-//		}
+		//		if(cols.indexOf(comboVelo.getValue())==-1){
+		////			message.append("Debe seleccionar la columna velocidad\n");
+		////			isValid=false;
+		//			labor.colVelocidad.set(Labor.NONE_SELECTED);
+		//		}
 		if(!isValid){
 			Alert alert = new Alert(AlertType.ERROR, message.toString(), ButtonType.OK);
 			alert.initOwner(this.getDialogPane().getScene().getWindow());
@@ -250,26 +251,16 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		this.labor = l;
 
 		List<String> availableColums = labor.getAvailableColumns();
-		availableColums.removeIf(s->s.length()>10);
+		//availableColums.removeIf(s->s.length()>10);//si la columna tiene mas de 10 caracteres no la puedo leer
 		availableColums.sort((a,b)->{
 			return a.compareTo(b);
 		});
 		availableColums.add(Labor.NONE_SELECTED);
 
-		//TODO si avalilableColumns contiene las columnas estandar seleccionarlas
-
-
-//		this.comboVelo.setItems(FXCollections.observableArrayList(availableColums));
-//
-//		this.comboVelo.valueProperty().bindBidirectional(labor.colVelocidad);
-
-
-		//	this.comboVelo.getSelectionModel().select(-1);
-
+		//si avalilableColumns contiene las columnas estandar seleccionarlas
 
 		//comboElev
 		this.comboElev.setItems(FXCollections.observableArrayList(availableColums));
-
 		this.comboElev.valueProperty().bindBidirectional(labor.colElevacion);
 
 
@@ -278,40 +269,10 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		this.comboRend.setItems(FXCollections.observableArrayList(availableColums));
 
 		this.comboRend.valueProperty().bindBidirectional(labor.colRendimiento);
-		
-
-		//		int index = availableColums.indexOf(labor.colRendimiento);
-		//		comboRend.getSelectionModel().select(index);
-
 
 		//colAncho;
-		//this.comboAnch.setItems(FXCollections.observableArrayList(availableColums));
 		this.comboAnch.getItems().addAll(availableColums);
-
 		this.comboAnch.valueProperty().bindBidirectional(labor.colAncho);
-
-
-		//		this.comboAnch.valueProperty().addListener((ov,old,nv)->{
-		//			System.out.println("comboAncho new value "+nv);
-		//			labor.colAncho.set(nv);
-		//		});
-		//
-		//		this.comboAnch.setConverter(new StringConverter<String>() {
-		//			@Override
-		//			public String toString(String s) {
-		//				System.out.println("convirtiendo "+s+" a string");
-		//				if(!comboAnch.getItems().contains(s)){
-		//					comboAnch.getItems().add(s);
-		//				}
-		//				return s;
-		//			}
-		//
-		//			@Override
-		//			public String fromString(String s) {
-		//				return s;
-		//			}
-		//		});
-		//this.comboAnch.setEditable(true);
 
 		//colCurso;
 		this.comboCurs.setItems(FXCollections.observableArrayList(availableColums));
@@ -321,45 +282,34 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		this.comboDist.setItems(FXCollections.observableArrayList(availableColums));
 		this.comboDist.valueProperty().bindBidirectional(labor.colDistancia);
 
-		//colPasada ;
 
-
-		//		this.comboPasa.setItems(FXCollections.observableArrayList(availableColums));
-		//		this.comboPasa.valueProperty().bindBidirectional(labor.colPasada);
-
-		//colPasada ;
+		//colCultivo ;
 		this.comboCultivo.setItems(FXCollections.observableArrayList(DAH.getAllCultivos()));
 		this.comboCultivo.getSelectionModel().select(labor.getCultivo());
 		this.comboCultivo.valueProperty().addListener((obj,old,n)->{
 			labor.cultivo=n;
 			if(n!=null)labor.config.getConfigProperties().setProperty(CosechaLabor.CosechaLaborConstants.PRODUCTO_DEFAULT,n.getNombre());
 		});
-		
 
-
-		//StringConverter<Number> converter = new NumberStringConverter();//FIXME corregir que el separador de miles
 		DecimalFormat converter = new DecimalFormat("0.00"){ //$NON-NLS-1$
-	            @Override
-	            public Object parseObject(String source)  {
-	            	if("".equals(source)||source==null){ //$NON-NLS-1$
-	            		source="0.00"; //$NON-NLS-1$
-	            	}
-	            	try {
-						return super.parseObject(source);
-					} catch (ParseException e) {
-						e.printStackTrace();
-						return new Double(0.0);
-					
-					}
-	            }
+			@Override
+			public Object parseObject(String source)  {
+				if("".equals(source)||source==null){ //$NON-NLS-1$
+					source="0.00"; //$NON-NLS-1$
+				}
+				try {
+					return super.parseObject(source);
+				} catch (ParseException e) {
+					e.printStackTrace();
+					return new Double(0.0);
+				}
+			}
 		};
-		
+
 		converter.setGroupingUsed(true);
 		converter.setGroupingSize(3);
 
 		//textPrecioGrano
-		//Bindings.bindBidirectional(this.textPrecioGrano.textProperty(), labor.precioGranoProperty, converter);
-		//TODO init textPrecioGrano con el valor de properties o el valor de la labor
 		if(labor.getPrecioGrano()!=null) {
 			this.textPrecioGrano.textProperty().set(labor.getPrecioGrano().toString());
 		}else {
@@ -371,18 +321,16 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 			} catch (ParseException e) {
 				e.printStackTrace();
 			}
-			//config.getConfigProperties().getPropertyOrDefault(CosechaLabor.PRECIO_GRANO,"0")
 			labor.config.getConfigProperties().setProperty(CosechaLabor.CosechaLaborConstants.PRECIO_GRANO, n);
 		});
 
 		//textCostoCosechaHa
-		//Bindings.bindBidirectional(this.textCostoCosechaHa.textProperty(), labor.precioLaborProperty, converter);
 		if(labor.getPrecioLabor()!=null) {
 			this.textCostoCosechaHa.textProperty().set(labor.getPrecioLabor().toString());
 		}else {
 			this.textCostoCosechaHa.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_HA, labor.getPrecioLabor().toString()));
 		}
-		//this.textCostoCosechaHa.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_HA, labor.getPrecioLabor().toString()));
+
 		this.textCostoCosechaHa.textProperty().addListener((obj,old,n)->{
 			try {
 				labor.setPrecioLabor(converter.parse(n).doubleValue());
@@ -391,16 +339,14 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 			}
 			labor.config.getConfigProperties().setProperty(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_HA, n);
 		});
-		
+
 
 		//textCostoCosechaTn
-		//Bindings.bindBidirectional(this.textCostoCosechaTn.textProperty(), labor.costoCosechaTnProperty, converter);
 		if(labor.getCostoCosechaTn()!=null) {
 			this.textCostoCosechaTn.textProperty().set(labor.getCostoCosechaTn().toString());
 		}else {
 			this.textCostoCosechaTn.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_TN, labor.getCostoCosechaTn().toString()));
 		}
-	//	this.textCostoCosechaTn.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_TN, labor.getCostoCosechaTn().toString()));
 		this.textCostoCosechaTn.textProperty().addListener((obj,old,n)->{
 			try {
 				labor.setCostoCosechaTn(converter.parse(n).doubleValue());
@@ -417,23 +363,29 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		//textPorcCorreccion
 		Bindings.bindBidirectional(this.textPorcCorreccion.textProperty(), labor.correccionCosechaProperty, converter);
 
-	
+
 		//textMaxRinde
-		Bindings.bindBidirectional(this.textMaxRinde.textProperty(), labor.maxRindeProperty, new DecimalFormat() {
-			   @Override
-	            public Object parseObject(String source)  {
-				   try {
-					Number val = converter.parse(source);
+		DecimalFormat converterMax = new DecimalFormat("0.00"){ //$NON-NLS-1$
+			@Override
+			public Object parseObject(String source)  {
+				try {
+					if("".equals(source)||source==null){ //$NON-NLS-1$
+						source="0.00"; //$NON-NLS-1$
+					}
+					Number val = super.parse(source);
 					if(val.equals(new Double(0.0))) {
 						val = Double.MAX_VALUE;
 					}
 					return val;
 				} catch (ParseException e) {
 					return Double.MAX_VALUE;
-				}
-	            }
-		});
+				}            	
+			}
+		};
+		converterMax.setGroupingUsed(true);
+		converterMax.setGroupingSize(3);
 
+		Bindings.bindBidirectional(this.textMaxRinde.textProperty(), labor.maxRindeProperty,converterMax);
 
 		//textMinRinde
 		Bindings.bindBidirectional(this.textMinRinde.textProperty(), labor.minRindeProperty, converter);
@@ -442,7 +394,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		Bindings.bindBidirectional(this.textDistanciasRegimen.textProperty(), labor.config.cantDistanciasEntradaRegimenProperty(), converter);
 
 		//textMaxSuper
-	//	Bindings.bindBidirectional(this.textMaxSuper.textProperty(), labor.config.cantMaxGeometriasSuperpuestasProperty(), converter);
+		//	Bindings.bindBidirectional(this.textMaxSuper.textProperty(), labor.config.cantMaxGeometriasSuperpuestasProperty(), converter);
 
 		//textSupMin
 		Bindings.bindBidirectional(this.textSupMin.textProperty(), labor.config.supMinimaProperty(), converter);
@@ -453,24 +405,20 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		unidades.put(Messages.getString("HarvestConfigDialogController.13"),0.0254); //$NON-NLS-1$
 		unidades.put(Messages.getString("HarvestConfigDialogController.14"),0.01d); //$NON-NLS-1$
 		unidades.put(Messages.getString("HarvestConfigDialogController.15"),0.001d); //$NON-NLS-1$
-		
-		
+
+
 		this.cbMetrosPorUnidad.setItems(FXCollections.observableArrayList(unidades.keySet()));
 		this.cbMetrosPorUnidad.valueProperty().addListener((ov,old,nv)->{
 			labor.config.valorMetrosPorUnidadDistanciaProperty().set(unidades.get(nv));
 		});
 
-	double configured=labor.config.valorMetrosPorUnidadDistanciaProperty().get();
-	unidades.forEach((key,value)->{
-		if(value.equals(configured)){
-			cbMetrosPorUnidad.getSelectionModel().select(key);//
-		}
-	});
-	
-		//textMetrosPorUnidad
-	//	Bindings.bindBidirectional(property1, property2);bindBidirectional(, labor.config.valorMetrosPorUnidadDistanciaProperty(), converter);
-		
-		//labor.config.valorMetrosPorUnidadDistanciaProperty().get());	
+		double configured=labor.config.valorMetrosPorUnidadDistanciaProperty().get();
+		unidades.forEach((key,value)->{
+			if(value.equals(configured)){
+				cbMetrosPorUnidad.getSelectionModel().select(key);//
+			}
+		});
+
 
 		//textAnchoFiltro
 		Bindings.bindBidirectional(this.textAnchoFiltro.textProperty(), labor.config.anchoFiltroOutlayersProperty(), converter);
@@ -478,7 +426,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		//textCorrimientoPesada
 		Bindings.bindBidirectional(this.textCorrimientoPesada.textProperty(), labor.config.valorCorreccionPesadaProperty(), converter);
 
-		
+
 		StringConverter<Number> nsConverter = new NumberStringConverter(){
 			@Override
 			public Number fromString(String s){
@@ -487,13 +435,11 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 					d = converter.parse(s);
 					return d.doubleValue()/100;
 				} catch (ParseException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				return 0;
-				
 			}
-			
+
 			@Override 
 			public String toString(Number n){
 				return converter.format(n.doubleValue()*100);
@@ -502,9 +448,6 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		//textToleranciaCV
 		Bindings.bindBidirectional(this.textToleranciaCV.textProperty(), labor.config.toleranciaCVProperty(), nsConverter);
 
-		//textDistTolera
-		//		this.textDistTolera.textProperty().set(labor.config.cantDistanciasToleraProperty().getValue().toString());
-		//		this.textDistTolera.textProperty().addListener((ov,old,nv)->{labor.config.cantDistanciasToleraProperty().set(Integer.parseInt(nv));});
 
 		Bindings.bindBidirectional(this.textDistTolera.textProperty(), labor.config.cantDistanciasToleraProperty(), converter);
 
@@ -530,7 +473,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		chkFlow.selectedProperty().bindBidirectional(cosechaConfig.correccionFlowToRindeProperty());
 
 		chkResumirGeometrias.selectedProperty().bindBidirectional(labor.config.resumirGeometriasProperty());
-		
+
 		//StringConverter<LocalDate> dateConverter = this.datePickerFecha.getConverter();
 
 		datePickerFecha.setValue(DateConverter.asLocalDate(l.fecha));
@@ -539,8 +482,8 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 			l.setFecha(DateConverter.asDate(n));
 			//l.fechaProperty.setValue(bool2);
 		});
-	//	Bindings.bindBidirectional(this.datePickerFecha.valueProperty()., l.fechaProperty, );
-		
+		//	Bindings.bindBidirectional(this.datePickerFecha.valueProperty()., l.fechaProperty, );
+
 	}
 
 

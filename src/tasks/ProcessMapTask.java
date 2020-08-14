@@ -644,7 +644,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	private RenderableLayer createAnalyticSurfaceFromQuery(int milis){		
 		ReferencedEnvelope bounds = labor.outCollection.getBounds();
 	//	System.out.println("createAnalyticSurfaceFromQuery");
-	//	System.out.println("bounds = "+bounds);
+		System.out.println("bounds = "+bounds);
 		double res=  Math.sqrt(bounds.getArea()/(milis));//antes dividia por 10000 cuando eran segundos
 		double	resolution =res;// Math.sqrt(bounds.getArea()/40000)>1?;//como el tiempo por item es 0.1 limito el tiempo de rendering a 2seg
 		double	ancho = resolution / ProyectionConstants.metersToLong();
@@ -662,8 +662,8 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		//System.out.println("maxElev,minElev= "+maxElev+", "+minElev);
 		
 		int offset = 3;//para que quede un lugar a cada lado mas el desplazamiento
-		int width=(int) ((maxX-minX)/resolution)+offset;
-		int height=(int) ((maxY-minY)/resolution)+offset;
+		int width=Math.max((int) ((maxX-minX)/resolution)+offset,1);
+		int height=Math.max((int) ((maxY-minY)/resolution)+offset,1);
 		int maxIndex =  width*height;
 		
 		//System.out.println("width="+width+" height="+height+" maxIndex="+maxIndex);

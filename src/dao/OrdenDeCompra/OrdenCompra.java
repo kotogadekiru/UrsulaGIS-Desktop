@@ -11,6 +11,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 
+import dao.Ndvi;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,7 +19,13 @@ import lombok.Setter;
 @Getter
 @Setter(value = AccessLevel.PUBLIC)
 @Entity @Access(AccessType.FIELD)
+@NamedQueries({
+	@NamedQuery(name=OrdenCompra.FIND_ALL, query="SELECT c FROM OrdenCompra c ") ,
+//	@NamedQuery(name=OrdenCompra.FIND_NAME, query="SELECT o FROM OrdenCompra o where o.nombre = :name") ,
+//	@NamedQuery(name=OrdenCompra.FIND_ACTIVOS, query="SELECT o FROM OrdenCompra o where o.activo = true") ,
+}) 
 public class OrdenCompra {
+	public static final String FIND_ALL="OrdenCompra.findAll";	
 	
 	@javax.persistence.Id @GeneratedValue
 	private Long id=null;

@@ -169,6 +169,7 @@ public abstract class LaborItem implements Comparable<Object>{
 
 	public static Double getDoubleFromObj(Object o){
 		Double d = new Double(0); 
+		try {
 		if(o instanceof Double){
 			d = (Double) o;
 		} else  if(o instanceof Integer){
@@ -187,9 +188,15 @@ public abstract class LaborItem implements Comparable<Object>{
 			}
 		}else{
 			//es por que estoy leyendo una columna que no existe en ese feature. como ancho en una prescripcion.
-			System.err.println("no se pudo leer la cantidad de " +o);//no se pudo leer la cantidad de L3:CARG0003
+		//	System.err.println("no se pudo leer la cantidad de " +o);//no se pudo leer la cantidad de L3:CARG0003
 
 		}
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+//		if(0.0==d) {
+//			System.out.println(o+" es cero");
+//		}
 		return d;
 	}
 

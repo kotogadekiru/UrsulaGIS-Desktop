@@ -280,12 +280,12 @@ public class CosechaLabor extends Labor<CosechaItem> {
 	}
 	
 	public void setCultivo(Cultivo c) {
-		System.out.println("camniando el cultivo de "+getCultivo()+" a "+c);
+		//System.out.println("camniando el cultivo de "+getCultivo()+" a "+c);
 //		if(productoProperty==null) {
 //			productoProperty = new SimpleObjectProperty<Cultivo>();
 //		}
 		this.cultivo=c;
-		System.out.println("el cultivo quedo en "+getCultivo());
+		//System.out.println("el cultivo quedo en "+getCultivo());
 	}
 
 

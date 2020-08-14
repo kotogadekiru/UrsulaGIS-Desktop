@@ -30,6 +30,7 @@ import dao.config.Lote;
 import dao.utils.JPAStringProperty;
 import gui.JFXMain;
 import gui.Messages;
+import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleStringProperty;
@@ -110,8 +111,9 @@ public class SmartTableView<T> extends TableView<T> {
 
 		this.setOnMouseClicked( event->{
 			contextMenu.getItems().clear();
-			T rowData = this.getSelectionModel().getSelectedItem();
-			if(rowData != null ){
+			List<T> rowData = this.getSelectionModel().getSelectedItems();
+			
+			if(rowData != null && rowData.size()>0 ){
 				if(onShowClick!=null) contextMenu.getItems().add(mostrarItem);
 				if(permiteEliminar)   contextMenu.getItems().add(eliminarItem);
 
@@ -123,8 +125,10 @@ public class SmartTableView<T> extends TableView<T> {
 				else if(MouseButton.SECONDARY.equals(event.getButton()) && event.getClickCount() == 1){
 
 					mostrarItem.setOnAction((ev)->{
-						onShowClick.accept(rowData);
+						Platform.runLater(()->	rowData.forEach(onShowClick));
+						//onShowClick.accept(rowData);
 					});
+					
 					eliminarItem.setOnAction((aev)->{						
 						Alert alert = new Alert(AlertType.CONFIRMATION);
 						Stage stage = (Stage) alert.getDialogPane().getScene().getWindow();
@@ -135,8 +139,11 @@ public class SmartTableView<T> extends TableView<T> {
 						Optional<ButtonType> res = alert.showAndWait();
 						if(res.get().equals(ButtonType.OK) && rowData!=null){
 							try{
-								DAH.remove(rowData);
-								data.remove(rowData);
+								rowData.forEach(each->{
+								DAH.remove(each);
+							//	data.remove(each);
+								});
+								data.removeAll(rowData);
 								if(data.size()==0){
 									data.add(onDoubleClick.get());
 								}

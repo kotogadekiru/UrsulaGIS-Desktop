@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,6 +15,8 @@ import java.util.stream.Stream;
 
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import org.geotools.data.FileDataStore;
+import org.geotools.data.FileDataStoreFinder;
 import org.geotools.data.shapefile.ShapefileDataStore;
 import org.geotools.data.shapefile.ShapefileDataStoreFactory;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -49,6 +52,7 @@ public class FileHelper {
 		if(shpFiles.isEmpty())return null;
 		return shpFiles.get(0);
 	}
+	
 	public static  List<File> selectAllFiles(Path uploadedShpFilePath) {
 		List<File> shpFiles = new LinkedList<File>();
 		try(Stream<Path> paths = Files.walk(uploadedShpFilePath)) {
@@ -147,4 +151,125 @@ public class FileHelper {
 		System.out.println(Messages.getString("JFXMain.412")); //$NON-NLS-1$
 		return files;
 	}
+	
+	public static List<FileDataStore> chooseShapeFileAndGetMultipleStores(List<File> files) {
+		if(files==null){
+			//	List<File> 
+			files =chooseFiles(Messages.getString("JFXMain.401"), Messages.getString("JFXMain.402")); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		List<FileDataStore> stores = new ArrayList<FileDataStore>();
+		if (files != null) {
+			for(File f : files){
+				try {
+					stores.add(FileDataStoreFinder.getDataStore(f));//esto falla con java10 :(
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				//stage.setTitle(TITLE_VERSION+" "+f.getName());
+				//Configuracion.getInstance().setProperty(Configuracion.LAST_FILE,f.getAbsolutePath());
+
+			}
+
+
+			/*
+			 * miro el archivo y pregunto cuales son las columnas
+			 * correspondientes
+			 */
+
+		}
+		return stores;
+	}
+
+
+//	/**
+//	 * 
+//	 * @param f1 filter Title "JPG"
+//	 * @param f2 filter regex "*.jpg"
+//	 */
+//	private List<File> chooseFiles(String f1,String f2) {
+//		return FileHelper.chooseFiles(f1, f2);
+//	}
+
+	/**
+	 * este metodo se usa para crear archivos shp al momento de exportar mapas
+	 * @param nombre es el nombre del archivo que se desea crear
+	 * @return el archivo creado en la carpeta seleccionada por el usuario
+	 */
+	public static File getNewShapeFile(String nombre) {
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle(Messages.getString("JFXMain.413")); //$NON-NLS-1$
+		fileChooser.getExtensionFilters().add(
+				new FileChooser.ExtensionFilter(Messages.getString("JFXMain.414"), Messages.getString("JFXMain.415"))); //$NON-NLS-1$ //$NON-NLS-2$
+
+		
+		File lastFile = null;
+		//Configuracion config =Configuracion.getInstance();
+		Configuracion config = JFXMain.config;
+		String lastFileName = config.getPropertyOrDefault(Configuracion.LAST_FILE,null);
+		if(lastFileName != null){
+			lastFile = new File(lastFileName);
+		}
+		if(lastFile ==null || ! lastFile.exists()) {
+			lastFile=File.listRoots()[0];
+		} 
+		//if(lastFile != null && lastFile.exists()){
+		fileChooser.setInitialDirectory(lastFile.getParentFile());
+
+		if(nombre == null){
+			nombre = lastFile.getName();
+		}
+		fileChooser.setInitialFileName(nombre);
+		config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
+		config.save();
+
+		//if(file!=null)	fileChooser.setInitialDirectory(file.getParentFile());
+
+		File file = fileChooser.showSaveDialog(JFXMain.stage);
+
+		System.out.println(Messages.getString("JFXMain.416")+file); //$NON-NLS-1$
+
+		return file;
+	}
+
+
+	/**
+	 * este metodo se usa para crear archivos shp al momento de exportar mapas
+	 * @param nombre es el nombre del archivo que se desea crear
+	 * @return el archivo creado en la carpeta seleccionada por el usuario
+	 */
+	public static File getNewTiffFile(String nombre) {
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle(Messages.getString("JFXMain.417")); //$NON-NLS-1$
+		fileChooser.getExtensionFilters().add(
+				new FileChooser.ExtensionFilter(Messages.getString("JFXMain.418"), Messages.getString("JFXMain.419"))); //$NON-NLS-1$ //$NON-NLS-2$
+
+		File lastFile = null;
+		//Configuracion config =Configuracion.getInstance();
+		Configuracion config = JFXMain.config;
+		String lastFileName = config.getPropertyOrDefault(Configuracion.LAST_FILE,null);
+		if(lastFileName != null){
+			lastFile = new File(lastFileName);
+		}
+		if(lastFile ==null || ! lastFile.exists()) {
+			lastFile=File.listRoots()[0];
+		} 
+		//if(lastFile != null && lastFile.exists()){
+		fileChooser.setInitialDirectory(lastFile.getParentFile());
+
+		if(nombre == null){
+			nombre = lastFile.getName();
+		}
+		fileChooser.setInitialFileName(nombre);
+		config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
+		config.save();
+
+		//if(file!=null)	fileChooser.setInitialDirectory(file.getParentFile());
+
+		File file = fileChooser.showSaveDialog(JFXMain.stage);
+
+		System.out.println(Messages.getString("JFXMain.420")+file); //$NON-NLS-1$
+
+		return file;
+	}
+	
 }

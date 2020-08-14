@@ -51,6 +51,7 @@ import javafx.stage.Modality;
 import lombok.experimental.var;
 import lombok.extern.java.Log;
 import utils.ProyectionConstants;
+
 @Log //private static final java.util.logging.Logger log = java.util.logging.Logger.getLogger(LogExample.class.getName());
 public class ShowNDVITifFileTask extends Task<Layer>{
 	public static final double WATER_RENDER_VALUE = 0.09; //para que quede sobre el nivel del suelo
@@ -135,12 +136,12 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 			int width = raster.getWidth();
 			int height = raster.getHeight();
 			double dLat = raster.getSector().getDeltaLatDegrees();
-			double lon = raster.getSector().getDeltaLonDegrees();
+			double dLon = raster.getSector().getDeltaLonDegrees();
 			
 			Sector sector = raster.getSector();
 			double latProm = (sector.getMaxLatitude().degrees+sector.getMinLatitude().degrees)/2;
 			ProyectionConstants.setLatitudCalculo(latProm);
-			double pixelArea = ProyectionConstants.A_HAS(((dLat*lon)/(width*height)));//12... =~ 10
+			double pixelArea = ProyectionConstants.A_HAS(((dLat*dLon)/(width*height)));//12... =~ 10
 			//System.out.println("el area calculada del pixel es "+pixelArea);
 			
 			//acoto los valores entre -2.2 y 2.2
@@ -356,7 +357,7 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 			}
 
 			// Read the file into the raster.
-			DataRaster[] rasters = reader.read(file, null);
+			DataRaster[] rasters = reader.read(file, null);// BufferUnderflowException - If there are fewer than eight bytes remaining in this buffer
 			if (rasters == null || rasters.length == 0)	{
 				String msg = Logging.getMessage("ElevationModel.CannotReadElevations", file.getAbsolutePath());
 				Logging.logger().severe(msg);

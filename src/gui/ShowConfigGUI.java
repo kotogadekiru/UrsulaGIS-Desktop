@@ -36,6 +36,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.web.WebView;
@@ -240,6 +241,9 @@ public class ShowConfigGUI {
 
 			SmartTableView<Poligono> table = new SmartTableView<Poligono>(data);
 			table.setEditable(true);
+			table.getSelectionModel().setSelectionMode(
+					SelectionMode.MULTIPLE
+					);
 			table.setOnDoubleClick(()->new Poligono());
 			table.setOnShowClick((poli)->{
 				poli.setActivo(true);
@@ -280,6 +284,9 @@ public class ShowConfigGUI {
 							);
 
 			SmartTableView<Ndvi> table = new SmartTableView<Ndvi>(data);
+			table.getSelectionModel().setSelectionMode(
+					SelectionMode.MULTIPLE
+					);
 			table.setEditable(true);
 			//			table.setOnDoubleClick(()->new Poligono());
 			table.setOnShowClick((ndvi)->{

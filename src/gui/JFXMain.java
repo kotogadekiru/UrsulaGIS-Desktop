@@ -12,14 +12,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
-import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.Period;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,14 +24,12 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -47,45 +42,25 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import org.geotools.data.DataUtilities;
-import org.geotools.data.DefaultTransaction;
 import org.geotools.data.FileDataStore;
-import org.geotools.data.FileDataStoreFinder;
-import org.geotools.data.Transaction;
-import org.geotools.data.shapefile.ShapefileDataStore;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
-import org.geotools.data.simple.SimpleFeatureStore;
-import org.geotools.feature.DefaultFeatureCollection;
-import org.geotools.feature.SchemaException;
-import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Polygon;
 
+import dao.Camino;
 import dao.Labor;
 import dao.LaborItem;
 import dao.Ndvi;
 import dao.Poligono;
 import dao.OrdenDeCompra.OrdenCompra;
 import dao.OrdenDeCompra.OrdenCompraItem;
-import dao.config.Agroquimico;
-import dao.config.Campania;
 import dao.config.Configuracion;
-import dao.config.Cultivo;
-import dao.config.Empresa;
-import dao.config.Establecimiento;
-import dao.config.Fertilizante;
-import dao.config.Lote;
-import dao.config.Semilla;
 import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaLabor;
-import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.margen.Margen;
 import dao.pulverizacion.PulverizacionLabor;
@@ -126,14 +101,10 @@ import gui.nww.LayerPanel;
 import gui.nww.WWPanel;
 import gui.utils.DateConverter;
 import gui.utils.SmartTableView;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -151,8 +122,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.ChoiceDialog;
-import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -170,12 +139,10 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
-import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 import tasks.ExportLaborMapTask;
 import tasks.GetNDVI2ForLaborTask;
 import tasks.GoogleGeocodingHelper;
@@ -196,6 +163,7 @@ import tasks.importar.ProcessFertMapTask;
 import tasks.importar.ProcessHarvestMapTask;
 import tasks.importar.ProcessPulvMapTask;
 import tasks.importar.ProcessSiembraMapTask;
+import tasks.procesar.CortarCosechaMapTask;
 import tasks.procesar.ExportarCosechaDePuntosTask;
 import tasks.procesar.ExportarPrescripcionFertilizacionTask;
 import tasks.procesar.ExportarPrescripcionSiembraTask;
@@ -208,13 +176,13 @@ import tasks.procesar.ProcessMarginMapTask;
 import tasks.procesar.RecomendFertNFromHarvestMapTask;
 import tasks.procesar.RecomendFertPFromHarvestMapTask;
 import tasks.procesar.SiembraFertTask;
+import tasks.procesar.SimplificarCaminoTask;
 import tasks.procesar.UnirCosechasMapTask;
 import tasks.procesar.UnirFertilizacionesMapTask;
 import tasks.procesar.UnirSiembrasMapTask;
 import utils.DAH;
 import utils.ExcelHelper;
 import utils.FileHelper;
-import utils.PolygonValidator;
 import utils.ProyectionConstants;
 
 public class JFXMain extends Application {
@@ -226,9 +194,9 @@ public class JFXMain extends Application {
 	//	private static final double MIN_VALUE = 0.2;
 	public static Configuracion config = Configuracion.getInstance();
 
-	public static final String VERSION = "0.2.24.2"; //$NON-NLS-1$
-	public static final String TITLE_VERSION = "Ursula GIS-RAVIT v"+VERSION; //$NON-NLS-1$
-	public static final String buildDate = "14/02/2020";
+	public static final String VERSION = "0.2.25"; //$NON-NLS-1$
+	public static final String TITLE_VERSION = "Ursula GIS-"+VERSION; //$NON-NLS-1$
+	public static final String buildDate = "25/05/2020";
 	
 	public static final String ICON ="gui/32x32-icon-earth.png";// "gui/1-512.png";//UrsulaGIS-Desktop/src/gui/32x32-icon-earth.png //$NON-NLS-1$
 	private static final String SOUND_FILENAME = "gui/Alarm08.wav";//"Alarm08.wav" funciona desde eclipse pero no desde el jar  //$NON-NLS-1$
@@ -259,7 +227,7 @@ public class JFXMain extends Application {
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
-		this.stage = primaryStage;
+		JFXMain.stage = primaryStage;
 
 		primaryStage.setTitle(TITLE_VERSION);
 		primaryStage.getIcons().add(new Image(ICON));
@@ -403,7 +371,7 @@ public class JFXMain extends Application {
 
 
 
-		this.stage.heightProperty().addListener((o,old,nu)->{
+		JFXMain.stage.heightProperty().addListener((o,old,nu)->{
 			this.wwjPanel.setPreferredSize(new Dimension((int)stage.getHeight(),nu.intValue()));
 			this.wwjPanel.repaint();
 		});
@@ -436,21 +404,6 @@ public class JFXMain extends Application {
 			this.wwjPanel.setPreferredSize(new Dimension(nu.intValue(),(int)stage.getWidth()));
 			this.wwjPanel.repaint();
 		});
-
-		//TODO modificar esto para que cuando sea full screen mantenga el tamanio del arbol en vez de estirarlo
-		//hbox.set(layerPanel);
-		//		wwSwingNode.setScaleX(1.5);
-		//		wwSwingNode.setScaleY(1.5);
-		//	hbox.setCenter(wwSwingNode);
-
-		// Create and install the view controls layer and register a controller
-		// for it with the World Window.
-		//ViewControlsLayer viewControlsLayer = new ViewControlsLayer();
-		//insertBeforeCompass(getWwd(), viewControlsLayer);
-		//		this.getWwd()
-		//		.addSelectListener(
-		//				new ViewControlsSelectListener(this.getWwd(),
-		//						viewControlsLayer));
 
 		// Register a rendering exception listener that's notified when
 		// exceptions occur during rendering.
@@ -523,7 +476,7 @@ public class JFXMain extends Application {
 		addMenuItem(Messages.getString("JFXMain.NDVI"),(a)->doOpenNDVITiffFiles(),menuImportar); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.imagen"),(a)->importImagery(),menuImportar); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.suelo"),(a)->doOpenSoilMap(null),menuImportar); //$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.margen"),(a)->doOpenMarginlMap(),menuImportar); //$NON-NLS-1$
+		addMenuItem(Messages.getString("JFXMain.margen"),(a)->doOpenMarginMap(),menuImportar); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.poligonos"),(a)->doImportarPoligonos(null),menuImportar); //$NON-NLS-1$
 
 		final Menu menuHerramientas = new Menu(Messages.getString("JFXMain.herramientas")); //$NON-NLS-1$
@@ -659,11 +612,21 @@ public class JFXMain extends Application {
 			return "mostre la evolucion del ndvi";
 		})));
 		
+		//Exporta todos los ndvi cargados a un archivo excel donde las filas son las coordenadas y las columnas son los valores en esa fecha
+		rootNodeNDVI.add(new LayerAction(constructPredicate(Messages.getString("JFXMain.expoNDVI"),(layer)->{ //$NON-NLS-1$
+			ExportNDVIToExcel sEvo= new ExportNDVIToExcel(this.getWwd(),this.layerPanel);
+			
+			sEvo.exportToExcel();
+			return "mostre la evolucion del ndvi";
+		})));
+		
+		/**
+		 * Save NDVI action
+		 * guarda todos los ndvi activos en la rama de ndvi
+		 */
 		rootNodeNDVI.add(new LayerAction(constructPredicate(Messages.getString("JFXMain.saveAction"),(layer)->{
 			executorPool.submit(()->{
 				try {
-					List<Geometry> geometriasActivas = new ArrayList<Geometry>();
-					//1 obtener los poligonos activos
 					LayerList layers = this.getWwd().getModel().getLayers();
 					for (Layer l : layers) {
 						
@@ -719,12 +682,9 @@ public class JFXMain extends Application {
 			return "importados";	
 		})));
 				
-		//addMenuItem(Messages.getString("JFXMain.poligonos"),(a)->doImportarPoligonos(null),menuImportar); //$NON-NLS-1$
 		rootNodeP.add(new LayerAction(constructPredicate(Messages.getString("JFXMain.saveAction"),(layer)->{
 			executorPool.submit(()->{
 				try {
-					List<Geometry> geometriasActivas = new ArrayList<Geometry>();
-					//1 obtener los poligonos activos
 					LayerList layers = this.getWwd().getModel().getLayers();
 					for (Layer l : layers) {
 						Object o = l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
@@ -765,6 +725,7 @@ public class JFXMain extends Application {
 		addAccionesPulverizaciones(predicates);
 
 		addAccionesPoligonos(predicates);
+		addAccionesCaminos(predicates);
 		addAccionesNdvi(predicates);
 
 		addAccionesMargen(predicates);
@@ -852,7 +813,7 @@ public class JFXMain extends Application {
 		 * Accion permite exportar la labor como shp
 		 */
 		fertilizacionesP.add(constructPredicate(Messages.getString("JFXMain.exportarFertPAction"),(layer)->{			
-			doExportPrescripcion((FertilizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+			doExportPrescripcionFertilizacion((FertilizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 			return "labor Exportada" + layer.getName(); //$NON-NLS-1$
 		}));
 
@@ -970,6 +931,8 @@ public class JFXMain extends Application {
 			return "ndvi obtenido" + layer.getName();	 //$NON-NLS-1$
 		}));
 	}
+	
+	
 
 	private void addAccionesPoligonos(Map<Class<?>, List<Function<Layer, String>>> predicates) {
 		List<Function<Layer, String>> poligonosP = new ArrayList<Function<Layer,String>>();
@@ -1067,7 +1030,48 @@ public class JFXMain extends Application {
 		//TODO implementar addMenuItem(Messages.getString("JFXMain.intersectarPoligonos"),(a)->doIntersectarPoligonos(),menuHerramientas); //$NON-NLS-1$
 		
 	}
+	
+	private void addAccionesCaminos(Map<Class<?>, List<Function<Layer, String>>> predicates) {
+		List<Function<Layer, String>> poligonosP = new ArrayList<Function<Layer,String>>();
+		predicates.put(Camino.class, poligonosP);
+		
+		poligonosP.add(constructPredicate(Messages.getString("JFXMain.editarLayer"),(layer)->{
+			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			if(layerObject!=null && Camino.class.isAssignableFrom(layerObject.getClass())){
+				//mostrar un dialogo para editar el nombre del poligono
+				Camino p =(Camino)layerObject;
+				TextInputDialog nombreDialog = new TextInputDialog(p.getNombre());
+				nombreDialog.initOwner(stage);
+				nombreDialog.setTitle(Messages.getString("JFXMain.editarLayerDialogTitle")); //$NON-NLS-1$
+				nombreDialog.setContentText(Messages.getString("JFXMain.editarLayerPoligonName")); //$NON-NLS-1$
 
+				Optional<String> nombreOptional = nombreDialog.showAndWait();
+				if(nombreOptional.isPresent()){
+					p.setNombre(nombreOptional.get());
+					this.getLayerPanel().update(this.getWwd());
+				}
+			}
+			return "edite camino"; //$NON-NLS-1$
+		}));
+		
+		poligonosP.add(constructPredicate(Messages.getString("JFXMain.acortarCamino"),(layer)->{
+			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			if(layerObject!=null && Camino.class.isAssignableFrom(layerObject.getClass())){
+				//mostrar un dialogo para editar el nombre del poligono
+				Camino camino =(Camino)layerObject;
+				
+				SimplificarCaminoTask t = new SimplificarCaminoTask(camino);
+				t.run();				
+				MeasureTool measureTool = PathLayerFactory.createCaminoLayer(camino, this.getWwd(), this.getLayerPanel());
+				measureTool.setArmed(false);
+
+				insertBeforeCompass(this.getWwd(), measureTool.getApplicationLayer());
+				this.getLayerPanel().update(this.getWwd());
+			}
+			return "acorte camino"; //$NON-NLS-1$
+		}));
+	}
+	
 	private List<Function<Layer, String>> addAccionesCosecha(
 			Map<Class<?>, List<Function<Layer, String>>> predicates) {
 		List<Function<Layer, String>> cosechasP = new ArrayList<Function<Layer,String>>();
@@ -1096,6 +1100,14 @@ public class JFXMain extends Application {
 		cosechasP.add(constructPredicate(Messages.getString("JFXMain.clonarCosechaAction"),(layer)->{
 			doUnirCosechas((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 			return "cosecha clonada" + layer.getName(); //$NON-NLS-1$
+		}));
+		
+		/**
+		 * Accion que permite pasar una grilla sobre la cosecha
+		 */
+		cosechasP.add(constructPredicate(Messages.getString("JFXMain.cortarCosechaAction"),(layer)->{
+			doCortarCosecha((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+			return "cosecha cortada" + layer.getName(); //$NON-NLS-1$
 		}));
 
 		/**
@@ -1242,7 +1254,7 @@ public class JFXMain extends Application {
 		ndvi.updateContent();
 
 		File tiffFile = ndvi.getF();
-		File dir =getNewTiffFile(tiffFile.getName());
+		File dir =FileHelper.getNewTiffFile(tiffFile.getName());
 		try{
 			InputStream in = new FileInputStream(tiffFile);
 			OutputStream out = new FileOutputStream(dir);
@@ -1433,7 +1445,7 @@ public class JFXMain extends Application {
 				filePosition="0" />
 		</LogDataBlock>
 		 */
-		List<File> files =chooseFiles("FDL", "*.fdl"); //$NON-NLS-1$ //$NON-NLS-2$
+		List<File> files =FileHelper.chooseFiles("FDL", "*.fdl"); //$NON-NLS-1$ //$NON-NLS-2$
 		ReadJDHarvestLog task = new ReadJDHarvestLog(files.get(0));
 		task.installProgressBar(progressBox);
 
@@ -1599,7 +1611,7 @@ public class JFXMain extends Application {
 	private void doUpdate(MenuItem actualizarMI) {
 		Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
 		alert.setContentText(Messages.getString("JFXMain.doUpdateText")); //$NON-NLS-1$
-		alert.initOwner(this.stage);
+		alert.initOwner(JFXMain.stage);
 		alert.showAndWait();
 		if(ButtonType.OK.equals(alert.getResult())){
 			UpdateTask uTask = new UpdateTask();
@@ -1609,12 +1621,12 @@ public class JFXMain extends Application {
 				if(newVersion==null){
 					Alert error = new Alert(Alert.AlertType.ERROR);
 					error.setContentText(Messages.getString("JFXMain.doUpdateErrorText")); //$NON-NLS-1$
-					error.initOwner(this.stage);
+					error.initOwner(JFXMain.stage);
 					error.showAndWait();
 				} else{
 					Alert error = new Alert(Alert.AlertType.CONFIRMATION);
 					error.setContentText(Messages.getString("JFXMain.doUpdateSuccessText")); //$NON-NLS-1$
-					error.initOwner(this.stage);
+					error.initOwner(JFXMain.stage);
 					error.showAndWait();
 
 					//					playSound();	
@@ -1671,7 +1683,7 @@ public class JFXMain extends Application {
 
 
 		Alert supDialog = new Alert(Alert.AlertType.INFORMATION);
-		supDialog.initOwner(this.stage);
+		supDialog.initOwner(JFXMain.stage);
 		supDialog.setTitle(Messages.getString("JFXMain.medirSuperficieDielogTitle")); //$NON-NLS-1$
 		supDialog.setHeaderText(Messages.getString("JFXMain.medirSuperficieHeaderText")); //$NON-NLS-1$
 
@@ -1684,6 +1696,39 @@ public class JFXMain extends Application {
 		supDialog.initModality(Modality.NONE);
 		nombreTF.textProperty().addListener((obj,old,n)->{
 			poli.setNombre(n);
+			// es importante para que se modifique el layerPanel con el nombre actualizado
+			this.getLayerPanel().update(this.getWwd());
+		});
+
+		supDialog.show();
+		supDialog.setOnHidden((event)->{			
+			measureTool.setArmed(false);
+		});
+	}
+	
+
+	private void doMedirDistancia(){
+		Camino camino = new Camino();
+		MeasureTool measureTool = PathLayerFactory.createCaminoLayer(camino, this.getWwd(), this.getLayerPanel());
+		measureTool.setArmed(true);
+
+		insertBeforeCompass(this.getWwd(), measureTool.getApplicationLayer());
+		this.getLayerPanel().update(this.getWwd());	
+
+		Alert supDialog = new Alert(Alert.AlertType.INFORMATION);
+		supDialog.initOwner(JFXMain.stage);
+		supDialog.setTitle(Messages.getString("JFXMain.medirDistancia")); //$NON-NLS-1$
+		supDialog.setHeaderText(Messages.getString("JFXMain.medirDistanciaHeaderText")); //$NON-NLS-1$
+
+		Text t = new Text();
+		TextField nombreTF = new TextField();
+		nombreTF.setPromptText(Messages.getString("JFXMain.medirDistanciaHeaderText")); //$NON-NLS-1$
+		VBox vb = new VBox();
+		vb.getChildren().addAll(nombreTF,t);
+		supDialog.setGraphic(vb);
+		supDialog.initModality(Modality.NONE);
+		nombreTF.textProperty().addListener((obj,old,n)->{
+			camino.setNombre(n);
 			// es importante para que se modifique el layerPanel con el nombre actualizado
 			this.getLayerPanel().update(this.getWwd());
 		});
@@ -1780,73 +1825,7 @@ public class JFXMain extends Application {
 		});
 	}
 
-	private void doMedirDistancia() {		 
-		RenderableLayer layer = new RenderableLayer();
-		layer.setName(Messages.getString("JFXMain.medirDistanciaLayerName")); //$NON-NLS-1$
-		MeasureTool measureTool = new MeasureTool(getWwd());
-		measureTool.setController(new MeasureToolController());
-		// MeasureToolPanel  measurePanel=  new MeasureToolPanel(getWwd(), measureTool);
 
-		measureTool.setMeasureShapeType(MeasureTool.SHAPE_PATH);
-		measureTool.setPathType(AVKey.GREAT_CIRCLE);
-		measureTool.getUnitsFormat().setLengthUnits(UnitsFormat.METERS);
-		measureTool.getUnitsFormat().setAreaUnits(UnitsFormat.HECTARE);
-		measureTool.getUnitsFormat().setShowDMS(false);
-		measureTool.setFollowTerrain(true);
-		measureTool.setShowControlPoints(true);
-		// measureTool.setMeasureShape(new SurfacePolygon());
-		measureTool.clear();
-		measureTool.setArmed(true);
-
-		Alert distanciaDialog = new Alert(Alert.AlertType.INFORMATION);
-		distanciaDialog.initOwner(this.stage);
-		Text t = new Text();
-		distanciaDialog.setTitle(Messages.getString("JFXMain.medirDistancia")); //$NON-NLS-1$
-		distanciaDialog.setHeaderText(Messages.getString("JFXMain.medirDistanciaHeaderText")); //$NON-NLS-1$
-		distanciaDialog.setGraphic(t);
-		distanciaDialog.initModality(Modality.NONE);
-
-		DoubleProperty valueProperty = new SimpleDoubleProperty();
-		measureTool.addPropertyChangeListener((event)->{
-			//System.out.println(event.getPropertyName());
-			// Add, remove or change positions
-			if(event.getPropertyName().equals(MeasureTool.EVENT_ARMED)){
-				if (measureTool.isArmed()) {
-					((Component) getWwd()).setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
-				} else {                    
-					((Component) getWwd()).setCursor(Cursor.getDefaultCursor());
-				}
-			}
-			// Metric changed - sent after each render frame
-			else if(event.getPropertyName().equals(MeasureTool.EVENT_POSITION_REPLACE) ||
-					event.getPropertyName().equals(MeasureTool.EVENT_POSITION_ADD) ||
-					event.getPropertyName().equals(MeasureTool.EVENT_POSITION_REMOVE)){
-				double	value = measureTool.getLength();
-				DecimalFormat dc = new DecimalFormat("0.00"); //$NON-NLS-1$
-				dc.setGroupingSize(3);
-				dc.setGroupingUsed(true);
-				if(value != valueProperty.doubleValue() && value > 0){
-					String formated = dc.format(value)+Messages.getString("JFXMain.metrosAbrevSufix"); //$NON-NLS-1$
-					t.textProperty().set(formated);
-					measureTool.getLayer().setName(formated);
-					measureTool.getLayer().setValue(Labor.LABOR_LAYER_IDENTIFICATOR, Messages.getString("JFXMain.medirLayerTypeName")); //$NON-NLS-1$
-					measureTool.getLayer().setValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR, Poligono.class); //$NON-NLS-1$
-					valueProperty.setValue(value);
-					this.getLayerPanel().update(this.getWwd());
-				}                	                  
-			}
-		});
-
-
-		distanciaDialog.show();
-		distanciaDialog.setOnHidden((event)->{
-			measureTool.setArmed(false);
-			((Component) getWwd()).setCursor(Cursor.getDefaultCursor());
-			this.getLayerPanel().update(this.getWwd());
-		});
-
-		distanciaDialog.getResult();               
-	}
 
 	/**
 	 * Funcion util para vincular un metodo con un item en un menu
@@ -1866,7 +1845,7 @@ public class JFXMain extends Application {
 		TextInputDialog anchoDialog = new TextInputDialog(Messages.getString("JFXMain.goToExample")); //$NON-NLS-1$
 		anchoDialog.setTitle(Messages.getString("JFXMain.goToDialogTitle")); //$NON-NLS-1$
 		anchoDialog.setHeaderText(Messages.getString("JFXMain.goToDialogHeader")); //$NON-NLS-1$
-		anchoDialog.initOwner(this.stage);
+		anchoDialog.initOwner(JFXMain.stage);
 		Optional<String> anchoOptional = anchoDialog.showAndWait();
 		if(anchoOptional.isPresent()){
 			Position pos = GoogleGeocodingHelper.obtenerPositionDirect(anchoOptional.get());
@@ -1906,7 +1885,7 @@ public class JFXMain extends Application {
 		TextInputDialog anchoDialog = new TextInputDialog("20"); //$NON-NLS-1$
 		anchoDialog.setTitle(Messages.getString("JFXMain.heightVsAmountDialogTitle")); //$NON-NLS-1$
 		anchoDialog.setContentText(Messages.getString("JFXMain.heightVsAmountDialogMaxGroupsText")); //$NON-NLS-1$
-		anchoDialog.initOwner(this.stage);
+		anchoDialog.initOwner(JFXMain.stage);
 		Optional<String> oGrupos = anchoDialog.showAndWait();
 		int grupos=Integer.parseInt(oGrupos.get());
 		Labor<?>[] cosechasAux = new Labor[]{cosechaLabor};
@@ -1946,7 +1925,7 @@ public class JFXMain extends Application {
 				Scene scene = new Scene(histoChart, 800,450);
 				histoStage.setScene(scene);
 				System.out.println("termine de crear el grafico rinde vs altura"); //$NON-NLS-1$
-				histoStage.initOwner(this.stage);
+				histoStage.initOwner(JFXMain.stage);
 				histoStage.show();
 				System.out.println("histoChart.show();"); //$NON-NLS-1$
 			}else{
@@ -1999,7 +1978,7 @@ public class JFXMain extends Application {
 			Scene scene = new Scene(histoChart, 800,450);
 			histoStage.setScene(scene);
 			//	System.out.println("termine de crear el histo chart");
-			histoStage.initOwner(this.stage);
+			histoStage.initOwner(JFXMain.stage);
 			histoStage.show();
 			//	System.out.println("histoChart.show();");
 		});
@@ -2013,7 +1992,7 @@ public class JFXMain extends Application {
 			histoStage.getIcons().add(new Image(ICON));
 			Scene scene = new Scene(histoChart, 800,450);
 			histoStage.setScene(scene);
-			histoStage.initOwner(this.stage);
+			histoStage.initOwner(JFXMain.stage);
 			histoStage.show();
 		});
 	}
@@ -2093,7 +2072,7 @@ public class JFXMain extends Application {
 			fin= DateConverter.asLocalDate((Date)((Labor<?>)placementObject).getFecha());
 		} 
 		//fin = dateChooser(fin);
-		NdviDatePickerDialog ndviDpDLG = new NdviDatePickerDialog(this.stage);
+		NdviDatePickerDialog ndviDpDLG = new NdviDatePickerDialog(JFXMain.stage);
 		LocalDate ret = ndviDpDLG.ndviDateChooser(fin);
 		if(ret ==null)return;//seleccionar fecha termino en cancel.
 		//System.out.println(Messages.getString("JFXMain.212")+ndviDpDLG.initialDate+Messages.getString("JFXMain.213")+ndviDpDLG.finalDate); //$NON-NLS-1$ //$NON-NLS-2$
@@ -2152,7 +2131,7 @@ public class JFXMain extends Application {
 	 * seleccionar archivos .tif y mostrarlos como Ndvi
 	 */
 	private void doOpenNDVITiffFiles() {
-		List<File>	files =chooseFiles(Messages.getString("JFXMain.218"), Messages.getString("JFXMain.219")); //$NON-NLS-1$ //$NON-NLS-2$
+		List<File>	files =FileHelper.chooseFiles("TIF","*.tif"); //$NON-NLS-1$ //$NON-NLS-2$
 		if(files!=null)	files.forEach((file)->{
 			showNdviTiffFile(file,null,null);
 		});//fin del foreach
@@ -2180,7 +2159,7 @@ public class JFXMain extends Application {
 
 
 	protected void importImagery()  {
-		List<File>	files =chooseFiles(Messages.getString("JFXMain.220"), Messages.getString("JFXMain.221")); //$NON-NLS-1$ //$NON-NLS-2$
+		List<File>	files =FileHelper.chooseFiles("TIF","*.tif"); //$NON-NLS-1$ //$NON-NLS-2$
 		files.forEach((file)->{
 			executorPool.execute(()->{	
 				try {
@@ -2626,7 +2605,7 @@ public class JFXMain extends Application {
 			TextInputDialog anchoDialog = new TextInputDialog(Messages.getString("JFXMain.272")); //$NON-NLS-1$
 			anchoDialog.setTitle(Messages.getString("JFXMain.273")); //$NON-NLS-1$
 			anchoDialog.setContentText(Messages.getString("JFXMain.274")); //$NON-NLS-1$
-			anchoDialog.initOwner(this.stage);
+			anchoDialog.initOwner(JFXMain.stage);
 			Optional<String> anchoOptional = anchoDialog.showAndWait();
 			rinde = Double.valueOf(anchoOptional.get());
 		}catch(java.lang.NumberFormatException e) {
@@ -2636,7 +2615,7 @@ public class JFXMain extends Application {
 			char sep=symbols.getDecimalSeparator();
 
 			Alert a = new Alert(Alert.AlertType.ERROR);
-			a.initOwner(this.stage);
+			a.initOwner(JFXMain.stage);
 
 			a.setTitle(Messages.getString("JFXMain.275")); //$NON-NLS-1$
 			a.setHeaderText(Messages.getString("JFXMain.276")+sep+Messages.getString("JFXMain.277")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -2831,6 +2810,40 @@ public class JFXMain extends Application {
 			//		}
 		}
 		
+		
+	private void doCortarCosecha(CosechaLabor cosechaAcortar) {
+		
+		List<Poligono> geometriasActivas = new ArrayList<Poligono>();
+		//1 obtener los poligonos activos
+		LayerList layers = this.getWwd().getModel().getLayers();
+		for (Layer l : layers) {
+			Object o = l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			if (l.isEnabled() && o instanceof Poligono){
+				Poligono p = (Poligono)o;
+				geometriasActivas.add(p);
+			}
+		}
+		CortarCosechaMapTask umTask = new CortarCosechaMapTask(cosechaAcortar,geometriasActivas);
+		
+		umTask.installProgressBar(progressBox);
+
+		umTask.setOnSucceeded(handler -> {
+			CosechaLabor ret = (CosechaLabor)handler.getSource().getValue();
+			if(ret.getLayer()!=null){
+				cosechas.add(ret);
+				insertBeforeCompass(getWwd(), ret.getLayer());
+				this.getLayerPanel().update(this.getWwd());
+			}
+			umTask.uninstallProgressBar();
+			viewGoTo(ret);
+
+			System.out.println(Messages.getString("JFXMain.286")); //$NON-NLS-1$
+			playSound();
+		});//fin del OnSucceeded						
+		//umTask.start();					
+		JFXMain.executorPool.execute(umTask);
+		
+	}
 
 	// junta 2 o mas cosechas en una 
 	private void doUnirCosechas(CosechaLabor cosechaLabor) {
@@ -2997,7 +3010,7 @@ public class JFXMain extends Application {
 		minMaxDialog.setTitle(Messages.getString("JFXMain.296")); //$NON-NLS-1$
 		minMaxDialog.setContentText(Messages.getString("JFXMain.297")); //$NON-NLS-1$
 		//dateDialog.setHeaderText("Fecha Desde");
-		minMaxDialog.initOwner(this.stage);
+		minMaxDialog.initOwner(JFXMain.stage);
 		Optional<ButtonType> res = minMaxDialog.showAndWait();
 		Double minFert =null,maxFert=null; 
 		if(res.get().equals(ButtonType.OK)){
@@ -3079,7 +3092,7 @@ public class JFXMain extends Application {
 		minMaxDialog.setTitle(Messages.getString("JFXMain.303")); //$NON-NLS-1$
 		minMaxDialog.setContentText(Messages.getString("JFXMain.304")); //$NON-NLS-1$
 		//dateDialog.setHeaderText("Fecha Desde");
-		minMaxDialog.initOwner(this.stage);
+		minMaxDialog.initOwner(JFXMain.stage);
 		Optional<ButtonType> res = minMaxDialog.showAndWait();
 		Double minFert =null,maxFert=null; 
 		if(res.get().equals(ButtonType.OK)){
@@ -3134,7 +3147,7 @@ public class JFXMain extends Application {
 	 * selector e invoca la tarea que muestra el file en pantalla
 	 */
 	private void doOpenCosecha(List<File> files) {
-		List<FileDataStore> stores = chooseShapeFileAndGetMultipleStores(files);
+		List<FileDataStore> stores = FileHelper.chooseShapeFileAndGetMultipleStores(files);
 		if (stores != null) {
 			for(FileDataStore store : stores){//abro cada store y lo dibujo en el harvestMap individualmente
 				CosechaLabor labor = new CosechaLabor(store);
@@ -3177,7 +3190,7 @@ public class JFXMain extends Application {
 	 * selector e invoca la tarea que muestra el file en pantalla
 	 */
 	private void doOpenFertMap(List<File> files) {
-		List<FileDataStore> stores = chooseShapeFileAndGetMultipleStores(files);
+		List<FileDataStore> stores =FileHelper.chooseShapeFileAndGetMultipleStores(files);
 		if (stores != null) {
 			//	harvestMap.getChildren().clear();
 			for(FileDataStore store : stores){//abro cada store y lo dibujo en el harvestMap individualmente
@@ -3214,7 +3227,7 @@ public class JFXMain extends Application {
 
 
 	private void doOpenSiembraMap(List<File> files) {
-		List<FileDataStore> stores = chooseShapeFileAndGetMultipleStores(files);
+		List<FileDataStore> stores = FileHelper.chooseShapeFileAndGetMultipleStores(files);
 		if (stores != null) {
 			for(FileDataStore store : stores){//abro cada store y lo dibujo en el harvestMap individualmente
 				SiembraLabor labor = new SiembraLabor(store);
@@ -3245,9 +3258,13 @@ public class JFXMain extends Application {
 		}//if stores != null
 	}
 
-
+/**
+ * @see doExtraerPoligonos(Labor<?>) para ver como optimizar este codigo
+ * @ metodo que lee todas las geometrias de todos los archivos seleccionados y los carga como poligonos en memoria
+ * @param files
+ */
 	private void doImportarPoligonos(List<File> files) {
-		List<FileDataStore> stores = chooseShapeFileAndGetMultipleStores(files);
+		List<FileDataStore> stores = FileHelper.chooseShapeFileAndGetMultipleStores(files);
 		executorPool.submit(()->{
 			if (stores != null) {for(FileDataStore store : stores){//abro cada store y lo dibujo en el harvestMap individualmente
 				System.out.println(Messages.getString("JFXMain.312")); //$NON-NLS-1$
@@ -3267,6 +3284,7 @@ public class JFXMain extends Application {
 						poli.setNombre(storeName+" ["+Integer.toString(i)+"]");
 						i++;
 						try {
+							//intento tomar el nombre del atributo si tiene la columna Name
 							String name = (String) feature.getAttribute("Name");
 							if(name!=null) {
 								poli.setNombre(name);
@@ -3288,11 +3306,8 @@ public class JFXMain extends Application {
 		});
 	}
 
-
-
-
 	private void doOpenPulvMap(List<File> files) {
-		List<FileDataStore> stores = chooseShapeFileAndGetMultipleStores(files);
+		List<FileDataStore> stores = FileHelper.chooseShapeFileAndGetMultipleStores(files);
 		if (stores != null) {
 			//	harvestMap.getChildren().clear();
 			for(FileDataStore store : stores){//abro cada store y lo dibujo en el harvestMap individualmente
@@ -3329,7 +3344,7 @@ public class JFXMain extends Application {
 	}
 
 	private void doOpenSoilMap(List<File> files) {
-		List<FileDataStore> stores = chooseShapeFileAndGetMultipleStores(files);
+		List<FileDataStore> stores = FileHelper.chooseShapeFileAndGetMultipleStores(files);
 		if (stores != null) {
 			//	harvestMap.getChildren().clear();
 			for(FileDataStore store : stores){//abro cada store y lo dibujo en el harvestMap individualmente
@@ -3363,8 +3378,8 @@ public class JFXMain extends Application {
 		}//if stores != null
 	}
 
-	private void doOpenMarginlMap() {
-		List<FileDataStore> stores = chooseShapeFileAndGetMultipleStores(null);
+	private void doOpenMarginMap() {
+		List<FileDataStore> stores = FileHelper.chooseShapeFileAndGetMultipleStores(null);
 		if (stores != null) {
 			//	harvestMap.getChildren().clear();
 			for(FileDataStore store : stores){//abro cada store y lo dibujo en el harvestMap individualmente
@@ -3474,7 +3489,6 @@ public class JFXMain extends Application {
 			playSound();
 		});
 		executorPool.execute(uMmTask);
-		//}
 	}
 
 	private void doProcesarBalanceNutrientes() {		
@@ -3521,37 +3535,37 @@ public class JFXMain extends Application {
 
 
 
-	private void doExportLabor(Labor<?> cosechaLabor) {
-		if(cosechaLabor==null){//esto servia cuando solo se elegia exportar pero no la cosecha
-			Optional<CosechaLabor> cosechaSelected = HarvestSelectDialogController.select(this.cosechas);
-			if(cosechaSelected.isPresent()){
-				cosechaLabor= cosechaSelected.get();
-			} else {
-				return;
-			}
-		}
+	private void doExportLabor(Labor<?> laborToExport) {
+//		if(labor==null){//esto servia cuando solo se elegia exportar pero no la cosecha
+//			Optional<CosechaLabor> cosechaSelected = HarvestSelectDialogController.select(this.cosechas);
+//			if(cosechaSelected.isPresent()){
+//				labor= cosechaSelected.get();
+//			} else {
+//				return;
+//			}
+//		}
 
-		final Labor<?> laborToExport = cosechaLabor;
+		//final Labor<?> laborToExport = labor;
 
 		String nombre = laborToExport.getNombre();
-		File shapeFile =  getNewShapeFile(nombre);
+		File shapeFile =  FileHelper.getNewShapeFile(nombre);
 
-		ExportLaborMapTask ehTask = new ExportLaborMapTask(cosechaLabor,shapeFile);
+		ExportLaborMapTask ehTask = new ExportLaborMapTask(laborToExport,shapeFile);
 		executorPool.execute(ehTask);
 	}
 
 
 	//TODO permitir al ususario definir el formato. para siembra fertilizada necesita 3 columnas
 	//en la linea, al costado de la linea, siembra
-	private void doExportPrescripcion(FertilizacionLabor laborToExport) {
+	private void doExportPrescripcionFertilizacion(FertilizacionLabor laborToExport) {
 		String nombre = laborToExport.getNombre();
-		File shapeFile =  getNewShapeFile(nombre);
+		File shapeFile =  FileHelper.getNewShapeFile(nombre);
 		executorPool.execute(()->ExportarPrescripcionFertilizacionTask.run(laborToExport, shapeFile));		
 	}
 
 	private void doExportPrescripcionSiembra(SiembraLabor laborToExport) {
 		String nombre = laborToExport.getNombre();
-		File shapeFile =  getNewShapeFile(nombre);
+		File shapeFile = FileHelper.getNewShapeFile(nombre);
 
 		executorPool.execute(()->ExportarPrescripcionSiembraTask.run(laborToExport, shapeFile));
 	}
@@ -3568,28 +3582,29 @@ public class JFXMain extends Application {
 //		}
 		
 		String nombre = laborToExport.getNombre();
-		File shapeFile =  getNewShapeFile(nombre);
+		File shapeFile = FileHelper.getNewShapeFile(nombre);
 
 		executorPool.execute(()->ExportarCosechaDePuntosTask.run(laborToExport, shapeFile));
 		}
 
 	
-
+/**
+ * metodo que toma una labor y muestra una tabla con los campos de la labor
+ * @param labor
+ */
 	private void doShowDataTable(Labor<?> labor) {		   
 		Platform.runLater(()->{
 
-			ArrayList<LaborItem> ciLista = new ArrayList<LaborItem>();
-			System.out.println(Messages.getString("JFXMain.360")); //$NON-NLS-1$
+			ArrayList<LaborItem> liLista = new ArrayList<LaborItem>();
+			System.out.println("Comenzando a cargar la los datos de la tabla"); //$NON-NLS-1$
 			Iterator<?> it = labor.outCollection.iterator();
 			while(it.hasNext()){
-				LaborItem ci = labor.constructFeatureContainerStandar((SimpleFeature)it.next(), false);
-				ciLista.add(ci);
+				LaborItem lI = labor.constructFeatureContainerStandar((SimpleFeature)it.next(), false);
+				liLista.add(lI);
 			}
 
 			final ObservableList<LaborItem> dataLotes =
-					FXCollections.observableArrayList(
-							ciLista
-							);
+					FXCollections.observableArrayList(liLista);
 
 			SmartTableView<LaborItem> table = new SmartTableView<LaborItem>(dataLotes);
 			table.setEditable(false);
@@ -3604,6 +3619,9 @@ public class JFXMain extends Application {
 
 	}
 
+	/**
+	 * metodo que muestra una lista con todas las labores guardadas en la base de datos
+	 */
 	private void doShowLaboresTable() {
 		Platform.runLater(()->{
 			final ObservableList<Labor<?>> data =
@@ -3614,7 +3632,7 @@ public class JFXMain extends Application {
 				System.out.println(Messages.getString("JFXMain.361")); //$NON-NLS-1$
 				//data.add(new Lote());
 			}
-			SmartTableView<Labor<?>> table = new SmartTableView<Labor<?>>(data);//,data);
+			SmartTableView<Labor<?>> table = new SmartTableView<Labor<?>>(data);//,data,List<String> rejectedColumns,List<String> order);
 			table.setEditable(true);
 			//table.setOnDoubleClick(()->new Lote("Nuevo Lote"));
 
@@ -3657,7 +3675,7 @@ public class JFXMain extends Application {
 				Messages.getString("JFXMain.398"), Messages.getString("JFXMain.399")); //$NON-NLS-1$ //$NON-NLS-2$
 		fileChooser.getExtensionFilters().add(extFilter);
 		// Show save file dialog
-		File snapsthotFile = fileChooser.showSaveDialog(this.stage);
+		File snapsthotFile = fileChooser.showSaveDialog(JFXMain.stage);
 
 		try {
 			ImageIO.write(SwingFXUtils.fromFXImage(image, null), Messages.getString("JFXMain.400"), snapsthotFile); //$NON-NLS-1$
@@ -3666,123 +3684,7 @@ public class JFXMain extends Application {
 		}
 	}
 
-	private List<FileDataStore> chooseShapeFileAndGetMultipleStores(List<File> files) {
-		if(files==null){
-			//	List<File> 
-			files =chooseFiles(Messages.getString("JFXMain.401"), Messages.getString("JFXMain.402")); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-		List<FileDataStore> stores = new ArrayList<FileDataStore>();
-		if (files != null) {
-			for(File f : files){
-				try {
-					stores.add(FileDataStoreFinder.getDataStore(f));//esto falla con java10 :(
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				//stage.setTitle(TITLE_VERSION+" "+f.getName());
-				//Configuracion.getInstance().setProperty(Configuracion.LAST_FILE,f.getAbsolutePath());
 
-			}
-
-
-			/*
-			 * miro el archivo y pregunto cuales son las columnas
-			 * correspondientes
-			 */
-
-		}
-		return stores;
-	}
-
-
-	/**
-	 * 
-	 * @param f1 filter Title "JPG"
-	 * @param f2 filter regex "*.jpg"
-	 */
-	private List<File> chooseFiles(String f1,String f2) {
-		return FileHelper.chooseFiles(f1, f2);
-	}
-
-	/**
-	 * este metodo se usa para crear archivos shp al momento de exportar mapas
-	 * @param nombre es el nombre del archivo que se desea crear
-	 * @return el archivo creado en la carpeta seleccionada por el usuario
-	 */
-	private File getNewShapeFile(String nombre) {
-		FileChooser fileChooser = new FileChooser();
-		fileChooser.setTitle(Messages.getString("JFXMain.413")); //$NON-NLS-1$
-		fileChooser.getExtensionFilters().add(
-				new FileChooser.ExtensionFilter(Messages.getString("JFXMain.414"), Messages.getString("JFXMain.415"))); //$NON-NLS-1$ //$NON-NLS-2$
-
-		
-		File lastFile = null;
-		//Configuracion config =Configuracion.getInstance();
-		String lastFileName = config.getPropertyOrDefault(Configuracion.LAST_FILE,null);
-		if(lastFileName != null){
-			lastFile = new File(lastFileName);
-		}
-		if(lastFile ==null || ! lastFile.exists()) {
-			lastFile=File.listRoots()[0];
-		} 
-		//if(lastFile != null && lastFile.exists()){
-		fileChooser.setInitialDirectory(lastFile.getParentFile());
-
-		if(nombre == null){
-			nombre = lastFile.getName();
-		}
-		fileChooser.setInitialFileName(nombre);
-		config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
-		config.save();
-
-		//if(file!=null)	fileChooser.setInitialDirectory(file.getParentFile());
-
-		File file = fileChooser.showSaveDialog(JFXMain.stage);
-
-		System.out.println(Messages.getString("JFXMain.416")+file); //$NON-NLS-1$
-
-		return file;
-	}
-
-
-	/**
-	 * este metodo se usa para crear archivos shp al momento de exportar mapas
-	 * @param nombre es el nombre del archivo que se desea crear
-	 * @return el archivo creado en la carpeta seleccionada por el usuario
-	 */
-	private File getNewTiffFile(String nombre) {
-		FileChooser fileChooser = new FileChooser();
-		fileChooser.setTitle(Messages.getString("JFXMain.417")); //$NON-NLS-1$
-		fileChooser.getExtensionFilters().add(
-				new FileChooser.ExtensionFilter(Messages.getString("JFXMain.418"), Messages.getString("JFXMain.419"))); //$NON-NLS-1$ //$NON-NLS-2$
-
-		File lastFile = null;
-		//Configuracion config =Configuracion.getInstance();
-		String lastFileName = config.getPropertyOrDefault(Configuracion.LAST_FILE,null);
-		if(lastFileName != null){
-			lastFile = new File(lastFileName);
-		}
-		if(lastFile ==null || ! lastFile.exists()) {
-			lastFile=File.listRoots()[0];
-		} 
-		//if(lastFile != null && lastFile.exists()){
-		fileChooser.setInitialDirectory(lastFile.getParentFile());
-
-		if(nombre == null){
-			nombre = lastFile.getName();
-		}
-		fileChooser.setInitialFileName(nombre);
-		config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
-		config.save();
-
-		//if(file!=null)	fileChooser.setInitialDirectory(file.getParentFile());
-
-		File file = fileChooser.showSaveDialog(JFXMain.stage);
-
-		System.out.println(Messages.getString("JFXMain.420")+file); //$NON-NLS-1$
-
-		return file;
-	}
 
 	private void playSound() {
 		executorPool.execute(()->{

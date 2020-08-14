@@ -5,6 +5,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import org.geotools.data.FeatureReader;
 import org.geotools.data.simple.SimpleFeatureIterator;
@@ -16,10 +17,12 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
+import dao.Camino;
 import dao.Labor;
 import dao.LaborItem;
 import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
+import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
 import gui.nww.LaborLayer;
@@ -58,9 +61,6 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 	 */
 	@Override
 	protected void doProcess() throws IOException {
-	
-		
-
 		String nombre =null;
 
 		//List<SueloItem> features = Collections.synchronizedList(new ArrayList<SueloItem>());
@@ -114,17 +114,6 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 							insertCentroid=false;
 						}
 						
-
-						
-//						Coordinate[] coords = new Coordinate[5];
-//						double width = ProyectionConstants.metersToLongLat(10/2);
-//						coords[0]=new Coordinate(x-width,y+width);
-//						coords[1]=new Coordinate(x+width,y+width);
-//						coords[2]=new Coordinate(x+width,y-width);
-//						coords[3]=new Coordinate(x-width,y-width);
-//						coords[4]=coords[0];
-//						Polygon random =centroid.getFactory().createPolygon(coords);//{new Coordinate(x,y),new Coordinate(x,y),new Coordinate(x,y),new Coordinate(x,y)});
-//						
 						if(geometry.contains(random)){
 						//	System.out.println(Messages.getString("GenerarMuestreoDirigidoTask.3")+random); //$NON-NLS-1$
 							SueloItem muestra = new SueloItem();
@@ -148,12 +137,12 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 		SimpleFeatureIterator it = labor.outCollection.features();
 		while(it.hasNext()){
 			SimpleFeature f=it.next();
-			
 			itemsToShow.add(labor.constructFeatureContainerStandar(f,false));
 		}
 		it.close();
-
-
+		
+		//TODO crear un PathLayer con los puntos de itemsToShow
+		createMuestreoPathLayer(itemsToShow);
 		labor.setNombre(nombre);
 		labor.setLayer(new LaborLayer());
 		//List<?> featureList = features.stream().map(f ->{
@@ -165,23 +154,50 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 
 		//TODO 4 mostrar la cosecha sintetica creada
 		labor.constructClasificador();
-
-
 		
 		System.out.println(Messages.getString("GenerarMuestreoDirigidoTask.4")+itemsToShow.size()); //$NON-NLS-1$
 		runLater(itemsToShow);
 		updateProgress(0, featureCount);
-
-
 	}
 
+	/**
+	 * metood que toma una lista
+	 * @param itemsToShow
+	 */
+	private void createMuestreoPathLayer(List<SueloItem> itemsToShow) {
+		System.out.println("items "+itemsToShow.size());
+		List<Position> positions = itemsToShow.stream().map(sueloItem->{
+			Point p = sueloItem.getGeometry().getCentroid();
+			Position pos = Position.fromDegrees(p.getY(),p.getX());
+			return pos;
+			}
+		).collect(Collectors.toList());
+		
+		Camino c = new Camino(positions);
+		SimplificarCaminoTask t = new SimplificarCaminoTask(c);
+		t.run();
+		
+		//TODO poner items en el orden en el que aparecen en positions
+		List<SueloItem> newItems = new ArrayList<SueloItem>();
+		for(Position np :positions) {	//FIXME tengo dudas sobre la forma en que matchea los elementos		
+			for(SueloItem s : itemsToShow) {
+				Point p = s.getGeometry().getCentroid();
+				Position pos = Position.fromDegrees(p.getY(),p.getX());
+				if(pos.latitude.equals(np.latitude)&& pos.longitude.equals(np.longitude)) {
+					newItems.add(s);
+					System.out.println("insertando "+pos+" suelo de "+itemsToShow.indexOf(s)+" en "+newItems.indexOf(s));
+					break;	
+				}
+			}
+		}
+		System.out.println("newItems "+newItems.size());
+		itemsToShow.clear();
+		itemsToShow.addAll(newItems);	
+	}
 
 	private double getAreaMinimaLongLat() {	
 		return this.superficieMinimaAMuestrear*(ProyectionConstants.metersToLong()*ProyectionConstants.metersToLat());
 	}
-
-
-
 
 	@Override
 	protected ExtrudedPolygon getPathTooltip(Geometry poly,	SueloItem sueloItem) {

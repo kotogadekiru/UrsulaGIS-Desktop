@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.poi.util.SystemOutLogger;
+
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpRequest;
@@ -69,7 +71,8 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 	//private static final String BASE_URL = "http://www.ursulagis.com/api/ndvi/v4/SR/";
 	//private static final String BASE_URL = "http://localhost:5001";
 
-	private static final String HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3 = BASE_URL+"/ndvi_v4";//+"/gndvi_v4_SR";//"/ndvi_v3";//ndvi_v5
+	//private static final String HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3 = BASE_URL+"/chloroi_v1_SR";//"/ndvi_v4";//+"/gndvi_v4_SR";//"/ndvi_v3";//ndvi_v5
+	private static final String HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3 = BASE_URL+"/ndvi_v4";//+"/chloroi_v1_SR";//+"/gndvi_v4_SR";//"/ndvi_v3";//ndvi_v5
 	private static final String HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3PNG = BASE_URL+"/ndvi_v4PNG";
 	private static final String HTTPS_GEE_API_HELPER_HEROKUAPP_COM_S2_PRODUCT_FINDER = BASE_URL+"/s2_product_finder_v3";
 	private static final String GEE_POLYGONS_GET_REQUEST_KEY = "polygons";
@@ -196,6 +199,7 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 			String path2 = feature.get(PATH2);
 			if(path2!=""){
 				System.out.println("path2 "+path2);
+				
 				File tiffFile = downloadGoogleTifFile(path2);
 
 				//esto no funciona porque los nombres duplicados se le agrega un numero.

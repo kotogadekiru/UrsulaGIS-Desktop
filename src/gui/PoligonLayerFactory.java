@@ -45,7 +45,6 @@ public class PoligonLayerFactory {
 	static public MeasureTool createPoligonLayer(Poligono poli, WorldWindow wwd,LayerPanel layerPanel){
 		RenderableLayer surfaceLayer = new RenderableLayer();
 		poli.setLayer(surfaceLayer);
-	//	poli.setLayer(surfaceLayer);		
 		surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, poli);
 		surfaceLayer.setValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR, poli.getClass());
 		MeasureTool measureTool = createMeasureTool(wwd, surfaceLayer);
@@ -88,16 +87,9 @@ public class PoligonLayerFactory {
 					//layerPanel.update(wwd);				//XXX esto hace que se re calcule todo el arbol varias veces??
 				}                	                  
 			}
-		});
-		
+		});	
 		return measureTool;
 	}
-	
-	
-
-
-
-
 	
 	private void doMedirSuperfice(Poligono poli, WorldWindow wwd,LayerPanel layerPanel) {
 		RenderableLayer surfaceLayer = new RenderableLayer();

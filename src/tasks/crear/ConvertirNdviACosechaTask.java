@@ -30,7 +30,7 @@ import tasks.ShowNDVITifFileTask;
 import utils.ProyectionConstants;
 
 public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,CosechaLabor> {
-	private static final double NDVI_RINDE_CERO = ShowNDVITifFileTask.MIN_VALUE;//0.2;
+	private static  double NDVI_RINDE_CERO = ShowNDVITifFileTask.MIN_VALUE;//0.2;
 	Double rindeProm = new Double(0);
 	Ndvi ndvi=null;
 
@@ -68,6 +68,9 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 		this.featureCount=size;
 		Double averageNdvi = new Double(sum/size);
 		System.out.println("el promedio de los ndvi es "+averageNdvi);
+		// si el rinde promedio es >0.5 => NDVI_RINDE_CERO es 0.3
+		//si el rinde promedio es <0.5 => NDVI_RINDE_CERO es 0.1
+		NDVI_RINDE_CERO= averageNdvi>0.5?0.5:0.1;//depende del cultivo?
 		if(averageNdvi.isNaN())averageNdvi =1.0;
 		 it = values.iterator();
 		 

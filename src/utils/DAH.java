@@ -154,6 +154,21 @@ public class DAH {
 		}
 	}
 	
+	public static void removeAll(List<Object> entidades) {
+		EntityManager em = em();
+		if(DAH.transaction == null){
+			//	DAH.transaction = em.getTransaction();
+			em.getTransaction().begin();		
+			entidades.forEach(each->em.remove(each));
+			//em.remove(entidad);			
+			em.getTransaction().commit();
+		} else{
+			entidades.forEach(each->em.remove(each));
+			//em.remove(entidad);	
+		}
+
+	}
+	
 	public static void remove(Object entidad) {
 		EntityManager em = em();
 		if(DAH.transaction == null){
@@ -282,7 +297,7 @@ public class DAH {
 //		TypedQuery<Producto> query =
 //				em.createQuery("SELECT p FROM Producto p where p.nombre like '"+cultivoName+"'", Producto.class);
 		Number count = (Number)em().createNamedQuery(Cultivo.COUNT_ALL).getSingleResult();
-		System.out.print("hay "+count+" cultivos en la base de datos");
+		//System.out.println("hay "+count+" cultivos en la base de datos");
 		if(count.intValue() ==0) {
 			List<Cultivo> results = getAllCultivos();//getAll crea los cultivos default
 		}

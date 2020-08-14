@@ -26,6 +26,7 @@ import javax.persistence.AccessType;
 import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.layers.Layer;
+import gui.Messages;
 import lombok.Data;
 import utils.ProyectionConstants;
 
@@ -104,7 +105,11 @@ public class Poligono implements Comparable<Poligono>{
 		//System.out.println(positionsString);
 		return positionsString;
 	}
-	
+	/**
+	 * metodo que toma un string conf formato {{{lat,long},{lat}}}
+	 * y crea la lista de posiciones del poligono
+	 * @param s
+	 */
 	public void setPositionsString(String s){
 		positions.clear();
 		try{
@@ -170,20 +175,24 @@ public class Poligono implements Comparable<Poligono>{
 	public void setNombre(String n){
 		this.nombre=n;
 		if(this.layer!=null){
-			DecimalFormat dc = new DecimalFormat("0.00");
+			DecimalFormat dc = new DecimalFormat("0.00"); //$NON-NLS-1$
 			dc.setGroupingSize(3);
 			dc.setGroupingUsed(true);
-			layer.setName(nombre+" "+dc.format(area)+" Ha");
+			String formated = dc.format(this.area)+Messages.getString("PoligonLayerFactory.4"); //$NON-NLS-1$
+			
+			layer.setName(nombre+" "+formated);
 		}
 	}
 	@Transient
 	public void setLayer(Layer l){
+		
 		this.layer=l;
 		DecimalFormat dc = new DecimalFormat("0.00");
 		dc.setGroupingSize(3);
 		dc.setGroupingUsed(true);
-		layer.setName(nombre+" "+dc.format(area)+" Ha");
+		layer.setName(nombre+" "+dc.format(area)+Messages.getString("PoligonLayerFactory.4"));
 	}
+	
 	@Transient
 	public Layer getLayer(){
 		return this.layer;
@@ -200,7 +209,7 @@ public class Poligono implements Comparable<Poligono>{
 			DecimalFormat dc = new DecimalFormat("0.00");
 			dc.setGroupingSize(3);
 			dc.setGroupingUsed(true);
-			layer.setName(nombre+" "+dc.format(area)+" Ha");
+			layer.setName(nombre+" "+dc.format(area)+Messages.getString("PoligonLayerFactory.4"));
 		}
 	}
 	

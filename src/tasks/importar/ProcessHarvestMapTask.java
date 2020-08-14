@@ -25,6 +25,7 @@ import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
+import com.vividsolutions.jts.util.GeometricShapeFactory;
 
 import dao.Labor;
 import dao.LaborItem;
@@ -92,7 +93,9 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			List<AttributeType> descriptors = labor.getInStore().getSchema().getTypes();
 			for(AttributeType att:descriptors){
 			String colName = att.getName().toString();
-				if(Messages.getString("ProcessHarvestMapTask.0").equalsIgnoreCase(colName)){ //$NON-NLS-1$
+			
+			System.out.println(att.getBinding().getName()+": "+colName);
+				if("Mappable".equalsIgnoreCase(colName)){ //$NON-NLS-1$
 				mappableColumn=colName;	
 				}
 			}
@@ -100,7 +103,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		} else{
 			if(labor.getInCollection() == null){//solo cambio la inCollection por la outCollection la primera vez
 				labor.setInCollection(labor.outCollection);
-				labor.outCollection=  new DefaultFeatureCollection(Messages.getString("ProcessHarvestMapTask.1"),labor.getType()); //$NON-NLS-1$
+				labor.outCollection=  new DefaultFeatureCollection("internal",labor.getType()); //$NON-NLS-1$
 			}
 			//XXX cuando es una grilla los datos estan en outstore y instore es null
 			//FIXME si leo del outCollection y luego escribo en outCollection me quedo sin memoria
@@ -109,6 +112,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			featureCount=labor.getInCollection().size();
 		}
 
+		System.out.println("procesando una cosecha con "+featureCount+" elementos");
 		int divisor = 1;
 		if(labor.getConfiguracion().correccionOutlayersEnabled()){
 			divisor =2;
@@ -130,12 +134,12 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 				Object mappable = simpleFeature.getAttribute(mappableColumn);
 				Double mappableValue = new Double(1);
 				if(!mappableValue.equals(mappable)){//OK! Funciona
-					//System.out.println("descartando el registro por no ser mapeable mappable="+mappable);
+					System.out.println("descartando el registro por no ser mapeable mappable="+mappable);
 					continue;
 				}
 			}
 			CosechaItem ci = labor.constructFeatureContainer(simpleFeature);
-			
+			//System.out.println(ci.toString());
 		
 			//ci.getRumbo()==90 ||ci.getRumbo()==270 ||			
 			//if(ci.getAncho()==0||ci.getDistancia()==0||					ci.getAmount()==0)continue;//XXX evito ingresar puntos invalidos
@@ -150,6 +154,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 
 
 			Object geometry = ci.getGeometry();
+			//System.out.println("geometry es "+geometry);
 
 			/**
 			 * si la geometria es un point procedo a poligonizarla
@@ -227,7 +232,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 				if(longLatGeom == null 
 						//			|| geom.getArea()*ProyectionConstants.A_HAS()*10000<labor.config.supMinimaProperty().doubleValue()
 						){//con esto descarto las geometrias muy chicas
-					//System.out.println("geom es null, ignorando...");
+					System.out.println("geom es null, ignorando...");
 					continue;
 				}
 
@@ -272,6 +277,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 					}					
 					ci.setGeometry(longLatGeom);
 					corregirRinde(ci,anchoOrig);
+					//System.out.println("insertando ci= "+ci);
 					labor.insertFeature(ci);//featureTree.insert(geom.getEnvelopeInternal(), cosechaFeature);
 				} else{
 					//System.out.println("no inserto la feature "+ci+" "+empty+" "+valid+" "+big );
@@ -296,6 +302,8 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 				
 					if(has>supMinimaHas){
 						labor.insertFeature(ci);//XXX es posible que no se inserte si ya existe el id
+					}else{
+						System.out.println("descarto el punto por area menor al minimo. "+ci);
 					}
 				}
 			}
@@ -351,6 +359,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		//TODO resumir geometrias pero en base a la altimetria y dibujar los contornos en otra capa
 
 		//XXX ojo! si son muchos esto me puede tomar toda la memoria.
+		System.out.println("mostrando la cosecha con "+itemsToShow.size()+" items");
 			runLater(itemsToShow);
 	//canvasRunLater();
 
@@ -1227,6 +1236,15 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 
 		//	cosechaFeature.setGeometry(difGeom);
 		//difGeom a veces devuelve un POINT y eso es una geometria invalida
+		if(difGeom==null) {
+			 GeometricShapeFactory gsf = new GeometricShapeFactory(fact);
+			  gsf.setSize( 10 * ProyectionConstants.metersToLat());
+			  gsf.setNumPoints(4);
+			  gsf.setBase(new Coordinate(X.getX(),X.getY() ));
+			  gsf.setRotation(0.0);
+			  difGeom = gsf.createRectangle();
+			 
+		}
 		return difGeom;//XXX aca esta ok, se ve el poligono inclinado correctamente
 	}
 

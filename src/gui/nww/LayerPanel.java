@@ -300,8 +300,6 @@ public class LayerPanel extends VBox {
 				Object layerObject = nuLayer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 				Object layerObjectClass = nuLayer.getValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR);
 
-
-
 				if(layerObject == null ){//es un layer vacio
 				
 					if(layerObjectClass instanceof Class) {//estoy cargando las acciones genericas
