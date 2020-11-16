@@ -27,7 +27,7 @@ import utils.DAH;
 
 @Getter
 @Setter(value = AccessLevel.PUBLIC)
-@Entity @Access(AccessType.FIELD)//variable (el default depende de donde pongas el @Id)
+//@Entity @Access(AccessType.FIELD)//variable (el default depende de donde pongas el @Id)
 public class FertilizacionLabor extends Labor<FertilizacionItem> {
 	public static final String COLUMNA_KG_HA = "Kg_FertHa";
 	public static final String COLUMNA_PRECIO_FERT = "Precio Kg Fert";

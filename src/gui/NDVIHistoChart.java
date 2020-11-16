@@ -195,7 +195,12 @@ public class NDVIHistoChart extends VBox {
 			
 			
 		}
-		ndviPromedio = ndviPromedio/size;
+		if(size>0) {
+			ndviPromedio = ndviPromedio/size;	
+		} else {
+			ndviPromedio = new Double(0);
+		}
+		
 		//System.out.println("la cantidad de valores del ndvi es "+size);
 
 		XYChart.Series<String, Number> series = new XYChart.Series<>();
@@ -216,12 +221,12 @@ public class NDVIHistoChart extends VBox {
 							newNode.setStyle("-fx-bar-fill: " + color + ";"); //$NON-NLS-1$ //$NON-NLS-2$
 						}
 						DecimalFormat df = new DecimalFormat("0.00"); //$NON-NLS-1$
-							df.setGroupingSize(3);
-							df.setGroupingUsed(true);
-							double val = cData.getYValue().doubleValue();
-							Tooltip tooltip = new Tooltip(df.format(val)+Messages.getString("NDVIHistoChart.has1")+df.format(val/superficieTotal*100)+"%"); //$NON-NLS-1$ //$NON-NLS-2$
-							tooltip.autoHideProperty().set(false);
-							Tooltip.install(newNode,tooltip );					
+						df.setGroupingSize(3);
+						df.setGroupingUsed(true);
+						double val = cData.getYValue().doubleValue();
+						Tooltip tooltip = new Tooltip(df.format(val)+Messages.getString("NDVIHistoChart.has1")+df.format(val/superficieTotal*100)+"%"); //$NON-NLS-1$ //$NON-NLS-2$
+						tooltip.autoHideProperty().set(false);
+						Tooltip.install(newNode,tooltip );					
 					}				
 			});
 			series.getData().add(cData);

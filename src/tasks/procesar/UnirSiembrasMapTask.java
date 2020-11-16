@@ -98,7 +98,7 @@ public class UnirSiembrasMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 				SiembraItem ci = labor.constructFeatureContainerStandar(f,true);
 				//TODO multiplicar ci.rinde por el coeficiente de conversion
 			
-				//ci.setDosisML(ci.getDosisML());
+				ci.setDosisML(ci.getDosisML()*10);
 				SimpleFeature nf=ci.getFeature(labor.featureBuilder);
 				
 				boolean ret = labor.outCollection.add(nf);
@@ -136,6 +136,7 @@ public class UnirSiembrasMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 			SimpleFeatureIterator it = labor.outCollection.features();
 			while(it.hasNext()){
 				SimpleFeature f=it.next();
+				
 				itemsToShow.add(labor.constructFeatureContainerStandar(f,false));
 			}
 			it.close();
@@ -154,7 +155,7 @@ public class UnirSiembrasMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 
 
 	@Override
-	public  ExtrudedPolygon  getPathTooltip( Geometry poly,SiembraItem siembraFeature) {
+	public  ExtrudedPolygon  getPathTooltip( Geometry poly,SiembraItem siembraFeature,ExtrudedPolygon  renderablePolygon) {
 	//	Path path = getPathFromGeom(poly,siembraFeature);		
 		
 		double area = poly.getArea() *ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
@@ -198,7 +199,7 @@ public class UnirSiembrasMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 		} else {
 			tooltipText=tooltipText.concat(Messages.getString("ProcessSiembraMapTask.11")+df.format(area ) + Messages.getString("ProcessSiembraMapTask.12")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		return super.getExtrudedPolygonFromGeom(poly, siembraFeature,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, siembraFeature,tooltipText,renderablePolygon);
 	//	return ret;		
 	}
 

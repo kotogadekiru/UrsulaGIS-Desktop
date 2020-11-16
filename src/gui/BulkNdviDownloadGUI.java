@@ -59,6 +59,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import tasks.GetNDVI2ForLaborTask;
+import tasks.GetNdviForLaborTask3;
 import tasks.procesar.ExtraerPoligonosDeLaborTask;
 import utils.DAH;
 import utils.ExcelHelper;
@@ -75,7 +76,7 @@ public class BulkNdviDownloadGUI {
 	private static final String DATA = "data";
 
 	private static final String BASE_URL = "http://gee-api-helper.herokuapp.com";
-	private static final String HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3 = BASE_URL+"/ndvi_v4PNG";//"/ndvi_v4";//+"/gndvi_v4_SR";//"/ndvi_v3";//ndvi_v5
+	private static final String HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3 = BASE_URL+"/ndvi_mean_v4";//"/ndvi_v4";//+"/gndvi_v4_SR";//"/ndvi_v3";//ndvi_v5
 
 	private static final String GEE_POLYGONS_GET_REQUEST_KEY = "polygons";
 
@@ -358,7 +359,7 @@ public class BulkNdviDownloadGUI {
 		
 	public 	List<Ndvi> requestNDVIForPolyDateDateByDate( Poligono p) {
 		List<Ndvi> ret = new ArrayList<Ndvi>();
-		GetNDVI2ForLaborTask task = new GetNDVI2ForLaborTask(null,null,null);
+		GetNdviForLaborTask3 task = new GetNdviForLaborTask3(null,null,null);
 		task.setFinDate(this.finalLd);
 		task.setBeginDate(this.startLd);
 		List<LocalDate> fechasP = task.getSentinellAssets(p);
@@ -422,7 +423,7 @@ public class BulkNdviDownloadGUI {
 		List<Ndvi> ndviValues = values.stream().map(v->{
 			Ndvi ndvi = new Ndvi();
 			ndvi.setNombre(p.getNombre()+" "+v[0]);
-			ndvi.setF(new File(v[3]));//pongo path en 				
+			ndvi.setF(new File(v[3]));//pongo path en file				
 			ndvi.setContorno(p);
 			try {
 				ndvi.setMeanNDVI(new Double(v[1]));//number format exception epty string

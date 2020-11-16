@@ -12,11 +12,13 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
+import dao.config.Fertilizante;
 import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
 import tasks.ProcessMapTask;
+import tasks.crear.CrearSueloMapTask;
 import utils.ProyectionConstants;
 
 
@@ -91,23 +93,11 @@ public class OpenSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 
 	
 	@Override
-	protected ExtrudedPolygon getPathTooltip(Geometry poly, SueloItem si) {
+	protected ExtrudedPolygon getPathTooltip(Geometry poly, SueloItem si,ExtrudedPolygon  renderablePolygon) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
-		String tooltipText = new String(
-				Messages.getString("OpenSoilMapTask.1")+ df.format(si.getPpmP()) +Messages.getString("OpenSoilMapTask.2") //$NON-NLS-1$ //$NON-NLS-2$
-				+Messages.getString("OpenSoilMapTask.3")+ df.format(si.getPpmN()) +Messages.getString("OpenSoilMapTask.4") //$NON-NLS-1$ //$NON-NLS-2$
-		);
+		String tooltipText = CrearSueloMapTask.buildTooltipText(this.labor,si,area);
 
-		if(area<1){
-			tooltipText=tooltipText.concat( Messages.getString("OpenSoilMapTask.5")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("OpenSoilMapTask.6")); //$NON-NLS-1$ //$NON-NLS-2$
-		} else {
-			tooltipText=tooltipText.concat(Messages.getString("OpenSoilMapTask.7")+df.format(area ) + Messages.getString("OpenSoilMapTask.8")); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-
-		return super.getExtrudedPolygonFromGeom(poly, si,tooltipText);
-
-		
+		return super.getExtrudedPolygonFromGeom(poly, si,tooltipText,renderablePolygon);
 	}
 	
 	protected int getAmountMin() {

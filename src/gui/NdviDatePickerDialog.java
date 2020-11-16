@@ -55,7 +55,7 @@ public class NdviDatePickerDialog {
 		datePickerFechaDesde.setConverter(dc);
 		datePickerFechaDesde.valueProperty().bindBidirectional(iniLdp);
 		datePickerFechaDesde.valueProperty().addListener((n,old,ob)->{
-			System.out.println("date picker fecha desde cambio a "+datePickerFechaDesde.valueProperty().get()+" initial quedo en "+initialDate); //$NON-NLS-1$ //$NON-NLS-2$
+			System.out.println("date picker fecha desde cambio a "+datePickerFechaDesde.valueProperty().get()+" initial quedo en "+iniLdp.get()); //$NON-NLS-1$ //$NON-NLS-2$
 		});
 		
 		DatePicker datePickerFechaHasta=new DatePicker();
@@ -63,6 +63,7 @@ public class NdviDatePickerDialog {
 		datePickerFechaHasta.valueProperty().bindBidirectional(finLdp);
 		datePickerFechaHasta.valueProperty().addListener((ob,old,n)->{
 			iniLdp.set(n.minusMonths(1));
+			System.out.println("date picker fecha hasta cambio a "+datePickerFechaHasta.valueProperty().get()+" initial quedo en "+iniLdp.get()); //$NON-NLS-1$ //$NON-NLS-2$
 		});
 		
 		VBox vb = new VBox();

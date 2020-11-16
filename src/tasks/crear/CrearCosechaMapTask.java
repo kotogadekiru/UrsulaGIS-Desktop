@@ -85,7 +85,7 @@ public class CrearCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 
 
 	@Override
-	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem) {
+	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem,ExtrudedPolygon  renderablePolygon) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
 		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
@@ -108,7 +108,7 @@ public class CrearCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
 		}
 		//super.getRenderPolygonFromGeom(poly, cosechaItem,tooltipText);
-		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText,renderablePolygon);
 
 	}
 

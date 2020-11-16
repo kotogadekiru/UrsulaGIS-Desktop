@@ -248,6 +248,10 @@ public class Poligono implements Comparable<Poligono>{
 //		return this.getPoligonoToString().equals(((Poligono)o).positionsString);
 //	}
 	
+	/**
+	 * metodo que devuelve el string necesario para consultar el ndvi
+	 * @return
+	 */
 	public String getPoligonoToString() {
 		List<? extends Position> positions = this.getPositions();
 

@@ -985,7 +985,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 	}
 
 	@Override
-	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem) {
+	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem,ExtrudedPolygon  renderablePolygon) {
 		//	System.out.println("getPathTooltip(); "+System.currentTimeMillis());
 		//List<SurfacePolygon>  paths = getSurfacePolygons(poly, cosechaFeature);//
 		//	List<gov.nasa.worldwind.render.Polygon>  paths = super.getPathFromGeom2D(poly, cosechaFeature);
@@ -1013,7 +1013,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			tooltipText=tooltipText.concat(Messages.getString("ProcessHarvestMapTask.35")+df.format(area ) + Messages.getString("ProcessHarvestMapTask.36")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		//super.getRenderPolygonFromGeom(poly, cosechaItem,tooltipText);
-		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText,renderablePolygon);
 
 	}
 

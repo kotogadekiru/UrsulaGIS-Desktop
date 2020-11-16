@@ -11,6 +11,7 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 
 import dao.Poligono;
+import dao.config.Fertilizante;
 import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
 import gov.nasa.worldwind.geom.Position;
@@ -67,23 +68,56 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 
 	}
 
+	
+	public static String buildTooltipText(Suelo s, SueloItem si,double area) {
+		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
+		StringBuilder sb = new StringBuilder();
+		sb.append(Messages.getString("OpenSoilMapTask.1"));//ppmP
+		sb.append(df.format(si.getPpmP())+"\n");
+		sb.append(Messages.getString("OpenSoilMapTask.2")+" 0-20cm"+"\n"); //ppm
+		
+		sb.append(Messages.getString("OpenSoilMapTask.3"));
+		sb.append(df.format(si.getPpmN())+"\n");
+		sb.append(Messages.getString("OpenSoilMapTask.2")+" 0-60cm");
+		sb.append(df.format(s.ppmToKg(si.getPpmN(),0.6)*Fertilizante.porcN_NO3)+"\n");
+		sb.append("kg/ha 0-60"+"\n");
+		
+		sb.append(Messages.getString("JFXMain.236")+": ");//%MO
+		sb.append(df.format(si.getPorcMO())+" 0-20cm"+"\n");
+		
+		if(area<1){
+			sb.append( Messages.getString("CrearSueloMapTask.sup")+": "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
+		} else {
+			sb.append( Messages.getString("CrearSueloMapTask.sup")+": "+df.format(area ) + "Has\n");
+		}
+		
+		String tooltipText = sb.toString();
+		return tooltipText;
+	}
 
 	@Override
-	public  ExtrudedPolygon  getPathTooltip( Geometry poly,SueloItem si) {
+	public  ExtrudedPolygon  getPathTooltip( Geometry poly,SueloItem si,ExtrudedPolygon  renderablePolygon) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
-		String tooltipText = new String(
-				Messages.getString("CrearSueloMapTask.fosforo")+": " +df.format(si.getPpmP()) +"Ppm\n"
-				+Messages.getString("CrearSueloMapTask.nitrogeno")+": "+ df.format(si.getPpmN()) +"Ppm\n"
-				);
+	//	DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
+		
+//		CrearSueloMapTask.fosforo=Fosforo
+//		CrearSueloMapTask.nitrogeno=Nitrogeno
+//		CrearSueloMapTask.sup=Sup
+		
+		String tooltipText = buildTooltipText(this.labor,si,area);
+		
+//		String tooltipText = new String(
+//				Messages.getString("CrearSueloMapTask.fosforo")+": " +df.format(si.getPpmP()) +Messages.getString("OpenSoilMapTask.2")
+//				+Messages.getString("CrearSueloMapTask.nitrogeno")+": "+ df.format(si.getPpmN()) +Messages.getString("OpenSoilMapTask.2")
+//				);
 
-		if(area<1){
-			tooltipText=tooltipText.concat( Messages.getString("CrearSueloMapTask.sup")+": "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
-		} else {
-			tooltipText=tooltipText.concat(Messages.getString("CrearSueloMapTask.sup")+": "+df.format(area ) + "Has\n");
-		}
+//		if(area<1){
+//			tooltipText=tooltipText.concat( Messages.getString("CrearSueloMapTask.sup")+": "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
+//		} else {
+//			tooltipText=tooltipText.concat(Messages.getString("CrearSueloMapTask.sup")+": "+df.format(area ) + "Has\n");
+//		}
 
-		return super.getExtrudedPolygonFromGeom(poly, si,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, si,tooltipText,renderablePolygon);
 	}
 
 	protected int getAmountMin() {

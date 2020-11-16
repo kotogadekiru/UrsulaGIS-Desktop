@@ -25,6 +25,7 @@ import dao.fertilizacion.FertilizacionLabor;
 import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
+import gui.Messages;
 import gui.nww.LaborLayer;
 import tasks.ProcessMapTask;
 import utils.PolygonValidator;
@@ -47,6 +48,7 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 
 		labor.setSemilla(siembra.getSemilla());//Cultivo(cultivo);
 		labor.setLayer(new LaborLayer());
+		labor.setEntreSurco(siembra.getEntreSurco());
 		labor.colAmount.set(SiembraLabor.COLUMNA_DOSIS_SEMILLA);
 
 		labor.setNombre("SiembraFertilizada "+siembra.getNombre()+"-"+fertilizacion.getNombre());//este es el nombre que se muestra en el progressbar
@@ -123,9 +125,9 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 		//XXX byPolygon contiene un map con la categoria de destino y todos los simplefeatures
 		List<Object[]> resumidas = resumirGeometrias(byBicluster);
 		
-		double entresurco = siembra.getEntreSurco();
-		double pesoSemilla = siembra.getSemilla().getPesoDeMil()/1000000;//141
-		double metrosLHA = ProyectionConstants.METROS2_POR_HA/entresurco;//23,809.52
+		//double entresurco = siembra.getEntreSurco();
+		double pesoSKg = labor.getSemilla().getPesoDeMil()/(1000*1000);//141
+		//double metrosLHA = ProyectionConstants.METROS2_POR_HA/entresurco;//23,809.52
 		
 
 		List<SiembraItem> itemsToShow = new ArrayList<SiembraItem>();
@@ -136,14 +138,20 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 			id++;
 		
 			si.setDosisHa((Double)value[1]);
-		
-			si.setDosisML((si.getDosisHa()/pesoSemilla)/metrosLHA);
+			
+			Double seedsM2=si.getDosisHa()/(pesoSKg*ProyectionConstants.METROS2_POR_HA);
+			
+			double sML=seedsM2*labor.getEntreSurco();//esto es 0.42
+			
+			//double semillasMl =(si.getDosisHa()/pesoSKg)/metrosLHA; 
+			System.out.println("dosisML "+sML);
+			si.setDosisML(sML*10);//multipolicar por 10 porque al insertarla se divide por 10
 			si.setDosisFertLinea((Double)value[2]);
 			labor.setPropiedadesLabor(si);
 			si.setGeometry((Geometry)value[0]);
 			
 			//System.out.println("termine de crear una siembra resumida : "+ci.toString());
-			labor.insertFeature(si);
+			labor.insertFeature(si); //aca se divide por 10
 			itemsToShow.add(si);		
 		}
 
@@ -455,22 +463,32 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 	}
 
 	@Override
-	public ExtrudedPolygon  getPathTooltip( Geometry poly,SiembraItem siembraFeature) {		
+	public ExtrudedPolygon  getPathTooltip( Geometry poly,SiembraItem siembraFeature,ExtrudedPolygon  renderablePolygon) {		
 		double area = poly.getArea() *ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
+		//densidad seeds/metro lineal
+		String tooltipText = new String(Messages.getString("ProcessSiembraMapTask.1")+ df.format(siembraFeature.getDosisML()) + Messages.getString("ProcessSiembraMapTask.2")); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		String tooltipText = new String("Densidad: "+ df.format(siembraFeature.getDosisML()) + " Sem/m\n");
-		tooltipText=tooltipText.concat("Kg: " + df.format(siembraFeature.getDosisHa()) + " kg/Ha\n");
+		Double seedsSup= siembraFeature.getDosisML()/labor.getEntreSurco();
+		if(seedsSup<100) {//plantas por ha
+			tooltipText=tooltipText.concat(df.format(seedsSup*ProyectionConstants.METROS2_POR_HA) + "s/"+ Messages.getString("ProcessSiembraMapTask.12")); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		tooltipText=tooltipText.concat( "Fert: " + df.format(siembraFeature.getDosisFertLinea()) + " Kg/Ha\n"		);
-		tooltipText=tooltipText.concat( "Costo: " + df.format(siembraFeature.getImporteHa()) + " U$S/Ha\n"		);
+		}else {
+			tooltipText=tooltipText.concat(df.format(seedsSup) + "s/"+Messages.getString("ProcessSiembraMapTask.10")); //s/m2
+		}
+			//kg semillas por ha
+		tooltipText=tooltipText.concat(Messages.getString("ProcessSiembraMapTask.3") + df.format(siembraFeature.getDosisHa()) + Messages.getString("ProcessSiembraMapTask.4")); //$NON-NLS-1$ //$NON-NLS-2$
+		//fert l
+		tooltipText=tooltipText.concat( Messages.getString("ProcessSiembraMapTask.5") + df.format(siembraFeature.getDosisFertLinea()) + Messages.getString("ProcessSiembraMapTask.6")		); //$NON-NLS-1$ //$NON-NLS-2$
+		//fert costo
+		tooltipText=tooltipText.concat( Messages.getString("ProcessSiembraMapTask.7") + df.format(siembraFeature.getImporteHa()) + Messages.getString("ProcessSiembraMapTask.8")		); //$NON-NLS-1$ //$NON-NLS-2$
 
 		if(area<1){
-			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
+			tooltipText=tooltipText.concat( Messages.getString("ProcessSiembraMapTask.9")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("ProcessSiembraMapTask.10")); //$NON-NLS-1$ //$NON-NLS-2$
 		} else {
-			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
+			tooltipText=tooltipText.concat(Messages.getString("ProcessSiembraMapTask.11")+df.format(area ) + Messages.getString("ProcessSiembraMapTask.12")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		return super.getExtrudedPolygonFromGeom(poly, siembraFeature,tooltipText);	
+		return super.getExtrudedPolygonFromGeom(poly, siembraFeature,tooltipText,renderablePolygon);	
 	}
 
 	@Override

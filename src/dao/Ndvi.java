@@ -1,5 +1,6 @@
 package dao;
 
+import java.awt.Component;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -22,6 +23,7 @@ import javax.persistence.Transient;
 
 import dao.config.Configuracion;
 import dao.utils.LocalDateAttributeConverter;
+import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwindx.examples.analytics.ExportableAnalyticSurface;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -54,8 +56,9 @@ public class Ndvi {
 	@Transient
 	private File f=null;
 	
-	@ManyToOne
+	//@ManyToOne
 	private Poligono contorno = null;
+	
 	@Lob
 	private byte[] content;//el contenido de la imagen ndvi
 	
@@ -64,6 +67,8 @@ public class Ndvi {
  
 	@Transient
 	ExportableAnalyticSurface surfaceLayer=null;
+	@Transient
+	Layer layer=null;
 	
 	double pixelArea=100/10000;//100m2
 	
@@ -101,6 +106,7 @@ public class Ndvi {
 			 f = File.createTempFile(parent, ".tif", ursulaGISFolder);
 			 //f=new File(f.getParentFile(),parent);
 			 f.deleteOnExit();
+			
 			 FileOutputStream fos = new FileOutputStream(f.getPath());
 			 fos.write(content);
 			 fos.close();

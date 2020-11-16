@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import javax.persistence.EntityTransaction;
 import javax.persistence.Transient;
 
 import org.controlsfx.control.table.TableFilter;
@@ -139,10 +140,12 @@ public class SmartTableView<T> extends TableView<T> {
 						Optional<ButtonType> res = alert.showAndWait();
 						if(res.get().equals(ButtonType.OK) && rowData!=null){
 							try{
-								rowData.forEach(each->{
-								DAH.remove(each);
-							//	data.remove(each);
-								});
+								//EntityTransaction transaction = DAH.em().getTransaction();
+								DAH.removeAll((List<Object>) rowData);
+							//	rowData.forEach(each->{
+//								DAH.remove(each);
+//							//	data.remove(each);
+//								});
 								data.removeAll(rowData);
 								if(data.size()==0){
 									data.add(onDoubleClick.get());

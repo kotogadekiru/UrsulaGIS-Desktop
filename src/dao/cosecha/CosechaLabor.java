@@ -35,7 +35,7 @@ import utils.ProyectionConstants;
 
 @Getter
 @Setter(value = AccessLevel.PUBLIC)
-@Entity @Access(AccessType.FIELD)//variable (el default depende de donde pongas el @Id)
+//@Entity @Access(AccessType.FIELD)//variable (el default depende de donde pongas el @Id)
 @NamedQueries({
 	@NamedQuery(name=CosechaLabor.CosechaLaborConstants.FIND_ALL, query="SELECT c FROM CosechaLabor c") ,
 	@NamedQuery(name=CosechaLabor.CosechaLaborConstants.FIND_NAME, query="SELECT o FROM CosechaLabor o where o.nombre = :name") ,
@@ -73,7 +73,9 @@ public class CosechaLabor extends Labor<CosechaItem> {
 	}
 	
 	public StringProperty colRendimiento= new SimpleStringProperty();
-	 
+	
+	
+	
 	public Cultivo cultivo= null;//FIXME producto no se puede guardar como una property
 	public Double costoCosechaTn = new Double(0);
 	public Double precioGrano = new Double(0);

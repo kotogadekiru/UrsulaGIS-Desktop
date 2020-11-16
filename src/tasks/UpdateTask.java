@@ -45,7 +45,7 @@ import javafx.stage.Stage;
 
 
 public class UpdateTask  extends Task<File>{
-	private static final String UPDATE_URL ="http://www.ursulagis.com/update/";
+	private static final String UPDATE_URL ="http://www.ursulagis.com/update/";//TODO cambiar a https
 	//private static final String UPDATE_URL = "http://localhost:5000/update";
 	private static final String TASK_CLOSE_ICON = "/gui/event-close.png";
 	private ProgressBar progressBarTask;

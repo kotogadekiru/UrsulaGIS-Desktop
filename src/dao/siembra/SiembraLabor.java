@@ -2,6 +2,7 @@ package dao.siembra;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.persistence.Access;
 import javax.persistence.AccessType;
@@ -26,16 +27,17 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import utils.DAH;
+import utils.ProyectionConstants;
 
 @Getter
 @Setter(value = AccessLevel.PUBLIC)
-@Entity @Access(AccessType.FIELD)
+//@Entity @Access(AccessType.FIELD)
 public class SiembraLabor extends Labor<SiembraItem> {
 //	private static final String SEMILLAS_POR_BOLSA_KEY = "SEMILLAS_POR_BOLSA";
 
 	//esta columna es la que viene con los mapas de siembra //mentira las siembras vienen con Rate o AppIdRate o AppRate
 	public static final String COLUMNA_DOSIS_SEMILLA = "SemillaK";
-	public static final String COLUMNA_DOSIS_SEMILLA_ML = "SemillaM";
+	public static final String COLUMNA_DOSIS_SEMILLA_ML = SiembraLabor.COLUMNA_SEM_10METROS;//"SemillaM";
 	
 	//esta columna es la que voy a exportar
 	//public static final String COLUMNA_BOLSAS_HA = "BolsasHa";//=semillasMetro*(ProyectionConstants.METROS2_POR_HA/entreSurco)/semillasPorBolsa;
@@ -142,8 +144,21 @@ public class SiembraLabor extends Labor<SiembraItem> {
 		
 		SiembraItem siembraItem = new SiembraItem(next);
 		super.constructFeatureContainerStandar(siembraItem,next,newIDS);
-		siembraItem.setDosisML( LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DOSIS_SEMILLA_ML)));
-		siembraItem.setDosisHa( LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DOSIS_SEMILLA)));
+	//	System.out.println("Attributes: "+next.getType().getTypes());
+		//next.getType().getTypes().
+		//TODO si tiene semillas cada 10mts calcular la dosis en kg segun en ancho y el peso de la semilla seleccionada
+		//TODO si tiene dosis semilla calcular las semillas por metro
+		siembraItem.setDosisML(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DOSIS_SEMILLA_ML))/10);
+		if(siembraItem.getDosisML()!=0.0) {
+			//Double semillasMetro = bolsasHa*(ProyectionConstants.METROS2_POR_HA/entreSurco.get())/semillasPorBolsa.get();
+			Double dosisSemillakgHa = siembraItem.getDosisML()
+					*ProyectionConstants.METROS2_POR_HA
+					*(semilla.getPesoDeMil()/(1000*1000))/entreSurco;
+			siembraItem.setDosisHa(dosisSemillakgHa);
+		} else {
+			siembraItem.setDosisHa( LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DOSIS_SEMILLA)));	
+		}
+		
 		siembraItem.setDosisFertLinea( LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DOSIS_LINEA)));
 		siembraItem.setDosisFertCostado( LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DOSIS_COSTADO)));
 //		siembraItem.setPrecioInsumo(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_PRECIO_SEMILLA)));

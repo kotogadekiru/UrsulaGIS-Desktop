@@ -178,6 +178,12 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 	
 		this.comboInsumo.setItems(FXCollections.observableArrayList(DAH.getAllSemillas()));//Semilla.semillas.values()));
 	//	this.comboInsumo.valueProperty().bindBidirectional(labor.semillaProperty);
+		String sDefautlName = labor.config.getConfigProperties().getPropertyOrDefault(SiembraLabor.SEMILLA_DEFAULT, "");
+		 
+		Optional<Semilla> sDefault = this.comboInsumo.getItems().stream().filter((s)->s.getNombre().equals(sDefautlName)).findFirst();
+		if(sDefault.isPresent()) {
+			this.comboInsumo.getSelectionModel().select(sDefault.get());
+		}
 		this.comboInsumo.valueProperty().addListener((obj,old,n)->{		
 			labor.setSemilla(n);
 			//labor.setPrecioLabor(converter.fromString(n).doubleValue());
@@ -204,8 +210,8 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 			labor.config.getConfigProperties().setProperty(SiembraLabor.COLUMNA_PRECIO_PASADA, n);
 		});
 		
-		
-		this.textEntresurco.textProperty().set(converter.toString(labor.getEntreSurco()));
+		this.textEntresurco.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(SiembraLabor.ENTRE_SURCO_DEFAULT_KEY, converter.toString(labor.getEntreSurco())));
+		//this.textEntresurco.textProperty().set(converter.toString(labor.getEntreSurco()));
 		this.textEntresurco.textProperty().addListener((obj,old,n)->{			
 			labor.setEntreSurco(converter.fromString(n).doubleValue());
 			labor.config.getConfigProperties().setProperty(SiembraLabor.ENTRE_SURCO_DEFAULT_KEY, n);

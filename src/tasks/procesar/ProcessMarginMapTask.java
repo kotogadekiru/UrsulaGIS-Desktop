@@ -392,7 +392,7 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 	// getPathFromGeom(importeFert/areaCosecha,importePulv/areaCosecha,importeSiembra/areaCosecha,importeCosechaPorHa,margenPorHa,
 	// harvestPolygon);
 	@Override
-	protected ExtrudedPolygon getPathTooltip( Geometry poly,MargenItem renta) {
+	protected ExtrudedPolygon getPathTooltip( Geometry poly,MargenItem renta,ExtrudedPolygon  renderablePolygon) {
 
 	//	gov.nasa.worldwind.render.Polygon path = getPathFromGeom2D(poly, renta);
 
@@ -450,7 +450,7 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 		} else {
 			tooltipText=tooltipText.concat(Messages.getString("OpenMargenMapTask.19")+df.format(area ) + Messages.getString("OpenMargenMapTask.20")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		return super.getExtrudedPolygonFromGeom(poly, renta,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, renta,tooltipText,renderablePolygon);
 	}
 
 

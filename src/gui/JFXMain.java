@@ -41,6 +41,7 @@ import javax.sound.sampled.Clip;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.xml.stream.XMLStreamException;
 
 import org.geotools.data.FileDataStore;
 import org.geotools.data.simple.SimpleFeatureIterator;
@@ -145,6 +146,7 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import tasks.ExportLaborMapTask;
 import tasks.GetNDVI2ForLaborTask;
+import tasks.GetNdviForLaborTask3;
 import tasks.GoogleGeocodingHelper;
 import tasks.ProcessMapTask;
 import tasks.ReadJDHarvestLog;
@@ -194,11 +196,11 @@ public class JFXMain extends Application {
 	//	private static final double MIN_VALUE = 0.2;
 	public static Configuracion config = Configuracion.getInstance();
 
-	public static final String VERSION = "0.2.25"; //$NON-NLS-1$
+	public static final String VERSION = "0.2.26"; //$NON-NLS-1$
 	public static final String TITLE_VERSION = "Ursula GIS-"+VERSION; //$NON-NLS-1$
-	public static final String buildDate = "25/05/2020";
+	public static final String buildDate = "13/11/2020";
 	
-	public static final String ICON ="gui/32x32-icon-earth.png";// "gui/1-512.png";//UrsulaGIS-Desktop/src/gui/32x32-icon-earth.png //$NON-NLS-1$
+	public static final String ICON ="gui/ursula_logo_2020.png";//"gui/32x32-icon-earth.png";// "gui/1-512.png";//UrsulaGIS-Desktop/src/gui/32x32-icon-earth.png //$NON-NLS-1$
 	private static final String SOUND_FILENAME = "gui/Alarm08.wav";//"Alarm08.wav" funciona desde eclipse pero no desde el jar  //$NON-NLS-1$
 
 
@@ -308,6 +310,8 @@ public class JFXMain extends Application {
 		//   <Property name="gov.nasa.worldwind.avkey.InitialLatitude" value="-35"/>
 		//<Property name="gov.nasa.worldwind.avkey.InitialLongitude" value="-62"/>
 		//<Property name="gov.nasa.worldwind.avkey.InitialAltitude" value="19.07e5"/>
+		initLat = (initLat>-90&&initLat<90)?initLat:-35.0;
+		initLong = (initLong>-180&&initLat<180)?initLat:-62.0;//Chequeo que este entre valores validos
 		Configuration.setValue(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LATITUDE, initLat);
 		Configuration.setValue(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LONGITUDE,initLong);
 		Configuration.setValue(GOV_NASA_WORLDWIND_AVKEY_INITIAL_ALTITUDE, initAltitude);
@@ -354,9 +358,18 @@ public class JFXMain extends Application {
 		}
 
 		//	setDefaultSize(50);//esto funciona para la barra de abajo pero no para los placemarks
-
+		try {
 		// Create the WorldWindow.
 		this.wwjPanel =	new WWPanel(canvasSize, true);
+		}catch(Exception e) {
+			Platform.runLater(()->{
+			Alert a = new Alert(Alert.AlertType.ERROR);
+			a.setHeaderText("No se pudo crear WorldWindow");
+			String stackTrace = Arrays.toString(e.getStackTrace());
+			a.setContentText(stackTrace);
+			a.show();
+			});
+		}
 		//una vez que se establecio el tamaño inicial ese es el tamaño maximo
 		//this.wwjPanel.setPreferredSize(canvasSize);
 		final SwingNode wwSwingNode = new SwingNode();
@@ -619,6 +632,10 @@ public class JFXMain extends Application {
 			sEvo.exportToExcel();
 			return "mostre la evolucion del ndvi";
 		})));
+		
+		
+
+		
 		
 		/**
 		 * Save NDVI action
@@ -1174,7 +1191,8 @@ public class JFXMain extends Application {
 				Optional<String> nombreOptional = nombreDialog.showAndWait();
 				if(nombreOptional.isPresent()){
 					ndvi.setNombre(nombreOptional.get());
-					layer.setName(ndvi.getNombre());
+					DecimalFormat df = new DecimalFormat(Messages.getString("GenerarMuestreoDirigidoTask.5")); //$NON-NLS-1$
+					layer.setName(ndvi.getNombre()+" "+df.format(ndvi.getPorcNubes()*100)+"% Nublado");
 					this.getLayerPanel().update(this.getWwd());
 				}
 			}
@@ -1232,6 +1250,28 @@ public class JFXMain extends Application {
 			if(o instanceof Ndvi){
 				Ndvi ndvi = (Ndvi)o;
 				doExportarTiffFile(ndvi);
+			}
+
+			return "exporte" + layer.getName(); //$NON-NLS-1$
+		}));
+		
+		
+		/*
+		 * funcionalidad que permite guardar el archivo tiff de este ndvi en una ubicacion definida por el usuario
+		 */
+		ndviP.add(constructPredicate(Messages.getString("JFXMain.expoNDVIToKML"),(layer)->{
+			Object o =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			if(o instanceof Ndvi){
+				Ndvi ndvi = (Ndvi)o;
+				ExportNDVIToKMZ toKMZ= new ExportNDVIToKMZ(this.getWwd(),this.layerPanel);
+				try {
+					toKMZ.exportToKMZ(ndvi);
+				} catch (XMLStreamException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
 			}
 
 			return "exporte" + layer.getName(); //$NON-NLS-1$
@@ -2089,17 +2129,17 @@ public class JFXMain extends Application {
 				e.printStackTrace();
 			}//directoryChooser();
 			if(downloadLocation==null)return;
-			ObservableList<File> observableList = FXCollections.observableArrayList(new ArrayList<File>());
-			observableList.addListener((ListChangeListener<File>) c -> {
+			ObservableList<Ndvi> observableList = FXCollections.observableArrayList(new ArrayList<Ndvi>());
+			observableList.addListener((ListChangeListener<Ndvi>) c -> {
 				System.out.println(Messages.getString("JFXMain.216")); //$NON-NLS-1$
 				if(c.next()){
-					c.getAddedSubList().forEach((file)->{
-						showNdviTiffFile(file, placementObject,null);
+					c.getAddedSubList().forEach((ndvi)->{
+						showNdviTiffFile(ndvi.getF(), placementObject,ndvi);
 					});//fin del foreach
 				}			
 			});
 
-			GetNDVI2ForLaborTask task = new GetNDVI2ForLaborTask(placementObject,downloadLocation,observableList);
+			GetNdviForLaborTask3 task = new GetNdviForLaborTask3(placementObject,downloadLocation,observableList);
 			task.setFinDate(fin);
 			task.setBeginDate(ndviDpDLG.initialDate);
 			task.installProgressBar(progressBox);
@@ -2637,6 +2677,8 @@ public class JFXMain extends Application {
 			umTask.uninstallProgressBar();
 			System.out.println(Messages.getString("JFXMain.278")); //$NON-NLS-1$
 			playSound();
+			ndvi.getLayer().setEnabled(false);
+			//ndvi.getSurfaceLayer().setVisible(false);
 		});//fin del OnSucceeded
 		JFXMain.executorPool.execute(umTask);		
 	}

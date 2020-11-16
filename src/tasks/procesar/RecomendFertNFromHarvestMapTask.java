@@ -167,7 +167,7 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 		
 		
 		@Override
-		protected ExtrudedPolygon getPathTooltip(Geometry poly, FertilizacionItem fertFeature) {
+		protected ExtrudedPolygon getPathTooltip(Geometry poly, FertilizacionItem fertFeature,ExtrudedPolygon  renderablePolygon) {
 
 			double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 			//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
@@ -192,7 +192,7 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 			}
 
 			//List  paths = 
-		return	super.getExtrudedPolygonFromGeom(poly, fertFeature,tooltipText);
+		return	super.getExtrudedPolygonFromGeom(poly, fertFeature,tooltipText,renderablePolygon);
 
 			//return null;
 		}

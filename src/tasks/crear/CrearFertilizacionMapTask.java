@@ -87,7 +87,7 @@ public class CrearFertilizacionMapTask extends ProcessMapTask<FertilizacionItem,
 
 
 	@Override
-	protected ExtrudedPolygon getPathTooltip(Geometry poly, FertilizacionItem fertFeature) {
+	protected ExtrudedPolygon getPathTooltip(Geometry poly, FertilizacionItem fertFeature,ExtrudedPolygon  renderablePolygon) {
 
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
@@ -112,7 +112,7 @@ public class CrearFertilizacionMapTask extends ProcessMapTask<FertilizacionItem,
 		}
 
 		//List  paths = 
-	 return	getExtrudedPolygonFromGeom(poly, fertFeature,tooltipText);
+	 return	getExtrudedPolygonFromGeom(poly, fertFeature,tooltipText,renderablePolygon);
 
 		//return null;
 	}

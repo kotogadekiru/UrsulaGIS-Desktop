@@ -451,7 +451,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 	
 	
 	@Override
-	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem) {
+	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem,ExtrudedPolygon  renderablePolygon) {
 		//	System.out.println("getPathTooltip(); "+System.currentTimeMillis());
 		//List<SurfacePolygon>  paths = getSurfacePolygons(poly, cosechaFeature);//
 		//	List<gov.nasa.worldwind.render.Polygon>  paths = super.getPathFromGeom2D(poly, cosechaFeature);
@@ -479,7 +479,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 			tooltipText=tooltipText.concat(Messages.getString("GrillarCosechasMapTask.33")+df.format(area ) + Messages.getString("GrillarCosechasMapTask.34")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		//super.getRenderPolygonFromGeom(poly, cosechaItem,tooltipText);
-		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText,renderablePolygon);
 
 	}
 	

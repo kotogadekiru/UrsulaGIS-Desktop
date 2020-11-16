@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.OptionalDouble;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.geotools.data.FeatureReader;
 import org.geotools.data.simple.SimpleFeatureIterator;
@@ -17,6 +18,9 @@ import org.opengis.feature.simple.SimpleFeatureType;
 
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryCollection;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 
 import dao.Poligono;
 import dao.cosecha.CosechaItem;
@@ -70,9 +74,31 @@ public class CortarCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabo
 			CosechaItem ci = labor.constructFeatureContainerStandar(f,true);
 			Geometry g = ci.getGeometry();
 
-			boolean dentro = poligonos.stream().anyMatch(pol->{return pol.toGeometry().contains(g);});
+			 List<Geometry> intersecciones = poligonos.stream().map(pol->{
+				return pol.toGeometry().intersects(g) ? pol.toGeometry().intersection(g):null;
+				}).filter(inter->inter!=null).collect(Collectors.toList());
 
-			if(dentro) {
+			if(intersecciones.size()>0) {
+				GeometryFactory fact = intersecciones.get(0).getFactory();
+				Geometry[] geomArray = new Geometry[intersecciones.size()];
+				GeometryCollection colectionCat = fact.createGeometryCollection(intersecciones.toArray(geomArray));
+
+				Geometry buffered = null;
+				double bufer= ProyectionConstants.metersToLongLat(0.25);
+				try{
+					buffered = colectionCat.union();
+					buffered =buffered.buffer(bufer);
+				}catch(Exception e){
+					System.out.println(Messages.getString("ProcessHarvestMapTask.10")); //$NON-NLS-1$
+					//java.lang.IllegalArgumentException: Comparison method violates its general contract!
+					try{
+					buffered= EnhancedPrecisionOp.buffer(colectionCat, bufer);//java.lang.IllegalArgumentException: Comparison method violates its general contract!
+					}catch(Exception e2){
+						e2.printStackTrace();
+					}
+				}
+				
+				ci.setGeometry(buffered);
 				SimpleFeature nf=ci.getFeature(labor.featureBuilder);
 
 				boolean ret = labor.outCollection.add(nf);
@@ -101,7 +127,7 @@ public class CortarCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabo
 	}
 
 	@Override
-	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem) {
+	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem,ExtrudedPolygon  renderablePolygon) {
 		//	System.out.println("getPathTooltip(); "+System.currentTimeMillis());
 		//List<SurfacePolygon>  paths = getSurfacePolygons(poly, cosechaFeature);//
 		//	List<gov.nasa.worldwind.render.Polygon>  paths = super.getPathFromGeom2D(poly, cosechaFeature);
@@ -129,7 +155,7 @@ public class CortarCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabo
 			tooltipText=tooltipText.concat(Messages.getString("ProcessHarvestMapTask.35")+df.format(area ) + Messages.getString("ProcessHarvestMapTask.36")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		//super.getRenderPolygonFromGeom(poly, cosechaItem,tooltipText);
-		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText, renderablePolygon);
 	}
 
 	@Override

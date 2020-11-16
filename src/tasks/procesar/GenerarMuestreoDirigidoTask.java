@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 
 import org.geotools.data.FeatureReader;
 import org.geotools.data.simple.SimpleFeatureIterator;
@@ -15,7 +16,9 @@ import org.opengis.feature.simple.SimpleFeatureType;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
 
 import dao.Camino;
 import dao.Labor;
@@ -62,6 +65,8 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 	@Override
 	protected void doProcess() throws IOException {
 		String nombre =null;
+		double ancho = 1+Math.sqrt(superficieMinimaAMuestrear*ProyectionConstants.METROS2_POR_HA)/2;
+		System.out.println("ancho="+ancho); //ancho=86.60254037844386
 
 		//List<SueloItem> features = Collections.synchronizedList(new ArrayList<SueloItem>());
 		for(Labor<? extends LaborItem> c:aMuestrear){			
@@ -73,14 +78,13 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 
 			FeatureReader<SimpleFeatureType, SimpleFeature> reader =c.outCollection.reader();
 			//por cada poligono de las labores de entrada 
+			int count=0;
 			while (reader.hasNext()) {
 				SimpleFeature feature = reader.next();
 				Geometry geometry = (Geometry) feature.getDefaultGeometry();
 				LaborItem container =c.constructFeatureContainer(feature);
 				Integer categoria =c.getClasificador().getCategoryFor(container.getAmount());
 				//System.out.println("categoria para Amount "+container.getAmount()+" es: "+categoria);//OK! categoria para Amount 12.28167988386877 es: 1
-				
-				
 				
 				//TODO si el area del poligono es mayor que la superficieMinimaAMuestrear
 				boolean insertCentroid=true;
@@ -93,10 +97,13 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 					double sigmaX = geometry.getEnvelopeInternal().getWidth()/2;
 					double sigmaY = geometry.getEnvelopeInternal().getHeight()/2;
 					//double sigma = Math.sqrt(geometry.getArea())/3;//area en longLat
-					System.out.println("creando un muestreo con sigma = "+sigmaX+" , "+sigmaY);
-					
+					//System.out.println("creando un muestreo con sigma = "+sigmaX+" , "+sigmaY);
+					double posiciones =densidadDeMuestrasDeseada*areaPoly+1000;
 					//TODO mientas que la cantidad de puntos generados para el poligono sea menor que la cantidadMinimaDeMuestrasPoligonoAMuestrear o la densidad de muestras sea menor que densidadDeMuestrasDeseada
-					while(puntosGenerados.size()<cantidadMinimaDeMuestrasPoligonoAMuestrear || densidadDeMuestrasDeseada > (puntosGenerados.size()/areaPoly)  ){
+					
+					for(int i=0;(puntosGenerados.size()<cantidadMinimaDeMuestrasPoligonoAMuestrear 
+							|| densidadDeMuestrasDeseada > (puntosGenerados.size()/areaPoly))
+							&&i<100*posiciones  ;i++){
 
 						//TODO generar puntos al azar que esten dentro del poligono y por cada punto crear agregar un sueloItem al suelo	
 						/*
@@ -104,30 +111,49 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 						//TODO los puntos generados pueden tener una distribucion normal al rededor del centroide del poligono y desvio relacionado al area del poligono
 						
 						Point random =null;
+						
 						if(!insertCentroid) {
 							double x =rand.nextGaussian()*sigmaX+centroid.getX();
 							double y =rand.nextGaussian()*sigmaY+centroid.getY();
-
-							random =centroid.getFactory().createPoint(new Coordinate(x,y));
+							random =centroid.getFactory().createPoint(new Coordinate(x,y));							
+							
 						} else {
 							random =centroid;
 							insertCentroid=false;
 						}
 						
-						if(geometry.contains(random)){
+						Coordinate l = new Coordinate(ProyectionConstants.metersToLongLat(ancho)/2  ,0);
+						Coordinate d = new Coordinate(0,ProyectionConstants.metersToLongLat(ancho)/2 );
+						
+						Polygon poly =constructPolygon(l,d,random);
+						//System.out.println(poly.toText());
+						System.out.println("has "+ProyectionConstants.A_HAS(poly.getArea()));
+						//TODO controlar que la distancia a una muestra anterior sea mayor a un minimo
+						double minDist = puntosGenerados.stream().flatMapToDouble(p->
+						DoubleStream.of(p.getGeometry().distance(poly))
+								).min().orElse(Double.MAX_VALUE)/ProyectionConstants.metersToLat();
+						System.out.println("minDist="+minDist);
+						if(geometry.contains(poly) && minDist>ancho) {
 						//	System.out.println(Messages.getString("GenerarMuestreoDirigidoTask.3")+random); //$NON-NLS-1$
 							SueloItem muestra = new SueloItem();
 							muestra.setCategoria(categoria);
 							muestra.setId(labor.getNextID());
-							muestra.setGeometry(random);
+							muestra.setGeometry(poly);
 							puntosGenerados.add(muestra);
 							labor.insertFeature(muestra);
+						} else if(geometry.contains(random)) {
+							//double distancia = geometry.distance(poly)/ProyectionConstants.metersToLat();
 							
-						}				
+							System.out.println("rechazando punto por estar cerca de la frontera o de otro punto "+"minDist="+minDist);
+							
+							
+						}
 					}//termine de crear los puntos para el poligono de tamanio suficiente
 					//features.addAll(puntosGenerados);
 
 				}//termino de evaluar el poligono con tamanio suficiente
+				count++;
+				updateProgress(count, featureCount);
 			}//termino de recorrer el while de una labor
 		}//termino de recorrer todas las labores
 
@@ -142,7 +168,7 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 		it.close();
 		
 		//TODO crear un PathLayer con los puntos de itemsToShow
-		createMuestreoPathLayer(itemsToShow);
+	//	createMuestreoPathLayer(itemsToShow);
 		labor.setNombre(nombre);
 		labor.setLayer(new LaborLayer());
 		//List<?> featureList = features.stream().map(f ->{
@@ -160,6 +186,36 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 		updateProgress(0, featureCount);
 	}
 
+	
+	public Polygon constructPolygon(Coordinate l, Coordinate d, Point X) {
+		double x = X.getX();
+		double y = X.getY();
+	
+		Coordinate D = new Coordinate(x - l.x - d.x, y - l.y - d.y); // x-l-d
+		Coordinate C = new Coordinate(x + l.x - d.x, y + l.y - d.y);// X+l-d
+		Coordinate B = new Coordinate(x + l.x + d.x, y + l.y + d.y);// X+l+d
+		Coordinate A = new Coordinate(x - l.x + d.x, y - l.y + d.y);// X-l+d
+
+		/**
+		 * D-- ancho de carro--C ^ ^ | | avance ^^^^^^^^ avance | | A-- ancho de
+		 * carro--B
+		 * 
+		 */
+		Coordinate[] coordinates = { A, B, C, D, A };// Tiene que ser cerrado.
+		// Empezar y terminar en
+		// el mismo punto.
+		// sentido antihorario
+
+		GeometryFactory fact = X.getFactory();
+
+		//		LinearRing shell = fact.createLinearRing(coordinates);
+		//		LinearRing[] holes = null;
+		//		Polygon poly = new Polygon(shell, holes, fact);
+		Polygon poly = fact.createPolygon(coordinates);
+	
+		return poly;
+	}
+	
 	/**
 	 * metood que toma una lista
 	 * @param itemsToShow
@@ -200,7 +256,7 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 	}
 
 	@Override
-	protected ExtrudedPolygon getPathTooltip(Geometry poly,	SueloItem sueloItem) {
+	protected ExtrudedPolygon getPathTooltip(Geometry poly,	SueloItem sueloItem,ExtrudedPolygon  renderablePolygon) {
 
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
@@ -225,7 +281,7 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 			tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.26")+df.format(area ) + Messages.getString("GenerarMuestreoDirigidoTask.27")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		//super.getRenderPolygonFromGeom(poly, cosechaItem,tooltipText);
-		return super.getExtrudedPolygonFromGeom(poly, sueloItem,tooltipText);
+		return super.getExtrudedPolygonFromGeom(poly, sueloItem,tooltipText,renderablePolygon);
 
 	}
 

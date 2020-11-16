@@ -19,6 +19,7 @@ import com.vividsolutions.jts.geom.Polygon;
 
 import dao.Ndvi;
 import dao.Poligono;
+import dao.config.Cultivo;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 import gov.nasa.worldwind.geom.Sector;
@@ -70,7 +71,12 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 		System.out.println("el promedio de los ndvi es "+averageNdvi);
 		// si el rinde promedio es >0.5 => NDVI_RINDE_CERO es 0.3
 		//si el rinde promedio es <0.5 => NDVI_RINDE_CERO es 0.1
-		NDVI_RINDE_CERO= averageNdvi>0.5?0.5:0.1;//depende del cultivo?
+		//chequear el minimo ndvi segun el cultivo? para el trigo inicial en macollo el minimo de 0.5 es malo
+		Cultivo cult =super.labor.getCultivo();
+		if(cult.isEstival()) {
+			//ver si la imagen es del final del ciclo o del principio?
+			NDVI_RINDE_CERO= averageNdvi>0.5?0.2:0.1;//depende del cultivo?
+		}
 		if(averageNdvi.isNaN())averageNdvi =1.0;
 		 it = values.iterator();
 		 
@@ -207,7 +213,7 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 
 
 	@Override
-	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem) {
+	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem,ExtrudedPolygon  renderablePolygon) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
 		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
@@ -229,7 +235,7 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
 		}
 		//super.getRenderPolygonFromGeom(poly, cosechaItem,tooltipText);
-	return 	super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText);
+	return 	super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText,renderablePolygon);
 
 	}
 

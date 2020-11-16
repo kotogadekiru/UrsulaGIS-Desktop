@@ -76,6 +76,7 @@ public class DAH {
 			 */
 			String currentUsersHomeDir =System.getenv(APPDATA);
 			String ursulaGISFolder = currentUsersHomeDir + File.separator + Configuracion.URSULA_GIS_APPDATA_FOLDER;
+			//en ursulaGISFolder estan todos los tif temporales. borrarlos antes de cerrar el programa
 			String  db_url = ursulaGISFolder + File.separator + H2_URSULAGIS_DB;		
 			
 			File sqliteDBFile=new File(db_url);
@@ -140,7 +141,13 @@ public class DAH {
 			//	DAH.transaction = em.getTransaction();
 			try{
 			em.getTransaction().begin();		
-			em.persist(entidad);			
+			if(em.contains(entidad)) {
+				em.merge(entidad);
+				System.out.println("merging entidad "+entidad);
+			}else {
+				System.out.println("persistiendo entidad "+entidad);
+				em.persist(entidad);			
+			}
 			em.getTransaction().commit();
 			}catch(javax.persistence.RollbackException rbe){
 				em.getTransaction().begin();		
@@ -150,7 +157,13 @@ public class DAH {
 				
 			}
 		} else{
-			em.persist(entidad);	
+			if(em.contains(entidad)) {
+				em.merge(entidad);
+				System.out.println("merging entidad "+entidad);
+			}else {
+				System.out.println("persistiendo entidad "+entidad);
+				em.persist(entidad);			
+			}
 		}
 	}
 	

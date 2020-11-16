@@ -44,10 +44,10 @@ public class PropertyHelper {
 		//			}
 		//		});
 
-		if(availableColums!=null && !availableColums.contains(sProperty.get()) && availableColums.contains(key)){
+		String configuredValue=sProperty.get();
+		if(availableColums!=null && !availableColums.contains(configuredValue) && availableColums.contains(key)){
 			sProperty.setValue(key);
 		} else {
-			String configuredValue=sProperty.get();
 			List<String> l=new ArrayList<String>(availableColums);
 			l.add(configuredValue);
 			l.sort((a,b)->{
@@ -61,8 +61,13 @@ public class PropertyHelper {
 			//System.out.println("en "+String.join(", ", l));
 			//System.out.println("en "+String.join(", ", availableColums));
 			//System.out.println("en el indice "+index);
-			
-			String closest = availableColums.get(index);
+			String closest = configuredValue;
+			if(index>=0 && index<availableColums.size()) {
+				closest = availableColums.get(index);//si es el ultimo da error
+			} else if(index >= availableColums.size()){
+				closest = availableColums.get(availableColums.size()-1);//el ultimo
+						
+			}
 //			for(String column : availableColums) {//columnas esta ordenado en orden alfabetico
 //				
 //				if(closest==null) {

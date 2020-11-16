@@ -7,7 +7,7 @@ public class LaborLayer extends RenderableLayer {
 	private RenderableLayer extrudedPolygonsLayer=null;
 	private int elementsCount=0;
 	private boolean showOnlyExtudedPolygons=false;
-	private int screenPixelsSectorMinSize=1000;//2000 queda bueno
+	private int screenPixelsSectorMinSize=3000;//2000 queda bueno
 	private static int MAX_EXTRUDED_ELEMENTS=10000;
 	long vS =0;
 	private boolean extrudedRendered=false;
@@ -41,26 +41,23 @@ public class LaborLayer extends RenderableLayer {
 		long vsNow =dc.getView().getViewStateID();
 
 		double eyeElevation = dc.getView().getCurrentEyePosition().elevation;
-		if( //(this.vS==vsNow  &&
+		 //(this.vS==vsNow  &&
 				//extrudedPolygonsLayer != null && (
 				//elementsCount<MAX_EXTRUDED_ELEMENTS || //si comento esto cuando es una labor sintentica no se muestra
-				analyticSurfaceLayer==null ||
-				eyeElevation < screenPixelsSectorMinSize ){
-			
+		if(	analyticSurfaceLayer==null ||
+				(eyeElevation < screenPixelsSectorMinSize && this.vS==vsNow)){//primer render o debajo de la altura minima
 			if(extrudedPolygonsLayer!=null)extrudedPolygonsLayer.render(dc);//null pointer exception
 			if(analyticSurfaceLayer!=null)analyticSurfaceLayer.setEnabled(false);
 		} else 	{//if(analyticSurfaceLayer!=null)
-			this.vS=vsNow;
+			
 			if(!extrudedRendered){
-				extrudedPolygonsLayer.render(dc);
-				
+				extrudedPolygonsLayer.render(dc);				
 				extrudedRendered=true;
 			}
 			analyticSurfaceLayer.setEnabled(true);
 			analyticSurfaceLayer.render(dc);	
-			
 		}
-		
+		this.vS=vsNow;
 //		double eyeElevation = dc.getView().getCurrentEyePosition().elevation;
 //		if(extrudedPolygonsLayer!=null && analyticSurfaceLayer!=null){
 //			if (showOnlyExtudedPolygons || elementsCount<MAX_EXTRUDED_ELEMENTS || eyeElevation < screenPixelsSectorMinSize ){

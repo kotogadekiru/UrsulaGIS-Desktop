@@ -233,7 +233,7 @@ public class FileHelper {
 
 
 	/**
-	 * este metodo se usa para crear archivos shp al momento de exportar mapas
+	 * este metodo se usa para crear archivos tiff al momento de exportar mapas
 	 * @param nombre es el nombre del archivo que se desea crear
 	 * @return el archivo creado en la carpeta seleccionada por el usuario
 	 */
@@ -272,4 +272,42 @@ public class FileHelper {
 		return file;
 	}
 	
+	/**
+	 * este metodo se usa para crear archivos tiff al momento de exportar mapas
+	 * @param nombre es el nombre del archivo que se desea crear
+	 * @return el archivo creado en la carpeta seleccionada por el usuario
+	 */
+	public static File getNewFile(String nombre,String ext) {
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle(Messages.getString("JFXMain.417")); //$NON-NLS-1$
+		fileChooser.getExtensionFilters().add(
+				new FileChooser.ExtensionFilter(ext.toUpperCase(), ext)); //$NON-NLS-1$ //$NON-NLS-2$
+		File lastFile = null;
+		//Configuracion config =Configuracion.getInstance();
+		Configuracion config = JFXMain.config;
+		String lastFileName = config.getPropertyOrDefault(Configuracion.LAST_FILE,null);
+		if(lastFileName != null){
+			lastFile = new File(lastFileName);
+		}
+		if(lastFile ==null || ! lastFile.exists()) {
+			lastFile=File.listRoots()[0];
+		} 
+		//if(lastFile != null && lastFile.exists()){
+		fileChooser.setInitialDirectory(lastFile.getParentFile());
+
+		if(nombre == null){
+			nombre = lastFile.getName();
+		}
+		fileChooser.setInitialFileName(nombre);
+		config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
+		config.save();
+
+		//if(file!=null)	fileChooser.setInitialDirectory(file.getParentFile());
+
+		File file = fileChooser.showSaveDialog(JFXMain.stage);
+
+		System.out.println(Messages.getString("JFXMain.420")+file); //$NON-NLS-1$
+
+		return file;
+	}
 }

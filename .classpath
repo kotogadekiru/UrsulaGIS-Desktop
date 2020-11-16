@@ -66,5 +66,6 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="/WorldWindJava/jogl-all.jar"/>
 	<classpathentry kind="lib" path="/WorldWindJava/gluegen-rt.jar"/>
+	<classpathentry kind="lib" path="libs/tiff-2.0.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

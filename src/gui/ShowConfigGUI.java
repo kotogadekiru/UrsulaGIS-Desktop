@@ -292,7 +292,6 @@ public class ShowConfigGUI {
 			table.setOnShowClick((ndvi)->{
 				//poli.setActivo(true);
 				main.doShowNDVI(ndvi);
-
 			});
 
 

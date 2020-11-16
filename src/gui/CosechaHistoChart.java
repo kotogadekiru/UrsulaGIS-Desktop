@@ -230,7 +230,13 @@ public class CosechaHistoChart extends VBox {
 						DecimalFormat df = new DecimalFormat("0.00"); //$NON-NLS-1$
 						df.setGroupingSize(3);
 						df.setGroupingUsed(true);
-						Tooltip.install(newNode, new Tooltip(df.format(cData.getYValue())+Messages.getString("CosechaHistoChart.21"))); //$NON-NLS-1$
+						
+						double val = cData.getYValue().doubleValue();
+						Tooltip tooltip = new Tooltip(df.format(val)+Messages.getString("CosechaHistoChart.21")+df.format(val/superficieTotal*100)+"%"); //$NON-NLS-1$ //$NON-NLS-2$
+						tooltip.autoHideProperty().set(false);
+						Tooltip.install(newNode,tooltip );		
+						
+						//Tooltip.install(newNode, new Tooltip(df.format(cData.getYValue())+Messages.getString("CosechaHistoChart.21"))); //$NON-NLS-1$
 					}
 				}
 			});
