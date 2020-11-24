@@ -250,13 +250,15 @@ public class LayerPanel extends VBox {
 	private void setGraphic(CheckBoxTreeItem<Layer> item,String iconUrl) {
 		ImageView mv = new ImageView();		
 		mv.setImage(new Image(this.getClass().getResourceAsStream(iconUrl)));		
-		mv.setFitWidth(20);
+		mv.setFitWidth(40);
 		mv.setPreserveRatio(true);
 		mv.setSmooth(true);
 		mv.setCache(true);
 		item.setGraphic(mv);
 		
 	}
+	
+	//TODO permitir agrupar por establecimiento campania y lote
 	private TreeView<Layer> constructTreeView(CheckBoxTreeItem<Layer> rootItem) {
 		final TreeView<Layer> tree = new TreeView<Layer>(rootItem);  
 		//tree.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
