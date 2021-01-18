@@ -109,7 +109,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 		this.productoLabor=DAH.getProductoLabor(ProductoLabor.LABOR_DE_COSECHA);
 		//System.out.println("iniciando la configuracion de CosechLabor");
 		List<String> availableColums = this.getAvailableColumns();		
-		Configuracion properties = getConfigLabor().getConfigProperties();
+		Configuracion properties = getConfiguracion().getConfigProperties();
 
 		colRendimiento = PropertyHelper.initStringProperty(CosechaLabor.CosechaLaborConstants.COLUMNA_RENDIMIENTO, properties, availableColums);
 		//como detecto que es una cosecha default evito hacer correcciones de flow y de distancia
@@ -122,7 +122,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 
 		correccionCosechaProperty = PropertyHelper.initDoubleProperty(CosechaLabor.CosechaLaborConstants.CORRECCION_COSECHA, "100", properties);
 		minRindeProperty = PropertyHelper.initDoubleProperty(CosechaLabor.CosechaLaborConstants.MIN_RINDE_KEY, "0", properties);
-		maxRindeProperty = PropertyHelper.initDoubleProperty(CosechaLabor.CosechaLaborConstants.MAX_RINDE_KEY, "0", properties);
+		maxRindeProperty = PropertyHelper.initDoubleProperty(CosechaLabor.CosechaLaborConstants.MAX_RINDE_KEY, "20", properties);
 		
 		precioGrano = PropertyHelper.initDouble(CosechaLabor.CosechaLaborConstants.PRECIO_GRANO, "0", properties);
 		costoCosechaTn = PropertyHelper.initDouble(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_TN, "0", properties);

@@ -24,6 +24,7 @@ import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import tasks.ProcessMapTask;
+import utils.GeometryHelper;
 import utils.PolygonValidator;
 import utils.ProyectionConstants;
 
@@ -112,7 +113,8 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 					Double area = 0.0;
 					try {
 						//XXX posible punto de error/ exceso de demora/ inneficicencia
-						Geometry inteseccionGeom = geometry.intersection(fertGeom);// Computes a
+						 Geometry inteseccionGeom = GeometryHelper.getIntersection(fertGeom, geometry);
+						//Geometry inteseccionGeom = geometry.intersection(fertGeom);// Computes a
 						area = ProyectionConstants.A_HAS(inteseccionGeom.getArea());
 						// Geometry
 					} catch (Exception e) {
@@ -147,7 +149,8 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 					Double area = 0.0;
 					try {
 						//XXX posible punto de error/ exceso de demora/ inneficicencia
-						Geometry inteseccionGeom = geometry.intersection(geom);// Computes a
+						Geometry inteseccionGeom = GeometryHelper.getIntersection(geom, geometry);
+						//Geometry inteseccionGeom = geometry.intersection(geom);// Computes a
 						area = ProyectionConstants.A_HAS(inteseccionGeom.getArea());
 						// Geometry
 					} catch (Exception e) {

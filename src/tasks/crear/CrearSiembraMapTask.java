@@ -90,16 +90,18 @@ public class CrearSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 
 	public ExtrudedPolygon  getPathTooltip( Geometry poly,SiembraItem siembraFeature,ExtrudedPolygon  renderablePolygon) {		
 		double area = poly.getArea() *ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
+		DecimalFormat df = new DecimalFormat("#,###.##");//$NON-NLS-2$
+		df.setGroupingUsed(true);
+		df.setGroupingSize(3);
 		//densidad seeds/metro lineal
 		String tooltipText = new String(Messages.getString("ProcessSiembraMapTask.1")+ df.format(siembraFeature.getDosisML()) + Messages.getString("ProcessSiembraMapTask.2")); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		Double seedsSup= siembraFeature.getDosisML()/labor.getEntreSurco();
 		if(seedsSup<100) {//plantas por ha
-			tooltipText=tooltipText.concat(df.format(seedsSup*ProyectionConstants.METROS2_POR_HA) + "s/"+ Messages.getString("ProcessSiembraMapTask.12")); //$NON-NLS-1$ //$NON-NLS-2$
+			tooltipText=tooltipText.concat(df.format(seedsSup*ProyectionConstants.METROS2_POR_HA) + " s/"+ Messages.getString("ProcessSiembraMapTask.12")); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		}else {
-			tooltipText=tooltipText.concat(df.format(seedsSup) + "s/"+Messages.getString("ProcessSiembraMapTask.10")); //s/m2
+			tooltipText=tooltipText.concat(df.format(seedsSup) + " s/"+Messages.getString("ProcessSiembraMapTask.10")); //s/m2
 		}
 			//kg semillas por ha
 		tooltipText=tooltipText.concat(Messages.getString("ProcessSiembraMapTask.3") + df.format(siembraFeature.getDosisHa()) + Messages.getString("ProcessSiembraMapTask.4")); //$NON-NLS-1$ //$NON-NLS-2$

@@ -29,6 +29,7 @@ import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
 import gui.nww.LaborLayer;
 import tasks.ProcessMapTask;
+import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
 public class CortarCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabor> {
@@ -74,8 +75,13 @@ public class CortarCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabo
 			CosechaItem ci = labor.constructFeatureContainerStandar(f,true);
 			Geometry g = ci.getGeometry();
 
+			/*
+			 * calcula las intesecciones entre la geometria del cosechaitem y los poligonos seleccionados
+			 */
 			 List<Geometry> intersecciones = poligonos.stream().map(pol->{
-				return pol.toGeometry().intersects(g) ? pol.toGeometry().intersection(g):null;
+				 Geometry ret = GeometryHelper.getIntersection(pol.toGeometry(), g);
+				//System.out.println("intersection is "+ret);
+				return ret;// ? pol.toGeometry().intersection(g):null;
 				}).filter(inter->inter!=null).collect(Collectors.toList());
 
 			if(intersecciones.size()>0) {

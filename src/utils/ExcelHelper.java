@@ -330,13 +330,19 @@ public class ExcelHelper {
 
 		}
 
-		public void exportData(String nombre ,Map<String, Object[]> data) {//OK!
+		public void exportData(String sheetName ,Map<String, Object[]> data) {//OK!
 			File outFile = getNewExcelFile();
 
 			XSSFWorkbook workbook = new XSSFWorkbook();							
-			String sheetName = nombre;
+		//	String sheetName = nombre;
 			
-			XSSFSheet sheet = workbook.createSheet(sheetName);	
+			XSSFSheet sheet =null;
+			if(sheetName!=null) {
+				sheet =  workbook.createSheet(sheetName);	
+			}else {
+				sheet = workbook.createSheet();
+			}
+			
 
 			// Iterate over data and write to sheet
 			writeDataToSheet( sheet, data);

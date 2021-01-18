@@ -60,6 +60,7 @@ import gov.nasa.worldwindx.examples.analytics.AnalyticSurfaceAttributes;
 import gov.nasa.worldwindx.examples.analytics.AnalyticSurfaceLegend;
 import gov.nasa.worldwindx.examples.analytics.ExportableAnalyticSurface;
 import gui.JFXMain;
+import gui.Messages;
 import gui.nww.ReusableExtrudedPolygon;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
@@ -1131,6 +1132,8 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	}
 
 	protected void runLater(Collection<FC> itemsToShow) {	
+		
+		
 		//System.out.println("runlater "+itemsToShow.size());
 		updateStatsLabor(itemsToShow);
 
@@ -1331,19 +1334,18 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 
 					List<FC> features = labor.cachedOutStoreQuery(env);
-
+					char[] abc = "ABCDEFGHIJKLM".toCharArray();
+					int size = labor.getClasificador().getNumClasses()-1;
 					features.stream().forEach((c)->{
 						Geometry g = c.getGeometry();
 						if(g instanceof Point){
 							//System.out.println("creando un marker para "+g);
 							Point center =(Point)g;
-
 							try{
-
 								Position pointPosition = Position.fromDegrees(center.getY(),center.getX());
-
+								
 								PointPlacemark pmStandard = new PointPlacemark(pointPosition);
-								pmStandard.setLabelText("Categoria: "+c.getCategoria());
+								pmStandard.setLabelText(Messages.getString("ProcessMapTask.categoria")+": "+abc[size-c.getCategoria()]);//
 								Color color = labor.getClasificador().getColorForCategoria(c.getCategoria());
 								int red = new Double(color.getRed()*255).intValue();
 								int green = new Double(color.getGreen()*255).intValue();

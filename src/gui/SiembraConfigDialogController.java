@@ -1,12 +1,15 @@
 package gui;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import dao.Clasificador;
 import dao.Labor;
 import dao.config.Semilla;
+import dao.siembra.SiembraConfig;
 import dao.siembra.SiembraLabor;
 import gui.utils.DateConverter;
 import javafx.beans.binding.Bindings;
@@ -45,6 +48,9 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 
 	@FXML
 	private ComboBox<String> comboDosis;//ok
+	
+	@FXML
+	private ComboBox<String> comboDosisUnit;//ok
 
 	@FXML
 	private TextField textPrecioFert;//ok
@@ -226,6 +232,30 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 
 		this.comboClasificador.setItems(FXCollections.observableArrayList(Clasificador.clasficicadores));
 		this.comboClasificador.valueProperty().bindBidirectional(labor.clasificador.tipoClasificadorProperty);
+		
+		
+		//TODO cambiar cbMetrosPorUnidad a ComboBox para que pueda ser editable
+		Map<String,SiembraConfig.Unidad> unidades = new HashMap<String,SiembraConfig.Unidad>();
+		unidades.put(Messages.getString("SiembraConfigDialogController.kgHa"),SiembraConfig.Unidad.kgHa); //$NON-NLS-1$
+		unidades.put(Messages.getString("SiembraConfigDialogController.milPlaHa"),SiembraConfig.Unidad.milPlaHa); //$NON-NLS-1$
+		unidades.put(Messages.getString("SiembraConfigDialogController.pla10MtLineal"),SiembraConfig.Unidad.pla10MtLineal); //$NON-NLS-1$
+		unidades.put(Messages.getString("SiembraConfigDialogController.plaMetroCuadrado"),SiembraConfig.Unidad.plaMetroCuadrado); //$NON-NLS-1$
+
+
+		this.comboDosisUnit.setItems(FXCollections.observableArrayList(unidades.keySet()));
+		this.comboDosisUnit.valueProperty().addListener((ov,old,nv)->{
+			labor.getConfiguracion().dosisUnitProperty().set(unidades.get(nv));
+		});
+
+		SiembraConfig.Unidad configured = labor.getConfiguracion().dosisUnitProperty().get();
+		unidades.forEach((key,value)->{
+			if(value.equals(configured)){
+				comboDosisUnit.getSelectionModel().select(key);
+			}
+		});
+		
+	//	this.comboDosisUnit.setItems(FXCollections.observableArrayList(unidades.keySet()));
+	//	this.comboDosisUnit.valueProperty().bindBidirectional(labor.config.dosisUnitProperty());
 
 		//textNombre.textProperty().bindBidirectional(labor.nombreProperty);
 		textNombre.textProperty().set(labor.getNombre());

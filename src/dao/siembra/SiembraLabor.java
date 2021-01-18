@@ -148,7 +148,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 		//next.getType().getTypes().
 		//TODO si tiene semillas cada 10mts calcular la dosis en kg segun en ancho y el peso de la semilla seleccionada
 		//TODO si tiene dosis semilla calcular las semillas por metro
-		siembraItem.setDosisML(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DOSIS_SEMILLA_ML))/10);
+		//siembraItem.setDosisML(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DOSIS_SEMILLA_ML))/10);
 		if(siembraItem.getDosisML()!=0.0) {
 			//Double semillasMetro = bolsasHa*(ProyectionConstants.METROS2_POR_HA/entreSurco.get())/semillasPorBolsa.get();
 			Double dosisSemillakgHa = siembraItem.getDosisML()
@@ -157,6 +157,11 @@ public class SiembraLabor extends Labor<SiembraItem> {
 			siembraItem.setDosisHa(dosisSemillakgHa);
 		} else {
 			siembraItem.setDosisHa( LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DOSIS_SEMILLA)));	
+			
+			Double kgM2 = siembraItem.getDosisHa()/ProyectionConstants.METROS2_POR_HA;//kg/m2
+			double semM2= (1000*1000*kgM2)/semilla.getPesoDeMil();//sem/m2
+		//	)*(1000*1000))*entreSurco;
+			siembraItem.setDosisML(semM2*entreSurco);// 1/entresurco=ml/m2 => sem/m2
 		}
 		
 		siembraItem.setDosisFertLinea( LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DOSIS_LINEA)));

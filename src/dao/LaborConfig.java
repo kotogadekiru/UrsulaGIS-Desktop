@@ -5,6 +5,7 @@ import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
 import dao.config.Configuracion;
+import dao.siembra.SiembraConfig;
 import dao.utils.PropertyHelper;
 import dao.LaborConfig;
 import javafx.beans.property.BooleanProperty;
@@ -14,6 +15,7 @@ import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 
 /**
  * clase que agrupa las configuraciones comunes a todas las labores
@@ -67,6 +69,8 @@ public class LaborConfig {
 	//private IntegerProperty clasesClasificadorProperty;
 	private IntegerProperty  nVarianzasToleraProperty;
 	private SimpleDoubleProperty  toleranciaCVProperty;
+	
+	
 
 	/**
 	 * hace referencia al archivo donde se guardan las configuraciones
@@ -199,6 +203,7 @@ public class LaborConfig {
 	public IntegerProperty cantDistanciasToleraProperty() { return cantDistanciasToleraProperty;}
 	public IntegerProperty nVarianzasToleraProperty() { return nVarianzasToleraProperty;}
 	public DoubleProperty toleranciaCVProperty() { return toleranciaCVProperty;}
+	
 //	public IntegerProperty clasesClasificadorProperty() { return clasesClasificadorProperty;
 //	}
 /**

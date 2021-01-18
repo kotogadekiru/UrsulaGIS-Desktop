@@ -58,14 +58,13 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 	}
 
 	/**
-	 * proceso que toma una lista de cosechas y las une 
-	 * con una grilla promediando los valores de acuerdo a su promedio ponderado por la superficie
-	 * superpuesta de cada item sobre la superficie superpuesta total de cada "pixel de la grilla"
+	 *Proceso que genera una lista de puntos al azar dentro de cada zona de acuerdo a la frecuencia minima especificada
 	 */
 	@Override
 	protected void doProcess() throws IOException {
 		String nombre =null;
-		double ancho = 1+Math.sqrt(superficieMinimaAMuestrear*ProyectionConstants.METROS2_POR_HA)/2;
+		//ancho me permite controlar la distancia minima entre los puntos y entre el punto y la frontera
+		double ancho = 1+Math.sqrt(superficieMinimaAMuestrear*ProyectionConstants.METROS2_POR_HA)/10;
 		System.out.println("ancho="+ancho); //ancho=86.60254037844386
 
 		//List<SueloItem> features = Collections.synchronizedList(new ArrayList<SueloItem>());
@@ -75,7 +74,7 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 			}else {
 				nombre+=Messages.getString("GenerarMuestreoDirigidoTask.2")+c.getNombre(); //$NON-NLS-1$
 			}
-
+			labor.setClasificador(c.getClasificador());
 			FeatureReader<SimpleFeatureType, SimpleFeature> reader =c.outCollection.reader();
 			//por cada poligono de las labores de entrada 
 			int count=0;
@@ -127,12 +126,13 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 						
 						Polygon poly =constructPolygon(l,d,random);
 						//System.out.println(poly.toText());
-						System.out.println("has "+ProyectionConstants.A_HAS(poly.getArea()));
+					//	System.out.println("has "+ProyectionConstants.A_HAS(poly.getArea()));
 						//TODO controlar que la distancia a una muestra anterior sea mayor a un minimo
-						double minDist = puntosGenerados.stream().flatMapToDouble(p->
+						double minDist = puntosGenerados.parallelStream().flatMapToDouble(p->
 						DoubleStream.of(p.getGeometry().distance(poly))
 								).min().orElse(Double.MAX_VALUE)/ProyectionConstants.metersToLat();
-						System.out.println("minDist="+minDist);
+						//System.out.println("minDist="+minDist);
+						
 						if(geometry.contains(poly) && minDist>ancho) {
 						//	System.out.println(Messages.getString("GenerarMuestreoDirigidoTask.3")+random); //$NON-NLS-1$
 							SueloItem muestra = new SueloItem();
@@ -141,12 +141,9 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 							muestra.setGeometry(poly);
 							puntosGenerados.add(muestra);
 							labor.insertFeature(muestra);
-						} else if(geometry.contains(random)) {
-							//double distancia = geometry.distance(poly)/ProyectionConstants.metersToLat();
-							
-							System.out.println("rechazando punto por estar cerca de la frontera o de otro punto "+"minDist="+minDist);
-							
-							
+						} else if(geometry.contains(poly)) {
+							//double distancia = geometry.distance(poly)/ProyectionConstants.metersToLat();							
+							//System.out.println("rechazando punto por estar cerca de la frontera o de otro punto "+"minDist="+minDist);
 						}
 					}//termine de crear los puntos para el poligono de tamanio suficiente
 					//features.addAll(puntosGenerados);
@@ -168,7 +165,7 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 		it.close();
 		
 		//TODO crear un PathLayer con los puntos de itemsToShow
-	//	createMuestreoPathLayer(itemsToShow);
+		createMuestreoPathLayer(itemsToShow);
 		labor.setNombre(nombre);
 		labor.setLayer(new LaborLayer());
 		//List<?> featureList = features.stream().map(f ->{
@@ -233,7 +230,7 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 		SimplificarCaminoTask t = new SimplificarCaminoTask(c);
 		t.run();
 		
-		//TODO poner items en el orden en el que aparecen en positions
+		//TODO poner items en el orden en el que aparecen en positions para que el recorrido sea el minimo
 		List<SueloItem> newItems = new ArrayList<SueloItem>();
 		for(Position np :positions) {	//FIXME tengo dudas sobre la forma en que matchea los elementos		
 			for(SueloItem s : itemsToShow) {

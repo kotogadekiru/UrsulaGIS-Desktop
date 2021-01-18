@@ -38,6 +38,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 	 * la lista de las cosechas a unir
 	 */
 	private List<CosechaLabor> cosechas;
+	private boolean rellenarHuecos = false;
 
 			
 	public GrillarCosechasMapTask(List<CosechaLabor> cosechas){//RenderableLayer layer, FileDataStore store, double d, Double correccionRinde) {
@@ -319,11 +320,15 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 			Geometry[] geomArray = new Geometry[intersections.size()];
 			GeometryCollection colectionCat = fact.createGeometryCollection(intersections.toArray(geomArray));
 			
+			if(!rellenarHuecos) {
 			try{
 				union = colectionCat.convexHull();//esto hace que no se cubra el area entre polygonos a menos que la grilla sea mas grande que el area
 				}catch(Exception e){
 
 				}
+			} else { 
+				union = poly;
+			}
 			
 			c.setGeometry(union);
 			c.setRindeTnHa(rindeProm);
@@ -512,6 +517,10 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 //
 //		super.getExrudedPolygonFromGeom(poly, cosechaFeature,tooltipText);
 //	}
+	
+	public void setRellenarHuecos(boolean rellenar) {
+		this.rellenarHuecos=rellenar;
+	}
 
 	@Override
 	protected int getAmountMin() {

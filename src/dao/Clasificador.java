@@ -11,12 +11,16 @@ import java.util.Locale;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.factory.CommonFactoryFinder;
+import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.filter.function.Classifier;
 import org.geotools.filter.function.JenksNaturalBreaksFunction;
+import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.expression.Literal;
 import org.opengis.filter.expression.PropertyName;
 
+import dao.cosecha.CosechaItem;
+import gui.Messages;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -330,6 +334,21 @@ public class Clasificador {
 			ocReader.close();
 			this.constructHistogram(items);
 		}
+		
+		
+		DefaultFeatureCollection newOutcollection =  new DefaultFeatureCollection(Messages.getString("ProcessHarvestMapTask.9"),labor.getType());
+		
+		SimpleFeatureIterator it = labor.outCollection.features();
+		while(it.hasNext()){
+			SimpleFeature fIn = it.next();
+
+			LaborItem li=labor.constructFeatureContainerStandar(fIn,false);
+			li.setCategoria(this.getCategoryFor(li.getAmount()));
+			SimpleFeature f = li.getFeature(labor.featureBuilder);
+			boolean res = newOutcollection.add(f);
+	
+		}
+		labor.setOutCollection(newOutcollection);
 		
 	}
 

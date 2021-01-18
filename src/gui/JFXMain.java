@@ -128,6 +128,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SplitPane;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.Image;
@@ -135,7 +136,9 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -196,9 +199,9 @@ public class JFXMain extends Application {
 	//	private static final double MIN_VALUE = 0.2;
 	public static Configuracion config = Configuracion.getInstance();
 
-	public static final String VERSION = "0.2.26"; //$NON-NLS-1$
+	public static final String VERSION = "0.2.27"; //$NON-NLS-1$
 	public static final String TITLE_VERSION = "Ursula GIS-"+VERSION; //$NON-NLS-1$
-	public static final String buildDate = "13/11/2020";
+	public static final String buildDate = "18/01/2021";
 	
 	public static final String ICON ="gui/ursula_logo_2020.png";//"gui/32x32-icon-earth.png";// "gui/1-512.png";//UrsulaGIS-Desktop/src/gui/32x32-icon-earth.png //$NON-NLS-1$
 	private static final String SOUND_FILENAME = "gui/Alarm08.wav";//"Alarm08.wav" funciona desde eclipse pero no desde el jar  //$NON-NLS-1$
@@ -632,10 +635,6 @@ public class JFXMain extends Application {
 			sEvo.exportToExcel();
 			return "mostre la evolucion del ndvi";
 		})));
-		
-		
-
-		
 		
 		/**
 		 * Save NDVI action
@@ -2992,8 +2991,20 @@ public class JFXMain extends Application {
 		} else{
 			return;
 		}
-
+		
+		Alert calibrarAlert = new Alert(Alert.AlertType.CONFIRMATION);
+		calibrarAlert.setTitle(Messages.getString("Rellenar Huecos")); //$NON-NLS-1$
+		calibrarAlert.setContentText(Messages.getString("Rellenar Huecos")); //$NON-NLS-1$
+		boolean rellenarHuecos = false;
+		Optional<ButtonType> calibrarButton = calibrarAlert.showAndWait();
+		if(calibrarButton.isPresent()){
+			if(calibrarButton.get().equals(ButtonType.OK)){
+				rellenarHuecos=true;
+			}
+		}
+		
 		GrillarCosechasMapTask umTask = new GrillarCosechasMapTask(cosechasAUnir);
+		umTask.setRellenarHuecos(rellenarHuecos);
 		umTask.installProgressBar(progressBox);
 
 		umTask.setOnSucceeded(handler -> {
@@ -3635,57 +3646,7 @@ public class JFXMain extends Application {
  * @param labor
  */
 	private void doShowDataTable(Labor<?> labor) {		   
-		Platform.runLater(()->{
-
-			ArrayList<LaborItem> liLista = new ArrayList<LaborItem>();
-			System.out.println("Comenzando a cargar la los datos de la tabla"); //$NON-NLS-1$
-			Iterator<?> it = labor.outCollection.iterator();
-			while(it.hasNext()){
-				LaborItem lI = labor.constructFeatureContainerStandar((SimpleFeature)it.next(), false);
-				liLista.add(lI);
-			}
-
-			final ObservableList<LaborItem> dataLotes =
-					FXCollections.observableArrayList(liLista);
-
-			SmartTableView<LaborItem> table = new SmartTableView<LaborItem>(dataLotes);
-			table.setEditable(false);
-
-			Scene scene = new Scene(table, 800, 600);
-			Stage tablaStage = new Stage();
-			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(labor.getNombre());
-			tablaStage.setScene(scene);
-			tablaStage.show();	 
-		});
-
-	}
-
-	/**
-	 * metodo que muestra una lista con todas las labores guardadas en la base de datos
-	 */
-	private void doShowLaboresTable() {
-		Platform.runLater(()->{
-			final ObservableList<Labor<?>> data =
-					FXCollections.observableArrayList(
-							DAH.getAllLabores()
-							);
-			if(data.size()<1){
-				System.out.println(Messages.getString("JFXMain.361")); //$NON-NLS-1$
-				//data.add(new Lote());
-			}
-			SmartTableView<Labor<?>> table = new SmartTableView<Labor<?>>(data);//,data,List<String> rejectedColumns,List<String> order);
-			table.setEditable(true);
-			//table.setOnDoubleClick(()->new Lote("Nuevo Lote"));
-
-			Scene scene = new Scene(table, 800, 600);
-			Stage tablaStage = new Stage();
-			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("JFXMain.362")); //$NON-NLS-1$
-			tablaStage.setScene(scene);
-			tablaStage.show();	 
-
-		});	
+		SmartTableView.showLaborTable(labor);
 	}
 
 	

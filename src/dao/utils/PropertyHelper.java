@@ -21,6 +21,9 @@ public class PropertyHelper {
 		return doubleProperty;
 	}
 
+	
+	
+	
 	public static Double initDouble(String key,String def,Configuracion properties){	
 		return Double.parseDouble(properties.getPropertyOrDefault(	key, def));
 	}

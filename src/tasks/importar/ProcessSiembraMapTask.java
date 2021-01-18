@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 import org.geotools.data.FeatureReader;
 import org.geotools.data.simple.SimpleFeatureIterator;
@@ -12,6 +13,7 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
+import dao.siembra.SiembraConfig;
 import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
@@ -66,12 +68,56 @@ public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLab
 			//initCrsTransform(storeCRS);
 
 			int divisor = 1;
+			
+			SiembraConfig.Unidad dosisUnit = labor.getConfiguracion().dosisUnitProperty().get();
+			Function<Double,Double> dosisToKgHa = (dosis)->dosis*2;
 
+			switch (dosisUnit) {
+			case kgHa: 
+				dosisToKgHa = (dosis)->dosis;
+				break;
+			case milPlaHa:
+				dosisToKgHa = (milPlHa)->{
+					//convertir de miles de semillas por Ha a kg de semilla por Ha
+					//miltiplico por el peso en gramos de mil semillas y lo divido por mil para convertir a kg
+					return (milPlHa)*labor.getSemilla().getPesoDeMil()/1000;
+				};
+				break;
+			case pla10MtLineal:
+				dosisToKgHa = (pla10MtLineal)->{
+					//convertir de semillas cada 10metros lineales a kg de semilla por Ha
+					//1) divido por 10 para obtener semillas por metro lineal
+					double plML= pla10MtLineal/10;
+					double plm2= plML/labor.getEntreSurco();
+					double plHa = plm2*ProyectionConstants.METROS2_POR_HA;
+					double gramHa = plHa*labor.getSemilla().getPesoDeMil()/1000;
+					double kgHa= gramHa/1000;
+					//miltiplico por el peso en gramos de mil semillas y lo divido por mil para convertir a kg
+					return kgHa;
+				};
+				break;
+			case plaMetroCuadrado:
+				dosisToKgHa = (plm2)->{
+					//convertir de semillas cada metro cuadrado a kg de semilla por Ha
+					//1) divido por 10 para obtener semillas por metro lineal
+				
+					double plHa = plm2*ProyectionConstants.METROS2_POR_HA;
+					double gramHa = plHa*labor.getSemilla().getPesoDeMil()/1000;
+					double kgHa= gramHa/1000;
+					//miltiplico por el peso en gramos de mil semillas y lo divido por mil para convertir a kg
+					return kgHa;
+				};
+				break;
+			
+			}
+			
 			while (reader.hasNext()) {
 
 				SimpleFeature simpleFeature = reader.next();
 				SiembraItem ci = labor.constructFeatureContainer(simpleFeature);
 				
+			
+				ci.setDosisHa(dosisToKgHa.apply(ci.getDosisHa()));
 
 				featureNumber++;
 
@@ -218,16 +264,18 @@ public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLab
 	@Override
 	public ExtrudedPolygon  getPathTooltip( Geometry poly,SiembraItem siembraFeature,ExtrudedPolygon  renderablePolygon) {		
 		double area = poly.getArea() *ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
+		DecimalFormat df = new DecimalFormat("#,###.##");//$NON-NLS-2$
+		df.setGroupingUsed(true);
+		df.setGroupingSize(3);
 		//densidad seeds/metro lineal
 		String tooltipText = new String(Messages.getString("ProcessSiembraMapTask.1")+ df.format(siembraFeature.getDosisML()) + Messages.getString("ProcessSiembraMapTask.2")); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		Double seedsSup= siembraFeature.getDosisML()/labor.getEntreSurco();
 		if(seedsSup<100) {//plantas por ha
-			tooltipText=tooltipText.concat(df.format(seedsSup*ProyectionConstants.METROS2_POR_HA) + "s/"+ Messages.getString("ProcessSiembraMapTask.12")); //$NON-NLS-1$ //$NON-NLS-2$
+			tooltipText=tooltipText.concat(df.format(seedsSup*ProyectionConstants.METROS2_POR_HA) + " s/"+ Messages.getString("ProcessSiembraMapTask.12")); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		}else {
-			tooltipText=tooltipText.concat(df.format(seedsSup) + "s/"+Messages.getString("ProcessSiembraMapTask.10")); //s/m2
+			tooltipText=tooltipText.concat(df.format(seedsSup) + " s/"+Messages.getString("ProcessSiembraMapTask.10")); //s/m2
 		}
 			//kg semillas por ha
 		tooltipText=tooltipText.concat(Messages.getString("ProcessSiembraMapTask.3") + df.format(siembraFeature.getDosisHa()) + Messages.getString("ProcessSiembraMapTask.4")); //$NON-NLS-1$ //$NON-NLS-2$

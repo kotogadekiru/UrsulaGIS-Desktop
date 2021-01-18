@@ -34,6 +34,7 @@ import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
 import tasks.ProcessMapTask;
+import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
 public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
@@ -347,25 +348,26 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 	}
 	
 	private Geometry getIntersection(Geometry g, Geometry g2){
-	g=makeGood(g);
-	g2=makeGood(g2);
-		Geometry intersection =g;
-		try {			
-			if (g2 != null //&& g2.isValid()
-					){
-				Geometry polyG =g;
-				intersection = polyG.intersection(g2);// Computes a Geometry//found non-noded intersection between LINESTRING ( -61.9893807883
-			}
-			intersection = makeGood(intersection);
-			// .out.println("tarde "+(fin-init)+" milisegundos en insertar");
-		} catch (Exception te) {//com.vividsolutions.jts.geom.TopologyException: found non-noded intersection between LINESTRING ( -62.008963817544945 -33.872771283412874, -62.0089897286684 -33.87272023486772 ) and LINESTRING ( -62.00902014621838 -33.87282073965304, -62.00893906917324 -33.872626066467696 ) [ (-62.008983444498256, -33.87273261556376, NaN) ]
-			try{//
-				intersection = EnhancedPrecisionOp.difference(g, g2);
-			}catch(Exception e){
-			//	e.printStackTrace();
-				intersection=null;
-			}
-		}
+		Geometry intersection = GeometryHelper.getIntersection(g, g2);
+//	g=makeGood(g);
+//	g2=makeGood(g2);
+//		Geometry intersection =g;
+//		try {			
+//			if (g2 != null //&& g2.isValid()
+//					){
+//				Geometry polyG =g;
+//				intersection = polyG.intersection(g2);// Computes a Geometry//found non-noded intersection between LINESTRING ( -61.9893807883
+//			}
+//			intersection = makeGood(intersection);
+//			// .out.println("tarde "+(fin-init)+" milisegundos en insertar");
+//		} catch (Exception te) {//com.vividsolutions.jts.geom.TopologyException: found non-noded intersection between LINESTRING ( -62.008963817544945 -33.872771283412874, -62.0089897286684 -33.87272023486772 ) and LINESTRING ( -62.00902014621838 -33.87282073965304, -62.00893906917324 -33.872626066467696 ) [ (-62.008983444498256, -33.87273261556376, NaN) ]
+//			try{//
+//				intersection = EnhancedPrecisionOp.difference(g, g2);
+//			}catch(Exception e){
+//			//	e.printStackTrace();
+//				intersection=null;
+//			}
+//		}
 		return intersection;
 	}
 	

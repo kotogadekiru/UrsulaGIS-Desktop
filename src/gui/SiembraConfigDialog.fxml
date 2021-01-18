@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
@@ -16,10 +12,11 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="content" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.SiembraConfigDialogController">
+<VBox fx:id="content" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.SiembraConfigDialogController">
    <children>
       <TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="361.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE">
         <tabs>
@@ -47,7 +44,6 @@
                           </rowConstraints>
                            <children>
                               <ComboBox id="comboElev" fx:id="comboElev" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                              <ComboBox id="comboRend" fx:id="comboDosis" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                               <Label text="%SiembraConfigDialog.precioSemillaLabel" GridPane.columnIndex="2" GridPane.rowIndex="1">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
@@ -78,6 +74,12 @@
                               <Label text="%SiembraConfigDialog.fechaLabel" GridPane.columnIndex="2" />
                               <Label fx:id="entreSurcoLabel" text="%SiembraConfigDialog.entreSurcoLabel" GridPane.columnIndex="2" GridPane.rowIndex="4" />
                               <TextField id="textEntreSurco" fx:id="textEntresurco" promptText=" ej: 0.19" GridPane.columnIndex="3" GridPane.rowIndex="4" />
+                              <HBox prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                 <children>
+                                    <ComboBox id="comboRend" fx:id="comboDosis" prefWidth="150.0" />
+                                    <ComboBox id="comboRendUnit" fx:id="comboDosisUnit" prefWidth="150.0" promptText="unidad" />
+                                 </children>
+                              </HBox>
                            </children>
                         </GridPane>
                      </children>

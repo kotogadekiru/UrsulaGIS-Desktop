@@ -124,7 +124,7 @@ public class CosechaHistoChart extends VBox {
 		chart.getData().add(series);
 		VBox.getVgrow(chart);
 		this.getChildren().add(chart);
-		DecimalFormat df = new DecimalFormat("#.00"); //$NON-NLS-1$
+		DecimalFormat df = new DecimalFormat("#.##"); //$NON-NLS-1$
 		BorderPane bottom = new BorderPane();
 		VBox left = new VBox();
 		left.getChildren().addAll(

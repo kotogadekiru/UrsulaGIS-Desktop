@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import dao.Labor;
 import dao.Ndvi;
+import dao.Poligono;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.pulverizacion.PulverizacionLabor;
@@ -42,6 +43,8 @@ import javafx.util.StringConverter;
 
 public class LayerPanel extends VBox {
 
+	private static final int TREE_ITEM_ICON_WIDTH = 50;
+
 	protected ScrollPane scrollPane;
 
 	private VBox layersPanel = new VBox();
@@ -51,10 +54,10 @@ public class LayerPanel extends VBox {
 	private CheckBoxTreeItem<Layer> rootItem=null;
 
 	private Map<Class<?>,  CheckBoxTreeItem<Layer>> rootItems= new HashMap<Class<?>,  CheckBoxTreeItem<Layer>>();
-//	private CheckBoxTreeItem<Layer> pulverizacionesItem;
-//	private CheckBoxTreeItem<Layer> fertilizacionestItem;
-//	private CheckBoxTreeItem<Layer> siembrasItem;
-//	private CheckBoxTreeItem<Layer> cosechasItem;
+	//	private CheckBoxTreeItem<Layer> pulverizacionesItem;
+	//	private CheckBoxTreeItem<Layer> fertilizacionestItem;
+	//	private CheckBoxTreeItem<Layer> siembrasItem;
+	//	private CheckBoxTreeItem<Layer> cosechasItem;
 
 	private Map<Class<?>, List<Function<Layer, String>>> actions;
 	private Map<Class<?>, List<LayerAction>> layerActions= new HashMap<Class<?>, List<LayerAction>>();
@@ -133,12 +136,12 @@ public class LayerPanel extends VBox {
 			}else if(clazz!=null) {
 				layerClass = (Class<?>) clazz;
 			}
-			
+
 			CheckBoxTreeItem<Layer> item = rootItems.get(layerClass);
 			if(item!=null) {
 				item.getChildren().add(checkBoxTreeItem);
 			}else if(layerClass != null){
-				
+
 				//crear el nuevo rootItem y agregarlo a la lista de rootItems
 				String rootItemName = "unknown";
 				if(value instanceof String) {
@@ -150,7 +153,7 @@ public class LayerPanel extends VBox {
 				RenderableLayer rootLayer = new RenderableLayer();
 				rootLayer.setName(rootItemName);
 				rootLayer.setValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR,layerClass);
-				
+
 				CheckBoxTreeItem<Layer> newRootItem = new CheckBoxTreeItem<Layer>(rootLayer);
 				setGraphic(newRootItem,"map.png");
 				rootItems.put(layerClass,newRootItem);
@@ -210,7 +213,16 @@ public class LayerPanel extends VBox {
 		RenderableLayer rootLayer = new RenderableLayer();
 		rootLayer.setName(Messages.getString("LayerPanel.layerRootLabel")); //$NON-NLS-1$
 		rootItem = new CheckBoxTreeItem<Layer>(rootLayer);
+		
+		RenderableLayer poliLayer = new RenderableLayer();
+		poliLayer.setName(Messages.getString("LayerPanel.rootItemNamePoligono")); //$NON-NLS-1$
+		poliLayer.setValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR, Poligono.class);
+		CheckBoxTreeItem<Layer>poliItem = new CheckBoxTreeItem<Layer>(poliLayer);
+		setGraphic(poliItem,"map.png");
+		rootItems.put(Poligono.class, poliItem);
+		rootItem.getChildren().add(poliItem);
 
+		
 		RenderableLayer pulvLayer = new RenderableLayer();
 		pulvLayer.setName(Messages.getString("LayerPanel.pulvLabel")); //$NON-NLS-1$
 		pulvLayer.setValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR, PulverizacionLabor.class);
@@ -250,14 +262,14 @@ public class LayerPanel extends VBox {
 	private void setGraphic(CheckBoxTreeItem<Layer> item,String iconUrl) {
 		ImageView mv = new ImageView();		
 		mv.setImage(new Image(this.getClass().getResourceAsStream(iconUrl)));		
-		mv.setFitWidth(40);
+		mv.setFitWidth(TREE_ITEM_ICON_WIDTH);
 		mv.setPreserveRatio(true);
 		mv.setSmooth(true);
 		mv.setCache(true);
 		item.setGraphic(mv);
-		
+
 	}
-	
+
 	//TODO permitir agrupar por establecimiento campania y lote
 	private TreeView<Layer> constructTreeView(CheckBoxTreeItem<Layer> rootItem) {
 		final TreeView<Layer> tree = new TreeView<Layer>(rootItem);  
@@ -273,7 +285,7 @@ public class LayerPanel extends VBox {
 		tree.setCellFactory((treeView) ->{
 			CheckBoxTreeCell<Layer> cell = (CheckBoxTreeCell<Layer>) CheckBoxTreeCell.<Layer>forTreeView().call(treeView);
 			cell.setStyle("-fx-faint-focus-color: -fx-control-inner-background;");//-fx-focus-color: -fx-control-inner-background ; -fx-faint-focus-color: -fx-control-inner-background ;-fx-background-color:transparent; //$NON-NLS-1$
-			
+
 
 			cell.setConverter(new StringConverter<TreeItem<Layer>>(){
 				@Override
@@ -303,7 +315,7 @@ public class LayerPanel extends VBox {
 				Object layerObjectClass = nuLayer.getValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR);
 
 				if(layerObject == null ){//es un layer vacio
-				
+
 					if(layerObjectClass instanceof Class) {//estoy cargando las acciones genericas
 						Class<? extends Object> valueClass = (Class<?>) layerObjectClass;
 						List<Function<Layer, String>> layersP = new ArrayList<Function<Layer,String>>();
@@ -313,24 +325,24 @@ public class LayerPanel extends VBox {
 						//System.out.println("size "+valueClass+" es "+size);//falla con dao.Poligono
 						List<LayerAction> layerActionsForClass = layerActions.get(valueClass);
 						if(layerActionsForClass!=null) {
-						List<Function<Layer, String>> filtered =  layerActionsForClass.stream().filter(p->
-						p.minElementsRequired<=size).collect(Collectors.toList());
-						
-						layersP.addAll(filtered);
+							List<Function<Layer, String>> filtered =  layerActionsForClass.stream().filter(p->
+							p.minElementsRequired<=size).collect(Collectors.toList());
+
+							layersP.addAll(filtered);
 						}
 						if(size>0) {
 							actions.get(Object.class).forEach(a->layersP.add(
 									constructAllSelectedPredicate(a, rootItems.get(valueClass).getChildren())
 									));	
 						}
-						
+
 						constructMenuItem(nuLayer, menu, layersP);
 					}
-	
+
 				} else {
 
 					Class<? extends Object> valueClass = layerObject.getClass();
-					
+
 					for(Class<?> key : actions.keySet()){
 						if(key.isAssignableFrom(valueClass)
 								|| (key==null && valueClass==null)){						
@@ -349,15 +361,15 @@ public class LayerPanel extends VBox {
 		return tree;
 	}
 
-//	private CheckBoxTreeItem<Layer> buscarTreeItemConNombre(String rootLayerName) {
-//		CheckBoxTreeItem<Layer> actTreeItem = null;
-//		for(TreeItem<Layer> item :rootItem.getChildren()){
-//			if(item.getValue().getName().equals(rootLayerName)){//antes comparaba con value en vez de rootItem
-//				actTreeItem=(CheckBoxTreeItem<Layer>) item;		
-//			}
-//		}
-//		return actTreeItem;
-//	}
+	//	private CheckBoxTreeItem<Layer> buscarTreeItemConNombre(String rootLayerName) {
+	//		CheckBoxTreeItem<Layer> actTreeItem = null;
+	//		for(TreeItem<Layer> item :rootItem.getChildren()){
+	//			if(item.getValue().getName().equals(rootLayerName)){//antes comparaba con value en vez de rootItem
+	//				actTreeItem=(CheckBoxTreeItem<Layer>) item;		
+	//			}
+	//		}
+	//		return actTreeItem;
+	//	}
 	private Function<Layer, String> constructAllSelectedPredicate( Function<Layer, String> act,List<TreeItem<Layer>> children){
 		Function<Layer, String> removeSelected = (layer)->{//creo un predicado que devuelve "Remove Selected" como nombre y al ser ejecutado corre la accion de remover en todos los hijos de este nodo
 			if(layer==null){

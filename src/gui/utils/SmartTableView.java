@@ -7,9 +7,13 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -18,7 +22,10 @@ import javax.persistence.Transient;
 
 import org.controlsfx.control.table.TableFilter;
 import org.controlsfx.control.table.TableFilter.Builder;
+import org.opengis.feature.simple.SimpleFeature;
 
+import dao.Labor;
+import dao.LaborItem;
 import dao.Poligono;
 import dao.OrdenDeCompra.Producto;
 import dao.config.Agroquimico;
@@ -36,9 +43,12 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
@@ -49,9 +59,13 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import utils.DAH;
+import utils.ExcelHelper;
 
 
 
@@ -83,6 +97,39 @@ public class SmartTableView<T> extends TableView<T> {
 		construct(data);
 		
 
+	}
+	
+	public void toExcel() {
+		Platform.runLater(()->{
+			//TODO implementar exportar a excell 
+			ExcelHelper xHelper = new ExcelHelper();
+			Map<String, Object[]> data=new TreeMap<String,Object[]>();//HashMap no mantiene el orden
+			List<Object> itemData = new ArrayList<Object>();
+							
+			
+			Integer row = new Integer(1);//excel empieza a contar desde 1 duh!
+			//headers
+			for(TableColumn<?, ?> col:this.getColumns()) {		
+				Object cellData = col.getText();
+				itemData.add(cellData);
+			}
+			data.put("0",itemData.toArray());
+			//row++;
+			itemData.clear();
+			
+			for(T item :  this.getItems()) {			
+				
+				for(TableColumn col:this.getColumns()) {		
+					Object cellData = col.getCellData(item);
+					itemData.add(cellData);
+				}
+				data.put(row.toString(),itemData.toArray());
+				row++;
+				itemData.clear();
+			}
+
+			xHelper.exportData(null, data);
+			});
 	}
 
 	private void construct(ObservableList<T> data) {
@@ -862,6 +909,40 @@ public class SmartTableView<T> extends TableView<T> {
 		this.setItems(null); 
 		this.layout(); 
 		this.setItems(data); 
+	}
+
+	public static void showLaborTable(Labor<?> labor) {
+		Platform.runLater(()->{
+
+			ArrayList<LaborItem> liLista = new ArrayList<LaborItem>();
+			System.out.println("Comenzando a cargar la los datos de la tabla"); //$NON-NLS-1$
+			Iterator<?> it = labor.outCollection.iterator();
+			while(it.hasNext()){
+				LaborItem lI = labor.constructFeatureContainerStandar((SimpleFeature)it.next(), false);
+				liLista.add(lI);
+			}
+
+			final ObservableList<LaborItem> dataLotes =	FXCollections.observableArrayList(liLista);
+
+			SmartTableView<LaborItem> table = new SmartTableView<LaborItem>(dataLotes);
+			table.setEditable(false);
+			//Button toExcel = new Button("To Excel");
+			Button exportButton = new Button(Messages.getString("CosechaHistoChart.16")); //"Exportar"
+			exportButton.setOnAction(a->{
+				table.toExcel();
+			});
+			BorderPane bottom = new BorderPane();
+			bottom.setRight(exportButton);
+			VBox.setVgrow(table, Priority.ALWAYS);
+			VBox vBox = new VBox(table,bottom);
+			Scene scene = new Scene(vBox, 800, 600);
+			Stage tablaStage = new Stage();
+			tablaStage.getIcons().add(new Image(JFXMain.ICON));
+			tablaStage.setTitle(labor.getNombre());
+			tablaStage.setScene(scene);
+			tablaStage.show();	 
+		});
+		
 	}
 
 

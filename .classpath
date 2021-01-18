@@ -57,8 +57,6 @@
 	<classpathentry exported="true" kind="lib" path="libs/org.eclipse.persistence.jpars_2.7.1.v20171221-bd47e8f.jar"/>
 	<classpathentry kind="lib" path="libs/javax.persistence_2.2.0.v201708071007.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/WorldWindJava"/>
-	<classpathentry kind="lib" path="C:/Users/quero/Downloads/Xerces-J-bin.2.12.0/xerces-2_12_0/xercesImpl.jar"/>
-	<classpathentry kind="lib" path="C:/Users/quero/Downloads/Xerces-J-bin.2.12.0/xerces-2_12_0/xml-apis.jar"/>
 	<classpathentry kind="lib" path="/WorldWindJava/lib-external/gdal/gdal.jar">
 		<attributes>
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="WorldWindJava/lib-external/gdal"/>
@@ -67,5 +65,7 @@
 	<classpathentry kind="lib" path="/WorldWindJava/jogl-all.jar"/>
 	<classpathentry kind="lib" path="/WorldWindJava/gluegen-rt.jar"/>
 	<classpathentry kind="lib" path="libs/tiff-2.0.2.jar"/>
+	<classpathentry kind="lib" path="libs/xercesImpl.jar"/>
+	<classpathentry kind="lib" path="libs/xml-apis.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

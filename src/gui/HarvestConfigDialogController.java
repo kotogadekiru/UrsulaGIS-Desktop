@@ -385,10 +385,25 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		converterMax.setGroupingUsed(true);
 		converterMax.setGroupingSize(3);
 
+		this.textMaxRinde.textProperty().set(
+				labor.getConfiguracion().getConfigProperties().getPropertyOrDefault(
+						CosechaLabor.CosechaLaborConstants.MAX_RINDE_KEY, 
+						converterMax.format(labor.maxRindeProperty.doubleValue())
+								 ));
+				//labor.getPrecioGrano().toString()));
+		
 		Bindings.bindBidirectional(this.textMaxRinde.textProperty(), labor.maxRindeProperty,converterMax);
 
+		this.textMinRinde.textProperty().set(
+				labor.getConfiguracion().getConfigProperties().getPropertyOrDefault(
+						CosechaLabor.CosechaLaborConstants.MIN_RINDE_KEY, 
+						converterMax.format(labor.minRindeProperty.doubleValue())
+								 ));
+		
 		//textMinRinde
 		Bindings.bindBidirectional(this.textMinRinde.textProperty(), labor.minRindeProperty, converter);
+
+		
 
 		//textDistanciasRegimen
 		Bindings.bindBidirectional(this.textDistanciasRegimen.textProperty(), labor.config.cantDistanciasEntradaRegimenProperty(), converter);
