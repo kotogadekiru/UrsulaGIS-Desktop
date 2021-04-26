@@ -495,7 +495,7 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 
 			double porcNubes=cloudCount.doubleValue()/totalCount.doubleValue();
 			double ndviProm=ndviSuma.doubleValue()/cultivoCount.doubleValue();
-			System.out.println("ndviProm "+ndviProm);
+			//System.out.println("ndviProm "+ndviProm);
 
 			if(porcNubes>0.9) {
 				System.out.print("ignorando layer por nublado");
@@ -566,7 +566,11 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 			};
 
 			DecimalFormat df = new DecimalFormat(Messages.getString("GenerarMuestreoDirigidoTask.5")); //$NON-NLS-1$
-			layer.setName(fileName+" "+df.format(porcNubes*100)+"% "+Messages.getString("ShowNDVITifFileTask.nublado"));
+			if(porcNubes>0) {
+				layer.setName(fileName+" "+df.format(porcNubes*100)+"% "+Messages.getString("ShowNDVITifFileTask.nublado"));
+			}else {
+				layer.setName(fileName);
+			}
 			layer.setPickEnabled(false);
 			layer.addRenderable(surface);
 			layer.addRenderable(renderable);

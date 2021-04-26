@@ -500,7 +500,7 @@ public class JFXMain extends Application {
 		//insertMenuItem(menuCalcular,"Retabilidades",a->doProcessMargin());
 		addMenuItem(Messages.getString("JFXMain.distancia"),(a)->doMedirDistancia(),menuHerramientas); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.superficie"),(a)->doMedirSuperficie(),menuHerramientas); //$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.unirShapes"),(a)->JuntarShapefilesTask.process(),menuHerramientas); //$NON-NLS-1$
+		addMenuItem(Messages.getString("JFXMain.unirShapes"),(a)->doJuntarShapefiles(),menuHerramientas); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.rentabilidad"),(a)->doProcessMargin(),menuHerramientas); //$NON-NLS-1$
 		//addMenuItem(Messages.getString("JFXMain.unirCosechas"),(a)->doUnirCosechas(null),menuHerramientas); //$NON-NLS-1$
 		//addMenuItem(Messages.getString("JFXMain.unirFertilizaciones"),(a)->doUnirFertilizaciones(),menuHerramientas); //$NON-NLS-1$
@@ -939,6 +939,7 @@ public class JFXMain extends Application {
 		/**
 		 * Accion permite obtener ndvi
 		 */
+		//FIXME la fecha de obtener ndvi de labor se selecciona mal si elegimos 1ro de enero 2021 va a enero 2020
 		laboresP.add(constructPredicate(Messages.getString("JFXMain.downloadNDVI"),(layer)->{
 			Object o =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);			
 			if(o instanceof Labor){
@@ -1107,7 +1108,7 @@ public class JFXMain extends Application {
 		 */
 		cosechasP.add(constructPredicate(Messages.getString("JFXMain.grillarCosechaAction"),(layer)->{
 			doGrillarCosechas((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-			return "cosecha editada" + layer.getName(); //$NON-NLS-1$
+			return "cosecha grillada" + layer.getName(); //$NON-NLS-1$
 		}));
 
 		/**
@@ -3467,6 +3468,34 @@ public class JFXMain extends Application {
 		}//if stores != null
 
 	}
+	
+	
+	private void doJuntarShapefiles() {
+		
+//		ProcessMarginMapTask uMmTask = new ProcessMarginMapTask(margen);
+//		uMmTask.installProgressBar(progressBox);
+//		uMmTask.setOnSucceeded(handler -> {
+//			Margen ret = (Margen)handler.getSource().getValue();
+//			uMmTask.uninstallProgressBar();
+//
+//			this.margenes.add(ret);
+//			insertBeforeCompass(getWwd(), ret.getLayer());
+//			this.getLayerPanel().update(this.getWwd());
+//
+//			playSound();
+//
+//			viewGoTo(ret);
+//
+//			System.out.println(Messages.getString("JFXMain.323")); //$NON-NLS-1$
+//		});
+		
+		List<FileDataStore> stores = FileHelper.chooseShapeFileAndGetMultipleStores(null);
+		File shapeFile = FileHelper.getNewShapeFile("union");
+		
+		executorPool.execute(()->JuntarShapefilesTask.process(stores,shapeFile));
+		
+	}
+
 
 	private void doProcessMargin() {		
 		System.out.println(Messages.getString("JFXMain.319")); //$NON-NLS-1$

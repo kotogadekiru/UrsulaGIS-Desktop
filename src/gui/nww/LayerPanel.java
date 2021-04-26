@@ -167,30 +167,35 @@ public class LayerPanel extends VBox {
 			});
 		}
 
-
+//ordenar los ndvi por fecha
 		for(TreeItem<Layer> item : rootItem.getChildren()){
 			try{ item.getChildren().sort((c1,c2)->{
 				//fijarse si es de tipo ndvi
 				Object labor1 = c1.getValue().getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 				Object labor2 = c2.getValue().getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 
-				String l1Name =c1.getValue().getName();
+				String l1Name =c1.getValue().getName();//((Ndvi)labor1).get
 				String l2Name =c2.getValue().getName();
 
 				if(labor1 != null && labor1 instanceof Ndvi && 
-						labor2 != null && labor2 instanceof Ndvi &&
-						l1Name.startsWith(l2Name.substring(0, l2Name.length()-"02-01-2018".length()))){ //$NON-NLS-1$
-					try {
-						LocalDate fecha1 = ((Ndvi)labor1).getFecha();
-						LocalDate fecha2 = ((Ndvi)labor2).getFecha();
-						return fecha1.compareTo(fecha2);
-					}catch(Exception e) {
-						return l1Name.compareToIgnoreCase(l2Name);
-					}
-				} else {
+					labor2 != null && labor2 instanceof Ndvi) {
+					 l1Name =((Ndvi)labor1).getNombre();
+					 l2Name =((Ndvi)labor2).getNombre();
+					 //si empiezan con el mismo nombre los ordeno por fecha
+					if(	l1Name.startsWith(l2Name.substring(0, l2Name.length()-"02-01-2018".length()))){ //$NON-NLS-1$
+						try {
+							LocalDate fecha1 = ((Ndvi)labor1).getFecha();
+							LocalDate fecha2 = ((Ndvi)labor2).getFecha();
+						//	System.out.println("comprarando fecha1= "+fecha1+" con fecha2= "+fecha2);
+							return fecha1.compareTo(fecha2);
+						}catch(Exception e) {
+							return l1Name.compareToIgnoreCase(l2Name);
+						}
+					} 
+				} //else {//ordenar el resto por nombre
 
 					return l1Name.compareToIgnoreCase(l2Name);
-				}
+				//}
 			});
 			}catch(Exception e){
 				e.printStackTrace();

@@ -56,6 +56,7 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 	//ArrayList<ArrayList<Object>> pathTooltips = new ArrayList<ArrayList<Object>>();
 	Double costoFijoHa;
 	boolean showMargen = false;
+	
 	public ProcessMarginMapTask(Margen margen) {
 		super(margen);
 		this.fertilizaciones = margen.getFertilizaciones();

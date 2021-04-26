@@ -39,7 +39,9 @@ import org.opengis.feature.type.FeatureType;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.spatial.BBOX;
 import org.opengis.geometry.BoundingBox;
+import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.TransformException;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
@@ -55,17 +57,18 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
+import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
 public class JuntarShapefilesTask {
 	
 
-	public static void process(){
+	public static void process(List<FileDataStore> stores,File shapeFile){
 
-		//TODO seleccionar un directorio
-		//TODO buscar todos los shapefiles dentro de el directorio
-		List<FileDataStore> stores = chooseShapeFileAndGetMultipleStores(null);
-		//TODO buscar todas los atributos de cada shape
+		// seleccionar un directorio
+		// buscar todos los shapefiles dentro de el directorio
+		//List<FileDataStore> stores = chooseShapeFileAndGetMultipleStores(null);
+		// buscar todas los atributos de cada shape
 		List<String> newDescriptors = new ArrayList<String>();
 		//attributeMapping contiene la relacion entre el nombre de origen(key) y el nombre de destino(value) para cada store
 		Map<FileDataStore,Map<String,String>> attributeMaping=Collections.synchronizedMap(new HashMap<FileDataStore,Map<String,String>>());
@@ -73,7 +76,7 @@ public class JuntarShapefilesTask {
 		ReferencedEnvelope unionEnvelope = null;
 
 		if (stores == null)return;
-		for(int i=0;i<stores.size();i++){//FileDataStore store : stores){
+		for(int i=0; i < stores.size(); i++){//FileDataStore store : stores){
 			FileDataStore store =stores.get(i);
 			List<AttributeType> descriptors;
 			try {
@@ -94,13 +97,28 @@ public class JuntarShapefilesTask {
 					}
 				}
 				System.out.println("newDescriptors al final:\n"+newDescriptors);
+				
 				ReferencedEnvelope b = store.getFeatureSource().getBounds();
 				if(unionEnvelope==null){
 					unionEnvelope=b;
+					//CoordinateReferenceSystem ref = b.getCoordinateReferenceSystem();
 				}else{
-					if(b.getArea()<unionEnvelope.getArea()){
-						unionEnvelope=b;
-					}
+				//	unionEnvelope.include(b);
+					
+					ReferencedEnvelope e = new ReferencedEnvelope(							
+							Math.min(b.getMinX(), unionEnvelope.getMinX()),
+							Math.max(b.getMaxX(), unionEnvelope.getMaxX()),
+							Math.min(b.getMinY(), unionEnvelope.getMinY()),
+							Math.max(b.getMaxY(), unionEnvelope.getMaxY()),
+							unionEnvelope.getCoordinateReferenceSystem()
+							);
+					
+					unionEnvelope.setBounds(e);
+					
+					
+//					if(b.getArea()<unionEnvelope.getArea()){
+//						unionEnvelope=b;
+//					}
 
 				}
 
@@ -113,7 +131,7 @@ public class JuntarShapefilesTask {
 
 
 
-		//TODO crear un nuevo shapeFile type que contenga todas las features de los shapes ingresados
+		// crear un nuevo shapeFile type que contenga todas las features de los shapes ingresados
 		String typeDescriptor = "the_geom:MultiPolygon:srid=4326";
 		for(String descriptor : newDescriptors){
 			typeDescriptor+=","+descriptor;
@@ -124,40 +142,41 @@ public class JuntarShapefilesTask {
 
 			DefaultFeatureCollection outCollection=new DefaultFeatureCollection("internal",type);	
 			Double ancho=Double.parseDouble(Configuracion.getInstance().getPropertyOrDefault(CosechaConfig.ANCHO_GRILLA_KEY, "10"));
-			//TODO constriur una grilla que cubra todos los shapes
+			// constriur una grilla que cubra todos los shapes
 			List<Polygon>  grilla = construirGrilla(unionEnvelope, ancho);
 
-			//TODO por cada poligono de la grilla crear un nuevo SimpleFeature del nuevo tipo que contenga los valores de todos los shapes de entrada
+			// por cada poligono de la grilla crear un nuevo SimpleFeature del nuevo tipo que contenga los valores de todos los shapes de entrada
 			ConcurrentMap<Polygon,SimpleFeature > byPolygon =
 					grilla.parallelStream().collect(() -> new  ConcurrentHashMap< Polygon,SimpleFeature>(),
 							(map, poly) -> {
 								SimpleFeatureBuilder fBuilder = new SimpleFeatureBuilder(type);
 								//boolean polygonHasFeatures=false;
-								Map<Boolean,List<FileDataStore>> storeHasFeatures = new HashMap<Boolean,List<FileDataStore>>();
-								storeHasFeatures.put(true, new ArrayList<FileDataStore>());
-								storeHasFeatures.put(false, new ArrayList<FileDataStore>());
+								Map<Boolean,List<FileDataStore>> storeHasFeaturesMap = new HashMap<Boolean,List<FileDataStore>>();
+								storeHasFeaturesMap.put(true, new ArrayList<FileDataStore>());
+								storeHasFeaturesMap.put(false, new ArrayList<FileDataStore>());
+								
 								Envelope envelope = poly.getEnvelopeInternal();
 
-								for(FileDataStore store:stores){
-									boolean polygonHasInformation=construirJoinedFeature(store, envelope, attributeMaping.get(store), fBuilder);
-									storeHasFeatures.get(polygonHasInformation).add(store);				
+								for(FileDataStore store : stores){
+									boolean polygonHasInformation=construirJoinedFeature(store, poly, attributeMaping.get(store), fBuilder);
+									storeHasFeaturesMap.get(polygonHasInformation).add(store);				
 								}
 
-								boolean joinedFeatureHasInformation=storeHasFeatures.get(true).size()>0;
+								boolean joinedFeatureHasInformation = (storeHasFeaturesMap.get(true).size() > 0);
 
 								if(joinedFeatureHasInformation){
-									for(FileDataStore storeToInterpolate:storeHasFeatures.get(false)){
+									for(FileDataStore storeToInterpolate:storeHasFeaturesMap.get(false)){
 										//System.out.println("interpolando la informacion faltante para el store "+storeToInterpolate );
-										Envelope cachedEnvelope = new Envelope(envelope);
-										double height = cachedEnvelope.getHeight();
-										double width = cachedEnvelope.getHeight();
+									
+										double height = envelope.getHeight();
+										double width = envelope.getWidth();
 										for(int i=0;i<10;i++){							
 											//System.out.println("aumentando el tamanio del envelope "+(i+1)*2+" veces");
 											
 											//System.out.println("width= "+width+" heigh="+height);
-											cachedEnvelope.expandBy(width/2, height/2);
-											//TODO mientras devuelva false seguir duplicando el tamanio del envelope
-											if(construirJoinedFeature(storeToInterpolate, cachedEnvelope, attributeMaping.get(storeToInterpolate), fBuilder)){
+											envelope.expandBy(width/2, height/2);
+											// mientras devuelva false seguir duplicando el tamanio del envelope
+											if(construirJoinedFeature(storeToInterpolate, GeometryHelper.constructPolygon(envelope), attributeMaping.get(storeToInterpolate), fBuilder)){
 												//System.out.println(i+" consegui informacion para interpolar el punto "+ fBuilder);
 												continue;
 											}											
@@ -175,8 +194,9 @@ public class JuntarShapefilesTask {
 
 			byPolygon.values().forEach(o->outCollection.add(o));
 
-			//TODO grabar el nuevo shapefile del nuevo tipo en el directorio ingresado
-			File shapeFile =  getNewShapeFile(null);
+			//todo grabar el nuevo shapefile del nuevo tipo en el directorio ingresado
+			
+			//File shapeFile =  getNewShapeFile(null);
 
 			Map<String, Serializable> params = new HashMap<String, Serializable>();
 			try {
@@ -232,13 +252,14 @@ public class JuntarShapefilesTask {
 		}
 	}
 
-	private static boolean construirJoinedFeature(FileDataStore store, Envelope envelope,Map<String,String> storeMapping, SimpleFeatureBuilder fBuilder){
+	private static boolean construirJoinedFeature(FileDataStore store, Geometry poly,Map<String,String> storeMapping, SimpleFeatureBuilder fBuilder){
 		boolean hasFeatures = false;
-		List<SimpleFeature> storeFeatures =new LinkedList<SimpleFeature>( fileDataStoreQuery(store, envelope));
+		//Envelope envelope = poly.getEnvelopeInternal();
+		List<SimpleFeature> storeFeatures =new LinkedList<SimpleFeature>( fileDataStoreQuery(store, poly));
 		if(storeFeatures.size()>0){
 			hasFeatures=true;
 
-			SimpleFeature item = construirFeaturePromedio(storeFeatures,envelope);  
+			SimpleFeature item = construirFeaturePromedio(storeFeatures,poly.getEnvelopeInternal());  
 			if(item!=null){
 				//Map<String, String> storeMapping = attributeMaping.get(store);
 				for(String storeAttName : storeMapping.keySet()){
@@ -252,7 +273,7 @@ public class JuntarShapefilesTask {
 		return hasFeatures;
 	}
 
-	private static Double getDistancia(Object oGeom,Envelope envelope){
+	private static Double getKrigingWeight(Object oGeom,Envelope envelope){
 		double ancho = envelope.getWidth();
 		//la distancia no deberia ser mayor que 2^1/2*ancho, me tomo un factor de 10 por seguridad e invierto la escala para tener mejor representatividad
 		//en vez de tomar de 0 a inf, va de ancho*(10-2^1/2) a 0
@@ -297,7 +318,7 @@ public class JuntarShapefilesTask {
 					for(SimpleFeature f:storeFeatures){
 						Object gObject = (Geometry) f.getDefaultGeometry();
 
-						Double weight = getDistancia(gObject,envelope);
+						Double weight = getKrigingWeight(gObject,envelope);
 						value+=weight*getDoubleFromObj(f.getAttribute(att.getName()));
 						pesosTotal+=weight;
 					}
@@ -316,21 +337,21 @@ public class JuntarShapefilesTask {
 		return fBuilder.buildFeature(null);
 	}
 
-	private static Collection<? extends SimpleFeature> fileDataStoreQuery(FileDataStore store, Envelope envelopeInternal) {
+	private static Collection<? extends SimpleFeature> fileDataStoreQuery(FileDataStore store, Geometry poly) {
 		List<SimpleFeature> objects = new ArrayList<SimpleFeature>();
 
 		FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2( GeoTools.getDefaultHints() );
 		FeatureType schema;
 		try {
 			schema = store.getSchema();
-
+			
+			//Geometry geoEnv = GeometryHelper.constructPolygon(poly);
 
 			// usually "THE_GEOM" for shapefiles
 			String geometryPropertyName = schema.getGeometryDescriptor().getLocalName();
-			CoordinateReferenceSystem targetCRS = schema.getGeometryDescriptor()
-					.getCoordinateReferenceSystem();
+			CoordinateReferenceSystem targetCRS = schema.getGeometryDescriptor().getCoordinateReferenceSystem();
 
-			ReferencedEnvelope bbox = new ReferencedEnvelope(envelopeInternal,targetCRS);		    
+			ReferencedEnvelope bbox = new ReferencedEnvelope(poly.getEnvelopeInternal(),targetCRS);		    
 			BBOX filter = ff.bbox(ff.property(geometryPropertyName), bbox);
 
 			SimpleFeatureCollection features = store.getFeatureSource().getFeatures(filter);//OK!! esto funciona
@@ -339,7 +360,8 @@ public class JuntarShapefilesTask {
 			while(featuresIterator.hasNext()){
 				SimpleFeature next = featuresIterator.next();
 				Geometry geom = (Geometry)next.getDefaultGeometry();
-				if(envelopeInternal.intersects(geom.getEnvelopeInternal())){
+				if(poly.intersects(geom)){
+					next.setDefaultGeometry(poly.intersection(geom));
 					objects.add(next);
 				}
 			}
@@ -366,9 +388,11 @@ public class JuntarShapefilesTask {
 		Double maxX = bounds.getMaxX()/ProyectionConstants.metersToLong() + ancho/2;
 		Double maxY = bounds.getMaxY()/ProyectionConstants.metersToLat() + ancho/2;
 		Double x0=minX;
+		
 		for(int x=0;(x0)<maxX;x++){
 			x0=minX+x*ancho;
 			Double x1=minX+(x+1)*ancho;
+			
 			for(int y=0;(minY+y*ancho)<maxY;y++){
 				Double y0=minY+y*ancho;
 				Double y1=minY+(y+1)*ancho;
@@ -406,76 +430,76 @@ public class JuntarShapefilesTask {
 		return polygons;
 	}
 
-	private static List<FileDataStore> chooseShapeFileAndGetMultipleStores(List<File> files) {
-		if(files==null){
-			files =chooseFiles("SHP", "*.shp");;
-		}
-		List<FileDataStore> stores = new ArrayList<FileDataStore>();
-		if (files != null) {
-			for(File f : files){
-				try {
-					stores.add(FileDataStoreFinder.getDataStore(f));
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		return stores;
-	}
+//	private static List<FileDataStore> chooseShapeFileAndGetMultipleStores(List<File> files) {
+//		if(files==null){
+//			files =chooseFiles("SHP", "*.shp");;
+//		}
+//		List<FileDataStore> stores = new ArrayList<FileDataStore>();
+//		if (files != null) {
+//			for(File f : files){
+//				try {
+//					stores.add(FileDataStoreFinder.getDataStore(f));
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				}
+//			}
+//		}
+//		return stores;
+//	}
 
-	/**
-	 * 
-	 * @param f1 filter Title "JPG"
-	 * @param f2 filter regex "*.jpg"
-	 */
-	private static List<File> chooseFiles(String f1,String f2) {
-		List<File> files =null;
-		FileChooser fileChooser = new FileChooser();
-		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(f1, f2));
-
-		try{
-			files = fileChooser.showOpenMultipleDialog(new Stage());
-		}catch(IllegalArgumentException e){
-			fileChooser.setInitialDirectory(null);
-			File file = fileChooser.showOpenDialog(new Stage());
-			files = new LinkedList<File>();
-			files.add(file);
-		}
-
-		return files;
-	}
-
-	private static File getNewShapeFile(String nombre) {
-		FileChooser fileChooser = new FileChooser();
-		fileChooser.setTitle("Guardar ShapeFile");
-		fileChooser.getExtensionFilters().add(
-				new FileChooser.ExtensionFilter("SHP", "*.shp"));
-
-		File lastFile = null;
-		Configuracion config =Configuracion.getInstance();
-		String lastFileName = config.getPropertyOrDefault(Configuracion.LAST_FILE,null);
-		if(lastFileName != null){
-			lastFile = new File(lastFileName);
-		}
-		if(lastFile != null ){
-			fileChooser.setInitialDirectory(lastFile.getParentFile());
-			if(nombre == null){
-				nombre = lastFile.getName();
-			}
-			fileChooser.setInitialFileName(nombre);
-			config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
-		} else {
-			fileChooser.setInitialDirectory(null);
-		}
-
-		//if(file!=null)	fileChooser.setInitialDirectory(file.getParentFile());
-
-		File file = fileChooser.showSaveDialog(new Stage());
-
-		//System.out.println("archivo seleccionado para guardar "+file);
-
-		return file;
-	}
+//	/**
+//	 * 
+//	 * @param f1 filter Title "JPG"
+//	 * @param f2 filter regex "*.jpg"
+//	 */
+//	private static List<File> chooseFiles(String f1,String f2) {
+//		List<File> files =null;
+//		FileChooser fileChooser = new FileChooser();
+//		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(f1, f2));
+//
+//		try{
+//			files = fileChooser.showOpenMultipleDialog(new Stage());
+//		}catch(IllegalArgumentException e){
+//			fileChooser.setInitialDirectory(null);
+//			File file = fileChooser.showOpenDialog(new Stage());
+//			files = new LinkedList<File>();
+//			files.add(file);
+//		}
+//
+//		return files;
+//	}
+//
+//	private static File getNewShapeFile(String nombre) {
+//		FileChooser fileChooser = new FileChooser();
+//		fileChooser.setTitle("Guardar ShapeFile");
+//		fileChooser.getExtensionFilters().add(
+//				new FileChooser.ExtensionFilter("SHP", "*.shp"));
+//
+//		File lastFile = null;
+//		Configuracion config =Configuracion.getInstance();
+//		String lastFileName = config.getPropertyOrDefault(Configuracion.LAST_FILE,null);
+//		if(lastFileName != null){
+//			lastFile = new File(lastFileName);
+//		}
+//		if(lastFile != null ){
+//			fileChooser.setInitialDirectory(lastFile.getParentFile());
+//			if(nombre == null){
+//				nombre = lastFile.getName();
+//			}
+//			fileChooser.setInitialFileName(nombre);
+//			config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
+//		} else {
+//			fileChooser.setInitialDirectory(null);
+//		}
+//
+//		//if(file!=null)	fileChooser.setInitialDirectory(file.getParentFile());
+//
+//		File file = fileChooser.showSaveDialog(new Stage());
+//
+//		//System.out.println("archivo seleccionado para guardar "+file);
+//
+//		return file;
+//	}
 
 	public static Double getDoubleFromObj(Object o){
 
