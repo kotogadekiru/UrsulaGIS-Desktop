@@ -37,6 +37,7 @@ import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
+import gui.Messages;
 import javafx.geometry.Point2D;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
@@ -78,9 +79,8 @@ public class CrearFertilizacionMapTask extends ProcessMapTask<FertilizacionItem,
 				
 		labor.constructClasificador();
 
-		List<FertilizacionItem> itemsToShow = new ArrayList<FertilizacionItem>();
-		itemsToShow.add(ci);
-		runLater(itemsToShow);
+		
+		runLater(this.getItemsList());
 		updateProgress(0, featureCount);
 
 	}
@@ -96,23 +96,23 @@ public class CrearFertilizacionMapTask extends ProcessMapTask<FertilizacionItem,
 		String tooltipText = new String(// TODO ver si se puede instalar un
 				// boton
 				// que permita editar el dato
-				"Densidad: " + df.format(fertFeature.getDosistHa())
-				+ " Kg/Ha\n" + "Costo: "
-				+ df.format(fertFeature.getImporteHa()) + " U$S/Ha\n"
+				Messages.getString("ProcessFertMapTask.2") + df.format(fertFeature.getDosistHa()) //$NON-NLS-1$
+				+ Messages.getString("ProcessFertMapTask.3") + Messages.getString("ProcessFertMapTask.4") //$NON-NLS-1$ //$NON-NLS-2$
+				+ df.format(fertFeature.getImporteHa()) + Messages.getString("ProcessFertMapTask.5") //$NON-NLS-1$
 				//+ "Sup: "
 				//+ df.format(area * ProyectionConstants.METROS2_POR_HA)
 				//+ " m2\n"
 				// +"feature: " + featureNumber
 				);
 		if(area<1){
-			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
+			tooltipText=tooltipText.concat( Messages.getString("ProcessFertMapTask.6")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("ProcessFertMapTask.7")); //$NON-NLS-1$ //$NON-NLS-2$
 			//	tooltipText=tooltipText.concat( "SupOrig: "+df.format(area2 ) + "m2\n");
 		} else {
-			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
+			tooltipText=tooltipText.concat(Messages.getString("ProcessFertMapTask.8")+df.format(area ) + Messages.getString("ProcessFertMapTask.9")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
 		//List  paths = 
-	 return	getExtrudedPolygonFromGeom(poly, fertFeature,tooltipText,renderablePolygon);
+		return super.getExtrudedPolygonFromGeom(poly, fertFeature,tooltipText,renderablePolygon);
 
 		//return null;
 	}

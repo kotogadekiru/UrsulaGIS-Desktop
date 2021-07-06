@@ -169,15 +169,16 @@ public class ProcessFertMapTask extends ProcessMapTask<FertilizacionItem,Fertili
 		}// fin del for que recorre las cosechas por indice
 		reader.close();
 
-		List<FertilizacionItem> itemsToShow = new ArrayList<FertilizacionItem>();
+		//List<FertilizacionItem> itemsToShow = new ArrayList<FertilizacionItem>();
 		SimpleFeatureIterator it = labor.outCollection.features();
 		while(it.hasNext()){
 			SimpleFeature f=it.next();
-			itemsToShow.add(labor.constructFeatureContainerStandar(f,false));
+			//itemsToShow.add(labor.constructFeatureContainerStandar(f,false));
 		}
 		it.close();
 		labor.constructClasificador();
-		runLater(itemsToShow);
+		
+		runLater(this.getItemsList());
 		updateProgress(0, featureCount);	
 	}
 

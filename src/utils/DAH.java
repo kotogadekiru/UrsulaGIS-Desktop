@@ -19,6 +19,7 @@ import static org.eclipse.persistence.config.PersistenceUnitProperties.*;
 import dao.Labor;
 import dao.Ndvi;
 import dao.Poligono;
+import dao.OrdenDeCompra.OrdenCompra;
 import dao.OrdenDeCompra.ProductoLabor;
 import dao.config.Agroquimico;
 import dao.config.Campania;
@@ -30,6 +31,7 @@ import dao.config.Fertilizante;
 import dao.config.Lote;
 import dao.config.Semilla;
 import dao.cosecha.CosechaLabor;
+import dao.recorrida.Recorrida;
 
 public class DAH {
 	private static final String APPDATA = "APPDATA";
@@ -37,7 +39,11 @@ public class DAH {
 	private static final String H2_URSULAGIS_DB = "ursulaGIS.h2";//mv.db
 	//private static final String OBJECTDB_DB_MONITORES_H2 = "$ursulaGIS.odb";
 //	private static final String SQLLITE_PU = "UrsulaGIS";
-	private static EntityManager em = null;
+	/**
+	 * @deprecated use em() instead
+	 */
+	@Deprecated
+	private static EntityManager emODB = null;
 	private static EntityManager emLite = null;
 	static EntityTransaction transaction=null;
 
@@ -46,8 +52,22 @@ public class DAH {
 		return emLite();
 	}
 	
+	public static void beginTransaction() {
+		DAH.transaction = em().getTransaction();
+		DAH.transaction.begin();
+	}
+	
+	public static void commitTransaction() {
+		DAH.transaction.commit();
+		DAH.transaction=null;
+	}
+	
+	public static void rollbackTransaction() {
+		DAH.transaction.rollback();
+	}
+	
 	public static EntityManager emODB(){
-		if(em == null){
+		if(emODB == null){
 			String currentUsersHomeDir =System.getenv(APPDATA);
 			//	System.out.println("obtuve la direccion de appData : "+currentUsersHomeDir);
 				//obtuve la direccion de appData : C:\Users\quero\AppData\Roaming
@@ -57,9 +77,9 @@ public class DAH {
 			EntityManagerFactory emf =
 					Persistence.createEntityManagerFactory(db_url);		     
 			
-			em = emf.createEntityManager();
+			emODB = emf.createEntityManager();
 		}
-		return em;
+		return emODB;
 	}
 	
 	/**
@@ -177,6 +197,7 @@ public class DAH {
 			em.getTransaction().commit();
 		} else{
 			entidades.forEach(each->em.remove(each));
+			
 			//em.remove(entidad);	
 		}
 
@@ -364,6 +385,13 @@ public class DAH {
 		return results;
 	}
 
+	public static List<Recorrida> getAllRecorridas() {
+		  TypedQuery<Recorrida> query =
+				  em().createNamedQuery(Recorrida.FIND_ALL, Recorrida.class);
+			  List<Recorrida> results = query.getResultList();
+			//  closeEm();
+		return results;
+	}
 
 public static List<Poligono> getPoligonosActivos() {
 	  TypedQuery<Poligono> query =
@@ -377,10 +405,14 @@ public static List<Poligono> getPoligonosActivos() {
 
 	//se llama al cerrar la aplicacion
 	public static void closeEm() {
-		if(em!=null){
-			em.close();
-			 em=null;
-		}	 
+		if(emODB!=null){
+			emODB.close();
+			 emODB=null;
+		}	
+		if(emLite!=null){
+			emLite.close();
+			 emLite=null;
+		}
 	}
 	
 	public static List<Cultivo> getAllCultivos() {
@@ -470,6 +502,16 @@ public static List<Poligono> getPoligonosActivos() {
 				  em().createNamedQuery(Ndvi.FIND_ACTIVOS, Ndvi.class);
 			  List<Ndvi> results = query.getResultList();
 			//  closeEm();
+		return results;
+	}
+
+	public static List<OrdenCompra> getAllOrdenesCompra() {
+		
+		@SuppressWarnings("rawtypes")
+		TypedQuery<OrdenCompra> query = em().createNamedQuery(
+				OrdenCompra.FIND_ALL, OrdenCompra.class);
+		@SuppressWarnings("unchecked")
+		List<OrdenCompra> results = (List<OrdenCompra> ) query.getResultList();
 		return results;
 	}
 

@@ -73,6 +73,8 @@ public class SmartTableView<T> extends TableView<T> {
 	private Supplier<T> onDoubleClick=null;
 	private Consumer<T> onShowClick=null;
 	
+	private Consumer<List<T>> eliminarAction = list->DAH.removeAll((List<Object>) list);;
+	private Map<MenuItem,Consumer<T>> consumerMap=new HashMap<>();
 	private List<String> rejectedColumns=new ArrayList<>();
 	private List<String> orderColumns=new ArrayList<>();
 	private boolean permiteEliminar=true;
@@ -151,9 +153,15 @@ public class SmartTableView<T> extends TableView<T> {
 			System.out.println("no creo las columnas porque no hay datos");
 		}
 
+	//	Map<String,Consumer<T>> consumerMap = new HashMap<String,Consumer<T>>();
+		
 		ContextMenu contextMenu = new ContextMenu();
 		MenuItem mostrarItem = new MenuItem(Messages.getString("SmartTableView.Cargar"));//"Cargar"
 		MenuItem eliminarItem = new MenuItem(Messages.getString("SmartTableView.Eliminar"));//Eliminar
+		
+		//Map<MenuItem,Consumer<T>> mIMap = new HashMap<MenuItem,Consumer<T>>();
+		
+
 
 		this.setContextMenu(contextMenu);
 
@@ -164,6 +172,7 @@ public class SmartTableView<T> extends TableView<T> {
 			if(rowData != null && rowData.size()>0 ){
 				if(onShowClick!=null) contextMenu.getItems().add(mostrarItem);
 				if(permiteEliminar)   contextMenu.getItems().add(eliminarItem);
+				
 
 				if ( MouseButton.PRIMARY.equals(event.getButton()) && event.getClickCount() == 2) {
 					if(onDoubleClick!=null){
@@ -171,6 +180,14 @@ public class SmartTableView<T> extends TableView<T> {
 					}		            
 				} 
 				else if(MouseButton.SECONDARY.equals(event.getButton()) && event.getClickCount() == 1){
+					
+					consumerMap.keySet().stream().forEach(mi->{
+						contextMenu.getItems().add(mi);
+						mi.setOnAction((ev)->{
+							Platform.runLater(()->	rowData.forEach(consumerMap.get(mi)));
+						});
+					});
+						
 
 					mostrarItem.setOnAction((ev)->{
 						Platform.runLater(()->	rowData.forEach(onShowClick));
@@ -188,7 +205,8 @@ public class SmartTableView<T> extends TableView<T> {
 						if(res.get().equals(ButtonType.OK) && rowData!=null){
 							try{
 								//EntityTransaction transaction = DAH.em().getTransaction();
-								DAH.removeAll((List<Object>) rowData);
+								this.eliminarAction.accept((List<T>) rowData);
+								//DAH.removeAll((List<Object>) rowData);
 							//	rowData.forEach(each->{
 //								DAH.remove(each);
 //							//	data.remove(each);
@@ -884,6 +902,10 @@ public class SmartTableView<T> extends TableView<T> {
 	public void setOnShowClick(Consumer<T> onShowClick) {
 		this.onShowClick = onShowClick;
 	}
+	
+	public void addSecondaryClickConsumer(String localizedName, Consumer<T> consumer) {
+		this.consumerMap.put(new MenuItem(localizedName), consumer);
+	}
 
 	public void setPermiteEliminar(boolean b) {
 		this.permiteEliminar=b;
@@ -901,6 +923,14 @@ public class SmartTableView<T> extends TableView<T> {
 	 */
 	public void setOnDoubleClick(Supplier<T> onDoubleClick) {
 		this.onDoubleClick = onDoubleClick;
+	}
+	
+
+	/**
+	 * @param eliminarAction Consumer que se ocupa de eliminar el objeto deseado. 
+	 */
+	public void setEliminarAction(Consumer<List<T>> eliminarAction) {
+		this.eliminarAction = eliminarAction;
 	}
 
 	public void refresh() { 

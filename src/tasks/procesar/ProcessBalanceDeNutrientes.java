@@ -91,12 +91,12 @@ public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> 
 
 
 		featureCount = grilla.size();
-		List<SueloItem> itemsToShow = new ArrayList<SueloItem>();
+		//List<SueloItem> itemsToShow = new ArrayList<SueloItem>();
 		for(Geometry geometry :grilla){//TODO usar streams paralelos
 			SueloItem sueloItem = createSueloForPoly(geometry);		
 			if(sueloItem!=null){
 				labor.insertFeature(sueloItem);
-				itemsToShow.add(sueloItem);
+			//	itemsToShow.add(sueloItem);
 			}
 			featureNumber++;
 			updateProgress(featureNumber, featureCount);
@@ -106,7 +106,7 @@ public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> 
 			c.clearCache();
 		}
 		labor.constructClasificador();
-		runLater(itemsToShow);
+		runLater(this.getItemsList());
 		updateProgress(0, featureCount);
 
 

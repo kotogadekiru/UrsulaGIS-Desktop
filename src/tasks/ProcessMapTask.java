@@ -38,6 +38,7 @@ import dao.Clasificador;
 import dao.Labor;
 import dao.LaborItem;
 import dao.config.Configuracion;
+import dao.cosecha.CosechaItem;
 import gov.nasa.worldwind.WorldWind;
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Extent;
@@ -87,7 +88,13 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	private static final int TARGET_LOW_RES_TIME = 2000;
 	private static final String TASK_CLOSE_ICON = "/gui/event-close.png";
 	public static final String ZOOM_TO_KEY = "ZOOM_TO";
+	/**
+	 * cantidad de features a procesar
+	 */
 	protected int featureCount=0;
+	/**
+	 * cantidad de features procesadas
+	 */
 	protected int featureNumber=0;
 	protected E labor;
 
@@ -1004,6 +1011,23 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	}
 	protected abstract gov.nasa.worldwind.render.ExtrudedPolygon getPathTooltip(Geometry p, FC  fc,gov.nasa.worldwind.render.ExtrudedPolygon  renderablePolygon);
 
+	
+	protected List<FC> getItemsList(){
+		List<FC> cItems = new ArrayList<FC>();
+		try {
+			FeatureReader<SimpleFeatureType, SimpleFeature> reader = this.labor.outCollection.reader();
+
+			while (reader.hasNext()) {
+				SimpleFeature simpleFeature = reader.next();
+				FC ci = this.labor.constructFeatureContainerStandar(simpleFeature,false);
+				cItems.add(ci);
+			}
+			reader.close();
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		return cItems;
+	}
 
 	private void updateStatsLabor(Collection<FC> itemsToShow){
 		labor.minAmount= Double.MAX_VALUE;
@@ -1011,6 +1035,8 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 		labor.setCantidadLabor(new Double(0.0));
 		labor.setCantidadInsumo(new Double(0.0));
+		
+		
 
 		itemsToShow.parallelStream().forEach(fc->{
 			Geometry g = fc.getGeometry();
@@ -1151,7 +1177,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		int lowRes= TARGET_LOW_RES_TIME;//Integer.parseInt(config.getPropertyOrDefault(FAST_LAYER_PROCESS_TIME, Integer.toString(TARGET_LOW_RES_TIME)));
 		//lowRes = 1000000;
 		long start = System.currentTimeMillis();
-		RenderableLayer analyticSurfaceLayer = createAnalyticSurfaceFromQuery(lowRes);//2
+		RenderableLayer analyticSurfaceLayer = createAnalyticSurfaceFromQuery(lowRes);//21ms
 		long end = System.currentTimeMillis();
 		long actualTime= end-start;
 		System.out.println("lowRes Rendering Time = "+actualTime);
@@ -1194,7 +1220,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		System.out.println("mid res rendering milis: "+medRes);
 		int highRes=8*lowRes;
 		installPlaceMark();
-		if(medRes>TARGET_LOW_RES_TIME*2) {
+		if(medRes>TARGET_LOW_RES_TIME*2 && medRes<60000) {//solo si es menor a un minuto
 			CompletableFuture<Void> completableFuture 
 			= CompletableFuture.runAsync(() -> {
 				RenderableLayer analyticSurfaceLayerHD = createAnalyticSurfaceFromQuery(medRes);//10

@@ -52,9 +52,8 @@ public class CrearPulverizacionMapTask extends ProcessMapTask<PulverizacionItem,
 				
 		labor.constructClasificador();
 
-		List<PulverizacionItem> itemsToShow = new ArrayList<PulverizacionItem>();
-		itemsToShow.add(ci);
-		runLater(itemsToShow);
+		
+		runLater(this.getItemsList());;
 		updateProgress(0, featureCount);
 
 	}

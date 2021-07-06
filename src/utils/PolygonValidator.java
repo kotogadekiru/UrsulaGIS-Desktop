@@ -61,9 +61,10 @@ public class PolygonValidator {
  * inconsistencies are fixed. Otherwise the geometry is returned.
  * 
  * @param geom
- * @return a geometry 
+ * @return a valid geometry or null if not posible
  */
 public static Geometry validate(Geometry geom){
+	try {
     if(geom instanceof Polygon){
         if(geom.isValid()){
             geom.normalize(); // validate does not pick up rings in the wrong order - this will fix that
@@ -85,6 +86,10 @@ public static Geometry validate(Geometry geom){
     }else{
         return geom; // In my case, I only care about polygon / multipolygon geometries
     }
+	}catch(Exception e) {
+		e.printStackTrace();
+		return null;
+	}
 }
 
 /**

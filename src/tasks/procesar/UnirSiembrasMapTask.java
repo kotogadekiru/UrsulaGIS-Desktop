@@ -131,20 +131,12 @@ public class UnirSiembrasMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 			labor.constructClasificador();
 //		}
 
-		List<SiembraItem> itemsToShow = new ArrayList<SiembraItem>();
 
-			SimpleFeatureIterator it = labor.outCollection.features();
-			while(it.hasNext()){
-				SimpleFeature f=it.next();
-				
-				itemsToShow.add(labor.constructFeatureContainerStandar(f,false));
-			}
-			it.close();
 		
 			siembras.forEach((c)->c.getLayer().setEnabled(false));
 
 
-		runLater(itemsToShow);
+		runLater(this.getItemsList());
 		updateProgress(0, featureCount);
 		long time=System.currentTimeMillis()-init;
 		System.out.println("tarde "+time+" milisegundos en unir las cosechas.");

@@ -141,25 +141,26 @@ public class LaborDataStore<E> {
 			labor.cacheLastRead=LocalTime.now();
 			cachedObjects = labor.treeCache.query(envelope);// Exception in thread "pool-2-thread-5" java.util.ConcurrentModificationException
 
-//			if(labor.treeCache.size()>CACHE_MAX_SIZE) {
-//				labor.clearCache();
-//			}
-		}
+			//			if(labor.treeCache.size()>CACHE_MAX_SIZE) {
+			//				labor.clearCache();
+			//			}
 
-		//el error se produjo al convertir un ndvi a cosecha
 
-		FeatureType schema = labor.outCollection.getSchema();			    
-		CoordinateReferenceSystem targetCRS = schema.getGeometryDescriptor().getCoordinateReferenceSystem();		
-		ReferencedEnvelope bbox = new ReferencedEnvelope(envelope,targetCRS);		
-		Geometry geoEnv = GeometryHelper.constructPolygon(bbox);
-		for(SimpleFeature sf : cachedObjects){
-			Geometry sfGeom = (Geometry) sf.getDefaultGeometry();
-			boolean intersects = false;
-			if(sfGeom!=null){
-				intersects = geoEnv.intersects(sfGeom);
-			}
-			if(intersects){
-				objects.add(labor.constructFeatureContainerStandar(sf,false));
+			//el error se produjo al convertir un ndvi a cosecha
+
+			FeatureType schema = labor.outCollection.getSchema();			    
+			CoordinateReferenceSystem targetCRS = schema.getGeometryDescriptor().getCoordinateReferenceSystem();		
+			ReferencedEnvelope bbox = new ReferencedEnvelope(envelope,targetCRS);		
+			Geometry geoEnv = GeometryHelper.constructPolygon(bbox);
+			for(SimpleFeature sf : cachedObjects){
+				Geometry sfGeom = (Geometry) sf.getDefaultGeometry();
+				boolean intersects = false;
+				if(sfGeom!=null){
+					intersects = geoEnv.intersects(sfGeom);
+				}
+				if(intersects){
+					objects.add(labor.constructFeatureContainerStandar(sf,false));
+				}
 			}
 		}
 
@@ -167,23 +168,23 @@ public class LaborDataStore<E> {
 	}
 
 	private static  synchronized void updateAllCachedEnvelopes(Envelope envelope,Labor<? extends LaborItem> labor){
-//		if(labor.treeCache!=null){
-//			//if treeCache is too big clearCache. it only clears on insert.
-////			if(labor.treeCache.size()+1>LaborDataStore.CACHE_MAX_SIZE) {
-////				labor.clearCache();
-////				labor.treeCache=new Quadtree();
-////				labor.treeCacheEnvelope=new Envelope();
-////			}
-//		} else {
-//			labor.treeCache=new Quadtree();
-//			labor.treeCacheEnvelope=new Envelope();
-//		}
-//	
+		//		if(labor.treeCache!=null){
+		//			//if treeCache is too big clearCache. it only clears on insert.
+		////			if(labor.treeCache.size()+1>LaborDataStore.CACHE_MAX_SIZE) {
+		////				labor.clearCache();
+		////				labor.treeCache=new Quadtree();
+		////				labor.treeCacheEnvelope=new Envelope();
+		////			}
+		//		} else {
+		//			labor.treeCache=new Quadtree();
+		//			labor.treeCacheEnvelope=new Envelope();
+		//		}
+		//	
 		labor.treeCache=new Quadtree();
 		labor.treeCacheEnvelope=new Envelope();
-		
+
 		//TODO cargar todas las features en memoria pero en guardarlas indexadas en cachedEnvelopes
-		
+
 		//	Collection<SimpleFeature> items= Lists.newArrayList(labor.outCollection.iterator());
 		if(labor.outCollection==null) {
 			System.err.println("No se puede iterar sobre outCollection porque es null en "+labor.getNombre());
@@ -191,12 +192,17 @@ public class LaborDataStore<E> {
 		}
 		@SuppressWarnings("unchecked")
 		Iterator<SimpleFeature> iterator = labor.outCollection.iterator();
-		iterator.forEachRemaining((it)->{//java.util.ConcurrentModificationException
-			Geometry g =(Geometry) it.getDefaultGeometry();
+		iterator.forEachRemaining((sf)->{//java.util.ConcurrentModificationException
+			Geometry g =(Geometry) sf.getDefaultGeometry();
 			Envelope ge = g.getEnvelopeInternal();
 			//if(envelope.contains(ge) || ge.contains(envelope)) {//no estaba asi.
-				labor.treeCache.insert(ge, it);
+			labor.treeCache.insert(ge, sf);
+
+			if(labor.treeCacheEnvelope==null) {
+				labor.treeCacheEnvelope= ge;
+			}else {
 				labor.treeCacheEnvelope.expandToInclude(ge);
+			}
 			//}
 		});
 	}
@@ -243,12 +249,12 @@ public class LaborDataStore<E> {
 
 			if(labor.treeCache!=null){
 				//if treeCache is too big clearCache. it only clears on insert.
-//				if(labor.treeCache.size()+1>LaborDataStore.CACHE_MAX_SIZE) {
-//					System.out.println("clearing cache on size "+labor.treeCache.size());
-//					labor.clearCache();
-//					labor.treeCache=new Quadtree();
-//					labor.treeCacheEnvelope=new Envelope();
-//				}
+				//				if(labor.treeCache.size()+1>LaborDataStore.CACHE_MAX_SIZE) {
+				//					System.out.println("clearing cache on size "+labor.treeCache.size());
+				//					labor.clearCache();
+				//					labor.treeCache=new Quadtree();
+				//					labor.treeCacheEnvelope=new Envelope();
+				//				}
 
 				labor.treeCacheEnvelope.expandToInclude(geomEnvelope);
 				labor.treeCache.insert(geomEnvelope, fe);

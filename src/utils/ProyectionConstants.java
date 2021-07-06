@@ -66,6 +66,7 @@ public class ProyectionConstants {
 				PrecisionModel.FLOATING), SRID.WGS84_SRID.getSRID());
 		return factory;
 	}
+	
 	public static double getDistancia(Point2D origen, Point2D destino){
 		GeodeticCalculator gc = new GeodeticCalculator();//Constructs a new geodetic calculator associated with the WGS84 ellipsoid.
 		gc.setStartingGeographicPoint(origen);

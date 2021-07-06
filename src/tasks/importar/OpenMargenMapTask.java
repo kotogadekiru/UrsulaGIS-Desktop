@@ -60,14 +60,10 @@ public class OpenMargenMapTask extends ProcessMapTask<MargenItem,Margen> {
 		}
 		
 		int divisor = 1;
-		List<MargenItem> itemsToShow = new ArrayList<MargenItem>();
+		//List<MargenItem> itemsToShow = new ArrayList<MargenItem>();
 		while (reader.hasNext()) {
-
 			SimpleFeature simpleFeature = reader.next();
 			MargenItem si = labor.constructFeatureContainer(simpleFeature);
-		
-
-
 			featureNumber++;
 
 			updateProgress(featureNumber/divisor, featureCount);
@@ -82,13 +78,13 @@ public class OpenMargenMapTask extends ProcessMapTask<MargenItem,Margen> {
 			
 			} else { // no es point. Estoy abriendo una cosecha de poligonos.
 				labor.insertFeature(si);
-				itemsToShow.add(si);
+			//	itemsToShow.add(si);
 			}
 			
 		}// fin del for que recorre las cosechas por indice
 		reader.close();
 		labor.constructClasificador();
-		runLater(itemsToShow);
+		runLater(this.getItemsList());
 		updateProgress(0, featureCount);
 
 	}

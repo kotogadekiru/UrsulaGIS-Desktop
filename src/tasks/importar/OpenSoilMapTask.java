@@ -51,7 +51,7 @@ public class OpenSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		}
 		
 		int divisor = 1;
-		List<SueloItem> itemsToShow = new ArrayList<SueloItem>();
+		//List<SueloItem> itemsToShow = new ArrayList<SueloItem>();
 		while (reader.hasNext()) {
 
 			SimpleFeature simpleFeature = reader.next();
@@ -72,7 +72,7 @@ public class OpenSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 			
 			} else { // no es point. Estoy abriendo una cosecha de poligonos.
 				labor.insertFeature(si);
-				itemsToShow.add(si);
+		//		itemsToShow.add(si);
 			}
 			
 		}// fin del for que recorre las cosechas por indice
@@ -86,7 +86,7 @@ public class OpenSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 //		}
 //		it.close();
 		labor.constructClasificador();
-		runLater(itemsToShow);
+		runLater(this.getItemsList());
 		updateProgress(0, featureCount);
 
 	}

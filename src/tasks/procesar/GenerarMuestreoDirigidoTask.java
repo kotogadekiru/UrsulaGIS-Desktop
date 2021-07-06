@@ -20,9 +20,9 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 
-import dao.Camino;
 import dao.Labor;
 import dao.LaborItem;
+import dao.recorrida.Camino;
 import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
 import gov.nasa.worldwind.geom.Position;
@@ -32,6 +32,7 @@ import gui.nww.LaborLayer;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
 
+@Deprecated
 public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo> {
 	/**
 	 * la lista de las cosechas a unir
@@ -64,9 +65,9 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 	protected void doProcess() throws IOException {
 		String nombre =null;
 		//ancho me permite controlar la distancia minima entre los puntos y entre el punto y la frontera
-		double ancho = 1+Math.sqrt(superficieMinimaAMuestrear*ProyectionConstants.METROS2_POR_HA)/10;
+		double ancho = 1 + Math.sqrt(superficieMinimaAMuestrear*ProyectionConstants.METROS2_POR_HA)/10;
 		System.out.println("ancho="+ancho); //ancho=86.60254037844386
-
+		featureCount = 100;//TODO estimar cantidad a procesar
 		//List<SueloItem> features = Collections.synchronizedList(new ArrayList<SueloItem>());
 		for(Labor<? extends LaborItem> c:aMuestrear){			
 			if(nombre == null){
@@ -74,7 +75,7 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 			}else {
 				nombre+=Messages.getString("GenerarMuestreoDirigidoTask.2")+c.getNombre(); //$NON-NLS-1$
 			}
-			labor.setClasificador(c.getClasificador());
+			labor.setClasificador(c.getClasificador().clone());
 			FeatureReader<SimpleFeatureType, SimpleFeature> reader =c.outCollection.reader();
 			//por cada poligono de las labores de entrada 
 			int count=0;
@@ -137,6 +138,7 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 						//	System.out.println(Messages.getString("GenerarMuestreoDirigidoTask.3")+random); //$NON-NLS-1$
 							SueloItem muestra = new SueloItem();
 							muestra.setCategoria(categoria);
+							muestra.setPpmP(categoria.doubleValue());
 							muestra.setId(labor.getNextID());
 							muestra.setGeometry(poly);
 							puntosGenerados.add(muestra);
@@ -149,23 +151,15 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 					//features.addAll(puntosGenerados);
 
 				}//termino de evaluar el poligono con tamanio suficiente
-				count++;
-				updateProgress(count, featureCount);
+				featureNumber++;
+				updateProgress( featureNumber,featureCount);
 			}//termino de recorrer el while de una labor
 		}//termino de recorrer todas las labores
 
 		
-		List<SueloItem> itemsToShow = new ArrayList<SueloItem>();
 
-		SimpleFeatureIterator it = labor.outCollection.features();
-		while(it.hasNext()){
-			SimpleFeature f=it.next();
-			itemsToShow.add(labor.constructFeatureContainerStandar(f,false));
-		}
-		it.close();
-		
 		//TODO crear un PathLayer con los puntos de itemsToShow
-		createMuestreoPathLayer(itemsToShow);
+		createMuestreoPathLayer(this.getItemsList());
 		labor.setNombre(nombre);
 		labor.setLayer(new LaborLayer());
 		//List<?> featureList = features.stream().map(f ->{
@@ -176,10 +170,10 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 		//labor.outCollection.addAll(featureList);
 
 		//TODO 4 mostrar la cosecha sintetica creada
-		labor.constructClasificador();
+		labor.constructClasificador(); //no construir clasificador. usar el existente.
 		
-		System.out.println(Messages.getString("GenerarMuestreoDirigidoTask.4")+itemsToShow.size()); //$NON-NLS-1$
-		runLater(itemsToShow);
+		
+		runLater(this.getItemsList());
 		updateProgress(0, featureCount);
 	}
 

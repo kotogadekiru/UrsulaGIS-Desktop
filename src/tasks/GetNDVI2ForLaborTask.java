@@ -69,7 +69,7 @@ public class GetNDVI2ForLaborTask extends Task<List<File>>{
 	private static final String TOKEN = "token";
 
 
-	private static final String BASE_URL = "https://gee-api-helper-staging.herokuapp.com";
+	private static final String BASE_URL = "https://gee-api-helper.herokuapp.com";
 	//private static final String BASE_URL = "https://gee-api-helper-staging.herokuapp.com";
 	//private static final String BASE_URL = "http://www.ursulagis.com/api/ndvi/v4/SR/";
 	//private static final String BASE_URL = "http://localhost:5001";

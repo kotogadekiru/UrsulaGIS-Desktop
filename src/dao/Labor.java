@@ -511,12 +511,19 @@ public abstract class Labor<E extends LaborItem>  {
 		//		return objects;
 	}
 
-	public void clearCache(){
+	public synchronized void clearCache(){//do not clear cache while people are working 
+		synchronized(this) {
 		if(treeCache!=null) {
 			System.out.println("clearing Cache de "+this.nombre+" con size "+treeCache.size());
 		}
 		treeCache = null;
 		treeCacheEnvelope=null;
+		//long init = System.currentTimeMillis();
+		//System.gc();
+		//long end = System.currentTimeMillis();
+		//System.out.println("tarde "+(end-init)+"ms en hacer gc()");
+		}
+		//tarde 3852ms en hacer gc()
 	}
 	//	private Envelope updateCachedEnvelope(Envelope envelope){
 	//		Envelope cachedEnvelope = new Envelope(envelope);

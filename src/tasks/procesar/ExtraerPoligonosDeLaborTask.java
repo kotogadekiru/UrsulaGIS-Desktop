@@ -2,21 +2,29 @@ package tasks.procesar;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.geotools.data.simple.SimpleFeatureIterator;
+import org.geotools.feature.DefaultFeatureCollection;
 import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.index.quadtree.Quadtree;
+import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 
 import dao.Labor;
+import dao.LaborItem;
 import dao.Poligono;
 import dao.config.Configuracion;
 import dao.cosecha.CosechaLabor;
+import dao.fertilizacion.FertilizacionItem;
+import dao.fertilizacion.FertilizacionLabor;
 import dao.utils.PropertyHelper;
 import gov.nasa.worldwind.geom.Position;
 import gui.Messages;
@@ -53,18 +61,33 @@ public class ExtraerPoligonosDeLaborTask extends Task<List<Poligono>> {
 		try{
 			List<Poligono> poligonos = new ArrayList<Poligono>();
 			SimpleFeatureIterator it = labor.outCollection.features();
-			int featureCount=labor.outCollection.size();
-			int index =0;
+			List<LaborItem> items = new ArrayList<LaborItem>();
 			while(it.hasNext()){
+				LaborItem fi = labor.constructFeatureContainerStandar(it.next(),false);
+				items.add(fi);
+			}
+			it.close();
+			
+			int featureCount=items.size();//labor.outCollection.size();
+			
+			if(featureCount>=100) {
+				items = resumirGeometrias(labor);
+				reabsorverZonasChicas(items);
+			}
+			
+			int index =0;
+			for(LaborItem next : items) {
+			//while(it.hasNext()){
 				updateProgress(index, featureCount);
-				SimpleFeature next = it.next();
-				double has = ProyectionConstants.A_HAS(((Geometry)next.getDefaultGeometry()).getArea());
+				//SimpleFeature next = it.next();
+				double has = ProyectionConstants.A_HAS(next.getGeometry().getArea());
 				
 				if(has>supMin) {//0.2){//cada poli mayor a 10m2
-				Poligono poli = featureToPoligono(next);
-
-				poli.setNombre(labor.getNombre()+Messages.getString("ExtraerPoligonosDeLaborTask.1")+index); //$NON-NLS-1$
-				GeometryFactory fact = ((Geometry)next.getDefaultGeometry()).getFactory();
+				Poligono poli = itemToPoligono(next);
+				int cat = labor.getClasificador().getCategoryFor(next.getAmount());
+				String catName = labor.getClasificador().getCategoryNameFor(cat);
+				poli.setNombre(labor.getNombre()+" "+catName); //$NON-NLS-1$
+				GeometryFactory fact = ((Geometry)next.getGeometry()).getFactory();
 				List<Position> positions = poli.getPositions();
 
 				Coordinate[] coordinates = new Coordinate[positions.size()];
@@ -74,14 +97,8 @@ public class ExtraerPoligonosDeLaborTask extends Task<List<Poligono>> {
 				}
 				Polygon p =fact.createPolygon(coordinates);
 				//		p = (Polygon) JTS.smooth( p,1 );
-
-			
-
 				Geometry bp = p.getBoundary();
-			
 				poli.setArea(has);
-
-				
 					Coordinate[] finalCoords = bp.getCoordinates();
 					poli.getPositions().clear();
 					for(Coordinate c :finalCoords){//las coordenadas no estan ordenadas o tienen huecos
@@ -147,7 +164,7 @@ public class ExtraerPoligonosDeLaborTask extends Task<List<Poligono>> {
 				iterable.add(Position.fromDegrees(c.y, c.x));							
 			}
 
-			for(int n =1;n<mainBoundary.getNumGeometries();n++){
+			for(int n = 1;n<mainBoundary.getNumGeometries();n++){
 				Geometry toAdd =mainBoundary.getGeometryN(n);// mp.getGeometryN(0);
 				Coordinate[] cToAdd= toAdd.getCoordinates();
 				//1 buscar los puntos de cada una de las geometrias que esten mas cerca
@@ -193,6 +210,13 @@ public class ExtraerPoligonosDeLaborTask extends Task<List<Poligono>> {
 		} else {return null;}
 	}
 
+	public static Poligono itemToPoligono(LaborItem feature){			
+		Object g=feature.getGeometry();
+		if(g instanceof Geometry){
+			return ExtraerPoligonosDeLaborTask.geometryToPoligono((Geometry)g);
+		} else {return null;}
+	}
+	
 	public static Poligono featureToPoligono(SimpleFeature feature){			
 		Object g=feature.getDefaultGeometry();
 		if(g instanceof Geometry){
@@ -230,5 +254,158 @@ public class ExtraerPoligonosDeLaborTask extends Task<List<Poligono>> {
 	public void uninstallProgressBar() {
 		progressPane.getChildren().remove(progressContainer);
 	}
+	
+	private  List<LaborItem> resumirGeometrias(Labor labor) {
+		//TODO antes de proceder a dibujar las features
+		//agruparlas por clase y hacer un buffer cero
+		//luego crear un feature promedio para cada poligono individual
+		super.updateTitle("resumir geometrias");
+		updateProgress(0, 100);
+
+		//XXX inicializo la lista de las features por categoria
+		List<List<SimpleFeature>> colections = new ArrayList<List<SimpleFeature>>();
+		for(int i=0;i<labor.clasificador.getNumClasses();i++){
+			colections.add(i, new ArrayList<SimpleFeature>());
+		}
+		//XXX recorro las features y segun la categoria las voy asignando las features a cada lista de cada categoria
+		SimpleFeatureIterator it = labor.outCollection.features();
+		while(it.hasNext()){
+			SimpleFeature f = it.next();
+			LaborItem ci = labor.constructFeatureContainerStandar(f, false);
+			int cat = labor.getClasificador().getCategoryFor(ci.getAmount());//LaborItem.getDoubleFromObj(f.getAttribute(labor.colRendimiento.get())));
+			colections.get(cat).add(f);
+		}
+		it.close();
+		updateProgress(1, 100);
+		// ahora que tenemos las colecciones con las categorias solo hace falta juntar las geometrias y sacar los promedios	
+		List<LaborItem> itemsCategoria = new ArrayList<LaborItem>();//es la lista de los items que representan a cada categoria y que devuelvo
+		DefaultFeatureCollection newOutcollection =  new DefaultFeatureCollection(Messages.getString("ProcessHarvestMapTask.9"),labor.getType());		 //$NON-NLS-1$
+		//TODO pasar esto a parallel streams
+		//XXX por cada categoria 
+		for(int i=0;i<labor.clasificador.getNumClasses();i++){
+			List<Geometry> geometriesCat = new ArrayList<Geometry>();
+			updateProgress(i+1, labor.clasificador.getNumClasses());
+			//	Geometry slowUnion = null;
+			Double sumRinde=new Double(0);
+			Double sumatoriaAltura=new Double(0);
+			int n=0;
+			for(SimpleFeature f : colections.get(i)){//por cada item de la categoria i
+				Object geomObj = f.getDefaultGeometry();
+				geometriesCat.add((Geometry)geomObj);
+				sumRinde+=LaborItem.getDoubleFromObj(f.getAttribute(labor.getColAmount().get()));
+				sumatoriaAltura += LaborItem.getDoubleFromObj(f.getAttribute(Labor.COLUMNA_ELEVACION));
+				n++;
+			} 
+			double rindeProm =sumRinde/n;//si n ==o rindeProme es Nan
+			double elevProm = sumatoriaAltura/n;
+			
+			double sumaDesvio2 = 0.0;
+			for(SimpleFeature f:colections.get(i)){
+				double cantidadCosecha = LaborItem.getDoubleFromObj(f.getAttribute(labor.getColAmount().get()));	
+				sumaDesvio2+= Math.abs(rindeProm- cantidadCosecha);
+			}
+			
+			double desvioPromedio = sumaDesvio2/n;
+			if(n>0){//si no hay ningun feature en esa categoria esto da out of bounds
+				GeometryFactory fact = geometriesCat.get(0).getFactory();
+				Geometry[] geomArray = new Geometry[geometriesCat.size()];
+				GeometryCollection colectionCat = fact.createGeometryCollection(geometriesCat.toArray(geomArray));
+
+				Geometry buffered = null;
+				double bufer= ProyectionConstants.metersToLongLat(0.25);
+				try{
+					buffered = colectionCat.union();
+					buffered =buffered.buffer(bufer);
+				}catch(Exception e){
+					System.out.println(Messages.getString("ProcessHarvestMapTask.10")); //$NON-NLS-1$
+					//java.lang.IllegalArgumentException: Comparison method violates its general contract!
+					try{
+					buffered= EnhancedPrecisionOp.buffer(colectionCat, bufer);//java.lang.IllegalArgumentException: Comparison method violates its general contract!
+					}catch(Exception e2){
+						e2.printStackTrace();
+					}
+				}
+
+				SimpleFeature fIn = colections.get(i).get(0);
+				//TODO recorrer buffered y crear una feature por cada geometria de la geometry collection
+				for(int igeom=0;buffered!=null && igeom<buffered.getNumGeometries();igeom++){//null pointer exception at tasks.importar.ProcessHarvestMapTask.resumirGeometrias(ProcessHarvestMapTask.java:468)
+					Geometry g = buffered.getGeometryN(igeom);
+					fIn.setAttribute(labor.getColAmount().get(), rindeProm);
+					LaborItem ci=labor.constructFeatureContainerStandar(fIn,true);
+					//ci.set(rindeProm);
+					//ci.setDesvioRinde(desvioPromedio);
+					ci.setElevacion(elevProm);
+
+					ci.setGeometry(g);
+
+					itemsCategoria.add(ci);
+					//SimpleFeature f = ci.getFeature(labor.featureBuilder);
+					//boolean res = newOutcollection.add(f);
+				}
+			}	
+
+		}//termino de recorrer las categorias
+		//labor.setOutCollection(newOutcollection);
+		//FIXME esto las resume pero no garantiza que sean menos de 100
+		return itemsCategoria;
+	}
+	
+	public void reabsorverZonasChicas( List<LaborItem> items) {
+		if(items.size()<100)return;
+		//TODO reabsorver zonas mas chicas a las mas grandes vecinas
+		System.out.println("tiene mas de 100 zonas, reabsorviendo..."); //$NON-NLS-1$
+		//TODO tomar las 100 zonas mas grandes y reabsorver las otras en estas
+
+	
+
+		items.sort((i1,i2)
+				->	(-1*Double.compare(i1.getGeometry().getArea(), i2.getGeometry().getArea())));	
+		int limit = Math.min(100,items.size());
+		List<LaborItem> itemsAgrandar =items.subList(0,limit);
+		Quadtree tree=new Quadtree();
+		for(LaborItem ar : itemsAgrandar) {
+			Geometry gAr =ar.getGeometry();
+			tree.insert(gAr.getEnvelopeInternal(), ar);
+		}
+		List<LaborItem> itemsAReducir =items.subList(limit, items.size());
+		int n=0;
+		int i=itemsAReducir.size();
+		super.updateTitle("reabsorver zonas chicas");
+		updateProgress(0, i);
+		while(itemsAReducir.size() > 0 || n > 100) {//trato de reducirlos 10 veces
+			List<LaborItem> done = new ArrayList<LaborItem>();		
+			for(LaborItem ar : itemsAReducir) {
+				Geometry gAr = ar.getGeometry();
+				List<LaborItem> vecinos = (List<LaborItem>) tree.query(gAr.getEnvelopeInternal());
+
+				if(vecinos.size()>0) {
+					Optional<LaborItem> opV = vecinos.stream().reduce((v1,v2)->{
+						boolean v1i = gAr.intersects(v1.getGeometry());
+						boolean v2i = gAr.intersects(v2.getGeometry());
+						return (v1i && v2i) 
+								? (v1.getGeometry().getArea() > v2.getGeometry().getArea() ? v1 : v2) 
+								: (v1i ? v1 : v2);
+					});
+					if(opV.isPresent()) {
+						LaborItem v = opV.get();
+						Geometry g = v.getGeometry();
+						tree.remove(g.getEnvelopeInternal(), v);
+						Geometry union = g.union(gAr);
+						v.setGeometry(union);
+						tree.insert(union.getEnvelopeInternal(), v);
+						done.add(ar);
+					}
+				}
+				updateProgress(done.size(),itemsAReducir.size());
+			}
+			updateProgress(i-itemsAReducir.size(),i);
+			n++;
+			itemsAReducir.removeAll(done);
+		}
+		
+		items.clear();
+		items.addAll((List<LaborItem>)tree.queryAll());
+	}
+
 
 }

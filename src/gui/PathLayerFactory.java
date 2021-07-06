@@ -7,9 +7,9 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import dao.Camino;
 import dao.Labor;
 import dao.Poligono;
+import dao.recorrida.Camino;
 import gov.nasa.worldwind.WorldWindow;
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Position;

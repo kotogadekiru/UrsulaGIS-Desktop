@@ -55,17 +55,23 @@
 	<classpathentry exported="true" kind="lib" path="libs/validation-api-1.1.0.Final.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/org.eclipse.persistence.jpa.modelgen_2.7.1.v20171221-bd47e8f.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/org.eclipse.persistence.jpars_2.7.1.v20171221-bd47e8f.jar"/>
-	<classpathentry kind="lib" path="libs/javax.persistence_2.2.0.v201708071007.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/javax.persistence_2.2.0.v201708071007.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/WorldWindJava"/>
-	<classpathentry kind="lib" path="/WorldWindJava/lib-external/gdal/gdal.jar">
-		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="WorldWindJava/lib-external/gdal"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="/WorldWindJava/jogl-all.jar"/>
-	<classpathentry kind="lib" path="/WorldWindJava/gluegen-rt.jar"/>
-	<classpathentry kind="lib" path="libs/tiff-2.0.2.jar"/>
-	<classpathentry kind="lib" path="libs/xercesImpl.jar"/>
-	<classpathentry kind="lib" path="libs/xml-apis.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/tiff-2.0.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/xercesImpl.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/xml-apis.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/jSerialComm-2.7.0.jar"/>
+	<classpathentry kind="lib" path="libs/gdal/gluegen-rt-natives-linux-amd64.jar"/>
+	<classpathentry kind="lib" path="libs/gdal/gluegen-rt-natives-linux-i586.jar"/>
+	<classpathentry kind="lib" path="libs/gdal/gluegen-rt-natives-macosx-universal.jar"/>
+	<classpathentry kind="lib" path="libs/gdal/gluegen-rt-natives-windows-amd64.jar"/>
+	<classpathentry kind="lib" path="libs/gdal/gluegen-rt-natives-windows-i586.jar"/>
+	<classpathentry kind="lib" path="libs/gdal/gluegen-rt.jar"/>
+	<classpathentry kind="lib" path="libs/gdal/jogl-all-natives-linux-amd64.jar"/>
+	<classpathentry kind="lib" path="libs/gdal/jogl-all-natives-linux-i586.jar"/>
+	<classpathentry kind="lib" path="libs/gdal/jogl-all-natives-macosx-universal.jar"/>
+	<classpathentry kind="lib" path="libs/gdal/jogl-all-natives-windows-amd64.jar"/>
+	<classpathentry kind="lib" path="libs/gdal/jogl-all-natives-windows-i586.jar"/>
+	<classpathentry kind="lib" path="libs/gdal/jogl-all.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

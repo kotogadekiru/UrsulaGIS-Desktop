@@ -2,6 +2,8 @@ package gui.nww;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -59,7 +61,7 @@ public class LayerPanel extends VBox {
 	//	private CheckBoxTreeItem<Layer> siembrasItem;
 	//	private CheckBoxTreeItem<Layer> cosechasItem;
 
-	private Map<Class<?>, List<Function<Layer, String>>> actions;
+	private Map<Class<?>, List<LayerAction>> actions;
 	private Map<Class<?>, List<LayerAction>> layerActions= new HashMap<Class<?>, List<LayerAction>>();
 
 	/**
@@ -95,7 +97,7 @@ public class LayerPanel extends VBox {
 		this.getChildren().add(scrollPane);
 	}
 
-	public void setMenuItems(Map<Class<?>,List<Function<Layer,String>>> actions){
+	public void setMenuItems(Map<Class<?>,List<LayerAction>> actions){
 		this.actions= actions;
 	}
 
@@ -137,6 +139,7 @@ public class LayerPanel extends VBox {
 				layerClass = (Class<?>) clazz;
 			}
 
+			//Obtengo los items para esa clase
 			CheckBoxTreeItem<Layer> item = rootItems.get(layerClass);
 			if(item!=null) {
 				item.getChildren().add(checkBoxTreeItem);
@@ -319,46 +322,46 @@ public class LayerPanel extends VBox {
 				Object layerObject = nuLayer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 				Object layerObjectClass = nuLayer.getValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR);
 
-				if(layerObject == null ){//es un layer vacio
+				if(layerObject == null ){//es un root node
 
 					if(layerObjectClass instanceof Class) {//estoy cargando las acciones genericas
 						Class<? extends Object> valueClass = (Class<?>) layerObjectClass;
-						List<Function<Layer, String>> layersP = new ArrayList<Function<Layer,String>>();
+						List<LayerAction> layersP = new ArrayList<LayerAction>();
 
 						//System.out.println("creando el menu para la clase "+valueClass);//falla con dao.Poligono
 						int size = rootItems.get(valueClass).getChildren().size();
 						//System.out.println("size "+valueClass+" es "+size);//falla con dao.Poligono
 						List<LayerAction> layerActionsForClass = layerActions.get(valueClass);
 						if(layerActionsForClass!=null) {
-							List<Function<Layer, String>> filtered =  layerActionsForClass.stream().filter(p->
+							List<LayerAction> filtered =  layerActionsForClass.stream().filter(p->
 							p.minElementsRequired<=size).collect(Collectors.toList());
 
 							layersP.addAll(filtered);
 						}
-						if(size>0) {
-							actions.get(Object.class).forEach(a->layersP.add(
+						if(size > 0) {
+							List<LayerAction> accionesGenericas = actions.get(Object.class);
+							accionesGenericas.forEach(a->
+							layersP.add(
 									constructAllSelectedPredicate(a, rootItems.get(valueClass).getChildren())
 									));	
 						}
-
 						constructMenuItem(nuLayer, menu, layersP);
 					}
-
-				} else {
-
+				} else { //es un cell hoja
 					Class<? extends Object> valueClass = layerObject.getClass();
-
+					List<LayerAction> layersP = new ArrayList<LayerAction>();
 					for(Class<?> key : actions.keySet()){
 						if(key.isAssignableFrom(valueClass)
-								|| (key==null && valueClass==null)){						
-							constructMenuItem(nuLayer, menu, actions.get(key));
+								|| (key==null && valueClass==null)){	
+							layersP.addAll(actions.get(key));
+							
 						}					
 					}
+					constructMenuItem(nuLayer, menu, layersP);
 				}
+				
 				cell.setContextMenu(menu);
 			});
-
-
 			return cell;
 		}
 				);//fin del cell factory
@@ -375,10 +378,9 @@ public class LayerPanel extends VBox {
 	//		}
 	//		return actTreeItem;
 	//	}
-	private Function<Layer, String> constructAllSelectedPredicate( Function<Layer, String> act,List<TreeItem<Layer>> children){
+	private LayerAction constructAllSelectedPredicate( Function<Layer, String> act, List<TreeItem<Layer>> children){
 		Function<Layer, String> removeSelected = (layer)->{//creo un predicado que devuelve "Remove Selected" como nombre y al ser ejecutado corre la accion de remover en todos los hijos de este nodo
 			if(layer==null){
-
 				//System.out.println("ejetutando una accion de un treeItem sin Layer viendo si tengo que aplicar "+act.apply(null)+ " en "+rootLayerName);
 
 				return act.apply(null) + Messages.getString("LayerPanel.23"); //$NON-NLS-1$
@@ -391,10 +393,22 @@ public class LayerPanel extends VBox {
 				}
 				return act.apply(null);	
 			}};
-			return removeSelected;
+			
+			LayerAction lAction = new LayerAction(removeSelected);
+			lAction.name=removeSelected.apply(null);
+			return lAction;
+			//return removeSelected;
 	}
 
-	private void constructMenuItem(Layer nuLayer, ContextMenu menu, List<Function<Layer, String>> actions) {
+	/**
+	 * metodo que crea los menu items para las acciones layer y menu indicados
+	 * @param nuLayer layer para el cual se va a generar el menu
+	 * @param menu menu al cual agregar las acciones
+	 * @param actions acciones a agregar
+	 */
+	private void constructMenuItem(Layer nuLayer, ContextMenu menu, List<LayerAction> actions) {
+		//actions = actions.stream().sorted().collect(Collectors.toList());//intento para hacer que mantenga el orden
+		Collections.sort(actions);
 		for(Function<Layer,String> p :actions){
 			MenuItem cut = new MenuItem(p.apply(null));
 			cut.setOnAction(e->{Platform.runLater(()->p.apply(nuLayer));});		

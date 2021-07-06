@@ -113,6 +113,21 @@ public class UnirCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 			}
 			
 			reader.close();
+			//mantengo los valores configurados al clonar
+			labor.setPrecioGrano(c.getPrecioGrano());
+			labor.setCostoCosechaTn(c.getCostoCosechaTn());
+			labor.setPrecioLabor(c.getPrecioLabor());
+			labor.setCultivo(c.getCultivo());
+			labor.setFecha(c.getFecha());
+			labor.getMinRindeProperty().set(c.getMinRindeProperty().get());
+			labor.getMaxRindeProperty().set(c.getMaxRindeProperty().get());
+			labor.getConfiguracion().toleranciaCVProperty().set(c.getConfiguracion().toleranciaCVProperty().get());
+			labor.getConfiguracion().anchoFiltroOutlayersProperty().set(c.getConfiguracion().anchoFiltroOutlayersProperty().get());
+			labor.anchoDefaultProperty.set(c.getAnchoDefaultProperty().get());
+			labor.getConfiguracion().supMinimaProperty().set(c.getConfiguracion().supMinimaProperty().get());
+			
+			
+			
 		}
 		
 		System.out.println("inserte "+featuresInsertadas+" elementos");

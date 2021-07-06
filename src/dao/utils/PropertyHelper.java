@@ -1,31 +1,104 @@
 package dao.utils;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
+import java.util.function.Consumer;
+import java.util.function.DoubleConsumer;
+import java.util.function.DoubleSupplier;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import dao.config.Configuracion;
+import dao.cosecha.CosechaConfig;
+import dao.cosecha.CosechaLabor;
+import gui.Messages;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 public class PropertyHelper {
+	
+	private static DecimalFormat converter=null;
+	
+	public static Number parseDouble(String s) {
+		Number ret = new Double(0);
+		try {		ret = getDoubleConverter().parse(s);//Double.valueOf(ppmPOptional.get());
+		}catch(Exception e){e.printStackTrace();}
+		return ret;
+	}
+	
+	public static DecimalFormat getDoubleConverter() {
+		if(converter==null) {
+			NumberFormat nf = NumberFormat.getNumberInstance(Messages.getLocale());
+			converter = (DecimalFormat)nf;
+//			converter = new DecimalFormat("0.00"){ //$NON-NLS-1$
+//				@Override
+//				public Object parseObject(String source)  {
+//					//				if("".equals(source)||source==null){ //$NON-NLS-1$
+//					//					source="0.00"; //$NON-NLS-1$
+//					//				}
+//					try {
+//						return super.parseObject(source);//Format.parseObject(String) failed
+//					} catch (ParseException e) {
+//						e.printStackTrace();
+//						return new Double(0.0);
+//					}
+//				}
+//			};
+			
+			converter.setMinimumFractionDigits(2);
+			converter.setGroupingUsed(true);
+			converter.setGroupingSize(3);
+		}
+		return converter;
+	}
+
 	public static SimpleDoubleProperty initDoubleProperty(String key,String def,Configuracion properties){
 		SimpleDoubleProperty doubleProperty = new SimpleDoubleProperty(
 				initDouble(key,def,properties)
 				//Double.parseDouble(properties.getPropertyOrDefault(key, def))
 				);
+		
 		doubleProperty.addListener((obs, bool1, bool2) -> {
 
-			properties.setProperty(key,	bool2.toString());
+			properties.setProperty(key,	getDoubleConverter().format(bool2));
 		});
 		return doubleProperty;
 	}
 
-	
+	public static void bindDoubleToTextProperty(Supplier<Double> getDouble,Consumer<Double> setDouble, StringProperty textProperty, Configuracion configuracion, String key ) {
+		Double d = getDouble.get();
+		if(d!=null) {
+			textProperty.set(converter.format(d));
+		}else {
+			textProperty.set(configuracion.getPropertyOrDefault(key, "0"));
+		}
+		textProperty.addListener((obj,old,n)->{
+			try {
+				setDouble.accept(converter.parse(n).doubleValue());
+				configuracion.setProperty(key, n);
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		});
+	}
 	
 	
 	public static Double initDouble(String key,String def,Configuracion properties){	
-		return Double.parseDouble(properties.getPropertyOrDefault(	key, def));
+		Double ret = new Double(0);
+		try {
+			ret = converter.parse(properties.getPropertyOrDefault(key, def)).doubleValue();
+		}catch(Exception e) {
+			
+		}
+		return ret;// converter.parse(properties.getPropertyOrDefault(	key, def)).doubleValue();
+		//return Double.parseDouble(properties.getPropertyOrDefault(	key, def));
 	}
 
 	/**
@@ -88,7 +161,7 @@ public class PropertyHelper {
 		}
 
 		sProperty.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(key,	bool2.toString());
+			properties.setProperty(key,	bool2);
 		});
 		return sProperty;
 	}

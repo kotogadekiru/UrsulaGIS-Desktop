@@ -61,9 +61,7 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 				
 		labor.constructClasificador();
 
-		List<SueloItem> itemsToShow = new ArrayList<SueloItem>();
-		itemsToShow.add(si);
-		runLater(itemsToShow);
+		runLater(this.getItemsList());
 		updateProgress(0, featureCount);
 
 	}

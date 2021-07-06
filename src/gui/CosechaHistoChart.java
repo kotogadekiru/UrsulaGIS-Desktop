@@ -125,6 +125,8 @@ public class CosechaHistoChart extends VBox {
 		VBox.getVgrow(chart);
 		this.getChildren().add(chart);
 		DecimalFormat df = new DecimalFormat("#.##"); //$NON-NLS-1$
+		df.setGroupingSize(3);
+		df.setGroupingUsed(true);
 		BorderPane bottom = new BorderPane();
 		VBox left = new VBox();
 		left.getChildren().addAll(

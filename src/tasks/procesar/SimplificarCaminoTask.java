@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import dao.Camino;
+import dao.recorrida.Camino;
 import gov.nasa.worldwind.geom.LatLon;
 import gov.nasa.worldwind.geom.Position;
 import javafx.concurrent.Task;
@@ -36,12 +36,16 @@ public class SimplificarCaminoTask extends Task<Camino>{
 	// You need to be careful when edge lands on 0. (temp helps this check)
 		int crosses = 0;
 		int temp=0;
-		
+		int tries=0;
+		do {
 		for (int i = 0; i < positions.size(); i++) {//ordena el camino entre el primero y el ultimo para que sea lo mas corto posible
 			temp = (i > 0) ? 0 : 1;
 			for (int j = i ; j < positions.size()-1- temp; j++)
 				crosses+=swapIfCrossed(i,j,positions);
 		}
+		tries++;
+		}while(crosses>0 && tries <1000);
+		
 		return crosses;
 	}
 	

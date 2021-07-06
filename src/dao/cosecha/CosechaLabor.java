@@ -144,13 +144,27 @@ public class CosechaLabor extends Labor<CosechaItem> {
 
 	@Override
 	protected Double initPrecioLaborHa(){
-		return Double.parseDouble(config.getConfigProperties().getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_HA,"0"));
+		try {
+		return PropertyHelper.getDoubleConverter().parse(
+				config.getConfigProperties().getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_HA,"0")
+				).doubleValue();
+		}catch(Exception e) {
+			return new Double(0);
+		}
+		//return Double.parseDouble(config.getConfigProperties().getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_HA,"0"));
 		//return PropertyHelper.initDoubleProperty(CosechaLabor.COSTO_COSECHA_HA,"0",config.getConfigProperties());
 	} 
 	
 	@Override
 	protected Double initPrecioInsumo() {
-		return Double.parseDouble(config.getConfigProperties().getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.PRECIO_GRANO,"0"));
+		try {
+			return PropertyHelper.getDoubleConverter().parse(
+					config.getConfigProperties().getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.PRECIO_GRANO,"0")
+					).doubleValue();
+		}catch(Exception e) {
+			return new Double(0);
+		}	
+		//return Double.parseDouble(config.getConfigProperties().getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.PRECIO_GRANO,"0"));
 		//return PropertyHelper.initDoubleProperty(CosechaLabor.PRECIO_GRANO,  "0", config.getConfigProperties());
 	//	return initDoubleProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,"0",config.getConfigProperties());
 	}

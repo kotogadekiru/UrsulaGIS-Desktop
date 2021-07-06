@@ -80,9 +80,8 @@ public class CrearSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 				
 		labor.constructClasificador();
 
-		List<SiembraItem> itemsToShow = new ArrayList<SiembraItem>();
-		itemsToShow.add(ci);
-		runLater(itemsToShow);
+		
+		runLater(this.getItemsList());
 		updateProgress(0, featureCount);
 
 	}

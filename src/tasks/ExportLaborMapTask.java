@@ -20,13 +20,15 @@ import dao.config.Configuracion;
 import javafx.concurrent.Task;
 
 
-public class ExportLaborMapTask extends Task<File>{
+public class ExportLaborMapTask extends ProgresibleTask<File>{
 	Labor<?> laborToExport=null;
 	File shapeFile=null;
 	
 	public ExportLaborMapTask(Labor<?> _laborToExport,File _shapeFile){		
 		 laborToExport=_laborToExport;
 		 shapeFile=_shapeFile;
+		 super.updateTitle(taskName);
+		 this.taskName= laborToExport.getNombre();
 	}
 	
 	

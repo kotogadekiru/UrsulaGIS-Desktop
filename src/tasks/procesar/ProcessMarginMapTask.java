@@ -88,10 +88,10 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 			featureNumber++;
 			updateProgress(featureNumber, featureCount);	
 			MargenItem renta = createRentaForPoly(polygon);			
-			if(renta.getImporteFertHa()>0||
-					renta.getImportePulvHa()>0||
-					renta.getImporteSiembraHa()>0||
-					renta.getImporteCosechaHa()!=0){//solo lo descarto si no tienen costos variables
+			if(renta.getImporteFertHa()>0 ||
+					renta.getImportePulvHa()>0 ||
+					renta.getImporteSiembraHa()>0 ||
+					renta.getImporteCosechaHa() != 0){//solo lo descarto si no tienen costos variables
 				labor.insertFeature(renta);
 				list.add(renta);
 			}

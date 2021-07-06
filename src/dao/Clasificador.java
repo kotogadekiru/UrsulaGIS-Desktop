@@ -22,6 +22,7 @@ import org.opengis.filter.expression.PropertyName;
 import dao.cosecha.CosechaItem;
 import gui.Messages;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.paint.Color;
@@ -35,20 +36,24 @@ public class Clasificador {
 	public static final String TIPO_CLASIFICADOR = "CLASIFICADOR";
 
 	public static final  String[] clasficicadores = {CLASIFICADOR_DESVIOSTANDAR,CLASIFICADOR_JENKINS};
+	
 	public static Color[] colors = {
 			//Color.rgb(158,1,66),//0
 			//Color.rgb(213,62,79),//1
-			Color. rgb(244,109,67),//2
-			Color. rgb(253,174,97),//3
-			Color. rgb(254,224,139),//4
-			Color. rgb(255,255,191),//5
-			Color. rgb(230,245,152)	,//6
-			Color. rgb(171,221,164),//7
-			Color.rgb(102,194,165),//8
-			Color.rgb(50,136,189),//9
-			Color.DARKBLUE};//10
+			Color. rgb(244,109,67),//2 desde min a -inf
+			Color. rgb(253,174,97),//3 min a min+1
+			Color. rgb(254,224,139),//4 min +1 min +2
+			Color. rgb(255,255,191),//5 min +2 a min +3
+			Color. rgb(230,245,152)	,//6 min +3 a min +4
+			Color. rgb(171,221,164),//7 de min +4 a min +5
+			Color.rgb(102,194,165),//8 de min +5 a min +6
+			Color.rgb(50,136,189),//9 de min + a min +7
+			Color.DARKBLUE};//10    desde mas a inf
 	//		Color.rgb(94,79,162)
 	//		};
+	public static char[] abc = "ABCDEFGHIJKLM".toCharArray();
+	public static String cba = "HGFEDCBA";
+	
 	private  Double[] histograma=null;// es static para poder hacer constructHistograma static para usarlo en el grafico de Histograma
 	private  Classifier clasifier=null;
 	public StringProperty tipoClasificadorProperty;
@@ -58,6 +63,20 @@ public class Clasificador {
 	public Clasificador(){
 		tipoClasificadorProperty = new SimpleStringProperty();		
 
+	}
+	
+	public Clasificador clone() {
+		Clasificador clon = new Clasificador();
+		clon.clasesClasificadorProperty = new SimpleIntegerProperty(this.clasesClasificadorProperty.get());
+		clon.tipoClasificadorProperty= new SimpleStringProperty(this.tipoClasificadorProperty.get());
+		clon.initialized=this.initialized;
+		
+		if(this.histograma!=null) {
+			clon.histograma=this.histograma.clone();
+		}else {
+			clon.clasifier=this.clasifier;
+		}
+		return clon;
 	}
 
 	public String getCategoryNameFor(int index) {		
@@ -70,8 +89,8 @@ public class Clasificador {
 		//	Double delta = histograma[1]-histograma[0];
 
 			if(index == 0){
-				rangoIni = "-inf ~ "+ df.format(histograma[index]);
-			}else if(index<histograma.length){
+				rangoIni = "-inf ~ "+ df.format(histograma[0]);
+			}else if(index < histograma.length ){
 				rangoIni = df.format(histograma[index-1])+" ~ "+ df.format(histograma[index]);
 			}else {
 				rangoIni = df.format(histograma[index-1])+" ~ +inf";//+(histograma[index]+delta);
@@ -112,7 +131,7 @@ public class Clasificador {
 
 
 	public static int getColorByHistogram(Double rinde, Double[] histo) {
-		int colorIndex = histo.length-1;
+		int colorIndex = histo.length;
 		try {
 			BigDecimal bd = new BigDecimal(rinde);//java.lang.NumberFormatException: Infinite or NaN
 			bd = bd.setScale(2, RoundingMode.HALF_UP);
@@ -198,10 +217,10 @@ public class Clasificador {
 		Double amount= new Double(0);
 		for(LaborItem dao: elementosItem){
 			Double area = dao.getGeometry().getArea()*ProyectionConstants.A_HAS();
-			sup +=area;
-			amount+=dao.getAmount()*area;		
+			sup += area;
+			amount += dao.getAmount()*area;		
 		}
-		average=sup>0?amount/(sup):0.0;
+		average= sup > 0 ? amount/(sup) : 0.0;
 
 		//		average = elementosItem
 		//				.stream().mapToDouble( FeatureContainer::getAmount)
@@ -213,22 +232,96 @@ public class Clasificador {
 			double desvios = new Double(0);
 			for(LaborItem dao: elementosItem){
 				Double area = dao.getGeometry().getArea()*ProyectionConstants.A_HAS();
-				desvios += area*Math.abs(dao.getAmount()-average);
+				desvios += area * Math.abs(dao.getAmount()-average);
 				//desvios += Math.abs(dao.getAmount()-average);
 			}
-			desvioEstandar= desvios/sup;
+			desvioEstandar = sup > 0 ? desvios/(sup) : 0.0;
+			//desvioEstandar= desvios/sup;
 			//desvioEstandar= desvios/(elementosItem.size());
 		}
 
 		//	System.out.println("termine de ordenar los elementos en constructHistogram");
-		int numClases = getNumClasses()-1;//esto es porque el histograma se extiende hacia el infinito por lo que gana una clase
-		histograma=new Double[numClases];
+		int numLimites = getNumClasses()-1;//esto es porque el histograma se extiende hacia el infinito por lo que gana una clase
+		histograma=new Double[numLimites];//2 clases 1 limite, 3 clases 2 limites...
 
-		int desviosEstandar =numClases;// 8;//es la cantidad de desvios que voy a dibujar
-		Double deltaForColour =(desviosEstandar*desvioEstandar)/numClases;
-
-		for(int i = 0;i<numClases;i++){	
-			histograma[i]=(average-(desviosEstandar/2)*desvioEstandar)+deltaForColour*(i+1);
+		//int desviosEstandar = numClases;// 8;//es la cantidad de desvios que voy a dibujar
+		Double origen = new Double(numLimites);//casteo a double para las divisiones
+		
+		//TODO repartir los +-3 desvios estandar segun la cantidad de clases pedidas
+		
+//		
+//		switch(numLimites) {
+//		 case 1:
+//				histograma[0] = average;
+//			    break;
+//		 case 2:
+//			 histograma[0] = average - desvioEstandar;// code block
+//			 histograma[1] = average + desvioEstandar;// code block
+//			    break;
+//		 case 3:
+//			 histograma[0] = average - desvioEstandar;// code block
+//			 histograma[1] = average ;// code block
+//			 histograma[2] = average + desvioEstandar;// code block
+//			    // code block
+//			    break;
+//		 case 4:
+//			 histograma[0] = average - (-1+0*2/3)*desvioEstandar;// code block
+//			 histograma[1] = average + (-1+1*2/3)*desvioEstandar;// code block
+//			 histograma[2] = average + (-1+2*2/3)*desvioEstandar;// code block
+//			 histograma[3] = average + (-1+3*2/3)*desvioEstandar;// code block
+//			    // code block
+//			    break;
+//		 case 5:
+//			 histograma[0] = average + (-1+ 0*2/4)*desvioEstandar;// code block
+//			 histograma[1] = average + (-1+ 1*2/4)*desvioEstandar;// code block
+//			 histograma[2] = average + (-1+ 2*2/4)*desvioEstandar;// code block
+//			 histograma[3] = average + (-1+ 3*2/4)*desvioEstandar;// code block
+//			 histograma[4] = average + (-1+ 4*2/4)*desvioEstandar;// code block
+//			    // code block
+//			    break;
+//		 case 6:
+//			 histograma[0] = average + (-1+ 0*2/5)*desvioEstandar;
+//			 histograma[1] = average + (-1+ 1*2/5)*desvioEstandar;
+//			 histograma[2] = average + (-1+ 2*2/5)*desvioEstandar;
+//			 histograma[3] = average + (-1+ 3*2/5)*desvioEstandar;
+//			 histograma[4] = average + (-1+ 4*2/5)*desvioEstandar;
+//			 histograma[5] = average + (-1+ 5*2/5)*desvioEstandar;
+//			    break;
+//			    
+//		 case 7:
+//			 histograma[0] = average + (-1+ 0*2/6)*desvioEstandar;
+//			 histograma[1] = average + (-1+ 1*2/6)*desvioEstandar;
+//			 histograma[2] = average + (-1+ 2*2/6)*desvioEstandar;
+//			 histograma[3] = average + (-1+ 3*2/6)*desvioEstandar;
+//			 histograma[4] = average + (-1+ 4*2/6)*desvioEstandar;
+//			 histograma[5] = average + (-1+ 5*2/6)*desvioEstandar;
+//			 histograma[6] = average + (-1+ 6*2/6)*desvioEstandar;
+//			    break;
+//			    
+//		 case 8:
+//			 histograma[0] = average + (-1+ 0d*2d/7d)*desvioEstandar;
+//			 histograma[1] = average + (-1+ 1d*2d/7d)*desvioEstandar;
+//			 histograma[2] = average + (-1+ 2d*2d/7d)*desvioEstandar;
+//			 histograma[3] = average + (-1+ 3d*2d/7d)*desvioEstandar;
+//			 histograma[4] = average + (-1+ 4d*2d/7d)*desvioEstandar;
+//			 histograma[5] = average + (-1+ 5d*2d/7d)*desvioEstandar;
+//			 histograma[6] = average + (-1+ 6d*2d/7d)*desvioEstandar;
+//			 histograma[7] = average + (-1+ 7d*2d/7d)*desvioEstandar;
+//			 
+//			    break;
+//		 default:
+//			    // code block
+//		}
+		//2 clases 1 limite average [ave-desv; ave+desv]
+		//3 clases 2 limites
+		
+		//i=0 //primer limite = average-3*desv/2+3*desv/3= ave + desv*(-3/2+2/2) = ave-desv/2
+		//i=1 //segundo limite = average-3*desv/2+ desv*2= ave + desv*(-3/2+4/2) = ave+desv/2
+		
+		//y=ax+b
+		for(int i = 0; i < numLimites; i++){	
+			histograma[i] = average + (-1+i*2d/(numLimites-1))*desvioEstandar;// code block
+			//histograma[i] = average  + desvioEstandar * (i- 1/numLimites );
 		}
 
 		this.initialized=true;
@@ -250,14 +343,32 @@ public class Clasificador {
 
 	public Color getColorForCategoria(Integer absCat) {
 		//int absCat = getCategoryFor(amount);//entre 0 y numClases-1
-		int length =colors.length-1;
-		int clases =getNumClasses()-1;
-		int colorIndex = absCat*(length/clases);
+//		int length =colors.length-1;
+//		int clases =getNumClasses()-1;
+//		int colorIndex = absCat*(length/clases);
+//		//	System.out.println(absCat+"*"+length+"/"+clases+" = "+colorIndex+" colorIndex");
+//		if(colorIndex>length){
+//			colorIndex=length;
+//		}
+		return getColorForCategoria(absCat,getNumClasses());
+	}
+	
+	public static Color getColorForCategoria(Integer absCat,Integer classCount) {
+		//int absCat = getCategoryFor(amount);//entre 0 y numClases-1
+		int length =colors.length-1;//8
+		int clases =classCount-1;//1
+		int colorIndex = absCat * (length/clases); // 7 * (8/1)
 		//	System.out.println(absCat+"*"+length+"/"+clases+" = "+colorIndex+" colorIndex");
 		if(colorIndex>length){
 			colorIndex=length;
 		}
 		return colors[colorIndex];
+	}
+	
+	public String getLetraCat(Integer categoria) {
+		int size = this.getNumClasses();
+		String nombre =""+Clasificador.abc[size-categoria-1];
+		return nombre;
 	}
 	
 	public Color getColorFor(LaborItem dao) {	
@@ -268,7 +379,7 @@ public class Clasificador {
 	public int getNumClasses() {
 		int numClases = clasesClasificadorProperty.intValue();
 		//return 3;
-		if(numClases>colors.length|| numClases<1){
+		if(numClases > colors.length|| numClases < 1){
 			System.err.println("la configuracion default de "+NUMERO_CLASES_CLASIFICACION+" no puede ser mayor a "+(colors.length));
 			numClases=colors.length;
 		}

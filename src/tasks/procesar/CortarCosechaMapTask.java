@@ -119,16 +119,17 @@ public class CortarCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabo
 		labor.setLayer(new LaborLayer());
 		labor.constructClasificador();
 
-		List<CosechaItem> itemsToShow = new ArrayList<CosechaItem>();
+	//	List<CosechaItem> itemsToShow = new ArrayList<CosechaItem>();
 
 		SimpleFeatureIterator it = labor.outCollection.features();
 		while(it.hasNext()){
 			SimpleFeature f=it.next();
-			itemsToShow.add(labor.constructFeatureContainerStandar(f,false));
+		//	itemsToShow.add(labor.constructFeatureContainerStandar(f,false));
 		}
 		it.close();
 
-		runLater(itemsToShow);
+		//runLater(itemsToShow);
+		runLater(this.getItemsList());
 		updateProgress(0, featureCount);
 	}
 

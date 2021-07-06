@@ -54,7 +54,7 @@ public class NdviDatePickerDialog {
 		DatePicker datePickerFechaDesde=new DatePicker();
 		datePickerFechaDesde.setConverter(dc);
 		datePickerFechaDesde.valueProperty().bindBidirectional(iniLdp);
-		datePickerFechaDesde.valueProperty().addListener((n,old,ob)->{
+		datePickerFechaDesde.valueProperty().addListener((ob,old,n)->{
 			System.out.println("date picker fecha desde cambio a "+datePickerFechaDesde.valueProperty().get()+" initial quedo en "+iniLdp.get()); //$NON-NLS-1$ //$NON-NLS-2$
 		});
 		

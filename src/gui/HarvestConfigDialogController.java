@@ -36,9 +36,11 @@ import javafx.util.converter.PercentageStringConverter;
 import utils.DAH;
 import dao.Clasificador;
 import dao.Labor;
+import dao.config.Configuracion;
 import dao.config.Cultivo;
 import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaLabor;
+import dao.utils.PropertyHelper;
 import gui.utils.DateConverter;
 
 
@@ -169,7 +171,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 
 	public HarvestConfigDialogController() {
 		super();
-		System.out.println("construyendo el controller"); //$NON-NLS-1$
+		//System.out.println("construyendo el controller"); //$NON-NLS-1$
 
 		this.setTitle(Messages.getString("HarvestConfigDialogController.title")); //$NON-NLS-1$
 		Stage stage = ((Stage)this.getDialogPane().getScene().getWindow());
@@ -223,6 +225,8 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 			message.append(Messages.getString("HarvestConfigDialogController.mensaje4")); //$NON-NLS-1$
 			isValid=false;
 		}
+		
+		
 
 		if(cols.indexOf(comboElev.getValue())==-1){
 			//			message.append("Debe seleccionar la columna Elevacion\n");
@@ -234,6 +238,12 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		////			isValid=false;
 		//			labor.colVelocidad.set(Labor.NONE_SELECTED);
 		//		}
+		
+		if(labor.minRindeProperty.get()>labor.maxRindeProperty.get()){
+			message.append(Messages.getString("HarvestConfigDialogController.mensaje5")); //$NON-NLS-1$
+			isValid=false;
+		}
+		
 		if(!isValid){
 			Alert alert = new Alert(AlertType.ERROR, message.toString(), ButtonType.OK);
 			alert.initOwner(this.getDialogPane().getScene().getWindow());
@@ -249,7 +259,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 
 	public void setLabor(CosechaLabor l) {
 		this.labor = l;
-
+		Configuracion config = labor.getConfiguracion().getConfigProperties();
 		List<String> availableColums = labor.getAvailableColumns();
 		//availableColums.removeIf(s->s.length()>10);//si la columna tiene mas de 10 caracteres no la puedo leer
 		availableColums.sort((a,b)->{
@@ -262,8 +272,6 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		//comboElev
 		this.comboElev.setItems(FXCollections.observableArrayList(availableColums));
 		this.comboElev.valueProperty().bindBidirectional(labor.colElevacion);
-
-
 
 		// colRendimiento;
 		this.comboRend.setItems(FXCollections.observableArrayList(availableColums));
@@ -288,75 +296,32 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		this.comboCultivo.getSelectionModel().select(labor.getCultivo());
 		this.comboCultivo.valueProperty().addListener((obj,old,n)->{
 			labor.cultivo=n;
-			if(n!=null)labor.config.getConfigProperties().setProperty(CosechaLabor.CosechaLaborConstants.PRODUCTO_DEFAULT,n.getNombre());
+			if(n!=null)config.setProperty(CosechaLabor.CosechaLaborConstants.PRODUCTO_DEFAULT,n.getNombre());
 		});
 
-		DecimalFormat converter = new DecimalFormat("0.00"){ //$NON-NLS-1$
-			@Override
-			public Object parseObject(String source)  {
-				if("".equals(source)||source==null){ //$NON-NLS-1$
-					source="0.00"; //$NON-NLS-1$
-				}
-				try {
-					return super.parseObject(source);
-				} catch (ParseException e) {
-					e.printStackTrace();
-					return new Double(0.0);
-				}
-			}
-		};
-
-		converter.setGroupingUsed(true);
-		converter.setGroupingSize(3);
+		DecimalFormat converter = PropertyHelper.getDoubleConverter();
 
 		//textPrecioGrano
-		if(labor.getPrecioGrano()!=null) {
-			this.textPrecioGrano.textProperty().set(labor.getPrecioGrano().toString());
-		}else {
-			this.textPrecioGrano.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.PRECIO_GRANO, labor.getPrecioGrano().toString()));
-		}
-		this.textPrecioGrano.textProperty().addListener((obj,old,n)->{
-			try {
-				labor.setPrecioInsumo(converter.parse(n).doubleValue());
-			} catch (ParseException e) {
-				e.printStackTrace();
-			}
-			labor.config.getConfigProperties().setProperty(CosechaLabor.CosechaLaborConstants.PRECIO_GRANO, n);
-		});
-
-		//textCostoCosechaHa
-		if(labor.getPrecioLabor()!=null) {
-			this.textCostoCosechaHa.textProperty().set(labor.getPrecioLabor().toString());
-		}else {
-			this.textCostoCosechaHa.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_HA, labor.getPrecioLabor().toString()));
-		}
-
-		this.textCostoCosechaHa.textProperty().addListener((obj,old,n)->{
-			try {
-				labor.setPrecioLabor(converter.parse(n).doubleValue());
-			} catch (ParseException e) {
-				e.printStackTrace();
-			}
-			labor.config.getConfigProperties().setProperty(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_HA, n);
-		});
-
+		PropertyHelper.bindDoubleToTextProperty(labor::getPrecioGrano,
+				labor::setPrecioGrano,
+				this.textPrecioGrano.textProperty(),
+				config,
+				CosechaLabor.CosechaLaborConstants.PRECIO_GRANO);
+		
+		//textCostoCosechaHa		
+		PropertyHelper.bindDoubleToTextProperty(labor::getPrecioLabor,
+				labor::setPrecioLabor,
+				this.textCostoCosechaHa.textProperty(),
+				config,
+				CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_HA);
 
 		//textCostoCosechaTn
-		if(labor.getCostoCosechaTn()!=null) {
-			this.textCostoCosechaTn.textProperty().set(labor.getCostoCosechaTn().toString());
-		}else {
-			this.textCostoCosechaTn.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_TN, labor.getCostoCosechaTn().toString()));
-		}
-		this.textCostoCosechaTn.textProperty().addListener((obj,old,n)->{
-			try {
-				labor.setCostoCosechaTn(converter.parse(n).doubleValue());
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			labor.config.getConfigProperties().setProperty(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_TN, n);
-		});
-
+		PropertyHelper.bindDoubleToTextProperty(labor::getCostoCosechaTn,
+												labor::setCostoCosechaTn,
+												this.textCostoCosechaTn.textProperty(),
+												config,
+												CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_TN);
+		
 		//textAnchoDef
 		Bindings.bindBidirectional(this.textAnchoDef.textProperty(), labor.anchoDefaultProperty, converter);
 
@@ -364,52 +329,28 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		Bindings.bindBidirectional(this.textPorcCorreccion.textProperty(), labor.correccionCosechaProperty, converter);
 
 
+
+	//	DecimalFormat converterMax = getMaxDecimalConverter();
+		
 		//textMaxRinde
-		DecimalFormat converterMax = new DecimalFormat("0.00"){ //$NON-NLS-1$
-			@Override
-			public Object parseObject(String source)  {
-				try {
-					if("".equals(source)||source==null){ //$NON-NLS-1$
-						source="0.00"; //$NON-NLS-1$
-					}
-					Number val = super.parse(source);
-					if(val.equals(new Double(0.0))) {
-						val = Double.MAX_VALUE;
-					}
-					return val;
-				} catch (ParseException e) {
-					return Double.MAX_VALUE;
-				}            	
-			}
-		};
-		converterMax.setGroupingUsed(true);
-		converterMax.setGroupingSize(3);
+//		this.textMaxRinde.textProperty().set(
+//				config.getPropertyOrDefault(
+//						CosechaLabor.CosechaLaborConstants.MAX_RINDE_KEY, 
+//						converterMax.format(labor.maxRindeProperty.doubleValue())
+//								 ));
+		Bindings.bindBidirectional(this.textMaxRinde.textProperty(), labor.maxRindeProperty,converter);
 
-		this.textMaxRinde.textProperty().set(
-				labor.getConfiguracion().getConfigProperties().getPropertyOrDefault(
-						CosechaLabor.CosechaLaborConstants.MAX_RINDE_KEY, 
-						converterMax.format(labor.maxRindeProperty.doubleValue())
-								 ));
-				//labor.getPrecioGrano().toString()));
-		
-		Bindings.bindBidirectional(this.textMaxRinde.textProperty(), labor.maxRindeProperty,converterMax);
-
-		this.textMinRinde.textProperty().set(
-				labor.getConfiguracion().getConfigProperties().getPropertyOrDefault(
-						CosechaLabor.CosechaLaborConstants.MIN_RINDE_KEY, 
-						converterMax.format(labor.minRindeProperty.doubleValue())
-								 ));
-		
-		//textMinRinde
+//		this.textMinRinde.textProperty().set(
+//				config.getPropertyOrDefault(
+//						CosechaLabor.CosechaLaborConstants.MIN_RINDE_KEY, 
+//						converter.format(labor.minRindeProperty.doubleValue())
+//								 ));
 		Bindings.bindBidirectional(this.textMinRinde.textProperty(), labor.minRindeProperty, converter);
 
 		
 
 		//textDistanciasRegimen
 		Bindings.bindBidirectional(this.textDistanciasRegimen.textProperty(), labor.config.cantDistanciasEntradaRegimenProperty(), converter);
-
-		//textMaxSuper
-		//	Bindings.bindBidirectional(this.textMaxSuper.textProperty(), labor.config.cantMaxGeometriasSuperpuestasProperty(), converter);
 
 		//textSupMin
 		Bindings.bindBidirectional(this.textSupMin.textProperty(), labor.config.supMinimaProperty(), converter);
@@ -463,7 +404,6 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		//textToleranciaCV
 		Bindings.bindBidirectional(this.textToleranciaCV.textProperty(), labor.config.toleranciaCVProperty(), nsConverter);
 
-
 		Bindings.bindBidirectional(this.textDistTolera.textProperty(), labor.config.cantDistanciasToleraProperty(), converter);
 
 		Bindings.bindBidirectional(this.textClasesClasificador.textProperty(), labor.clasificador.clasesClasificadorProperty, converter);
@@ -489,27 +429,41 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 
 		chkResumirGeometrias.selectedProperty().bindBidirectional(labor.config.resumirGeometriasProperty());
 
-		//StringConverter<LocalDate> dateConverter = this.datePickerFecha.getConverter();
-
 		datePickerFecha.setValue(DateConverter.asLocalDate(l.fecha));
-		datePickerFecha.setConverter(new DateConverter());
+		//datePickerFecha.setConverter(new DateConverter());
 		datePickerFecha.valueProperty().addListener((obs, bool1, n) -> {
 			l.setFecha(DateConverter.asDate(n));
-			//l.fechaProperty.setValue(bool2);
 		});
-		//	Bindings.bindBidirectional(this.datePickerFecha.valueProperty()., l.fechaProperty, );
-
 	}
 
-
-
+	private DecimalFormat getMaxDecimalConverter() {
+		DecimalFormat converterMax = new DecimalFormat("0.00"){ //$NON-NLS-1$
+			@Override
+			public Object parseObject(String source)  {
+				try {
+					if("".equals(source)||source==null){ //$NON-NLS-1$
+						return Double.MAX_VALUE;
+					}
+					Number val = super.parse(source);
+					if(val.equals(new Double(0.0))) {
+						val = Double.MAX_VALUE;
+					}
+					return val;
+				} catch (ParseException e) {
+					return Double.MAX_VALUE;
+				}            	
+			}
+			
+		};
+		
+		converterMax.setGroupingUsed(true);
+		converterMax.setGroupingSize(3);
+		return converterMax;
+	}
 
 	public void init() {
 		this.getDialogPane().setContent(content);
-
 	}
-
-
 
 	public static Optional<CosechaLabor> config(CosechaLabor labor) {
 		Optional<CosechaLabor> ret = Optional.empty();
@@ -529,8 +483,4 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		}
 		return ret;
 	}
-
-
-
-
 }

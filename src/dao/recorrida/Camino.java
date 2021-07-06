@@ -1,4 +1,4 @@
-package dao;
+package dao.recorrida;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;

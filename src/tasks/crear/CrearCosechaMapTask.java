@@ -76,9 +76,8 @@ public class CrearCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 				
 		labor.constructClasificador();
 
-		List<CosechaItem> itemsToShow = new ArrayList<CosechaItem>();
-		itemsToShow.add(ci);
-		runLater(itemsToShow);
+		
+		runLater(this.getItemsList());
 		updateProgress(0, featureCount);
 
 	}
