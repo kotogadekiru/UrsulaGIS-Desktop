@@ -156,7 +156,7 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 		
 		sueloItem.setGeometry(geomQuery);
 		sueloItem.setPpmP(newPpmPsuelo);
-		sueloItem.setPpmN(newPpmNsuelo);
+		sueloItem.setPpmNO3(newPpmNsuelo);
 		sueloItem.setPorcMO(newPMoSuelo);
 		sueloItem.setElevacion(elev);//10.0);//para que aparezca en el mapa
 

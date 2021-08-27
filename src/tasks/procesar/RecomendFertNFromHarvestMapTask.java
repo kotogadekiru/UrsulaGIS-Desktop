@@ -83,7 +83,7 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 			nAAplicar = Math.max(0, nAAplicar);
 			double reposicionN = nAAplicar / (fert.getPorcN()/100);
 
-			System.out.println("Rinde "+cItem.getAmount()+" Nreq "+absN+" nAAplicar="+nAAplicar+" "+fert.getNombre()+" "+reposicionN);
+		//	System.out.println("Rinde "+cItem.getAmount()+" Nreq "+absN+" nAAplicar="+nAAplicar+" "+fert.getNombre()+" "+reposicionN);
 			
 			if(this.minFert != null && this.minFert>0 &&this.minFert > reposicionN) {
 				reposicionN = minFert;

@@ -29,14 +29,15 @@ public class ToolTipAnnotation extends ScreenAnnotation {
 
 	protected void initializeAttributes() {
 		this.attributes.setAdjustWidthToText(AVKey.SIZE_FIXED);
+		
 		this.attributes.setFrameShape(AVKey.SHAPE_RECTANGLE);
 		this.attributes.setTextColor(Color.BLACK);
 		this.attributes.setBackgroundColor(new Color(1f, 1f, 1f, 0.8f));
 		this.attributes.setCornerRadius(5);
 		this.attributes.setBorderColor(new Color(0xababab));
-
-
-		this.attributes.setTextAlign(AVKey.CENTER);
+		
+		this.attributes.setTextAlign(AVKey.LEFT);
+	//	this.attributes.setTextAlign(AVKey.CENTER);
 		this.attributes.setInsets(new Insets(5, 5, 5, 5));
 		
 		if(HiDPIHelper.isHiDPI()){

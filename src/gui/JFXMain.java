@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -121,7 +122,9 @@ import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -130,6 +133,7 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
@@ -137,12 +141,16 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.media.AudioClip;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import tasks.CompartirRecorridaTask;
 import tasks.ExportLaborMapTask;
 import tasks.GetNdviForLaborTask3;
@@ -171,7 +179,9 @@ import tasks.procesar.CortarCosechaMapTask;
 import tasks.procesar.CrearSiembraDesdeFertilizacionTask;
 import tasks.procesar.ExportarCosechaDePuntosTask;
 import tasks.procesar.ExportarPrescripcionFertilizacionTask;
+import tasks.procesar.ExportarPrescripcionPulverizacionTask;
 import tasks.procesar.ExportarPrescripcionSiembraTask;
+import tasks.procesar.ExportarRecorridaTask;
 import tasks.procesar.ExtraerPoligonosDeLaborTask;
 import tasks.procesar.GenerarMuestreoDirigidoTask;
 import tasks.procesar.GenerarRecorridaDirigidaTask;
@@ -204,7 +214,7 @@ public class JFXMain extends Application {
 	public static final String buildDate = "29/06/2021";
 
 	public static final String ICON ="gui/ursula_logo_2020.png";//"gui/32x32-icon-earth.png";// "gui/1-512.png";//UrsulaGIS-Desktop/src/gui/32x32-icon-earth.png //$NON-NLS-1$
-	private static final String SOUND_FILENAME = "gui/Alarm08.wav";//"Alarm08.wav" funciona desde eclipse pero no desde el jar  //$NON-NLS-1$
+	private static final String SOUND_FILENAME = "gui/exito4.mp3";//"gui/Alarm08.wav";//"Alarm08.wav" funciona desde eclipse pero no desde el jar  //$NON-NLS-1$
 
 
 	public static Stage stage=null;
@@ -281,7 +291,7 @@ public class JFXMain extends Application {
 	private void startClearCacheCronJob() {
 		ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 		Property<LocalTime> lastClearCacheRun=new SimpleObjectProperty<LocalTime>(LocalTime.now());
-		
+		Property<Long> lagTimeProperty=new SimpleObjectProperty<Long>(new Long(600));//10min
 		Runnable clearCaches = ()->{			
 			Consumer<Labor<?>> checkCache = l->{
 				synchronized(l){
@@ -291,28 +301,15 @@ public class JFXMain extends Application {
 			}}};
 			
 			getLaboresCargadas().forEach(checkCache);
-//			cosechas.forEach(checkCache);
-//			fertilizaciones.forEach(checkCache);
-//			siembras.forEach(checkCache);
-//			pulverizaciones.forEach(checkCache);
-//			suelos.forEach(checkCache);
-//			margenes.forEach(checkCache);
-			
-	
-			//fertilizaciones.forEach(l->l.clearCache());
-//			siembras.forEach(l->l.clearCache());
-//			pulverizaciones.forEach(l->l.clearCache());
-//			suelos.forEach(l->l.clearCache());
-//			margenes.forEach(l->l.clearCache());
-			// System.out.println("termine de limpiar todas las caches");
-			
+			long lagTime = lagTimeProperty.getValue();
 			LocalTime init = LocalTime.now();
-			if(lastClearCacheRun.getValue().plusSeconds(30).isBefore(init)) {//aseguro 30segundos entre gc y gc
+			if(lastClearCacheRun.getValue().plusSeconds(lagTime).isBefore(init)) {//aseguro 30segundos entre gc y gc
 				System.gc();//600ms aprox
 				LocalTime end = LocalTime.now();
 				lastClearCacheRun.setValue(end);
-				
-				System.out.println("tarde "+(end.toNanoOfDay()-init.toNanoOfDay())+"ns en hacer gc() en JFXMain.startClearCacheCronJob()");
+				long deltaMs = (end.toNanoOfDay()-init.toNanoOfDay())/(1000*1000);
+				lagTimeProperty.setValue(600*deltaMs/1000);
+				System.out.println("tarde "+(deltaMs)+"ms en hacer gc() en JFXMain.startClearCacheCronJob()");
 			}
 		};
 
@@ -572,7 +569,7 @@ public class JFXMain extends Application {
 	}
 
 
-	private void setPulverizacionesRootNodeActions() {
+	private void addPulverizacionesRootNodeActions() {
 		List<LayerAction> rootNodeP = new ArrayList<LayerAction>();
 		rootNodeP.add(
 				new LayerAction(					
@@ -584,7 +581,7 @@ public class JFXMain extends Application {
 		layerPanel.addAccionesClase(rootNodeP,PulverizacionLabor.class);
 	}
 
-	private void setFertilizacionesRootNodeActions() {
+	private void addFertilizacionesRootNodeActions() {
 		List<LayerAction> rootNodeP = new ArrayList<LayerAction>();
 		rootNodeP.add(new LayerAction((layer)->{
 			doOpenFertMap(null);
@@ -600,7 +597,7 @@ public class JFXMain extends Application {
 		layerPanel.addAccionesClase(rootNodeP,FertilizacionLabor.class);
 	}
 
-	private void setSiembrasRootNodeActions() {
+	private void addSiembrasRootNodeActions() {
 		List<LayerAction> rootNodeP = new ArrayList<LayerAction>();
 		rootNodeP.add(new LayerAction((layer)->{
 			this.doOpenSiembraMap(null);
@@ -622,7 +619,7 @@ public class JFXMain extends Application {
 		layerPanel.addAccionesClase(rootNodeP,SiembraLabor.class);
 	}
 
-	private void setCosechasRootNodeActions() {
+	private void addCosechasRootNodeActions() {
 		List<LayerAction> rootNodeP = new ArrayList<LayerAction>();
 		rootNodeP.add(new LayerAction(
 				(layer)->{	this.doOpenCosecha(null);
@@ -641,7 +638,7 @@ public class JFXMain extends Application {
 
 		layerPanel.addAccionesClase(rootNodeP,CosechaLabor.class);
 	}
-	private void setNdviRootNodeActions() {
+	private void addNdviRootNodeActions() {
 		List<LayerAction> rootNodeNDVI = new ArrayList<LayerAction>();
 
 		rootNodeNDVI.add(new LayerAction((layer)->{ //$NON-NLS-1$
@@ -688,7 +685,7 @@ public class JFXMain extends Application {
 		layerPanel.addAccionesClase(rootNodeNDVI,Ndvi.class);
 	}
 
-	private void setPoligonosRootNodeActions() {
+	private void addPoligonosRootNodeActions() {
 		List<LayerAction> rootNodeP = new ArrayList<LayerAction>();
 
 		//addMenuItem(Messages.getString("JFXMain.distancia"),(a)->doMedirDistancia(),menuHerramientas); //$NON-NLS-1$
@@ -750,12 +747,12 @@ public class JFXMain extends Application {
 	 //XXX agregar nuevas funcionalidades aca!!! 
 	 */
 	private void setAccionesTreePanel() {
-		setPulverizacionesRootNodeActions();
-		setFertilizacionesRootNodeActions();
-		setSiembrasRootNodeActions();
-		setCosechasRootNodeActions();
-		setPoligonosRootNodeActions();
-		setNdviRootNodeActions();
+		addPulverizacionesRootNodeActions();
+		addFertilizacionesRootNodeActions();
+		addSiembrasRootNodeActions();
+		addCosechasRootNodeActions();
+		addPoligonosRootNodeActions();
+		addNdviRootNodeActions();
 
 		Map<Class<?>,List<LayerAction>> predicates = new HashMap<Class<?>,List<LayerAction>>();
 		
@@ -843,7 +840,7 @@ public class JFXMain extends Application {
 		List<LayerAction> fertilizacionesP = new ArrayList<LayerAction>();
 		predicates.put(FertilizacionLabor.class, fertilizacionesP);
 		/**
-		 *Accion que permite editar una cosecha
+		 *Accion que permite ediytar una fertilizacion
 		 */
 		fertilizacionesP.add(constructPredicate(Messages.getString("JFXMain.editFertAction"),(layer)->{			
 			doEditFertilizacion((FertilizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
@@ -860,7 +857,7 @@ public class JFXMain extends Application {
 
 		fertilizacionesP.add(constructPredicate(Messages.getString("JFXMain.generarSiembraDeFertAction"),(layer)->{			
 			doGenerarSiembraDesdeFertilizacion((FertilizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-			return "labor Exportada" + layer.getName(); //$NON-NLS-1$
+			return "labor siembraFertilziada Exportada" + layer.getName(); //$NON-NLS-1$
 		}));
 
 
@@ -881,12 +878,23 @@ public class JFXMain extends Application {
 		List<LayerAction> pulverizacionesP = new ArrayList<LayerAction>();
 		predicates.put(PulverizacionLabor.class, pulverizacionesP);
 		/**
-		 *Accion que permite editar una siembra
+		 *Accion que permite editar una pulverizacion
 		 */
 		pulverizacionesP.add(constructPredicate(Messages.getString("JFXMain.editPulvAction"),(layer)->{		
 			doEditPulverizacion((PulverizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 			return "pulverizacion editada" + layer.getName(); //$NON-NLS-1$
 		}));
+		
+		/**
+		 *Accion que permite exportar prescripcion de una pulverizacion
+		 */
+		pulverizacionesP.add(constructPredicate(Messages.getString("JFXMain.exportarFertPAction"),(layer)->{		
+			doExportarPrescPulverizacion((PulverizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+			return "pulverizacion prescripcion exportada" + layer.getName(); //$NON-NLS-1$
+		}));
+		
+	
+		
 		return pulverizacionesP;
 	}
 
@@ -1146,7 +1154,15 @@ public class JFXMain extends Application {
 				//TODO updload to server and show url to access
 				doAsignarValoresRecorrida(recorrida);
 			}
-			return "comparti una recorrida"; //$NON-NLS-1$
+			return "asigne los valores de una recorrida"; //$NON-NLS-1$
+		}));
+		
+		/**
+		 * Accion permite exportar la recorrida como shp
+		 */
+		recorridasP.add(constructPredicate(Messages.getString("JFXMain.exportLaborAction"),(layer)->{
+			doExportRecorrida((Recorrida) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+			return "recorrida Exportada" + layer.getName(); //$NON-NLS-1$
 		}));
 	}
 
@@ -2230,28 +2246,34 @@ public class JFXMain extends Application {
 	//	}
 
 
-	//TODO updload to server and show url to access
-	private void doCompartirRecorrida(Recorrida recorrida) {
+	/**
+	 *  updload recorrida to server and show url to access
+	 * @param recorrida
+	 */
+	private void doCompartirRecorrida(Recorrida recorrida) {		
+		if(recorrida.getUrl()!=null && recorrida.getUrl().length()>0) {			
+			new ShowConfigGUI(this).showQR(recorrida.getUrl());
+			//XXX editar la recorrida remota con la informacion actualizada de la local?
+			//XXX recupero la recorrida remota?
+			return;
+		}
 		CompartirRecorridaTask task = new CompartirRecorridaTask(recorrida);
-		//task.setBeginDate(ndviDpDLG.initialDate);
-		//task.setFinDate(ndviDpDLG.finalDate);
-
 		//System.out.println("procesando los datos entre "+ndviDpDLG.initialDate+" y "+ ndviDpDLG.finalDate);//hasta aca ok!
 		task.installProgressBar(progressBox);
 		task.setOnSucceeded(handler -> {
 			String ret = (String)handler.getSource().getValue();
-			Alert a = new Alert(AlertType.INFORMATION);
-		//	a.setContentText(ret);
-			a.setGraphic(new Text(ret));
-			a.show();
-			//TODO show returned url
+			recorrida.setUrl(ret);
+			DAH.save(recorrida);
+			new ShowConfigGUI(this).showQR(ret);
+			//XXX agregar boton de actualizar desde la nube?
 			task.uninstallProgressBar();
 		});
 		System.out.println("ejecutando Compartir Recorrida"); //$NON-NLS-1$
 		executorPool.submit(task);
 	}
 
-	//TODO juntar las muestras con mismo nombre y permitir completar los datos de las objervaciones
+
+	// junta las muestras con mismo nombre y permite completar los datos de las objervaciones
 	private void doAsignarValoresRecorrida(Recorrida recorrida) {
 		new ShowConfigGUI(this).doAsignarValoresRecorrida(recorrida);
 	}
@@ -2718,6 +2740,8 @@ public class JFXMain extends Application {
 		labor.setNombre(poli.getNombre()+" "+Messages.getString("JFXMain.pulverizacion")); //$NON-NLS-1$ //$NON-NLS-2$
 		LaborLayer layer = new LaborLayer();
 		labor.setLayer(layer);
+		
+		//TODO modificar el dialog controler para poder ingresarl el caldo
 		Optional<PulverizacionLabor> cosechaConfigured= PulverizacionConfigDialogController.config(labor);
 		if(!cosechaConfigured.isPresent()){//
 			System.out.println(Messages.getString("JFXMain.249")); //$NON-NLS-1$
@@ -2728,6 +2752,8 @@ public class JFXMain extends Application {
 		TextInputDialog anchoDialog = new TextInputDialog(Messages.getString("JFXMain.250")); //$NON-NLS-1$
 		anchoDialog.setTitle(Messages.getString("JFXMain.251")); //$NON-NLS-1$
 		anchoDialog.setContentText(Messages.getString("JFXMain.252")); //$NON-NLS-1$
+		anchoDialog.initOwner(this.stage);
+		
 		Optional<String> anchoOptional = anchoDialog.showAndWait();
 		Double rinde = PropertyHelper.parseDouble(anchoOptional.get()).doubleValue();//Double.valueOf(anchoOptional.get());
 		CrearPulverizacionMapTask umTask = new CrearPulverizacionMapTask(labor,poli,rinde);
@@ -4204,7 +4230,48 @@ public class JFXMain extends Application {
 		});
 		executorPool.execute(ept);		
 	}
+	
+	
+	
+	//TODO permitir al ususario definir el formato. para siembra fertilizada necesita 3 columnas
+	//en la linea, al costado de la linea, siembra
+	private void doExportarPrescPulverizacion(PulverizacionLabor laborToExport) {
+		String nombre = laborToExport.getNombre();
+		File shapeFile =  FileHelper.getNewShapeFile(nombre);
+		
+		Alert a = new Alert(Alert.AlertType.WARNING);
+		a.setTitle("Advertencia");
+		a.setContentText("Antes de aplicar consulte a un Ing. Agronomo!");
+		a.initOwner(JFXMain.stage);
+		a.show();
 
+		ExportarPrescripcionPulverizacionTask ept = new ExportarPrescripcionPulverizacionTask(laborToExport, shapeFile); 
+		ept.installProgressBar(progressBox);
+
+		ept.setOnSucceeded(handler -> {
+			//TODO mostrar el mapa exportado en la pantalla para ver las diferencias
+			File ret = (File)handler.getSource().getValue();
+			playSound();
+			ept.uninstallProgressBar();
+			this.doOpenPulvMap(Collections.singletonList(ret));
+		});
+		executorPool.execute(ept);		
+	}
+	
+
+	private void doExportRecorrida(Recorrida recorrida) {
+		String nombre = recorrida.getNombre();
+		File shapeFile = FileHelper.getNewShapeFile(nombre);
+		ExportarRecorridaTask task = new ExportarRecorridaTask(recorrida,shapeFile);
+		task.installProgressBar(progressBox);
+		task.setOnSucceeded(handler -> {
+			playSound();
+			task.uninstallProgressBar();
+		});
+		executorPool.execute(task);
+	}
+	
+	
 	private void doExportPrescripcionSiembra(SiembraLabor laborToExport) {
 		String nombre = laborToExport.getNombre();
 		File shapeFile = FileHelper.getNewShapeFile(nombre);
@@ -4281,30 +4348,23 @@ public class JFXMain extends Application {
 	private void playSound() {
 		if(!this.isPlayingSound) {
 			executorPool.execute(()->{
-				try	{
-					URL url = JFXMain.class.getClassLoader().getResource(SOUND_FILENAME); //ok en el jar!!
-					AudioInputStream ais =  AudioSystem.getAudioInputStream(url); 
+				URL url = JFXMain.class.getClassLoader().getResource(SOUND_FILENAME);
+				
+				try {					
+					 AudioClip plonkSound = new AudioClip(url.toURI().toString());
+					 this.isPlayingSound=true;
+					 plonkSound.setVolume(0.50);
+					 plonkSound.play();
+					 this.isPlayingSound=false;
+				
+				} catch (URISyntaxException e) {
 
-					//				InputStream bufferedIn = new BufferedInputStream(getClass().getResourceAsStream(SOUND_FILENAME));
-					//				AudioInputStream inputStream = AudioSystem
-					//						.getAudioInputStream(bufferedIn);
-					Clip clip = AudioSystem.getClip();
-					clip.open(ais);
-					this.isPlayingSound=true;
-					clip.start();
-
-					clip.addLineListener((lineEvent)->{
-						//System.out.println(lineEvent);
-
-						if(LineEvent.Type.STOP.equals(lineEvent.getType())) {
-							this.isPlayingSound=false;
-							//System.out.println("stopping");
-						}
-					});
-
-				}catch (Exception e){
 					e.printStackTrace();
-				}});
+				}
+			
+				});
+		}else {
+			System.out.println("no reprodusco el sonido porque ya hay un player andando");
 		}
 	}
 

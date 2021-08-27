@@ -254,7 +254,7 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 		DecimalFormat df = new DecimalFormat(Messages.getString("GenerarMuestreoDirigidoTask.5")); //$NON-NLS-1$
 
 		String tooltipText = new String(Messages.getString("GenerarMuestreoDirigidoTask.6")+ df.format(sueloItem.getPpmP()) +Messages.getString("GenerarMuestreoDirigidoTask.7")); //$NON-NLS-1$ //$NON-NLS-2$
-		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.8")+ df.format(sueloItem.getPpmN()) + Messages.getString("GenerarMuestreoDirigidoTask.9")); //$NON-NLS-1$ //$NON-NLS-2$
+		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.8")+ df.format(sueloItem.getPpmNO3()) + Messages.getString("GenerarMuestreoDirigidoTask.9")); //$NON-NLS-1$ //$NON-NLS-2$
 		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.10")+ df.format(sueloItem.getPpmS()) + Messages.getString("GenerarMuestreoDirigidoTask.11")); //$NON-NLS-1$ //$NON-NLS-2$
 		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.12")+ df.format(sueloItem.getPpmK()) + Messages.getString("GenerarMuestreoDirigidoTask.13")); //$NON-NLS-1$ //$NON-NLS-2$
 		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.14")+ df.format(sueloItem.getPorcMO()) + Messages.getString("GenerarMuestreoDirigidoTask.15")); //$NON-NLS-1$ //$NON-NLS-2$

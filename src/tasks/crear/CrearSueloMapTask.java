@@ -39,7 +39,7 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 	public void doProcess() throws IOException {
 		SueloItem si = new SueloItem();
 		si.setPpmP(ppmP);
-		si.setPpmN(ppmN);
+		si.setPpmNO3(ppmN);
 		si.setPorcMO(pMO);
 
 		labor.setPropiedadesLabor(si);
@@ -74,18 +74,19 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		df.setGroupingSize(3);
 		StringBuilder sb = new StringBuilder();
 		//Fosforo
-		sb.append(Messages.getString("OpenSoilMapTask.1")+"\n ");//"Fosforo: "
+		//sb.append(Messages.getString("OpenSoilMapTask.1")+"\n ");//"Fosforo: "
 		sb.append(df.format(si.getPpmP()));
-		sb.append(" " + Messages.getString("OpenSoilMapTask.2")+" 0-20cm"+"\n "); //ppm
+		sb.append(" " + Messages.getString("OpenSoilMapTask.2") + " 0-20cm \n "); //ppm
 		//Nitrogeno
-		sb.append(Messages.getString("OpenSoilMapTask.3")+"\n ");//"Nitrogeno: "
-		sb.append(df.format(si.getPpmN()));
-		sb.append(Messages.getString("OpenSoilMapTask.2")+" 0-60cm \n");
-		sb.append(df.format(s.ppmToKg(si.getPpmN(),0.6)*Fertilizante.porcN_NO3));
-		sb.append(" kgN/Ha 0-60cm"+"\n");
+		//sb.append(Messages.getString("OpenSoilMapTask.3")+"\n ");//"Nitrogeno: "
+		sb.append(df.format(si.getPpmNO3()));
+		sb.append(" " + Messages.getString("OpenSoilMapTask.4") + " 0-60cm \n");//Ppm NO3
 		
-		sb.append(Messages.getString("JFXMain.236")+": ");//%MO
-		sb.append(df.format(si.getPorcMO())+" 0-20cm"+"\n ");
+		sb.append(df.format(s.ppmToKg(si.getPpmNO3(),0.6)*Fertilizante.porcN_NO3));
+		sb.append(" kgN/Ha 0-60cm \n");
+		
+		sb.append(df.format(si.getPorcMO()));
+		sb.append("% " + Messages.getString("JFXMain.236") + " 0-20cm \n ");//JFXMain.236=%M0
 		
 		if(area<1){
 			sb.append( Messages.getString("CrearSueloMapTask.sup")+": "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");

@@ -32,7 +32,7 @@ import utils.DAH;
 @Setter(value = AccessLevel.PUBLIC)
 //@Entity
 public class PulverizacionLabor extends Labor<PulverizacionItem> {
-	private static final String COLUMNA_DOSIS = "Dosis";
+	public static final String COLUMNA_DOSIS = "Dosis";
 	private static final String COLUMNA_PASADAS = "CantPasada";
 	public static final String COLUMNA_PRECIO_PASADA = "CostoLab";	
 	public static final String COLUMNA_IMPORTE_HA = "Importe_ha";

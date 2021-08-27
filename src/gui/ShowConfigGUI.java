@@ -1,5 +1,6 @@
 package gui;
 
+import java.awt.image.BufferedImage;
 import java.text.DateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -18,6 +19,11 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityTransaction;
 
 import com.google.gson.Gson;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
 
 import dao.Labor;
 import dao.Ndvi;
@@ -42,6 +48,7 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
@@ -53,13 +60,16 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
+import tasks.CotizarOdenDeCompraOnlineTask;
 import utils.DAH;
 import utils.ExcelHelper;
 
@@ -445,7 +455,7 @@ public class ShowConfigGUI {
 			HBox h = new HBox();
 			Button guardarB = new Button("Guardar");
 			guardarB.setOnAction(actionEvent->{
-				System.out.println("implementar GuardarOrden de compra action");
+				//System.out.println("implementar GuardarOrden de compra action");
 				DAH.save(ret);
 			});
 			Button exportarB = new Button("Exportar");
@@ -456,6 +466,7 @@ public class ShowConfigGUI {
 
 			Button cotizarOblineB = new Button("Cotizar OnLine");
 			cotizarOblineB.setOnAction(actionEvent->{
+				CotizarOdenDeCompraOnlineTask cotTask= new CotizarOdenDeCompraOnlineTask(ret); 
 				//TODO enviar orden de compra a la nube. preguntar mail de contacto y subir la orden de compra a la nube
 				
 
@@ -841,5 +852,46 @@ public class ShowConfigGUI {
 		menuItemProductos.setOnAction(action);
 		parent.getItems().addAll(menuItemProductos);
 		return menuItemProductos;
+	}
+	
+	public  void showQR(String ret) {
+		BufferedImage qr = ShowConfigGUI.generateQR(ret);
+		Image image = SwingFXUtils.toFXImage(qr, null);
+
+		Alert a = new Alert(AlertType.INFORMATION);
+		ImageView view = new ImageView();
+		a.initOwner(this.main.stage);
+		a.setTitle("Qr Code");
+		view.setImage(image);
+		VBox v = new VBox();
+		v.getChildren().add(view);
+		TextField link = new TextField(ret);
+		link.setEditable(false);
+		v.getChildren().add(link);
+
+		a.setResizable(true);
+		a.setGraphic(v);
+		a.setHeaderText("");
+		//a.setWidth(400);
+		a.getDialogPane().setPrefWidth(image.getWidth());
+		//a.setContentText(ret);
+		a.show();
+	}
+
+	
+	
+	public static BufferedImage generateQR(String code) {
+	    QRCodeWriter barcodeWriter = new QRCodeWriter();
+	    BitMatrix bitMatrix;
+		try {
+			bitMatrix = barcodeWriter.encode(code, BarcodeFormat.QR_CODE, 200, 200);
+			return MatrixToImageWriter.toBufferedImage(bitMatrix);
+		} catch (WriterException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+
+	    
 	}
 }

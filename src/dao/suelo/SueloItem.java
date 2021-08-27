@@ -22,7 +22,7 @@ import utils.ProyectionConstants;
 @Data
 @EqualsAndHashCode(callSuper=true)//si no pones esto todos los hashmaps andan mal y grillar cosecha no anda
 public class SueloItem extends LaborItem { //suelo item no es labor item. le sobra: rumbo, ancho y distancia
-	public static final String PPM_N = "PPM N";
+	public static final String PPM_N = "PPM NO3";
 	public static final String PPM_FOSFORO = "PPM P";
 	public static final String PPM_POTASIO= "PPM K";
 	public static final String PPM_ASUFRE = "PPM S";
@@ -36,7 +36,7 @@ public class SueloItem extends LaborItem { //suelo item no es labor item. le sob
 	//para pasar de Ppm a kg/ha hay que multiplicar por 2.6. 
 	//es por que hay 2600tns en cada ha de 20cm de suelo.
 	//ppm=x/1.000.000 => ppm/ha=X(kg/ha)/2.600.000(kg/ha)=(1/2.6)
-	private Double ppmN=new Double(0);	
+	private Double ppmNO3=new Double(0);	
 	private Double ppmP=new Double(0);	
 	private Double ppmK=new Double(0);	
 	private Double ppmS=new Double(0);	
@@ -62,7 +62,7 @@ public class SueloItem extends LaborItem { //suelo item no es labor item. le sob
 	@Override
 	public Object[] getSpecialElementsArray() {
 		Object[] elements = new Object[]{
-				getPpmN(),
+				getPpmNO3(),
 				getPpmP(),
 				getPpmK(),
 				getPpmS(),

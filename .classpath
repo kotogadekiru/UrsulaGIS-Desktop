@@ -73,5 +73,7 @@
 	<classpathentry kind="lib" path="libs/gdal/jogl-all-natives-windows-amd64.jar"/>
 	<classpathentry kind="lib" path="libs/gdal/jogl-all-natives-windows-i586.jar"/>
 	<classpathentry kind="lib" path="libs/gdal/jogl-all.jar"/>
+	<classpathentry kind="lib" path="libs/zxing/core-3.4.1.jar"/>
+	<classpathentry kind="lib" path="libs/zxing/javase-3.4.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

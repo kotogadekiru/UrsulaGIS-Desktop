@@ -10,6 +10,8 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 
+import gov.nasa.worldwind.geom.Position;
+
 public class GeometryHelper {
 	public static Polygon constructPolygon(ReferencedEnvelope e) {
 		Coordinate D = new Coordinate(e.getMaxX(), e.getMaxY()); // x-l-d
@@ -87,6 +89,13 @@ public class GeometryHelper {
 		GeometryFactory fact = ProyectionConstants.getGeometryFactory();
 		Polygon poly = fact.createPolygon(coordinates);
 		return poly;
+	}
+	
+	public static Point constructPoint(Position e) {
+		Coordinate A = new Coordinate(e.getLongitude().getDegrees(), e.getLatitude().getDegrees());// X-l+d
+		GeometryFactory fact = ProyectionConstants.getGeometryFactory();
+		Point point = fact.createPoint(A);
+		return point;
 	}
 	
 	/**

@@ -3,11 +3,8 @@ package tasks;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 import javax.persistence.ManyToOne;
@@ -33,7 +30,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
-import dao.config.Configuracion;
+import dao.OrdenDeCompra.OrdenCompra;
 import dao.recorrida.Recorrida;
 import api.StandardResponse;
 import javafx.concurrent.Task;
@@ -47,13 +44,12 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 
 
-public class CompartirRecorridaTask extends Task<String> {
+public class CotizarOdenDeCompraOnlineTask extends Task<String> {
 	
-	private static final String GET_RECORRIDAS_BY_ID_URL = "https://www.ursulagis.com/api/recorridas/id/";
 	private static final String MMG_GUI_EVENT_CLOSE_PNG = "/gui/event-close.png";
 	public static final String ZOOM_TO_KEY = "ZOOM_TO";
 
-	public static final String INSERT_URL = "https://www.ursulagis.com/api/recorridas/insert/";
+	public static final String INSERT_URL = "https://www.ursulagis.com/api/orden_compra/insert/";
 	//public static final String INSERT_URL = "http://localhost:5000/api/recorridas/insert/";
 	private ProgressBar progressBarTask;
 	private Pane progressPane;
@@ -61,14 +57,14 @@ public class CompartirRecorridaTask extends Task<String> {
 	private HBox progressContainer;
 
 	
-	private Recorrida recorrida =null;
+	private OrdenCompra ordenCompra =null;
 	
 	
-	public CompartirRecorridaTask(Recorrida recorrida) {
-		this.recorrida = recorrida;
+	public CotizarOdenDeCompraOnlineTask(OrdenCompra orden) {
+		this.ordenCompra = orden;
 		
-		System.out.println("compartiendo recorrida "+recorrida);
-		System.out.println("muestras "+recorrida.getMuestras().size());
+		System.out.println("compartiendo OrdenCompra "+orden);
+		System.out.println("muestras "+orden.getItems().size());
 	}
 
 	@Override
@@ -87,9 +83,9 @@ public class CompartirRecorridaTask extends Task<String> {
 		    // 1. Java object to JSON file
 		//    gson.toJson(obj, new FileWriter("C:\\projects\\staff.json"));
 		 //   recorrida.muestras.clear();
-		System.out.println("convirtirndo recorrida a json "+recorrida);
-	  	String json_body = gson.toJson(recorrida, Recorrida.class);
-	  	System.out.println("sending recorrida "+ json_body);
+		System.out.println("convirtirndo OrdenCompra a json "+ordenCompra);
+	  	String json_body = gson.toJson(ordenCompra, OrdenCompra.class);
+	  	System.out.println("sending OrdenCompra "+ json_body);
 	  	//String document_id = document.getId();
 	  	//String resource_url = "https://api.mendeley.com/documents/" + document_id;
 	  	//GenericUrl gen_url = new GenericUrl(resource_url);
@@ -98,7 +94,6 @@ public class CompartirRecorridaTask extends Task<String> {
 	  	final HttpContent content = new ByteArrayContent("application/json", json_body.getBytes("UTF8") );
 
 		//final HttpContent req_content = new JsonHttpContent(new JacksonFactory(), content);
-	  	
 
 		HttpResponse response = makePostRequest(url,content);
 		InputStream resContent = response.getContent();
@@ -116,8 +111,8 @@ public class CompartirRecorridaTask extends Task<String> {
 		//Map<String,String> message = (Map<String, String>) resContent.get("data");
 		//System.out.println("message "+message);
 		if(data !=null) {
-			Recorrida dbRecorrida = gson.fromJson(data, Recorrida.class);
-			Long id = dbRecorrida.getId();
+			OrdenCompra dbOrdenCompra = gson.fromJson(data, OrdenCompra.class);
+			Long id = dbOrdenCompra.getId();
 		//java.math.BigDecimal id = (java.math.BigDecimal) data.get("id");
 		//String prettyresponse = resContent.toPrettyString();
 		//System.out.println("prettyresponse "+prettyresponse);
@@ -137,8 +132,7 @@ public class CompartirRecorridaTask extends Task<String> {
 		}
 		 */
 		//String urlGoto = "https://www.ursulagis.com/api/recorridas/4/";
-			//TODO cambiar esta url por una url mobile que permita hacer la recorrida via web.
-		String urlGoto = GET_RECORRIDAS_BY_ID_URL+id+"/";
+		String urlGoto = "https://www.ursulagis.com/api/orden_compra/"+id+"/";
 		return urlGoto;
 		}
 		return "status Success but data null";
@@ -226,7 +220,6 @@ public class CompartirRecorridaTask extends Task<String> {
 
 		try {
 			HttpRequest request = requestFactory.buildPostRequest(url, req_content);//(url);
-			request.getHeaders().set("USER", getUser());
 			response= request.execute();
 		} catch (Exception e) {			
 			e.printStackTrace();
@@ -235,22 +228,13 @@ public class CompartirRecorridaTask extends Task<String> {
 		return response;
 	}
 	
-	private String getUser() {
-		DecimalFormat dc = new DecimalFormat("0,000");
-		dc.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(new Locale("EN")));
-		dc.setGroupingUsed(true);
-		String userString = dc.format(Math.random()*1000000);
-		Configuracion conf = Configuracion.getInstance();
-		String usr = conf.getPropertyOrDefault("USER", userString);//si no existia la clave se crea una nueva
-		return usr;
-	}
 	public void installProgressBar(Pane progressBox) {
 		this.progressPane= progressBox;
 		progressBarTask = new ProgressBar();			
 		progressBarTask.setProgress(0);
 
 		progressBarTask.progressProperty().bind(this.progressProperty());
-		progressBarLabel = new Label("Compartiendo Recorrida "+this.recorrida.getNombre());
+		progressBarLabel = new Label("Compartiendo Recorrida "+this.ordenCompra.getDescription());
 		progressBarLabel.setTextFill(Color.BLACK);
 
 
@@ -273,5 +257,6 @@ public class CompartirRecorridaTask extends Task<String> {
 	public void uninstallProgressBar() {		
 		progressPane.getChildren().remove(progressContainer);
 	}
+	
 	
 }

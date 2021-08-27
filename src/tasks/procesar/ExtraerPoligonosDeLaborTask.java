@@ -85,7 +85,7 @@ public class ExtraerPoligonosDeLaborTask extends Task<List<Poligono>> {
 				if(has>supMin) {//0.2){//cada poli mayor a 10m2
 				Poligono poli = itemToPoligono(next);
 				int cat = labor.getClasificador().getCategoryFor(next.getAmount());
-				String catName = labor.getClasificador().getCategoryNameFor(cat);
+				String catName = labor.getClasificador().getLetraCat(cat);
 				poli.setNombre(labor.getNombre()+" "+catName); //$NON-NLS-1$
 				GeometryFactory fact = ((Geometry)next.getGeometry()).getFactory();
 				List<Position> positions = poli.getPositions();

@@ -90,7 +90,7 @@ public class Suelo extends Labor<SueloItem>{
 	public SueloItem constructFeatureContainerStandar(SimpleFeature next, boolean newIDS) {
 		SueloItem si = new SueloItem(next);
 		super.constructFeatureContainerStandar(si,next,newIDS);
-		si.setPpmN(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_N)));
+		si.setPpmNO3(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_N)));
 		si.setPpmP(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_P)));
 		si.setPpmK(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_K)));
 		si.setPpmS(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_S)));
@@ -104,7 +104,7 @@ public class Suelo extends Labor<SueloItem>{
 	public SueloItem constructFeatureContainer(SimpleFeature next) {
 		SueloItem si = new SueloItem(next);
 		super.constructFeatureContainer(si,next);
-		si.setPpmN(LaborItem.getDoubleFromObj(next.getAttribute(this.colNProperty.get())));
+		si.setPpmNO3(LaborItem.getDoubleFromObj(next.getAttribute(this.colNProperty.get())));
 		si.setPpmP(LaborItem.getDoubleFromObj(next.getAttribute(this.colPProperty.get())));
 		si.setPpmK(LaborItem.getDoubleFromObj(next.getAttribute(this.colKProperty.get())));
 		si.setPpmS(LaborItem.getDoubleFromObj(next.getAttribute(this.colSProperty.get())));
@@ -205,7 +205,7 @@ public class Suelo extends Labor<SueloItem>{
 		//double kgSueloHa = ProyectionConstants.METROS2_POR_HA*0.6*this.getDensidad();
 		//Double kgNHa= (Double) item.getPpmN()*kgSueloHa*Fertilizante.porcN_NO3/1000000;
 		
-		Double kgNHa= ppmToKg(item.getPpmN(),0.6)*Fertilizante.porcN_NO3;
+		Double kgNHa= ppmToKg(item.getPpmNO3(),0.6)*Fertilizante.porcN_NO3;
 		return kgNHa;		
 	}
 	

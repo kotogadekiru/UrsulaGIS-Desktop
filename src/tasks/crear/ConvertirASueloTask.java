@@ -106,7 +106,7 @@ public class ConvertirASueloTask extends ProcessMapTask<SueloItem,Suelo > {
 					si.setId(labor.getNextID());
 				}
 				si.setPpmP(ppmP.doubleValue());
-				si.setPpmN(ppmN.doubleValue());
+				si.setPpmNO3(ppmN.doubleValue());
 				si.setPorcMO(ppmMO.doubleValue());
 
 				labor.setPropiedadesLabor(si);

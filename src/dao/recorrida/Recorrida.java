@@ -50,6 +50,7 @@ public class Recorrida {
 	
 	public String nombre=new String();
 	public String observacion=new String();
+	public String url=new String();
 	
 	//public String posicion=new String();//json {long,lat}
 	public Double latitude= new Double(0.0);

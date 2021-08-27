@@ -44,6 +44,7 @@ public class ExportarCosechaDePuntosTask {
 		SimpleFeatureIterator it = laborToExport.outCollection.features();
 		DefaultFeatureCollection pointFeatureCollection =  new DefaultFeatureCollection(Messages.getString("JFXMain.356"),type); //$NON-NLS-1$
 		SimpleFeatureBuilder fb = new SimpleFeatureBuilder(type);
+		
 		while(it.hasNext()){
 			SimpleFeature sf = it.next();		
 			List<Object> attributes = sf.getAttributes();
