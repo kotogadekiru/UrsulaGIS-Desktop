@@ -36,8 +36,8 @@ public class SiembraLabor extends Labor<SiembraItem> {
 //	private static final String SEMILLAS_POR_BOLSA_KEY = "SEMILLAS_POR_BOLSA";
 
 	//esta columna es la que viene con los mapas de siembra //mentira las siembras vienen con Rate o AppIdRate o AppRate
-	public static final String COLUMNA_DOSIS_SEMILLA = "SemillaK";
-	public static final String COLUMNA_DOSIS_SEMILLA_ML = SiembraLabor.COLUMNA_SEM_10METROS;//"SemillaM";
+	public static final String COLUMNA_DOSIS_SEMILLA = "kgSemHa";//"SemillaK";//kgSemHa
+	//public static final String COLUMNA_DOSIS_SEMILLA_ML = SiembraLabor.COLUMNA_SEM_10METROS;//"SemillaM";
 	
 	//esta columna es la que voy a exportar
 	//public static final String COLUMNA_BOLSAS_HA = "BolsasHa";//=semillasMetro*(ProyectionConstants.METROS2_POR_HA/entreSurco)/semillasPorBolsa;
@@ -55,7 +55,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 	public static final String COLUMNA_DOSIS_LINEA = "Fert L";
 	public static final String COLUMNA_DOSIS_COSTADO= "Fert C";
 	public static final String COLUMNA_SEM_10METROS = "Sem10m";
-
+	public static final String COLUMNA_MILES_SEM_HA = "MilSemHa";
 
 
 //	public  SimpleDoubleProperty entreSurco =null; 
@@ -127,7 +127,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 	@Override
 	@Transient
 	public String getTypeDescriptors() {
-		String type = SiembraLabor.COLUMNA_DOSIS_SEMILLA_ML + ":Double,"
+		String type = SiembraLabor.COLUMNA_SEM_10METROS + ":Double,"
 				+SiembraLabor.COLUMNA_DOSIS_SEMILLA + ":Double,"
 				+ SiembraLabor.COLUMNA_DOSIS_LINEA + ":Double,"
 				+ SiembraLabor.COLUMNA_DOSIS_COSTADO + ":Double,"
@@ -186,7 +186,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 		
 		//Double bolsasHa = LaborItem.getDoubleFromObj(next.getAttribute(colSemillasMetroProperty.get()));
 		//Double semillasMetro = bolsasHa*(ProyectionConstants.METROS2_POR_HA/entreSurco.get())/semillasPorBolsa.get();
-		si.setDosisML(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DOSIS_SEMILLA_ML)));
+		si.setDosisML(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_SEM_10METROS)));
 		si.setDosisHa(LaborItem.getDoubleFromObj(next.getAttribute(colDosisSemilla.get())));
 		si.setDosisFertLinea( LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DOSIS_LINEA)));
 		si.setDosisFertCostado( LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DOSIS_COSTADO)));

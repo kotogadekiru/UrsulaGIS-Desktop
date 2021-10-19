@@ -118,8 +118,8 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 			return items.parallelStream().flatMapToDouble(item->{
 				Double kgNHa = (Double) item.getDosistHa() * fertilizante.getPorcN()/100;
 				Geometry fertGeom = item.getGeometry();				
-				fertGeom= PolygonValidator.validate(fertGeom);
-				if(!fertGeom.intersects(geometry))return DoubleStream.of(0.0);
+				fertGeom = PolygonValidator.validate(fertGeom);//puede ser null
+				if(fertGeom == null || !fertGeom.intersects(geometry))return DoubleStream.of(0.0);
 				Double area = 0.0;
 				try {
 					//XXX posible punto de error/ exceso de demora/ inneficicencia

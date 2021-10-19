@@ -85,6 +85,7 @@ import utils.ProyectionConstants;
 //import org.opengis.filter.FilterFactory2;
 
 public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> extends Task<E>{
+	public static final String LABOR_ITEM_AVKey = "LABOR_ITEM";
 	private static final int TARGET_LOW_RES_TIME = 2000;
 	private static final String TASK_CLOSE_ICON = "/gui/event-close.png";
 	public static final String ZOOM_TO_KEY = "ZOOM_TO";
@@ -246,6 +247,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				renderablePolygon.setSideAttributes(sideAttributes);
 				renderablePolygon.setAltitudeMode(WorldWind.ABSOLUTE);
 				renderablePolygon.setValue(AVKey.DISPLAY_NAME, tooltipText);// el tooltip se muestra con el nww.ToolTipAnnotation
+				renderablePolygon.setValue(LABOR_ITEM_AVKey, dao);// el tooltip se muestra con el nww.ToolTipAnnotation
 				renderablePolygon.setEnableBatchRendering(true);//XXX saco esto para ver si causa el problema del rendering
 				//	labor.getLayer().addRenderable(renderablePolygon);
 
@@ -1188,7 +1190,9 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		//cuanto le tengo que pedir para que tarde 5*target
 		//=5*target*target/actual
 		//	if(actualTime>TARGET_LOW_RES_TIME) {
-		lowRes=new Long(TARGET_LOW_RES_TIME*TARGET_LOW_RES_TIME/actualTime).intValue();
+		if(actualTime>0) {
+			lowRes=new Long(TARGET_LOW_RES_TIME*TARGET_LOW_RES_TIME/actualTime).intValue();
+		}
 		//	}
 
 		//System.out.println("ERROR = "+error);
@@ -1248,10 +1252,9 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				//					e.printStackTrace();
 				//				}
 				try {
-					completableFuture.get();
-					System.out.println("Rendered");
+					completableFuture.get();// java.util.ConcurrentModificationException en cosecha
+					System.out.println("ProcessMapTask.runLater() completable future rendered");
 				} catch (InterruptedException | ExecutionException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			});

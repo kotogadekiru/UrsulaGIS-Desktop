@@ -38,7 +38,7 @@ public class DAH {
 	private static final String OBJECTDB_DB_URSULAGIS_ODB = "$ursulaGIS.odb";
 	private static final String H2_URSULAGIS_DB = "ursulaGIS.h2";//mv.db
 	//private static final String OBJECTDB_DB_MONITORES_H2 = "$ursulaGIS.odb";
-//	private static final String SQLLITE_PU = "UrsulaGIS";
+	//	private static final String SQLLITE_PU = "UrsulaGIS";
 	/**
 	 * @deprecated use em() instead
 	 */
@@ -47,41 +47,41 @@ public class DAH {
 	private static EntityManager emLite = null;
 	static EntityTransaction transaction=null;
 
-	
+
 	public static EntityManager em(){
 		return emLite();
 	}
-	
+
 	public static void beginTransaction() {
 		DAH.transaction = em().getTransaction();
 		DAH.transaction.begin();
 	}
-	
+
 	public static void commitTransaction() {
 		DAH.transaction.commit();
 		DAH.transaction=null;
 	}
-	
+
 	public static void rollbackTransaction() {
 		DAH.transaction.rollback();
 	}
-	
+
 	public static EntityManager emODB(){
 		if(emODB == null){
 			String currentUsersHomeDir =System.getenv(APPDATA);
 			//	System.out.println("obtuve la direccion de appData : "+currentUsersHomeDir);
-				//obtuve la direccion de appData : C:\Users\quero\AppData\Roaming
+			//obtuve la direccion de appData : C:\Users\quero\AppData\Roaming
 			String ursulaGISFolder = currentUsersHomeDir + File.separator + Configuracion.URSULA_GIS_APPDATA_FOLDER;
 			String  db_url = ursulaGISFolder + File.separator + OBJECTDB_DB_URSULAGIS_ODB;		
 			System.out.println("abriendo la base de datos de: "+db_url);
 			EntityManagerFactory emf =
 					Persistence.createEntityManagerFactory(db_url);		     
-			
+
 			emODB = emf.createEntityManager();
 		}
 		return emODB;
 	}
-	
+
 	/**
 	 * obtener un acceso a la db de sqllite
 	 * @return
@@ -98,83 +98,83 @@ public class DAH {
 			String ursulaGISFolder = currentUsersHomeDir + File.separator + Configuracion.URSULA_GIS_APPDATA_FOLDER;
 			//en ursulaGISFolder estan todos los tif temporales. borrarlos antes de cerrar el programa
 			String  db_url = ursulaGISFolder + File.separator + H2_URSULAGIS_DB;		
-			
+
 			File sqliteDBFile=new File(db_url);
 			if(!sqliteDBFile.exists()){
 				System.out.println("need to migrate from ObjectDB");
 			}
-			
-			  Map<String,String> properties = new HashMap<>();
 
-			  properties.put(ECLIPSELINK_PERSISTENCE_UNITS,"UrsulaGIS");//  persistence-unit name="UrsulaGIS" transaction-type="RESOURCE_LOCAL">, value)
-			  properties.put(TARGET_DATABASE,"auto");//  eclipselink.target-database
-			  // Ensure RESOURCE_LOCAL transactions is used.
-			  properties.put(TRANSACTION_TYPE,    PersistenceUnitTransactionType.RESOURCE_LOCAL.name());
-			  
-			  // Configure the internal connection pool
-			  properties.put(JDBC_DRIVER, "org.h2.Driver");
-			  //properties.put(JDBC_URL, "jdbc:h2:~/test");
-			  
-			  properties.put(JDBC_URL, "jdbc:h2:"+db_url);
-			  properties.put(DDL_GENERATION, CREATE_OR_EXTEND);
-			  properties.put(DDL_GENERATION_MODE, "database");
+			Map<String,String> properties = new HashMap<>();
+
+			properties.put(ECLIPSELINK_PERSISTENCE_UNITS,"UrsulaGIS");//  persistence-unit name="UrsulaGIS" transaction-type="RESOURCE_LOCAL">, value)
+			properties.put(TARGET_DATABASE,"auto");//  eclipselink.target-database
+			// Ensure RESOURCE_LOCAL transactions is used.
+			properties.put(TRANSACTION_TYPE,    PersistenceUnitTransactionType.RESOURCE_LOCAL.name());
+
+			// Configure the internal connection pool
+			properties.put(JDBC_DRIVER, "org.h2.Driver");
+			//properties.put(JDBC_URL, "jdbc:h2:~/test");
+
+			properties.put(JDBC_URL, "jdbc:h2:"+db_url);
+			properties.put(DDL_GENERATION, CREATE_OR_EXTEND);
+			properties.put(DDL_GENERATION_MODE, "database");
 			//  properties.put(JDBC_USER, "scott");
-			 // properties.put(JDBC_PASSWORD, "tiger");
+			// properties.put(JDBC_PASSWORD, "tiger");
 
-			  // Configure logging. FINE ensures all SQL is shown
-			 // properties.put(LOGGING_LEVEL, "FINE");
+			// Configure logging. FINE ensures all SQL is shown
+			// properties.put(LOGGING_LEVEL, "FINE");
 			//  properties.put(LOGGING_TIMESTAMP, "false");
-			 // properties.put(LOGGING_THREAD, "false");
-			 // properties.put(LOGGING_SESSION, "false");
+			// properties.put(LOGGING_THREAD, "false");
+			// properties.put(LOGGING_SESSION, "false");
 
-			  // Ensure that no server-platform is configured
-			  properties.put(TARGET_SERVER, TargetServer.None);
-			  EntityManagerFactory factory =  Persistence.createEntityManagerFactory("UrsulaGIS", properties);
-		//step 2
-		emLite = factory.createEntityManager();
+			// Ensure that no server-platform is configured
+			properties.put(TARGET_SERVER, TargetServer.None);
+			EntityManagerFactory factory =  Persistence.createEntityManagerFactory("UrsulaGIS", properties);
+			//step 2
+			emLite = factory.createEntityManager();
 		}
 		return emLite;
 	}
 
 
-//	public static EntityManager em(){
-//		if(em == null){
-//			String currentUsersHomeDir =System.getenv(APPDATA);
-//			//	System.out.println("obtuve la direccion de appData : "+currentUsersHomeDir);
-//				//obtuve la direccion de appData : C:\Users\quero\AppData\Roaming
-//			String ursulaGISFolder = currentUsersHomeDir + File.separator + Configuracion.URSULA_GIS_APPDATA_FOLDER;
-//			String  db_url = ursulaGISFolder + File.separator + OBJECTDB_DB_MONITORES_ODB;		
-//			System.out.println("abriendo la base de datos de: "+db_url);
-//			EntityManagerFactory emf =
-//					Persistence.createEntityManagerFactory(db_url);		     
-//		emf.
-//			em = emf.createEntityManager();
-//		}
-//		return em;
-//	}
+	//	public static EntityManager em(){
+	//		if(em == null){
+	//			String currentUsersHomeDir =System.getenv(APPDATA);
+	//			//	System.out.println("obtuve la direccion de appData : "+currentUsersHomeDir);
+	//				//obtuve la direccion de appData : C:\Users\quero\AppData\Roaming
+	//			String ursulaGISFolder = currentUsersHomeDir + File.separator + Configuracion.URSULA_GIS_APPDATA_FOLDER;
+	//			String  db_url = ursulaGISFolder + File.separator + OBJECTDB_DB_MONITORES_ODB;		
+	//			System.out.println("abriendo la base de datos de: "+db_url);
+	//			EntityManagerFactory emf =
+	//					Persistence.createEntityManagerFactory(db_url);		     
+	//		emf.
+	//			em = emf.createEntityManager();
+	//		}
+	//		return em;
+	//	}
 
 
 	public static void save(Object entidad) {	
-		
+
 		EntityManager em = em();
 		if(DAH.transaction == null){
 			//	DAH.transaction = em.getTransaction();
 			try{
-			em.getTransaction().begin();		
-			if(em.contains(entidad)) {
-				em.merge(entidad);
-				System.out.println("merging entidad "+entidad);
-			}else {
-				System.out.println("persistiendo entidad "+entidad);
-				em.persist(entidad);			
-			}
-			em.getTransaction().commit();
+				em.getTransaction().begin();		
+				if(em.contains(entidad)) {
+					em.merge(entidad);
+					System.out.println("merging entidad "+entidad);
+				}else {
+					System.out.println("persistiendo entidad "+entidad);
+					em.persist(entidad);			
+				}
+				em.getTransaction().commit();
 			}catch(javax.persistence.RollbackException rbe){
 				em.getTransaction().begin();		
 				em.merge(entidad);
 				em.getTransaction().commit();			
 			}finally {
-				
+
 			}
 		} else{
 			if(em.contains(entidad)) {
@@ -186,7 +186,7 @@ public class DAH {
 			}
 		}
 	}
-	
+
 	public static void removeAll(List<Object> entidades) {
 		EntityManager em = em();
 		if(DAH.transaction == null){
@@ -197,12 +197,12 @@ public class DAH {
 			em.getTransaction().commit();
 		} else{
 			entidades.forEach(each->em.remove(each));
-			
+
 			//em.remove(entidad);	
 		}
 
 	}
-	
+
 	public static void remove(Object entidad) {
 		EntityManager em = em();
 		if(DAH.transaction == null){
@@ -215,18 +215,18 @@ public class DAH {
 		}
 
 	}
-	
+
 	/**
 	 * 
 	 * @param laborName
 	 * @return el producto existente en la base de datos o crea uno nuevo con ese nombre y lo devuelve
 	 */
 	public static ProductoLabor getProductoLabor(String laborName) {	
-//		EntityManager em = em();
-//		TypedQuery<Producto> query =
-//				em.createQuery("SELECT p FROM Producto p where p.nombre like '"+cultivoName+"'", Producto.class);
+		//		EntityManager em = em();
+		//		TypedQuery<Producto> query =
+		//				em.createQuery("SELECT p FROM Producto p where p.nombre like '"+cultivoName+"'", Producto.class);
 		Number count = (Number)em().createNamedQuery(ProductoLabor.COUNT_ALL).getSingleResult();
-		System.out.print("hay "+count+" cultivos en la base de datos");
+		System.out.print("hay "+count+" productos en la base de datos");
 		if(count.intValue() ==0) {
 			List<ProductoLabor> results = getAllProductosLabores(DAH.em());//getAll crea los cultivos default
 		}
@@ -234,23 +234,23 @@ public class DAH {
 		TypedQuery<ProductoLabor> query = em().createNamedQuery(
 				ProductoLabor.FIND_NAME, ProductoLabor.class);
 		query.setParameter("name", laborName);
-		
+
 		ProductoLabor result = null;
 		if(query.getResultList().size()>0){
-			result = query.getSingleResult();
+			result = query.getResultList().get(0);
 		}  
-//		else {
-//			result = new Cultivo(cultivoName);
-//			DAH.save(result);
-//		}
+		//		else {
+		//			result = new Cultivo(cultivoName);
+		//			DAH.save(result);
+		//		}
 		return result;
 	}
-	
+
 	public static List<ProductoLabor> getAllProductosLabores(EntityManager em) {
 		TypedQuery<ProductoLabor> query = em.createNamedQuery(
 				ProductoLabor.FIND_ALL, ProductoLabor.class);
 		List<ProductoLabor> results = query.getResultList();
-		
+
 		if(results.size()==0){
 			ProductoLabor.laboresDefault.values().forEach((d)->DAH.save(d));
 			results.addAll(ProductoLabor.laboresDefault.values());
@@ -264,13 +264,13 @@ public class DAH {
 		List<Establecimiento> results = query.getResultList();
 		return results;
 	}
-	
+
 	public static Establecimiento getEstablecimiento(String establecimientoName) throws Exception {
-	//	EntityManager em = em();
+		//	EntityManager em = em();
 		TypedQuery<Establecimiento> query = em().createNamedQuery(
 				Establecimiento.FIND_NAME, Establecimiento.class);
 		query.setParameter("name", establecimientoName);
-		
+
 		Establecimiento result = null;
 		if(query.getResultList().size()>0){
 			result = query.getSingleResult();
@@ -284,7 +284,7 @@ public class DAH {
 	public static List<Establecimiento> getAllEstablecimientos() {
 		return getAllEstablecimientos(em());
 	}
-	
+
 	public static List<? extends Labor<?>> getAllLabores() {
 		return getAllLabores(em());
 	}
@@ -303,12 +303,12 @@ public class DAH {
 	 * @throws Exception 
 	 */
 	public static Campania getCampania(String periodoName) throws Exception {	
-	//	EntityManager em = em();
+		//	EntityManager em = em();
 		TypedQuery<Campania> query = em().createNamedQuery(
 				Campania.FIND_NAME, Campania.class);
 		query.setParameter(0, periodoName);
-//		TypedQuery<Campania> query =
-//				em.createQuery("SELECT p FROM Campania p where p.nombre like '"+periodoName+"'", Campania.class);
+		//		TypedQuery<Campania> query =
+		//				em.createQuery("SELECT p FROM Campania p where p.nombre like '"+periodoName+"'", Campania.class);
 		Campania result = null;
 		if(query.getResultList().size()>0){
 			result = query.getSingleResult();
@@ -327,78 +327,77 @@ public class DAH {
 	 * @return el producto existente en la base de datos o crea uno nuevo con ese nombre y lo devuelve
 	 */
 	public static Cultivo getCultivo(String cultivoName) {	
-//		EntityManager em = em();
-//		TypedQuery<Producto> query =
-//				em.createQuery("SELECT p FROM Producto p where p.nombre like '"+cultivoName+"'", Producto.class);
+		//		EntityManager em = em();
+		//		TypedQuery<Producto> query =
+		//				em.createQuery("SELECT p FROM Producto p where p.nombre like '"+cultivoName+"'", Producto.class);
 		Number count = (Number)em().createNamedQuery(Cultivo.COUNT_ALL).getSingleResult();
 		//System.out.println("hay "+count+" cultivos en la base de datos");
-		if(count.intValue() ==0) {
+		
+		if(count.intValue() == 0) {
 			List<Cultivo> results = getAllCultivos();//getAll crea los cultivos default
 		}
 
-		TypedQuery<Cultivo> query = em().createNamedQuery(
-				Cultivo.FIND_NAME, Cultivo.class);
+		TypedQuery<Cultivo> query = em().createNamedQuery(Cultivo.FIND_NAME, Cultivo.class);
 		query.setParameter("name", cultivoName);
-		
+
 		Cultivo result = null;
 		if(query.getResultList().size()>0){
-			result = query.getSingleResult();
+			result = query.getResultList().get(0);//getFirstResult();
+			System.out.println("buscando "+cultivoName+" encontre "+result);
 		}  
-//		else {
-//			result = new Cultivo(cultivoName);
-//			DAH.save(result);
-//		}
+		//		else {
+		//			result = new Cultivo(cultivoName);
+		//			DAH.save(result);
+		//		}
 		return result;
 	}
 
 	public static List<Cultivo> getAllCultivos(EntityManager em) {
-		  TypedQuery<Cultivo> query =
-				  em.createNamedQuery(Cultivo.FIND_ALL, Cultivo.class);
-			  List<Cultivo> results = query.getResultList();
-			  if(results.size()==0){
-					Cultivo.cultivos.values().forEach((d)->DAH.save(d));
-					results = query.getResultList();
-					//results.addAll(Cultivo.cultivos.values());
-				} else {
-					results.forEach(cult->{
-						//Cultivo.cultivos.s
-						if(cult.getEstival()==null)cult.setEstival(true);
-						if(cult.getAporteMO()==null)cult.setAporteMO(1000*(-1+cult.getAbsN()/cult.getExtN()));//kg por tn;  estimacion en base a la extraccion de n vs absorcion de n
-					});
-				}
-			  return results;
-	}
-	
-	public static List<Poligono> getAllPoligonos() {
-		  TypedQuery<Poligono> query =
-				  em().createNamedQuery(Poligono.FIND_ALL, Poligono.class);
-			  List<Poligono> results = query.getResultList();
-			//  closeEm();
+		TypedQuery<Cultivo> query = em.createNamedQuery(Cultivo.FIND_ALL, Cultivo.class);
+		List<Cultivo> results = query.getResultList();
+		if(results.size()==0){
+			Cultivo.cultivos.values().forEach((d)->DAH.save(d));
+			results = query.getResultList();
+			//results.addAll(Cultivo.cultivos.values());
+		} else {
+			results.forEach(cult->{
+				//Cultivo.cultivos.s
+				if(cult.getEstival()==null)cult.setEstival(true);
+				if(cult.getAporteMO()==null)cult.setAporteMO(1000*(-1+cult.getAbsN()/cult.getExtN()));//kg por tn;  estimacion en base a la extraccion de n vs absorcion de n
+			});
+		}
 		return results;
 	}
-	
+
+	public static List<Poligono> getAllPoligonos() {
+		TypedQuery<Poligono> query = em().createNamedQuery(Poligono.FIND_ALL, Poligono.class);
+		List<Poligono> results = query.getResultList();
+		//  closeEm();
+		return results;
+	}
+
 	public static List<Ndvi> getAllNdvi() {
-		  TypedQuery<Ndvi> query =
-				  em().createNamedQuery(Ndvi.FIND_ALL, Ndvi.class);
-			  List<Ndvi> results = query.getResultList();
-			//  closeEm();
+		TypedQuery<Ndvi> query =
+				em().createNamedQuery(Ndvi.FIND_ALL, Ndvi.class);
+		List<Ndvi> results = query.getResultList();
+		//  closeEm();
 		return results;
 	}
 
 	public static List<Recorrida> getAllRecorridas() {
-		  TypedQuery<Recorrida> query =
-				  em().createNamedQuery(Recorrida.FIND_ALL, Recorrida.class);
-			  List<Recorrida> results = query.getResultList();
-			//  closeEm();
+		TypedQuery<Recorrida> query =
+				em().createNamedQuery(Recorrida.FIND_ALL, Recorrida.class);
+		List<Recorrida> results = query.getResultList();
+		//  closeEm();
 		return results;
 	}
 
-public static List<Poligono> getPoligonosActivos() {
-	  TypedQuery<Poligono> query =
-			  em().createNamedQuery(Poligono.FIND_ACTIVOS, Poligono.class);
-		  List<Poligono> results = query.getResultList();
+	public static List<Poligono> getPoligonosActivos() {
+		TypedQuery<Poligono> query =
+				em().createNamedQuery(Poligono.FIND_ACTIVOS, Poligono.class);
+		List<Poligono> results = query.getResultList();
 		//  closeEm();
-	return results;
+		return results;
 	}
 
 
@@ -407,14 +406,14 @@ public static List<Poligono> getPoligonosActivos() {
 	public static void closeEm() {
 		if(emODB!=null){
 			emODB.close();
-			 emODB=null;
+			emODB=null;
 		}	
 		if(emLite!=null){
 			emLite.close();
-			 emLite=null;
+			emLite=null;
 		}
 	}
-	
+
 	public static List<Cultivo> getAllCultivos() {
 		return getAllCultivos(em());
 	}
@@ -423,7 +422,7 @@ public static List<Poligono> getPoligonosActivos() {
 		TypedQuery<Empresa> query = em().createNamedQuery(
 				Empresa.FIND_ALL, Empresa.class);
 		List<Empresa> results = query.getResultList();
-		
+
 		return results;
 	}
 
@@ -433,7 +432,7 @@ public static List<Poligono> getPoligonosActivos() {
 		TypedQuery<Lote> query = em().createNamedQuery(
 				Lote.FIND_ALL, Lote.class);
 		List<Lote> results = query.getResultList();
-		
+
 		return results;
 	}
 
@@ -443,7 +442,7 @@ public static List<Poligono> getPoligonosActivos() {
 		TypedQuery<Campania> query = em().createNamedQuery(
 				Campania.FIND_ALL, Campania.class);
 		List<Campania> results = query.getResultList();
-		
+
 		return results;
 	}
 
@@ -457,7 +456,7 @@ public static List<Poligono> getPoligonosActivos() {
 			Fertilizante.fertilizantes.values().forEach((d)->DAH.save(d));
 			results.addAll(Fertilizante.fertilizantes.values());
 		}
-		
+
 		return results;
 	}
 
@@ -474,7 +473,7 @@ public static List<Poligono> getPoligonosActivos() {
 			results = query.getResultList();
 			//results.addAll(Fertilizante.fertilizantes.values());
 		}
-		
+
 		return results;
 	}
 
@@ -486,27 +485,27 @@ public static List<Poligono> getPoligonosActivos() {
 		if(results.size()==0){
 			Semilla.semillas.values().forEach((d)->{
 				System.out.println("guardando semilla default "+d);
-		//	DAH.save(d.getCultivo());	
-			DAH.save(d);
+				//	DAH.save(d.getCultivo());	
+				DAH.save(d);
 			});
 			results = query.getResultList();
 			//results.addAll(Fertilizante.fertilizantes.values());
 		}
-		
+
 		return results;
 	}
 
 	public static List<Ndvi> getNdviActivos() {
 		System.out.println("buscando ndvi activos");
-		  TypedQuery<Ndvi> query =
-				  em().createNamedQuery(Ndvi.FIND_ACTIVOS, Ndvi.class);
-			  List<Ndvi> results = query.getResultList();
-			//  closeEm();
+		TypedQuery<Ndvi> query =
+				em().createNamedQuery(Ndvi.FIND_ACTIVOS, Ndvi.class);
+		List<Ndvi> results = query.getResultList();
+		//  closeEm();
 		return results;
 	}
 
 	public static List<OrdenCompra> getAllOrdenesCompra() {
-		
+
 		@SuppressWarnings("rawtypes")
 		TypedQuery<OrdenCompra> query = em().createNamedQuery(
 				OrdenCompra.FIND_ALL, OrdenCompra.class);
@@ -588,12 +587,12 @@ public static List<Poligono> getPoligonosActivos() {
 	//
 	//	}
 
-	
 
 
 
 
 
-	
+
+
 
 }

@@ -22,6 +22,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,6 +56,9 @@ import org.opengis.feature.simple.SimpleFeature;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.IntersectionMatrix;
+import com.vividsolutions.jts.geom.prep.PreparedGeometry;
+import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory;
 
 import dao.Labor;
 import dao.Ndvi;
@@ -124,6 +130,8 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
@@ -198,6 +206,7 @@ import tasks.procesar.UnirFertilizacionesMapTask;
 import tasks.procesar.UnirSiembrasMapTask;
 import utils.DAH;
 import utils.FileHelper;
+import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
 public class JFXMain extends Application {
@@ -211,7 +220,7 @@ public class JFXMain extends Application {
 
 	public static final String VERSION = "0.2.27"; //$NON-NLS-1$
 	public static final String TITLE_VERSION = "Ursula GIS-"+VERSION; //$NON-NLS-1$
-	public static final String buildDate = "29/06/2021";
+	public static final String buildDate = "29/09/2021";
 
 	public static final String ICON ="gui/ursula_logo_2020.png";//"gui/32x32-icon-earth.png";// "gui/1-512.png";//UrsulaGIS-Desktop/src/gui/32x32-icon-earth.png //$NON-NLS-1$
 	private static final String SOUND_FILENAME = "gui/exito4.mp3";//"gui/Alarm08.wav";//"Alarm08.wav" funciona desde eclipse pero no desde el jar  //$NON-NLS-1$
@@ -414,11 +423,10 @@ public class JFXMain extends Application {
 		SplitPane sp = new SplitPane();
 		sp.getItems().addAll(layerPanel, wwSwingNode);
 
-		
+		//PREFERED_TREE_WIDTH=219,546		
 		double initSplitPaneWidth = PropertyHelper.parseDouble(
-				JFXMain.config.getPropertyOrDefault(PREFERED_TREE_WIDTH_KEY,
-						PropertyHelper.getDoubleConverter().format(stage.getWidth()*0.15f))
-				).doubleValue();
+				config.getPropertyOrDefault(PREFERED_TREE_WIDTH_KEY,
+						PropertyHelper.formatDouble(stage.getWidth()*0.15f))).doubleValue();
 
 		//me permite agrandar la pantalla sin que se agrande el arbol
 		sp.setDividerPositions(initSplitPaneWidth/stage.getWidth());//15% de la pantalla de 1245 es 186px ; 1552.0 es fullscreen
@@ -426,12 +434,15 @@ public class JFXMain extends Application {
 			//divider position changed to nu
 			//System.out.println("changing Width to "+nu);0.12 ~ 0.15 //hanging Width to 1245.0
 			double newPreferredSplitPaneWidth = stage.getWidth()*nu.doubleValue();
-			JFXMain.config.setProperty(PREFERED_TREE_WIDTH_KEY, Double.toString(newPreferredSplitPaneWidth));
+			JFXMain.config.setProperty(PREFERED_TREE_WIDTH_KEY, PropertyHelper.formatDouble(newPreferredSplitPaneWidth));
 			config.save();
 		});
 
 		JFXMain.stage.widthProperty().addListener((o,old,nu)->{
-			double splitPaneWidth = Double.valueOf(JFXMain.config.getPropertyOrDefault(PREFERED_TREE_WIDTH_KEY,Double.toString(initSplitPaneWidth)));
+			double splitPaneWidth = PropertyHelper.parseDouble(
+					config.getPropertyOrDefault(PREFERED_TREE_WIDTH_KEY,
+					PropertyHelper.formatDouble(initSplitPaneWidth))).doubleValue();
+			//double splitPaneWidth = Double.valueOf(JFXMain.config.getPropertyOrDefault(PREFERED_TREE_WIDTH_KEY,Double.toString(initSplitPaneWidth)));
 			sp.setDividerPositions(splitPaneWidth/nu.doubleValue());
 			//System.out.println("changing div to "+splitPaneWidth/nu.doubleValue());//hanging Width to 1245.0
 			//15% es 
@@ -691,13 +702,13 @@ public class JFXMain extends Application {
 		//addMenuItem(Messages.getString("JFXMain.distancia"),(a)->doMedirDistancia(),menuHerramientas); //$NON-NLS-1$
 		rootNodeP.add(new LayerAction((layer)->{
 			doMedirDistancia();
-			return "medida";	
+			return "distancia";	
 		},Messages.getString("JFXMain.distancia")));
 
 		//addMenuItem(Messages.getString("JFXMain.superficie"),(a)->doMedirSuperficie(),menuHerramientas); //$NON-NLS-1$
 		rootNodeP.add(new LayerAction((layer)->{
 			doMedirSuperficie();
-			return "medida";	
+			return "superficie";	
 		},Messages.getString("JFXMain.superficie")));
 
 		//addMenuItem(Messages.getString("JFXMain.unirPoligonos"),(a)->doUnirPoligonos(),menuHerramientas); //$NON-NLS-1$
@@ -709,9 +720,28 @@ public class JFXMain extends Application {
 		//addMenuItem(Messages.getString("JFXMain.intersectarPoligonos"),(a)->doIntersectarPoligonos(),menuHerramientas); //$NON-NLS-1$
 		rootNodeP.add(new LayerAction(Messages.getString("JFXMain.intersectarPoligonos"),(layer)->{
 			doIntersectarPoligonos();
-			return "unidas";	
+			return "intersectados";	
 		},2));
 
+		rootNodeP.add(new LayerAction(Messages.getString("JFXMain.poligonToSiembraAction"),(layer)->{
+			//doIntersectarPoligonos();			
+			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){
+				//doConvertirASiembra((Polygon) layerObject);
+				doCrearSiembra((Poligono) layerObject);
+			}
+			return "converti a Siembra";	
+		},1));
+		
+
+//		rootNodeP.add(constructPredicate(Messages.getString("JFXMain.poligonToFertAction"),(layer)->{
+//			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+//			if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){	
+//				doCrearFertilizacion((Poligono) layerObject);
+//			}
+//			return "converti a Fertilizacion"; //$NON-NLS-1$
+//		}));
+		
 		//addMenuItem(Messages.getString("JFXMain.poligonos"),(a)->doImportarPoligonos(null),menuImportar); //$NON-NLS-1$
 		rootNodeP.add(new LayerAction((layer)->{
 			doImportarPoligonos(null);
@@ -1230,7 +1260,7 @@ public class JFXMain extends Application {
 		}));
 
 		/**
-		 * Accion que permite pasar una clonar la cosecha
+		 * Accion que permite clonar la cosecha
 		 */
 		cosechasP.add(constructPredicate(Messages.getString("JFXMain.clonarCosechaAction"),(layer)->{
 			doUnirCosechas((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
@@ -1886,6 +1916,7 @@ public class JFXMain extends Application {
 		supDialog.show();
 		supDialog.setOnHidden((event)->{			
 			measureTool.setArmed(false);
+			this.getLayerPanel().update(this.getWwd());
 		});
 	}
 
@@ -1919,6 +1950,7 @@ public class JFXMain extends Application {
 		supDialog.show();
 		supDialog.setOnHidden((event)->{			
 			measureTool.setArmed(false);
+			this.getLayerPanel().update(this.getWwd());
 		});
 	}
 
@@ -1966,38 +1998,29 @@ public class JFXMain extends Application {
 			try {
 				List<Geometry> geometriasActivas = new ArrayList<Geometry>();
 				//1 obtener los poligonos activos
+				String nombre = Messages.getString("JFXMain.poligonIntersectionNamePrefix");
 				LayerList layers = this.getWwd().getModel().getLayers();
 				for (Layer l : layers) {
 					Object o = l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 					if (l.isEnabled() && o instanceof Poligono){
 						Poligono p = (Poligono)o;
 						geometriasActivas.add(p.toGeometry());
-					}
-				}
-				List<Geometry> geometriasOutput = new ArrayList<Geometry>();
-				for(int i=0;i<geometriasActivas.size()-1;i++){
-					Geometry a = geometriasActivas.get(i);
-					for(int j = i+1;j<geometriasActivas.size();j++){
-						Geometry b =geometriasActivas.get(j);
-						try {geometriasOutput.add(a.difference(b));}catch(Exception e) {}//found non-noded intersection between LINESTRING (
-						try {geometriasOutput.add(b.difference(a));}catch(Exception e) {}
-						try {geometriasOutput.add(a.intersection(b));}catch(Exception e) {}						
+						l.setEnabled(false);
+						p.setActivo(false);
+						nombre=nombre+" "+p.getNombre();
 					}
 				}
 
+				Set<Geometry> geometriasOutput = GeometryHelper.obtenerIntersecciones(geometriasActivas);
 				int num=0;
-				for(Geometry g:geometriasOutput){
-					for(int n=0;n<g.getNumGeometries();n++){
-						Geometry gn=g.getGeometryN(n);
-						if(g.getNumGeometries()==0)continue;
-						Poligono poli = ExtraerPoligonosDeLaborTask.geometryToPoligono(gn);
-						if(poli ==null)continue;
-						MeasureTool measureTool = PoligonLayerFactory.createPoligonLayer(poli, this.getWwd(), this.getLayerPanel());
-						double has = ProyectionConstants.A_HAS(gn.getArea());
-						poli.setArea(has);
-						poli.setNombre(Messages.getString("JFXMain.poligonIntersectionNamePrefix")+num+"["+n+"]");num++; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-						insertBeforeCompass(this.getWwd(), measureTool.getApplicationLayer());
-					}
+				for(Geometry g : geometriasOutput){
+					Poligono poli = ExtraerPoligonosDeLaborTask.geometryToPoligono(g);
+					if(poli ==null)continue;
+					MeasureTool measureTool = PoligonLayerFactory.createPoligonLayer(poli, this.getWwd(), this.getLayerPanel());
+					double has = ProyectionConstants.A_HAS(g.getArea());
+					poli.setArea(has);
+					poli.setNombre(nombre+" ["+num+"]");num++; 
+					insertBeforeCompass(this.getWwd(), measureTool.getApplicationLayer());
 				}
 
 				this.getLayerPanel().update(this.getWwd());
@@ -3427,10 +3450,13 @@ public class JFXMain extends Application {
 			Alert calibrarAlert = new Alert(Alert.AlertType.CONFIRMATION);
 			calibrarAlert.setTitle(Messages.getString("JFXMain.284")); //$NON-NLS-1$
 			calibrarAlert.setContentText(Messages.getString("JFXMain.285")); //$NON-NLS-1$
-
+		
+		
+			calibrarAlert.getButtonTypes().setAll(ButtonType.YES,ButtonType.NO);
+		
 			Optional<ButtonType> calibrarButton = calibrarAlert.showAndWait();
 			if(calibrarButton.isPresent()){
-				if(calibrarButton.get().equals(ButtonType.OK)){
+				if(calibrarButton.get().equals(ButtonType.YES)){
 					calibrar=true;
 				}
 
@@ -3516,9 +3542,10 @@ public class JFXMain extends Application {
 		rellenarHuecosAlert.setTitle(Messages.getString("JFXMain.rellenar_huecos")); //$NON-NLS-1$
 		rellenarHuecosAlert.setContentText(Messages.getString("JFXMain.rellenar_huecos")); //$NON-NLS-1$
 		boolean rellenarHuecos = false;
+		rellenarHuecosAlert.getButtonTypes().setAll(ButtonType.YES,ButtonType.NO);
 		Optional<ButtonType> rellenarHuecosButton = rellenarHuecosAlert.showAndWait();
 		if(rellenarHuecosButton.isPresent()){
-			if(rellenarHuecosButton.get().equals(ButtonType.OK)){
+			if(rellenarHuecosButton.get().equals(ButtonType.YES)){
 				rellenarHuecos=true;
 			}
 		}
@@ -4223,6 +4250,7 @@ public class JFXMain extends Application {
 
 		ept.setOnSucceeded(handler -> {
 			//TODO mostrar el mapa exportado en la pantalla para ver las diferencias
+			laborToExport.getLayer().setEnabled(false);
 			File ret = (File)handler.getSource().getValue();
 			playSound();
 			ept.uninstallProgressBar();
@@ -4273,10 +4301,56 @@ public class JFXMain extends Application {
 	
 	
 	private void doExportPrescripcionSiembra(SiembraLabor laborToExport) {
-		String nombre = laborToExport.getNombre();
-		File shapeFile = FileHelper.getNewShapeFile(nombre);
+		//TODO preguntar en que unidad exportar la dosis de semilla
+		Dialog<String> d= new Dialog<String>();
+		d.initOwner(JFXMain.stage);
+		d.setTitle(Messages.getString("JFXMain.doExportPrescripcionSiembraTitle"));//"Seleccione unidad de dosis semilla");
+		d.getDialogPane().getButtonTypes().add(ButtonType.OK);
+		d.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+		d.setResizable(true);
+		ComboBox<String> cb = new ComboBox<String>();
+		Map<String,String> availableColums = new LinkedHashMap<String,String>();
+		availableColums.put(Messages.getString("SiembraLabor.COLUMNA_SEM_10METROS"),SiembraLabor.COLUMNA_SEM_10METROS);//("Sem10ml");
+		availableColums.put(Messages.getString("SiembraLabor.COLUMNA_DOSIS_SEMILLA"),SiembraLabor.COLUMNA_DOSIS_SEMILLA);//("kgSemHa");
+		availableColums.put(Messages.getString("SiembraLabor.COLUMNA_MILES_SEM_HA"),SiembraLabor.COLUMNA_MILES_SEM_HA);//("MilSemHa");
+		
+	
+		
+		cb.setItems(FXCollections.observableArrayList(availableColums.keySet()));
+		cb.getSelectionModel().select(0);
+		d.getDialogPane().setContent(cb);
+		//d.getDialogPane().getChildren().add(cb);
+		
+		d.setResultConverter((bt)->{
+			if(ButtonType.OK.equals(bt)) {
+			String unidad = cb.getSelectionModel().getSelectedItem();
+			return availableColums.get(unidad);
+			}else {
+				return null;
+			}
+			//d.setResult(unidad);
+		});
+		d.showAndWait();
+		String unidad = d.getResult();
+		System.out.println("unidad seleccionada " + d.getResult());
+		if(unidad!=null) {
+			String nombre = laborToExport.getNombre();
+			File shapeFile = FileHelper.getNewShapeFile(nombre);
+			//executorPool.execute(()->ExportarPrescripcionSiembraTask.run(laborToExport, shapeFile,unidad));
+			
+			ExportarPrescripcionSiembraTask ept = new ExportarPrescripcionSiembraTask(laborToExport, shapeFile,unidad); 
+			ept.installProgressBar(progressBox);
 
-		executorPool.execute(()->ExportarPrescripcionSiembraTask.run(laborToExport, shapeFile));
+			ept.setOnSucceeded(handler -> {
+				//TODO mostrar el mapa exportado en la pantalla para ver las diferencias
+				File ret = (File)handler.getSource().getValue();
+				playSound();
+				ept.uninstallProgressBar();
+				this.doOpenSiembraMap(Collections.singletonList(ret));
+			});
+			executorPool.execute(ept);	
+			
+		}
 	}
 
 

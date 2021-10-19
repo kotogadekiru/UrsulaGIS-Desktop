@@ -58,11 +58,12 @@ public class CotizarOdenDeCompraOnlineTask extends Task<String> {
 
 	
 	private OrdenCompra ordenCompra =null;
+	private String mail=null;
 	
 	
 	public CotizarOdenDeCompraOnlineTask(OrdenCompra orden) {
 		this.ordenCompra = orden;
-		
+		this.mail=mail;
 		System.out.println("compartiendo OrdenCompra "+orden);
 		System.out.println("muestras "+orden.getItems().size());
 	}

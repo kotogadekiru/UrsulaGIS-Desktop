@@ -206,6 +206,8 @@ public class ExtraerPoligonosDeLaborTask extends Task<List<Poligono>> {
 			}
 			Poligono poli = new Poligono();
 			poli.setPositions(iterable);
+			double has = ProyectionConstants.A_HAS(g.getArea());
+			poli.setArea(has);
 			return poli;
 		} else {return null;}
 	}

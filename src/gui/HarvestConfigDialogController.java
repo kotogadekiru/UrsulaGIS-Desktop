@@ -386,7 +386,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		StringConverter<Number> nsConverter = new NumberStringConverter(){
 			@Override
 			public Number fromString(String s){
-				Number d;
+				Number d=new Double(0);
 				try {
 					d = converter.parse(s);
 					return d.doubleValue()/100;
@@ -436,30 +436,30 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		});
 	}
 
-	private DecimalFormat getMaxDecimalConverter() {
-		DecimalFormat converterMax = new DecimalFormat("0.00"){ //$NON-NLS-1$
-			@Override
-			public Object parseObject(String source)  {
-				try {
-					if("".equals(source)||source==null){ //$NON-NLS-1$
-						return Double.MAX_VALUE;
-					}
-					Number val = super.parse(source);
-					if(val.equals(new Double(0.0))) {
-						val = Double.MAX_VALUE;
-					}
-					return val;
-				} catch (ParseException e) {
-					return Double.MAX_VALUE;
-				}            	
-			}
-			
-		};
-		
-		converterMax.setGroupingUsed(true);
-		converterMax.setGroupingSize(3);
-		return converterMax;
-	}
+//	private DecimalFormat getMaxDecimalConverter() {
+//		DecimalFormat converterMax = new DecimalFormat("0.00"){ //$NON-NLS-1$
+//			@Override
+//			public Object parseObject(String source)  {
+//				try {
+//					if("".equals(source)||source==null){ //$NON-NLS-1$
+//						return Double.MAX_VALUE;
+//					}
+//					Number val = super.parse(source);
+//					if(val.equals(new Double(0.0))) {
+//						val = Double.MAX_VALUE;
+//					}
+//					return val;
+//				} catch (ParseException e) {
+//					return Double.MAX_VALUE;
+//				}            	
+//			}
+//			
+//		};
+//		
+//		converterMax.setGroupingUsed(true);
+//		converterMax.setGroupingSize(3);
+//		return converterMax;
+//	}
 
 	public void init() {
 		this.getDialogPane().setContent(content);

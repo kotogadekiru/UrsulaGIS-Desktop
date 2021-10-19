@@ -84,7 +84,7 @@ public class PoligonLayerFactory {
 					//surfaceLayer.setName(poli.getNombre()+" "+formated);
 					surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, poli);
 					valueProperty.setValue(area);
-					//layerPanel.update(wwd);				//XXX esto hace que se re calcule todo el arbol varias veces??
+					layerPanel.update(wwd);				//XXX esto hace que se re calcule todo el arbol varias veces?? si pero esta ok.
 				}                	                  
 			}
 		});	

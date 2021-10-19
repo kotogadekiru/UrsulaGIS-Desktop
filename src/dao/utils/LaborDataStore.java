@@ -5,7 +5,9 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
+import org.geotools.data.FeatureReader;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.factory.CommonFactoryFinder;
@@ -126,16 +128,8 @@ public class LaborDataStore<E> {
 	public static List<? extends LaborItem> cachedOutStoreQuery(Envelope envelope, Labor<? extends LaborItem> labor){
 		List<LaborItem> objects = new ArrayList<>();
 		List<SimpleFeature> cachedObjects = null;
-		synchronized(labor){
-			//si la cache crecio mucho la limito a un tamanio
-			//			if(treeCache!=null && treeCache.size()>50*1000){//71053 se limpia todo el timepo
-			//				System.out.println("limpiando cache con size = "+treeCache.size()+" envelope = "+envelope.toString());
-			//				treeCache=null;
-			//			}//esto no sirve porque updateAllCachedEnvelopes carga todas las features no solo las del envelope
-			//TODO poner un timer si no se uso el treeCache en x segundos limpiarlo.
-
-			if( labor.treeCache==null) {// || !labor.treeCacheEnvelope.contains(envelope)){		
-				//System.out.println("cache was null");
+	//	synchronized(labor){
+			if( labor.treeCache == null ) {
 				LaborDataStore.updateAllCachedEnvelopes(envelope,labor);			
 			}
 			labor.cacheLastRead=LocalTime.now();
@@ -162,49 +156,47 @@ public class LaborDataStore<E> {
 					objects.add(labor.constructFeatureContainerStandar(sf,false));
 				}
 			}
-		}
+	//	}
 
 		return objects;
 	}
 
-	private static  synchronized void updateAllCachedEnvelopes(Envelope envelope,Labor<? extends LaborItem> labor){
-		//		if(labor.treeCache!=null){
-		//			//if treeCache is too big clearCache. it only clears on insert.
-		////			if(labor.treeCache.size()+1>LaborDataStore.CACHE_MAX_SIZE) {
-		////				labor.clearCache();
-		////				labor.treeCache=new Quadtree();
-		////				labor.treeCacheEnvelope=new Envelope();
-		////			}
-		//		} else {
-		//			labor.treeCache=new Quadtree();
-		//			labor.treeCacheEnvelope=new Envelope();
-		//		}
-		//	
-		labor.treeCache=new Quadtree();
-		labor.treeCacheEnvelope=new Envelope();
-
-		//TODO cargar todas las features en memoria pero en guardarlas indexadas en cachedEnvelopes
-
-		//	Collection<SimpleFeature> items= Lists.newArrayList(labor.outCollection.iterator());
-		if(labor.outCollection==null) {
+	private static void updateAllCachedEnvelopes(Envelope envelope,Labor<? extends LaborItem> labor){		
+		
+		if(labor.outCollection == null) {
 			System.err.println("No se puede iterar sobre outCollection porque es null en "+labor.getNombre());
 			return;
 		}
-		@SuppressWarnings("unchecked")
-		Iterator<SimpleFeature> iterator = labor.outCollection.iterator();
-		iterator.forEachRemaining((sf)->{//java.util.ConcurrentModificationException
+		Quadtree auxTreeCache = new Quadtree();
+		final Envelope auxTreeCacheEnvelope = new Envelope();
+		List<SimpleFeature> sFeaturesToAdd = new ArrayList<SimpleFeature>();
+		// cargar todas las features en memoria pero guardarlas indexadas en cachedEnvelopes
+		try {
+			FeatureReader<SimpleFeatureType, SimpleFeature> reader = labor.outCollection.reader();
+			while(reader.hasNext()) {
+				SimpleFeature next = reader.next();//java.util.ConcurrentModificationException
+				sFeaturesToAdd.add(next);
+			}	
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+	//	@SuppressWarnings("unchecked")
+	//	Iterator<SimpleFeature> iterator = labor.outCollection.iterator();
+		//sFeaturesToAdd.forEachRemaining((sf)->{//java.util.ConcurrentModificationException
+		sFeaturesToAdd.stream().forEach(sf->{
 			Geometry g =(Geometry) sf.getDefaultGeometry();
 			Envelope ge = g.getEnvelopeInternal();
-			//if(envelope.contains(ge) || ge.contains(envelope)) {//no estaba asi.
-			labor.treeCache.insert(ge, sf);
+			auxTreeCache.insert(ge, sf);
 
-			if(labor.treeCacheEnvelope==null) {
-				labor.treeCacheEnvelope= ge;
-			}else {
-				labor.treeCacheEnvelope.expandToInclude(ge);
-			}
-			//}
+//			if(auxTreeCacheEnvelope == null) {
+//				auxTreeCacheEnvelope = ge;
+//			} else {
+				auxTreeCacheEnvelope.expandToInclude(ge);
+		//	}
 		});
+		labor.treeCache = auxTreeCache;
+		labor.treeCacheEnvelope = auxTreeCacheEnvelope;
 	}
 
 	public static void dispose(Labor<? extends LaborItem> labor) {

@@ -1,16 +1,28 @@
 package utils;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.geotools.geometry.jts.ReferencedEnvelope;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.IntersectionMatrix;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 
+import dao.Poligono;
 import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.util.measure.MeasureTool;
+import gui.Messages;
+import gui.PoligonLayerFactory;
+import tasks.procesar.ExtraerPoligonosDeLaborTask;
 
 public class GeometryHelper {
 	public static Polygon constructPolygon(ReferencedEnvelope e) {
@@ -114,7 +126,6 @@ public class GeometryHelper {
 				intersection = g1.intersection(g2);// Computes a Geometry//found non-noded intersection between LINESTRING ( -61.9893807883
 				intersection = PolygonValidator.validate(intersection);
 		
-			
 		} catch (Exception te) {
 			try{
 				intersection = EnhancedPrecisionOp.difference(g1, g2);
@@ -125,4 +136,39 @@ public class GeometryHelper {
 		}
 		return intersection;
 	}
+	
+	
+	/**
+	 * metodo que recorre todas las geometrias haciendo las intersecciones de todos con todos.
+	 * @param geometriasActivas
+	 * @return
+	 */
+	public static Set<Geometry> obtenerIntersecciones(List<Geometry> geometriasActivas){
+	// unir todas las geometrias.
+		//crear un poligono con los exterior rings de todas las geometrias
+		//obtener la diferencia entre la union y los vertices
+		GeometryFactory fact = geometriasActivas.get(0).getFactory();
+		GeometryCollection colectionCat = fact.createGeometryCollection(geometriasActivas.toArray(new Geometry[geometriasActivas.size()]));
+		Geometry convexHull = colectionCat.buffer(ProyectionConstants.metersToLongLat(0));
+		
+		List<Geometry> boundarys = new ArrayList<Geometry>();
+		for(Geometry g : geometriasActivas) {
+			boundarys.add(g.getBoundary());
+		}
+		GeometryCollection boundarysCol = fact.createGeometryCollection(boundarys.toArray(new Geometry[boundarys.size()]));
+		Geometry boundary_buffer = boundarysCol.buffer(ProyectionConstants.metersToLongLat(0.25));
+		
+		Geometry diff = convexHull.difference(boundary_buffer);
+		Set<Geometry> geometriasOutput = new HashSet<Geometry>();
+		
+		for(int n = 0; n < diff.getNumGeometries(); n++){
+			Geometry g = diff.getGeometryN(n);
+			geometriasOutput.add(g);
+		}
+		
+		
+		return geometriasOutput;
+	}
+	
+
 }

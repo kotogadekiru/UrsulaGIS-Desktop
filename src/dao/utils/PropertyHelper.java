@@ -32,6 +32,13 @@ public class PropertyHelper {
 		return ret;
 	}
 	
+	public static String formatDouble(Number n) {
+		String ret = new String("0");
+		try {		ret = getDoubleConverter().format(n);//Double.valueOf(ppmPOptional.get());
+		}catch(Exception e){e.printStackTrace();}
+		return ret;
+	}
+	
 	public static DecimalFormat getDoubleConverter() {
 		if(converter==null) {
 			NumberFormat nf = NumberFormat.getNumberInstance(Messages.getLocale());
@@ -74,18 +81,13 @@ public class PropertyHelper {
 	public static void bindDoubleToTextProperty(Supplier<Double> getDouble,Consumer<Double> setDouble, StringProperty textProperty, Configuracion configuracion, String key ) {
 		Double d = getDouble.get();
 		if(d!=null) {
-			textProperty.set(converter.format(d));
+			textProperty.set(formatDouble(d));
 		}else {
 			textProperty.set(configuracion.getPropertyOrDefault(key, "0"));
 		}
-		textProperty.addListener((obj,old,n)->{
-			try {
-				setDouble.accept(converter.parse(n).doubleValue());
-				configuracion.setProperty(key, n);
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		textProperty.addListener((obj,old,n)->{			
+				setDouble.accept(parseDouble(n).doubleValue());
+				configuracion.setProperty(key, n);		
 		});
 	}
 	

@@ -72,7 +72,7 @@ public class UnirSiembrasMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 		//	ReferencedEnvelope unionEnvelope = null;
 		//double ancho = labor.getConfiguracion().getAnchoFiltroOutlayers();
 		String nombre =null;
-		String prefijo = "Clon";
+		String prefijo = "grilla";
 		if(siembras.size()>1){
 			prefijo = "Union";
 		}
@@ -98,7 +98,7 @@ public class UnirSiembrasMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 				SiembraItem ci = labor.constructFeatureContainerStandar(f,true);
 				//TODO multiplicar ci.rinde por el coeficiente de conversion
 			
-				ci.setDosisML(ci.getDosisML()*10);
+				ci.setDosisML(ci.getDosisML()*10);//XXX verificar que ande para otras unidades
 				SimpleFeature nf=ci.getFeature(labor.featureBuilder);
 				
 				boolean ret = labor.outCollection.add(nf);
@@ -114,7 +114,7 @@ public class UnirSiembrasMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 		System.out.println("inserte "+featuresInsertadas+" elementos");
 		int elementosContiene = labor.outCollection.getCount();
 		System.out.println("la labor contiene "+elementosContiene+" elementos");
-		if(featuresInsertadas!=elementosContiene){
+		if(featuresInsertadas != elementosContiene){
 			System.out.println("no se insertaron todos los elementos con exito.");
 		}
 		labor.setNombre(nombre);

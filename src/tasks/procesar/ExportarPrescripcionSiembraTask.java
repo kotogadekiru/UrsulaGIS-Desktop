@@ -29,6 +29,7 @@ import dao.fertilizacion.FertilizacionItem;
 import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
 import gui.Messages;
+import tasks.ProgresibleTask;
 import utils.FileHelper;
 import utils.PolygonValidator;
 
@@ -42,8 +43,19 @@ import utils.PolygonValidator;
  *
  */
 
-public class ExportarPrescripcionSiembraTask {
-	public static void run(SiembraLabor laborToExport,File shapeFile) {
+public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
+	private SiembraLabor laborToExport=null;
+	private File shapeFile=null;
+	private String unidad=null;
+	
+	public  ExportarPrescripcionSiembraTask(SiembraLabor _laborToExport,File _shapeFile,String _unidad) {	
+		laborToExport=_laborToExport;
+		shapeFile=_shapeFile;
+		unidad=_unidad;
+		
+	}
+	
+	public File call() {
 		SimpleFeatureType type = null;
 		//*the_geom:    												:srid=4326,
 		//	String typeDescriptor = Messages.getString("JFXMain.341")+Polygon.class.getCanonicalName()+Messages.getString("JFXMain.342") //$NON-NLS-1$ //$NON-NLS-2$
@@ -56,7 +68,7 @@ public class ExportarPrescripcionSiembraTask {
 		String typeDescriptor = "*the_geom:"+Polygon.class.getCanonicalName()+":srid=4326,"//$NON-NLS-1$
 				+ SiembraLabor.COLUMNA_DOSIS_LINEA + ":java.lang.Long,"//$NON-NLS-1$
 				+ SiembraLabor.COLUMNA_DOSIS_COSTADO +":java.lang.Long,"//$NON-NLS-1$
-				+SiembraLabor.COLUMNA_SEM_10METROS+":java.lang.Long";//$NON-NLS-1$ semilla siempre tiene que ser la 3ra columna
+				+unidad+":java.lang.Long";//$NON-NLS-1$ semilla siempre tiene que ser la 3ra columna
 
 		System.out.println("creando type con: "+typeDescriptor); //$NON-NLS-1$ the_geom:Polygon:srid=4326,Fert L:java.lang.Long,Fert C:java.lang.Long,seeding:java.lang.Long
 		System.out.println("Long.SIZE="+Long.SIZE);//64bits=16bytes. ok!! //$NON-NLS-1$
@@ -93,14 +105,22 @@ public class ExportarPrescripcionSiembraTask {
 			List<Polygon> flatPolygons = PolygonValidator.geometryToFlatPolygons(itemGeometry);
 			for(Polygon p : flatPolygons){
 				fb.add(p);
+//				availableColums.add(SiembraLabor.COLUMNA_SEM_10METROS);//("Sem10ml");
+//				availableColums.add(SiembraLabor.COLUMNA_DOSIS_SEMILLA);//("kgSemHa");
+//				availableColums.add(SiembraLabor.COLUMNA_MILES_SEM_HA);//("MilSemHa");
 				Double semilla = fi.getDosisML()*10;///XXX aca hago magia para convertir de plantas por metro a plantas cada 10 metros
+				if(SiembraLabor.COLUMNA_DOSIS_SEMILLA.equals(unidad)) {
+					semilla = fi.getDosisHa();
+				} else if(SiembraLabor.COLUMNA_MILES_SEM_HA.equals(unidad)) {
+					semilla = fi.getDosisML()*(10/laborToExport.getEntreSurco());
+				}
 				Double linea = fi.getDosisFertLinea();
 				Double costado = fi.getDosisFertCostado();
 
 				//System.out.println("presc Dosis ="+semilla); //$NON-NLS-1$
 				fb.add(linea);
 				fb.add(costado);
-				fb.add(semilla.longValue());
+				fb.add(Math.round(semilla));
 
 				SimpleFeature exportFeature = fb.buildFeature(fi.getId().toString());
 				exportFeatureCollection.add(exportFeature);
@@ -153,6 +173,8 @@ public class ExportarPrescripcionSiembraTask {
 		Configuracion config = Configuracion.getInstance();
 		config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
 		config.save();
+		
+		return shapeFile;
 	}
 
 

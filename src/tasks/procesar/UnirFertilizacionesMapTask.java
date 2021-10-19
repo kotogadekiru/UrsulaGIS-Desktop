@@ -44,19 +44,15 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 		};
 
 		super.labor = new FertilizacionLabor();
-		//TODO asignar las columnas a  los valores estanar
+		//asignar las columnas a  los valores estandar
 		labor.colAmount.set(FertilizacionLabor.COLUMNA_KG_HA);
 		labor.colKgHaProperty.set(FertilizacionLabor.COLUMNA_KG_HA);
 		labor.colAncho.set(FertilizacionLabor.COLUMNA_ANCHO);
 		labor.colCurso.set(FertilizacionLabor.COLUMNA_CURSO);
 		labor.colDistancia.set(FertilizacionLabor.COLUMNA_DISTANCIA);
 		labor.colElevacion.set(FertilizacionLabor.COLUMNA_ELEVACION);
-		//labor.colVelocidad.set(CosechaLabor.COLUMNA_VELOCIDAD);
-		//labor.colPasada.set(CosechaLabor.COLUMNA_ANCHO);
 
-	//	labor.getConfiguracion().valorMetrosPorUnidadDistanciaProperty().set(1.0);
-	//	labor.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
-		String nombreProgressBar = "unir fertilizaciones";
+		String nombreProgressBar = "grillar fertilizacion";
 		if(fertilizaciones.size()>1){
 			nombreProgressBar = "unir fertilizaciones";
 		}
@@ -74,11 +70,11 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 		ReferencedEnvelope unionEnvelope = null;
 		double ancho = labor.getConfigLabor().getAnchoGrilla();
 		String nombre =null;
-		String prefijo = "clon";
+		String prefijo = "grilla";
 		if(fertilizaciones.size()>1){
 			prefijo = "union";
 		}
-		int featuresInsertadas=0;
+//		int featuresInsertadas=0;
 		for(FertilizacionLabor fert:fertilizaciones){
 			if(nombre == null){
 				nombre=prefijo+" "+fert.getNombre();	
@@ -181,15 +177,10 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 			System.out.println("no se pudieron agregar las features al outCollection");
 		}
 
-		//TODO 4 mostrar la cosecha sintetica creada
+		// 4 mostrar la fertilizacion sintetica creada
 		labor.constructClasificador();
 		
 		/*fin de grillar fertilizacion*/
-		
-	
-	
-
-
 
 		runLater(byPolygon.values());
 		updateProgress(0, featureCount);
@@ -210,10 +201,6 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 				"Densidad: " + df.format(fertFeature.getDosistHa())
 				+ " Kg/Ha\n" + "Costo: "
 				+ df.format(fertFeature.getImporteHa()) + " U$S/Ha\n"
-				//+ "Sup: "
-				//+ df.format(area * ProyectionConstants.METROS2_POR_HA)
-				//+ " m2\n"
-				// +"feature: " + featureNumber
 				);
 		if(area<1){
 			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
@@ -249,9 +236,9 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 			//XXX si es una cosecha de ambientes el area es importante
 			Geometry g = fPoly.getGeometry();
 			try{
-				g= EnhancedPrecisionOp.intersection(poly,g);
+				g = EnhancedPrecisionOp.intersection(poly,g);
 				Double areaInterseccion = g.getArea();
-				sumAreaInterseccion+=areaInterseccion;
+				sumAreaInterseccion += areaInterseccion;
 				areasIntersecciones.put(fPoly,areaInterseccion);
 				if(union==null){
 					union = g;
@@ -270,8 +257,16 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 			ancho=labor.getConfigLabor().getAnchoGrilla();
 			distancia=ancho;
 		
-
-			double areaPoly = poly.getArea();
+			GeometryFactory fact = intersections.get(0).getFactory();
+			Geometry[] geomArray = new Geometry[intersections.size()];
+			GeometryCollection colectionCat = fact.createGeometryCollection(intersections.toArray(geomArray));
+			
+			try{
+				union = colectionCat.convexHull();//esto hace que no se cubra el area entre polygonos a menos que la grilla sea mas grande que el area
+				}catch(Exception e){			}
+			
+			
+			double areaPoly = union.getArea();
 		for(FertilizacionItem fPoly : areasIntersecciones.keySet()){
 				Double areaInterseccion = areasIntersecciones.get(fPoly);//cPoly.getGeometry();
 				if(areaInterseccion==null){
@@ -290,13 +285,6 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 			}
 
 
-			GeometryFactory fact = intersections.get(0).getFactory();
-			Geometry[] geomArray = new Geometry[intersections.size()];
-			GeometryCollection colectionCat = fact.createGeometryCollection(intersections.toArray(geomArray));
-			
-			try{
-				union = colectionCat.convexHull();//esto hace que no se cubra el area entre polygonos a menos que la grilla sea mas grande que el area
-				}catch(Exception e){			}
 			
 			f.setGeometry(union);
 			f.setDosistHa(insumoProm);

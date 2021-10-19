@@ -573,75 +573,26 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 	 * el metodo realiza la tarea en forma paralelizada
 	 */
 	private void corregirOutlayersParalell() {			
-
 		//GeodeticCalculator calc = new GeodeticCalculator(DefaultEllipsoid.WGS84); 
-
 
 		//1) crear un circulo de radio a definir y centro en el centroide de la cosecha
 		double ancho = labor.getConfiguracion().getAnchoFiltroOutlayers();
-		double alfa =0;
+		double alfa = 0;
 		double distancia = ancho;
 		Coordinate anchoLongLatCoord = constructCoordinate(alfa, ancho);
-		Coordinate distanciaLongLat =constructCoordinate(alfa+ Math.PI / 2, distancia);
-
-		//		SimpleFeature[] arrayF = new SimpleFeature[labor.outCollection.size()];
-		//			labor.outCollection.toArray(arrayF);
-		//		List<SimpleFeature> outFeatures = Arrays.asList(arrayF);//  new CopyOnWriteArrayList<SimpleFeature>(arrayF);
-		//	List<SimpleFeature> filteredFeatures = new ArrayList<SimpleFeature>();
-		//DefaultFeatureCollection newOutcollection =  new DefaultFeatureCollection("internal",labor.getType());		
-
-		//		int i = 0;
-
-		//		GeometricShapeBuilder gb = new GeometricShapeBuilder();//DefaultEllipsoid.WGS84
-		//		   gb.circle(0,0, 1,1, 6);
-		//			Circle.
-
-		//XXX este metodo es eficiente en el uso de memoria pero demasiado lento al no paralelizar
-		//		labor.outCollection.accepts(new FeatureVisitor(){
-		//			@Override
-		//			public void visit(Feature pf) {
-		//				CosechaItem cosechaFeature = labor.constructFeatureContainerStandar((SimpleFeature) pf);
-		//				Point X = cosechaFeature.getGeometry().getCentroid();
-		//
-		//				Polygon poly = constructPolygon(anchoLongLatCoord, distanciaLongLat, X);
-		//
-		//				//circle = new Circle(X, ancho*ProyectionConstants.metersToLong()Lat);
-		//				//2) obtener todas las cosechas dentro det circulo
-		//				List<CosechaItem> features = labor.outStoreQuery(poly.getEnvelopeInternal());
-		//				if(features.size()>0){
-		//					//outlayerVarianza(cosechaFeature, poly,features);
-		//					if(outlayerCV(cosechaFeature, poly,features)){
-		//					}
-		//				} else {
-		//					System.out.println("zero features");
-		//				}
-		//				SimpleFeatureBuilder fBuilder = new SimpleFeatureBuilder(
-		//						labor.getType());
-		//				SimpleFeature f = cosechaFeature.getFeature(fBuilder);
-		//				boolean res = newOutcollection.add(f);				
-		//			}
-		//
-		//		}, new DefaultProgressListener(){
-		//			@Override
-		//			public void progress(float percent){
-		//				super.progress(percent);
-		//				System.out.println("percent "+percent);
-		//				updateProgress(0.5+percent/2,1);
-		//			}
-		//		});
+		Coordinate distanciaLongLat = constructCoordinate(alfa+ Math.PI / 2, distancia);
 
 		int initOutCollectionSize = labor.outCollection.size();
 		SimpleFeature[] arrayF = new SimpleFeature[labor.outCollection.size()];
 		labor.outCollection.toArray(arrayF);
 		List<SimpleFeature> outFeatures = Arrays.asList(arrayF);
 		List<SimpleFeature>  filteredFeatures = outFeatures.parallelStream().collect(
-				()->new  ArrayList<SimpleFeature>(),
+				()-> new  ArrayList<SimpleFeature>(),
 				(list, pf) ->{		
 					try{
 						CosechaItem cosechaFeature = labor.constructFeatureContainerStandar(pf,false);
 						Point X = cosechaFeature.getGeometry().getCentroid();
 						Polygon poly = constructPolygon(anchoLongLatCoord, distanciaLongLat, X);
-						//List<CosechaItem> features = labor.cachedOutStoreQuery(poly.getEnvelopeInternal());
 						List<CosechaItem> features = labor.cachedOutStoreQuery(poly.getEnvelopeInternal());
 						if(features.size()>0){						
 							outlayerCV(cosechaFeature, poly,features);						
@@ -651,62 +602,31 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 							//This method is safe to be called from any thread.	
 							//updateProgress((list.size()+featureCount)/2, featureCount);
 						} else{
-							System.out.println(Messages.getString("ProcessHarvestMapTask.11")); //$NON-NLS-1$
+							System.out.println("la query devolvio cero elementos"); //$NON-NLS-1$
 						}
 					}catch(Exception e){
-						System.err.println(Messages.getString("ProcessHarvestMapTask.12")); //$NON-NLS-1$
+						System.err.println("error en corregirOutliersParalell"); //$NON-NLS-1$
 						e.printStackTrace();
 					}
 				},	(list1, list2) -> list1.addAll(list2));
 		//XXX esto termina bien. filteredFeatures tiene 114275 elementos como corresponde
 
-		DefaultFeatureCollection newOutcollection =  new DefaultFeatureCollection(Messages.getString("ProcessHarvestMapTask.13"),labor.getType());		 //$NON-NLS-1$
-		boolean res =	newOutcollection.addAll(filteredFeatures);
+		DefaultFeatureCollection newOutcollection =  new DefaultFeatureCollection("internal",labor.getType());		 //$NON-NLS-1$
+		boolean res = newOutcollection.addAll(filteredFeatures);
 		if(!res){
-			System.out.println(Messages.getString("ProcessHarvestMapTask.14")); //$NON-NLS-1$
+			System.out.println("fallo el addAll(filteredFeatures)"); 
 		}
-		//labor.cachedEnvelopes.clear();
+
 		labor.clearCache();
-
-		//	List<SimpleFeature> filteredFeatures = new ArrayList<SimpleFeature>();
-		//		outFeatures.parallelStream().forEach(pf->{
-		//
-		//			CosechaItem cosechaFeature = labor.constructFeatureContainerStandar(pf);
-		//			Point X = cosechaFeature.getGeometry().getCentroid();
-		//
-		//			Polygon poly = constructPolygon(anchoLongLatCoord, distanciaLongLat, X);
-		//
-		//			//circle = new Circle(X, ancho*ProyectionConstants.metersToLong()Lat);
-		//			//2) obtener todas las cosechas dentro det circulo
-		//			List<CosechaItem> features = labor.outStoreQuery(poly.getEnvelopeInternal());
-		//			if(features.size()>0){
-		//				//outlayerVarianza(cosechaFeature, poly,features);
-		//				if(outlayerCV(cosechaFeature, poly,features)){
-		//				}
-		//			}
-		//			SimpleFeatureBuilder fBuilder = new SimpleFeatureBuilder(
-		//					labor.getType());
-		//			SimpleFeature f = cosechaFeature.getFeature(fBuilder);
-		//			boolean res = newOutcollection.add(f);
-		//			//			i++;
-		//
-		//			//	updateProgress((i+featureCount)/2, featureCount);
-		//
-		//		});
-
 
 		int endtOutCollectionSize = newOutcollection.size();
 		if(initOutCollectionSize !=endtOutCollectionSize){
-			System.err.println(Messages.getString("ProcessHarvestMapTask.15")+initOutCollectionSize+Messages.getString("ProcessHarvestMapTask.16")+endtOutCollectionSize); //$NON-NLS-1$ //$NON-NLS-2$
+			System.err.println("se perdieron elementos al hacer el filtro de outlayers. init="
+					+initOutCollectionSize
+					+" end="+endtOutCollectionSize); 
 		}
 		labor.setOutCollection(newOutcollection);
 		featureCount=labor.outCollection.size();
-		//TODO tratar de paralelizar este proceso que acelera mucho
-		//		DefaultFeatureCollection newOutcollection =  new DefaultFeatureCollection("internal",labor.getType());		
-		//		newOutcollection.addAll(filteredFeatures);
-
-		//labor.setOutCollection(newOutcollection);
-
 	}
 
 

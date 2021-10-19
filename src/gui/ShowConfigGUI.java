@@ -61,6 +61,7 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.image.Image;
@@ -70,6 +71,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import tasks.CotizarOdenDeCompraOnlineTask;
+import tasks.procesar.ExportarPrescripcionSiembraTask;
 import utils.DAH;
 import utils.ExcelHelper;
 
@@ -453,20 +455,33 @@ public class ShowConfigGUI {
 			VBox v=new VBox();
 			v.getChildren().add(table);
 			HBox h = new HBox();
-			Button guardarB = new Button("Guardar");
+			
+			Button guardarB = new Button(Messages.getString("JFXMain.saveAction"));//TODO traducir
 			guardarB.setOnAction(actionEvent->{
 				//System.out.println("implementar GuardarOrden de compra action");
 				DAH.save(ret);
 			});
-			Button exportarB = new Button("Exportar");
+			
+			Button exportarB = new Button(Messages.getString("JFXMain.exportar"));//TODO traducir
 			exportarB.setOnAction(actionEvent->{
 				ExcelHelper helper = new ExcelHelper();
 				helper.exportOrdenCompra(ret);
 			});
 
-			Button cotizarOblineB = new Button("Cotizar OnLine");
+			Button cotizarOblineB = new Button(Messages.getString("ShowConfigGUI.cotizarOnline"));//"Cotizar OnLine");//TODO traducir
 			cotizarOblineB.setOnAction(actionEvent->{
+				//TODO preguntar mail para enviar presupuestos
+				TextInputDialog tDialog = new TextInputDialog("tomas@ursulagis.com");
+				tDialog.initOwner(JFXMain.stage);
+				tDialog.setTitle(Messages.getString("ShowConfigGUI.cotizarOnlineMailTitle"));
+				tDialog.showAndWait();
+			
+				String mail=	tDialog.getResult();
+				
+				ret.setMail(mail);
 				CotizarOdenDeCompraOnlineTask cotTask= new CotizarOdenDeCompraOnlineTask(ret); 
+			
+				main.executorPool.execute(()->cotTask.run());
 				//TODO enviar orden de compra a la nube. preguntar mail de contacto y subir la orden de compra a la nube
 				
 
@@ -503,6 +518,9 @@ public class ShowConfigGUI {
 					Arrays.asList("Producto","Cantidad")
 					);
 			table.setEditable(true);
+			table.setOnShowClick((oc)->{
+				this.doShowOrdenCompra(oc);
+			});
 			//			table.setOnDoubleClick(()->new Poligono());
 			//			table.setOnShowClick((ndvi)->{
 			//				//poli.setActivo(true);

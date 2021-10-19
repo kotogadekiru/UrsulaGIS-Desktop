@@ -10,6 +10,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 
 import dao.Ndvi;
 import lombok.AccessLevel;
@@ -31,18 +32,18 @@ public class OrdenCompra {
 	private Long id=null;
 	
 	private String description=null;
+	private String mail=null;
 	
-	@OneToMany(cascade=CascadeType.ALL, mappedBy="ordenCompra")
+
+	@OneToMany(cascade=CascadeType.ALL, mappedBy="ordenCompra",orphanRemoval=true)
 	private List<OrdenCompraItem> items=new ArrayList<OrdenCompraItem>();
 	
 	private Double importeTotal=null;
 	
-	public void setItems(List<OrdenCompraItem> _items) {
-		this.items=_items;
-	}
-
-
-	
+//	public void setItems(List<OrdenCompraItem> _items) {
+//		this.items=_items;
+//	}
+//	
 	public Double getImporteTotal() {
 		this.importeTotal=items.stream().mapToDouble(i->i.getImporte()).sum(); 
 		return importeTotal;

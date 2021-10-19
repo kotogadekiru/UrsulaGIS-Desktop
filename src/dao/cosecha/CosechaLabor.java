@@ -106,7 +106,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 	//el controller de la configuracion. creo que setea las variables pero nunca las graba a menos 
 	//que las grabe el controller
 	protected void initConfig() {
-		this.productoLabor=DAH.getProductoLabor(ProductoLabor.LABOR_DE_COSECHA);
+		this.productoLabor = DAH.getProductoLabor(ProductoLabor.LABOR_DE_COSECHA);
 		//System.out.println("iniciando la configuracion de CosechLabor");
 		List<String> availableColums = this.getAvailableColumns();		
 		Configuracion properties = getConfiguracion().getConfigProperties();
@@ -130,7 +130,8 @@ public class CosechaLabor extends Labor<CosechaItem> {
 		String productoKEY = properties.getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.PRODUCTO_DEFAULT, Cultivo.MAIZ);
 		Cultivo cultDefault = null;
 		try {
-			cultDefault = Cultivo.cultivos.get(productoKEY);//DAH.getCultivo(productoKEY);
+			cultDefault = DAH.getCultivo(productoKEY);
+			//cultDefault = Cultivo.cultivos.get(productoKEY);//DAH.getCultivo(productoKEY);
 		}catch(Exception e) {
 			e.printStackTrace();
 		}

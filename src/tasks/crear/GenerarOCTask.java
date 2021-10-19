@@ -16,6 +16,7 @@ import dao.LaborItem;
 import dao.OrdenDeCompra.OrdenCompra;
 import dao.OrdenDeCompra.OrdenCompraItem;
 import dao.OrdenDeCompra.Producto;
+import dao.config.Cultivo;
 import dao.config.Semilla;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
@@ -55,6 +56,9 @@ public class GenerarOCTask  extends Task<OrdenCompra>{
 		this.siembras.forEach(l->{
 			description.append(l.getNombre());
 			Producto producto =l.getSemilla();
+			Cultivo cultivo = l.getSemilla().getCultivo();
+			//TODO resolver el problema de la unidad de compra. kg o bolsas
+			//si cultivo es maiz que la unidad sea bolsas. 
 			
 			Double cantidadItem = l.getCantidadInsumo();
 			putItem(prodCantidadMap, producto, cantidadItem,l.getPrecioInsumo());
@@ -88,6 +92,7 @@ public class GenerarOCTask  extends Task<OrdenCompra>{
 		OrdenCompra oc=new OrdenCompra();		
 		oc.setDescription(description.toString());
 		oc.setItems(new ArrayList<OrdenCompraItem>(prodCantidadMap.values()));
+		oc.getItems().stream().forEach((item)->item.setOrdenCompra(oc));
 		
 		return oc;
 	}

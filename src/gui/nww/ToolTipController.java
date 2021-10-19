@@ -6,10 +6,13 @@
 
 package gui.nww;
 
+import dao.LaborItem;
+import dao.fertilizacion.FertilizacionItem;
 import gov.nasa.worldwind.*;
 import gov.nasa.worldwind.avlist.*;
 import gov.nasa.worldwind.event.*;
 import gov.nasa.worldwindx.examples.ApplicationTemplate;
+import tasks.ProcessMapTask;
 import gov.nasa.worldwind.layers.*;
 import gov.nasa.worldwind.util.*;
 
@@ -30,6 +33,7 @@ public class ToolTipController implements SelectListener, Disposable
     protected Object lastHoverObject;
     protected AnnotationLayer layer;
     protected ToolTipAnnotation annotation;
+	private Object lastRightClickObject;
 
     /**
      * Create a controller for a specified {@link WorldWindow} that displays tool tips on hover and/or rollover.
@@ -59,7 +63,7 @@ public class ToolTipController implements SelectListener, Disposable
         this.wwd = wwd;
         this.rolloverKey = AVKey.DISPLAY_NAME;
 
-        this.wwd.addSelectListener(this);
+        this.wwd.addSelectListener(this);        
     }
 
     public void dispose()
@@ -86,7 +90,12 @@ public class ToolTipController implements SelectListener, Disposable
             if (event.isRollover() && this.rolloverKey != null)
                 this.handleRollover(event);
             else if (event.isHover() && this.hoverKey != null)
-                this.handleHover(event);
+                
+           if(event.isRightClick())    {//este evento no se lanza
+        	   System.out.println("right click!");
+        	   this.handleRigthClick(event);
+           }
+            
         }
         catch (Exception e)
         {
@@ -95,7 +104,17 @@ public class ToolTipController implements SelectListener, Disposable
         }
     }
 
-    protected void handleRollover(SelectEvent event)
+    private void handleRigthClick(SelectEvent event) {
+    	this.lastRightClickObject = event.getTopObject();
+    	if(this.lastRightClickObject != null && this.lastRightClickObject instanceof AVList) {
+    		LaborItem item = ((LaborItem)  ((AVList) this.lastRightClickObject).getValue(ProcessMapTask.LABOR_ITEM_AVKey) );	
+    		this.showToolTip(event, "Borrar item "+item.getId()+"?"); 
+    		this.wwd.redraw();
+    		
+    	}
+	}
+
+	protected void handleRollover(SelectEvent event)
     {
         if (this.lastRolloverObject != null)
         {
