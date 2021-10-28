@@ -158,6 +158,7 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 				}finally {
 					try {
 						transaction.close();
+						//TODO chequear que pese menos de 512KB
 						//System.out.println("closing transaction");
 					} catch (IOException e) {
 						e.printStackTrace();

@@ -4,6 +4,7 @@ import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import utils.ProyectionConstants;
 
 import javax.persistence.Access;
 import javax.persistence.AccessType;
@@ -218,6 +219,9 @@ public abstract class LaborItem implements Comparable<Object>{
 
 
 	public Double getAreaSinSup() {
+		if(areaSinSup.equals(new Double(0))) {
+			areaSinSup = ProyectionConstants.A_HAS(this.geometry.getArea());
+		}
 		return areaSinSup;
 	}
 

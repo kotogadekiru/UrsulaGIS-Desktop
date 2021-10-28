@@ -1,19 +1,38 @@
 package utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.logging.Level;
 
 import javafx.scene.paint.Color;
 
+import org.geotools.data.simple.SimpleFeatureCollection;
+import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.factory.CommonFactoryFinder;
+import org.geotools.feature.FeatureCollection;
 import org.geotools.filter.function.Classifier;
+import org.geotools.filter.function.RangedClassifier;
 import org.geotools.styling.FeatureTypeStyle;
+import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.expression.Function;
 import org.opengis.filter.expression.PropertyName;
 
+import com.vividsolutions.jts.geom.Geometry;
+
 public class NaturalBreaks {
+    private String amountCol ="";
+    private int numClases=9;
+    private double areaRef = 0;
 	
+    public NaturalBreaks(String amountColumn, int numClases,double a) {
+        this.amountCol=amountColumn;
+        this.numClases=numClases;
+        this.areaRef = a;//0.7/ProyectionConstants.A_HAS();
+    }
+    
 	/**
 	 * @return int[] devuelve el numero del elemento maximo que pertenece a la clase
 	 * @param list   com.sun.java.util.collections.ArrayList
@@ -89,6 +108,66 @@ public class NaturalBreaks {
 		return rangos;
 	}
 
+	 /**
+     * This is based on James' GeoTools1 code which seems to be based on
+     * http://lib.stat.cmu.edu/cmlib/src/cluster/fish.f
+     * 
+     * @param feature
+     * @return a RangedClassifier
+     */
+    public Object calculate(SimpleFeatureCollection featureCollection) {    	
+        SimpleFeatureIterator features = featureCollection.features();
+        ArrayList<Double> data = new ArrayList<Double>();
+        try {
+            while (features.hasNext()) {
+                SimpleFeature feature = features.next();
+                final Object result = feature.getAttribute(this.amountCol);//getParameters().get(0).evaluate(feature);
+                
+              //  logger.finest("importing " + result);
+                if (result != null) {
+                    final Double e = new Double(result.toString());
+                    if (!e.isInfinite() && !e.isNaN()) {
+                    	Geometry g= (Geometry) feature.getDefaultGeometry();
+                    	double times = Math.max(1, g.getArea()/this.areaRef);
+                    	//System.out.println("multiplicando el feature "+ e+ " por " + times);
+                    	  
+                    	for(int t=0; t<times;t++) {
+                    		data.add(new Double(e));
+                    	}
+                    }
+                }
+            }
+        } catch (NumberFormatException e) {
+            return null; // if it isn't a number what should we do?
+        }
+        features.close();
+      
+        Double[] breaks = QGISPrettyBreaks.calculateBreaks(0, 1000000,data, numClases+1);//.getJenksBreaks(data, this.numClases);
+
+        Comparable[] localMin = new Comparable[numClases];
+        Comparable[] localMax = new Comparable[numClases];
+        
+     
+        for(int i=0;i<numClases;i++) {
+        	  localMax[i] = breaks[i+1];
+              localMin[i] = breaks[i];
+        }
+//        localMax[numClases-1] = breaks[breaks.length-1];
+//        localMin[numClases-1] = breaks[breaks.length-1];
+        System.out.println("localMax: "+Arrays.toString(localMax));
+        System.out.println("localMin: "+Arrays.toString(localMin));
+  
+        return new RangedClassifier(localMin, localMax);
+    }
+	
+    public Object evaluate(Object feature) {
+        if (!(feature instanceof FeatureCollection)) {
+            return null;
+        }
+        return calculate((SimpleFeatureCollection) feature);
+    }
+
+    
 	class doubleComp implements Comparator<Object> {
 		public int compare(Object a, Object b) {
 			if (((Double) a).doubleValue() < ((Double) b).doubleValue())

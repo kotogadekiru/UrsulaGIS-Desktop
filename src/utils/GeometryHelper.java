@@ -163,6 +163,7 @@ public class GeometryHelper {
 		
 		for(int n = 0; n < diff.getNumGeometries(); n++){
 			Geometry g = diff.getGeometryN(n);
+			g = PolygonValidator.validate(g);
 			geometriasOutput.add(g);
 		}
 		

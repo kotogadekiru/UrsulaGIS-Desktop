@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -19,7 +20,6 @@ import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.expression.Literal;
 import org.opengis.filter.expression.PropertyName;
 
-import dao.cosecha.CosechaItem;
 import gui.Messages;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -27,7 +27,9 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.paint.Color;
 import lombok.Data;
+import utils.NaturalBreaks;
 import utils.ProyectionConstants;
+import utils.UrsulaJenksNaturalBreaksFunction;
 @Data
 public class Clasificador {
 	public static final String NUMERO_CLASES_CLASIFICACION = "NUMERO_CLASES_CLASIFICACION";
@@ -152,6 +154,36 @@ public class Clasificador {
 			return 0;
 		}
 	}
+	
+	
+	public  Classifier constructUrsulaJenksClasifier(SimpleFeatureCollection collection,String amountColumn){
+		histograma = null;
+		//TODO usar config. ancho grilla^2/10000
+		//Sup minima relevante 10m^2
+		double minArea = 70/(ProyectionConstants.METROS2_POR_HA*ProyectionConstants.A_HAS());
+		NaturalBreaks func = new NaturalBreaks(amountColumn,this.getNumClasses(),minArea);
+		//UrsulaJenksNaturalBreaksFunction func = new UrsulaJenksNaturalBreaksFunction(amountColumn,this.getNumClasses(),minArea);
+		
+		
+		//TODO construir una colleccion equivalente pero donde cada feature tenga la misma superficie
+		//10m^2 para que tengan el mismo peso relativo
+		if(collection.size()>0){
+			System.out.println("evaluando la colleccion para poder hacer jenkins");
+		
+			
+			clasifier = (Classifier) func.evaluate(collection);//XXX esto demora unos segundos!
+			
+			System.out.println(Arrays.toString(clasifier.getTitles())+" size: "+clasifier.getSize());
+		} else{
+			System.out.println("no se pudo evaluar jenkins porque la coleccion de datos es de tamanio cero");
+		}
+		if(clasifier == null){
+			System.out.println("No se pudo evaluar la colleccion de features con el metodo de Jenkins");
+
+		}
+		//  int clase =   clasifier.classify(arg0)
+		return clasifier;
+	}
 
 	public  Classifier constructJenksClasifier(SimpleFeatureCollection collection,String amountColumn){
 		//JenksFunctionTest test = new JenksFunctionTest("jenksTest");
@@ -161,6 +193,7 @@ public class Clasificador {
 		//Literal classes = ff.literal(colors.length);
 		Literal classes = ff.literal(this.getNumClasses());
 		PropertyName expr = ff.property(amountColumn);
+		
 		JenksNaturalBreaksFunction func = (JenksNaturalBreaksFunction) ff.function("Jenks", expr,
 				classes);
 
@@ -170,6 +203,8 @@ public class Clasificador {
 		//10m^2 para que tengan el mismo peso relativo
 		if(collection.size()>0){
 			System.out.println("evaluando la colleccion para poder hacer jenkins");
+			//double areaLongLat = 100/ProyectionConstants.A_HAS();
+			
 			clasifier = (Classifier) func.evaluate(collection);//XXX esto demora unos segundos!
 		} else{
 			System.out.println("no se pudo evaluar jenkins porque la coleccion de datos es de tamanio cero");
@@ -181,6 +216,21 @@ public class Clasificador {
 		//  int clase =   clasifier.classify(arg0)
 		return clasifier;
 	}
+	
+//	private SimpleFeatureCollection splitByArea(SimpleFeatureCollection collection,double area){
+//		List<SimpleFeature> splitted = new ArrayList<SimpleFeature>();
+//		//FXCollections.synchronizedObservableList(list) //Usar esto si hay proyblemas de paralelismo
+//		//TODO por cada Simplefeature dividirlo por el area y volver a agregarlo tantas veces como entre el area
+//		collection.parallelStream().forEach(sf->{
+//			Geometry g = (Geometry) sf.getDefaultGeometry();
+//			double times = g.getArea()/area;
+//			for(int i=0;i<=times;i++) {
+//				splitted.add(sf);
+//			}
+//			
+//		});
+//		return splitted;
+//	}
 
 	private  int getColorByJenks(Double double1) {
 		try{
@@ -319,9 +369,13 @@ public class Clasificador {
 		//i=1 //segundo limite = average-3*desv/2+ desv*2= ave + desv*(-3/2+4/2) = ave+desv/2
 		
 		//y=ax+b
+		if(numLimites>1) {
 		for(int i = 0; i < numLimites; i++){	
 			histograma[i] = average + (-1+i*2d/(numLimites-1))*desvioEstandar;// code block
 			//histograma[i] = average  + desvioEstandar * (i- 1/numLimites );
+		}
+		} else if(numLimites==1){
+			histograma[0]=average;
 		}
 
 		this.initialized=true;
@@ -357,6 +411,7 @@ public class Clasificador {
 		//int absCat = getCategoryFor(amount);//entre 0 y numClases-1
 		int length =colors.length-1;//8
 		int clases =classCount-1;//1
+		if(clases==0)return colors[colors.length-1];
 		int colorIndex = absCat * (length/clases); // 7 * (8/1)
 		//	System.out.println(absCat+"*"+length+"/"+clases+" = "+colorIndex+" colorIndex");
 		if(colorIndex>length){
@@ -432,7 +487,8 @@ public class Clasificador {
 //			areaInvariantCol.clear();
 			//** fin del nuevo codigo para tomar en cuenta el area de los poligonos
 			
-			this.constructJenksClasifier(labor.outCollection,labor.colAmount.get());
+			this.constructUrsulaJenksClasifier(labor.outCollection,labor.colAmount.get());//dan el mismo histograma
+			//this.constructJenksClasifier(labor.outCollection,labor.colAmount.get());
 		
 		} else {//if(Clasificador.CLASIFICADOR_DESVIOSTANDAR.equalsIgnoreCase(nombreClasif)) {
 			System.out.println("no hay jenks Classifier falling back to histograma");

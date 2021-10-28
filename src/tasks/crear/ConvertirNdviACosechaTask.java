@@ -29,6 +29,7 @@ import gov.nasa.worldwindx.examples.analytics.ExportableAnalyticSurface;
 import tasks.ProcessMapTask;
 import tasks.ShowNDVITifFileTask;
 import utils.ProyectionConstants;
+import utils.Logistic.Data;
 
 public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,CosechaLabor> {
 	private static  double NDVI_RINDE_CERO = ShowNDVITifFileTask.MIN_VALUE;//0.2;
@@ -77,7 +78,7 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 			//ver si la imagen es del final del ciclo o del principio?
 			NDVI_RINDE_CERO= averageNdvi>0.5?0.2:0.1;//depende del cultivo?
 		}
-		if(averageNdvi.isNaN())averageNdvi =1.0;
+		if(averageNdvi.isNaN()) averageNdvi = 1.0;
 		 it = values.iterator();
 		 
 	 
@@ -108,12 +109,10 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 		double id=0;
 		
 		
-		//lineal r=a*ndvi+b
-		//a=(r2-r1)/(ndvi2-ndvi1)=(rProm-0)/(ndviProm-0.1)
-		double pendienteNdviRinde=averageNdvi>NDVI_RINDE_CERO?rindeProm/(averageNdvi-NDVI_RINDE_CERO):1;
-		//b=0-a*0.1
-		double origenNdviRinde = 0-pendienteNdviRinde*NDVI_RINDE_CERO;
-		Function<Double,Double> calcRinde = (ndvi)->pendienteNdviRinde*ndvi+origenNdviRinde;
+		//Function<Double, Double> calcRinde = getRineForNDVILinealFunction(averageNdvi);
+		Function<Double, Double> calcRinde = getRindeForNDVISigmoidFunction(averageNdvi);
+		//Function<Double, Double> calcRinde = getRindeForNDVISmoothstepFunction(averageNdvi);
+		
 		
 		//logaritmica
 //		double pendienteNdviRinde=averageNdvi>NDVI_RINDE_CERO?Math.log(rindeProm)/(Math.log(averageNdvi)-Math.log(NDVI_RINDE_CERO)):1;
@@ -211,7 +210,54 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 
 	}
 
+	private Function<Double, Double> getRineForNDVILinealFunction(Double averageNdvi) {
+		//lineal r=a*ndvi+b
+		//a=(r2-r1)/(ndvi2-ndvi1)=(rProm-0)/(ndviProm-0.1)
+		double pendienteNdviRinde = averageNdvi>NDVI_RINDE_CERO?rindeProm/(averageNdvi-NDVI_RINDE_CERO):1;
+		//b=0-a*0.1
+		double origenNdviRinde = 0-pendienteNdviRinde*NDVI_RINDE_CERO;
+		
+		List<Data> dataset = new ArrayList<Data>();
+		
+		Function<Double,Double> calcRinde = (ndvi)->pendienteNdviRinde*ndvi+origenNdviRinde;
+		return calcRinde;
+	}
 
+	
+	//rinde=rindeMax/(1+EXP(-(ndvi-ndviProm)*alfa^beta))
+	//ndvi: valor de entrada de la funcion corresponde al valor del ndvi para ese lugar
+	//rindeMax: valor asintotico maximo no alcanzado
+	//ndviPromedio: valor de ndvi al que se alcalza el 50% del rinde max
+	//alfa : pendiente de la curva
+	//beta : potencia la pendiente de la curva
+	private Function<Double, Double> getRindeForNDVISigmoidFunction(Double ndviProm) {
+		//lineal r=a*ndvi+b
+		//a=(r2-r1)/(ndvi2-ndvi1)=(rProm-0)/(ndviProm-0.1)
+		double pendienteNdviRinde = ndviProm>NDVI_RINDE_CERO?rindeProm/(ndviProm-NDVI_RINDE_CERO):1;
+		//b=0-a*0.1
+		double origenNdviRinde = 0-pendienteNdviRinde*NDVI_RINDE_CERO;
+		double alfa = 2;
+		double beta = 2;
+		double pot = Math.pow(2, 2);//alfa^beta
+		Function<Double,Double> calcRinde = (ndvi)->2*rindeProm/(1+Math.exp(-(ndvi-ndviProm)*pot));
+		return calcRinde;
+	}
+	
+	private Function<Double, Double> getRindeForNDVISmoothstepFunction(Double ndviProm) {
+		  // Scale, bias and saturate x to 0..1 range
+		double edge0=NDVI_RINDE_CERO; double edge1=0.9; 
+		double lowerlimit= 0.0;double upperlimit=ndviProm*2;
+		
+		Function<Double,Double> calcRinde = (ndvi)->{
+			ndvi = (ndvi - edge0) / (edge1 - edge0);
+			if (ndvi < lowerlimit)    ndvi = lowerlimit;
+			if (ndvi > upperlimit)	    ndvi = upperlimit;
+			 return  ndvi * ndvi * (3 - 2 * ndvi);
+		};
+		return calcRinde;
+	}
+
+		
 	@Override
 	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem,ExtrudedPolygon  renderablePolygon) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();

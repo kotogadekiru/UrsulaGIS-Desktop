@@ -29,13 +29,12 @@ import java.util.logging.Logger;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.feature.FeatureCollection;
-import org.geotools.filter.capability.FunctionNameImpl;
 import org.geotools.filter.function.ClassificationFunction;
 import org.geotools.filter.function.RangedClassifier;
 import org.geotools.util.logging.Logging;
 import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.filter.capability.FunctionName;
-import static utils.FunctionNameImpl.*;
+
+import com.vividsolutions.jts.geom.Geometry;
 /**
  * Calculate the Jenks' Natural Breaks classification for a featurecollection
  * 
@@ -44,24 +43,38 @@ import static utils.FunctionNameImpl.*;
  *
  * @source $URL$
  */
-public class JenksNaturalBreaksFunction extends ClassificationFunction {
+/**
+ * Calculate the Jenks' Natural Breaks classification for a featurecollection
+ * 
+ * @author Ian Turton
+ *
+ *
+ * @source $URL$
+ */
+public class UrsulaJenksNaturalBreaksFunction extends ClassificationFunction {
     org.opengis.util.ProgressListener progress;
 
     private static final Logger logger = Logging.getLogger("org.geotools.filter.function");
-    
-    public static FunctionName NAME = new FunctionNameImpl("Jenks",
-            RangedClassifier.class,
-            parameter("value", Double.class),
-            parameter("classes", Integer.class));
+    private String amountCol ="";
+    private int numClases=9;
+    private double areaRef = 0;
+//    public static FunctionName NAME = new FunctionNameImpl("Jenks",
+//            RangedClassifier.class,
+//            parameter("value", Double.class),
+//            parameter("classes", Integer.class));
 
-    public JenksNaturalBreaksFunction() {
-        super(NAME);
+    public UrsulaJenksNaturalBreaksFunction(String amountColumn, int numClases,double a) {
+        super();
+        this.amountCol=amountColumn;
+        this.numClases=numClases;
+        this.areaRef = a;//0.7/ProyectionConstants.A_HAS();
     }
 
     /*
      * (non-Javadoc)
      * 
      * @see org.geotools.filter.function.ClassificationFunction#evaluate(java.lang.Object)
+     * must be SimpleFeatureCollection
      */
     public Object evaluate(Object feature) {
         if (!(feature instanceof FeatureCollection)) {
@@ -78,25 +91,36 @@ public class JenksNaturalBreaksFunction extends ClassificationFunction {
      * @return a RangedClassifier
      */
     private Object calculate(SimpleFeatureCollection featureCollection) {
+    	
+    	
         SimpleFeatureIterator features = featureCollection.features();
         ArrayList<Double> data = new ArrayList<Double>();
         try {
             while (features.hasNext()) {
                 SimpleFeature feature = features.next();
-                final Object result = getParameters().get(0).evaluate(feature);
+                final Object result = feature.getAttribute(this.amountCol);//getParameters().get(0).evaluate(feature);
+                
                 logger.finest("importing " + result);
                 if (result != null) {
                     final Double e = new Double(result.toString());
-                    if (!e.isInfinite() && !e.isNaN())
-                        data.add(e);
+                    if (!e.isInfinite() && !e.isNaN()) {
+                    	Geometry g= (Geometry) feature.getDefaultGeometry();
+                    	double times = Math.max(1, g.getArea()/this.areaRef);
+                    	System.out.println("multiplicando el feature "+ e+ " por " + times);
+                    	  
+                    	for(int t=0; t<times;t++) {
+                    		data.add(new Double(e));
+                    	}
+                    }
                 }
             }
         } catch (NumberFormatException e) {
             return null; // if it isn't a number what should we do?
         }
         Collections.sort(data);
-        final int k = getClasses();
+        final int k = this.numClases;
         final int m = data.size();
+    	System.out.println("data size "+ m);
         if (k == m) {
             logger.info("Number of classes (" + k + ") is equal to number of data points (" + m
                     + ") " + "unique classification returned");
@@ -112,17 +136,17 @@ public class JenksNaturalBreaksFunction extends ClassificationFunction {
             localMin[k - 1] = data.get(k - 1);
             return new RangedClassifier(localMin, localMax);
         }
-        int[][] iwork = new int[m + 1][k + 1];
-        double[][] work = new double[m + 1][k + 1];
+        int[][] indiceDatoClase = new int[m + 1][k + 1];
+        double[][] varianzaDatoClase = new double[m + 1][k + 1];
 
         for (int j = 1; j <= k; j++) {
             // the first item is always in the first class!
-            iwork[0][j] = 1;
-            iwork[1][j] = 1;
+            indiceDatoClase[0][j] = 1;
+            indiceDatoClase[1][j] = 1;
             // initialize work matirix
-            work[1][j] = 0;
+            varianzaDatoClase[1][j] = 0;//inicializa las 2 primeras posiciones con la minima varianza posible 
             for (int i = 2; i <= m; i++) {
-                work[i][j] = Double.MAX_VALUE;
+                varianzaDatoClase[i][j] = Double.MAX_VALUE;//inicializo la varianza con el valor maximo posible
             }
         }
 
@@ -154,25 +178,25 @@ public class JenksNaturalBreaksFunction extends ClassificationFunction {
                     // not the last value
                     for (int j = 2; j <= k; j++) {
                         // for each class compare current value to var + previous value
-                        // System.out.println("\tis "+work[i][j]+" >= "+(var + work[ik][j - 1]));
-                        if (work[i][j] >= (var + work[ik][j - 1])) {
+                         System.out.println("\tis "+varianzaDatoClase[i][j]+" >= "+(var + varianzaDatoClase[ik][j - 1]));
+                        if (varianzaDatoClase[i][j] >= (var + varianzaDatoClase[ik][j - 1])) {
                             // if it is greater or equal update classification
-                            iwork[i][j] = i3 - 1;
+                            indiceDatoClase[i][j] = i3 - 1;
                             // System.out.println("\t\tiwork["+i+"]["+j+"] = "+i3);
-                            work[i][j] = var + work[ik][j - 1];
+                            varianzaDatoClase[i][j] = var + varianzaDatoClase[ik][j - 1];
                         }
                     }
                 }
             }
             // store the latest variance!
-            iwork[i][1] = 1;
-            work[i][1] = var;
+            indiceDatoClase[i][1] = 1;
+            varianzaDatoClase[i][1] = var;
         }
         if (logger.getLevel() == Level.FINER) {
             for (int i = 0; i < m; i++) {
                 String tmp = (i + ": " + data.get(i));
                 for (int j = 2; j <= k; j++) {
-                    tmp+=("\t" + iwork[i][j]);
+                    tmp+=("\t" + indiceDatoClase[i][j]);
                 }
                 logger.finer(tmp);
             }
@@ -185,12 +209,12 @@ public class JenksNaturalBreaksFunction extends ClassificationFunction {
         localMax[k - 1] = data.get(ik);
         for (int j = k; j >= 2; j--) {
             logger.finest("index "+ik + ", class" + j);
-            int id = (int) iwork[ik][j] - 1; // subtract one as we want inclusive breaks on the
+            int id = (int) indiceDatoClase[ik][j] - 1; // subtract one as we want inclusive breaks on the
                                              // left?
             
             localMax[j - 2] = data.get(id);
             localMin[j - 1] = data.get(id);
-            ik = (int) iwork[ik][j] - 1;
+            ik = (int) indiceDatoClase[ik][j] - 1;
         }
         localMin[0] = data.get(0);
         /*
@@ -199,5 +223,11 @@ public class JenksNaturalBreaksFunction extends ClassificationFunction {
         features.close();
         return new RangedClassifier(localMin, localMax);
     }
+
+	@Override
+	public int getArgCount() {
+		// TODO Auto-generated method stub
+		return 2;
+	}
 
 }

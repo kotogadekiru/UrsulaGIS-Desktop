@@ -234,7 +234,7 @@ public class CosechaHistoChart extends VBox {
 						df.setGroupingUsed(true);
 						
 						double val = cData.getYValue().doubleValue();
-						Tooltip tooltip = new Tooltip(df.format(val)+Messages.getString("CosechaHistoChart.21")+df.format(val/superficieTotal*100)+"%"); //$NON-NLS-1$ //$NON-NLS-2$
+						Tooltip tooltip = new Tooltip(df.format(val)+Messages.getString("CosechaHistoChart.21")+" "+df.format(val/superficieTotal*100)+"%"); //$NON-NLS-1$ //$NON-NLS-2$
 						tooltip.autoHideProperty().set(false);
 						Tooltip.install(newNode,tooltip );		
 						
