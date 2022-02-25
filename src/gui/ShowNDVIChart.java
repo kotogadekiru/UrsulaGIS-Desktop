@@ -16,12 +16,15 @@ import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.LayerList;
 import gov.nasa.worldwind.layers.SurfaceImageLayer;
 import gui.nww.LayerPanel;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.chart.XYChart.Series;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
@@ -51,22 +54,32 @@ public class ShowNDVIChart extends VBox {
 		xAxis.setTickLabelFormatter(new StringConverter<Number>() {
 			@Override
 			public String toString(Number epochDay) {
-				return LocalDate.ofEpochDay(epochDay.longValue()).toString();
+				try {
+					return LocalDate.ofEpochDay(epochDay.longValue()).toString();
+				}catch(Exception e) {
+					return "";
+				}				
 			}
+			
 
 			@Override
 			public Number fromString(String string) {
+				try {
 				return LocalDate.parse(string).toEpochDay();
+				}catch(Exception e) {
+					return 0;
+				}
 			
 			}			
 		});
+		
+		xAxis.setLowerBound(Double.MAX_VALUE);	
+		xAxis.setAutoRanging(false);
+		
 		final NumberAxis yAxis = new NumberAxis();
 		yAxis.setLabel("NDVI");
-		//line chart syntax
-		lineChart = new LineChart<Number, Number>(xAxis, yAxis);				
-
-		//SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MMM/yyyy");
-		//junto los ndvi segun fecha para hacer la evolucion correctamente.
+		
+		ObservableList<Series<Number, Number>> data = FXCollections.observableArrayList();// new ArrayList<Series<Number, Number>>();
 
 		Map<Poligono, List<SurfaceImageLayer>>  contornoMap = ndviLayers.stream().collect(
 				Collectors.groupingBy((l2)->{
@@ -79,14 +92,19 @@ public class ShowNDVIChart extends VBox {
 			sr.setName(c.getNombre() );
 			contornoMap.get(c).stream().map(
 					(layer)->(Ndvi)layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR)).sorted((n1,n2)->n1.compareTo(n2)).forEachOrdered(lNdvi->{
-				//Ndvi lNdvi = (Ndvi)layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-
+				
+				xAxis.setLowerBound(Math.min(xAxis.getLowerBound(),lNdvi.getFecha().toEpochDay()-5));
+				xAxis.setUpperBound(Math.max(xAxis.getUpperBound(),lNdvi.getFecha().toEpochDay()+5));
 				sr.getData().add(new XYChart.Data<Number, Number>(lNdvi.getFecha().toEpochDay(), lNdvi.getMeanNDVI().doubleValue()));
 			});
-			lineChart.getData().add(sr);	
+			data.add(sr);	
 		});
 
-
+		lineChart = new LineChart<Number, Number>(xAxis, yAxis,data);				
+		lineChart.setAxisSortingPolicy(LineChart.SortingPolicy.X_AXIS);
+		
+		System.out.println("LowerBound "+ LocalDate.ofEpochDay((long) xAxis.getLowerBound()));
+		System.out.println("UpperBound "+ LocalDate.ofEpochDay((long) xAxis.getUpperBound()));
 
 		VBox vbox = new VBox(lineChart);
 		
