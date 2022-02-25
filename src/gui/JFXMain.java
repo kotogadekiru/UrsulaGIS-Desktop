@@ -643,6 +643,7 @@ public class JFXMain extends Application {
 				ShowNDVIChart sChart= new ShowNDVIChart(this.getWwd());
 				sChart.doShowNDVIChart();
 				Stage histoStage = new Stage();
+				histoStage.setTitle(Messages.getString("JFXMain.show_ndvi_chart"));
 				histoStage.getIcons().add(new Image(ICON));
 				Scene scene = new Scene(sChart, 800,450);
 				histoStage.setScene(scene);
