@@ -21,6 +21,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
+import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 
 import dao.Poligono;
 import dao.cosecha.CosechaItem;
@@ -64,7 +65,7 @@ public class CortarCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabo
 	}
 
 	/**
-	 * proceso que toma una lista de cosechas y las une sin tener en cuenta superposiciones ni nada
+	 * proceso que toma una cosecha y selecciona los items que estan dentro de los poligonos seleccionados
 	 */
 	@Override
 	protected void doProcess() throws IOException {	
@@ -92,8 +93,8 @@ public class CortarCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabo
 				Geometry buffered = null;
 				double bufer= ProyectionConstants.metersToLongLat(0.25);
 				try{
-					buffered = colectionCat.union();
-					buffered =buffered.buffer(bufer);
+				//	buffered = colectionCat.union();
+					buffered =colectionCat.buffer(bufer);
 				}catch(Exception e){
 					System.out.println(Messages.getString("ProcessHarvestMapTask.10")); //$NON-NLS-1$
 					//java.lang.IllegalArgumentException: Comparison method violates its general contract!
@@ -103,6 +104,14 @@ public class CortarCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabo
 						e2.printStackTrace();
 					}
 				}
+				try{	
+					buffered = TopologyPreservingSimplifier.simplify(buffered, ProyectionConstants.metersToLongLat(0.25));
+					//g =g.buffer(0);		
+					
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+				
 				
 				ci.setGeometry(buffered);
 				SimpleFeature nf=ci.getFeature(labor.featureBuilder);

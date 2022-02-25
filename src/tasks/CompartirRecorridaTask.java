@@ -45,6 +45,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import utils.DAH;
 
 
 public class CompartirRecorridaTask extends Task<String> {
@@ -117,7 +118,9 @@ public class CompartirRecorridaTask extends Task<String> {
 		//System.out.println("message "+message);
 		if(data !=null) {
 			Recorrida dbRecorrida = gson.fromJson(data, Recorrida.class);
-			Long id = dbRecorrida.getId();
+			DAH.save(dbRecorrida);//merge local recorrida
+		//	Long id = dbRecorrida.getId();
+			String dbUrl = dbRecorrida.getUrl();
 		//java.math.BigDecimal id = (java.math.BigDecimal) data.get("id");
 		//String prettyresponse = resContent.toPrettyString();
 		//System.out.println("prettyresponse "+prettyresponse);
@@ -138,7 +141,7 @@ public class CompartirRecorridaTask extends Task<String> {
 		 */
 		//String urlGoto = "https://www.ursulagis.com/api/recorridas/4/";
 			//TODO cambiar esta url por una url mobile que permita hacer la recorrida via web.
-		String urlGoto = GET_RECORRIDAS_BY_ID_URL+id+"/";
+		String urlGoto =dbUrl;// GET_RECORRIDAS_BY_ID_URL+id+"/";
 		return urlGoto;
 		}
 		return "status Success but data null";

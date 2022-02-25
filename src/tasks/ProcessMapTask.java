@@ -661,7 +661,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	private RenderableLayer createAnalyticSurfaceFromQuery(int milis){		
 		ReferencedEnvelope bounds = labor.outCollection.getBounds();
 		//	System.out.println("createAnalyticSurfaceFromQuery");
-		System.out.println("bounds = "+bounds);
+		//System.out.println("bounds = "+bounds);
 		double res=  Math.sqrt(bounds.getArea()/(milis));//antes dividia por 10000 cuando eran segundos
 		double	resolution =res;// Math.sqrt(bounds.getArea()/40000)>1?;//como el tiempo por item es 0.1 limito el tiempo de rendering a 2seg
 		double	ancho = resolution / ProyectionConstants.metersToLong();
@@ -1160,118 +1160,62 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	}
 
 	protected void runLater(Collection<FC> itemsToShow) {	
-		
-		
-		//System.out.println("runlater "+itemsToShow.size());
 		updateStatsLabor(itemsToShow);
-
-		//labor.getLayer().removeAllRenderables();//tiene que estar antes de runLaterInternall para que no se propagen los poligonos viejos
-		// crear un renderable layer que dibuje el layer de los poligonos si esta suficientemente cerca
-		//o el analyticSurface si esta lejos
-		//if(itemsToShow.size()<10000){
-		//long time = System.currentTimeMillis();
-		RenderableLayer extrudedPolygonsLayer = createExtrudedPolygonsLayer(itemsToShow);//XXX ojo! si son muchos esto me puede tomar toda la memoria.
-		//System.out.println("demora en crear extrudedPolygonsLayer: "+(System.currentTimeMillis()-time));
-		//}else{
-		//RenderableLayer analyticSurfaceLayer = createAnalyticSurface(itemsToShow);
+		RenderableLayer extrudedPolygonsLayer = createExtrudedPolygonsLayer(itemsToShow);//XXX ojo! si son muchos esto me puede tomar toda la memoria.	
 
 		//Configuracion config = Configuracion.getInstance();
 		int lowRes= TARGET_LOW_RES_TIME;//Integer.parseInt(config.getPropertyOrDefault(FAST_LAYER_PROCESS_TIME, Integer.toString(TARGET_LOW_RES_TIME)));
 		//lowRes = 1000000;
 		long start = System.currentTimeMillis();
+//		System.out.println("creando analyticSurface lowRes");
 		RenderableLayer analyticSurfaceLayer = createAnalyticSurfaceFromQuery(lowRes);//21ms
 		long end = System.currentTimeMillis();
 		long actualTime= end-start;
-		System.out.println("lowRes Rendering Time = "+actualTime);
-		//actualTime = 20000;//TODO remover esto que es para test solamente
-		//long error = (actualTime-TARGET_LOW_RES_TIME);
+//		System.out.println("lowRes Rendering Time = "+actualTime);
 
-		//si para target tardo actual,
-		//cuanto le tengo que pedir para que tarde 5*target
-		//=5*target*target/actual
-		//	if(actualTime>TARGET_LOW_RES_TIME) {
-		if(actualTime>0) {
+		if(actualTime > 0) {
 			lowRes=new Long(TARGET_LOW_RES_TIME*TARGET_LOW_RES_TIME/actualTime).intValue();
 		}
-		//	}
-
-		//System.out.println("ERROR = "+error);
-		//if(error>0) {
-		//	lowRes=(int)(TARGET_LOW_RES_TIME-error);//no quiero subir la resolucion solo bajarla cuando sea necesario
-		//} else {
-		//	System.out.println("ERROR < 0 entonses simulo que pasaria si el error fuera de 10segundos ");
-		//	lowRes=(int)(TARGET_LOW_RES_TIME+40000);
-		//}
-
-		//lowRes = (int)(TARGET_LOW_RES_TIME+error);//no importa el primero sino setear la barra para los demas.
-		//System.out.println("new lowRes = "+lowRes);
-		//	config.setProperty(FAST_LAYER_PROCESS_TIME,  Integer.toString(lowRes));
-		//	config.save();
+		
 		analyticSurfaceLayer.setPickEnabled(false);//ya es false de fabrica
 
 		labor.getLayer().removeAllRenderables();
 		labor.getLayer().setAnalyticSurfaceLayer(analyticSurfaceLayer);
 		labor.getLayer().setExtrudedPolygonsLayer(extrudedPolygonsLayer);
 		labor.getLayer().setElementsCount(itemsToShow.size());
-		//labor.getLayer().dispose();
-		//labor.setLayer(altitudeDependingLayer);//esto funciona bien pero no se actualiza al editar
-		//labor.getLayer().addRenderable(altitudeDependingLayer);
-		//labor.getLayer().setPickEnabled(false);//si hago esto no puedo pasar el pick a extrudedPolygonsLayers
+		
+		//System.out.println("low res rendering milis: "+lowRes);
 
-		System.out.println("low res rendering milis: "+lowRes);
-
-		int medRes=5*lowRes;
-		System.out.println("mid res rendering milis: "+medRes);
-		int highRes=8*lowRes;
+		//int medRes=5*lowRes;
+	//	System.out.println("mid res rendering milis: "+medRes);
+		int highRes=Math.min(10*lowRes,30000);
 		installPlaceMark();
-		if(medRes>TARGET_LOW_RES_TIME*2 && medRes<60000) {//solo si es menor a un minuto
-			CompletableFuture<Void> completableFuture 
-			= CompletableFuture.runAsync(() -> {
-				RenderableLayer analyticSurfaceLayerHD = createAnalyticSurfaceFromQuery(medRes);//10
-				analyticSurfaceLayerHD.setPickEnabled(false);//ya es false de fabrica
-				labor.getLayer().setAnalyticSurfaceLayer(analyticSurfaceLayerHD);
-			})
-			.thenRun(() -> {
-				//		    	 try {
-				//					Thread.sleep(TARGET_LOW_RES_TIME*5);
-				//				} catch (InterruptedException e) {
-				//					// TODO Auto-generated catch block
-				//					e.printStackTrace();
-				//				}
+		//
+
+	//	if( highRes > TARGET_LOW_RES_TIME*2 && highRes < 60000) {//solo si es menor a un minuto
+			CompletableFuture.runAsync(() -> {
+//				System.out.println("corriendo analyticSurfaceLayerMD");
+//				RenderableLayer analyticSurfaceLayerMD = createAnalyticSurfaceFromQuery(medRes);//10
+//				analyticSurfaceLayerMD.setPickEnabled(false);//ya es false de fabrica
+//				labor.getLayer().setAnalyticSurfaceLayer(analyticSurfaceLayerMD);
+//				System.out.println("termine analyticSurfaceLayerMD");
+//			}).handle((r,e) -> {
+//				if (e != null) e.printStackTrace();		
+//				return CompletableFuture.runAsync(()->{});
+//			}).thenRun(
+//					()->{
+				System.out.println("corriendo analyticSurfaceLayerHD");
 				RenderableLayer analyticSurfaceLayerHD = createAnalyticSurfaceFromQuery(highRes);//30
 				analyticSurfaceLayerHD.setPickEnabled(false);//ya es false de fabrica
 				labor.getLayer().setAnalyticSurfaceLayer(analyticSurfaceLayerHD);
-
+				System.out.println("termine analyticSurfaceLayerHD");
+			}).handle((r,e) -> {
+				if (e != null) e.printStackTrace();		
+				return null;
 			});
-
-			JFXMain.executorPool.execute(()->{
-				//			 try {
-				//					Thread.sleep(TARGET_LOW_RES_TIME);
-				//				} catch (InterruptedException e) {
-				//					// TODO Auto-generated catch block
-				//					e.printStackTrace();
-				//				}
-				try {
-					completableFuture.get();// java.util.ConcurrentModificationException en cosecha
-					System.out.println("ProcessMapTask.runLater() completable future rendered");
-				} catch (InterruptedException | ExecutionException e) {
-					e.printStackTrace();
-				}
-			});
-		}
-		//		JFXMain.executorPool.execute(()->{
-		//			RenderableLayer analyticSurfaceLayerHD = createAnalyticSurfaceFromQuery(medRes);//10
-		//			analyticSurfaceLayerHD.setPickEnabled(false);//ya es false de fabrica
-		//			labor.getLayer().setAnalyticSurfaceLayer(analyticSurfaceLayerHD);
-		//		});
-
-
-
-		//		JFXMain.executorPool.execute(()->{
-		//			RenderableLayer analyticSurfaceLayerHD = createAnalyticSurfaceFromQuery(highRes);//30
-		//			analyticSurfaceLayerHD.setPickEnabled(false);//ya es false de fabrica
-		//			labor.getLayer().setAnalyticSurfaceLayer(analyticSurfaceLayerHD);
-		//		});
+//		} else {
+//			System.out.println("no corro analyticSurfaceLayerHD");
+//		}
 	}
 
 	private RenderableLayer createExtrudedPolygonsLayer(Collection<FC> itemsToShow) {	
@@ -1360,9 +1304,8 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 					double dX = 0; //(maxX - minX)/200;
 					double dY = 0;//(maxY - minY)/200;
 					Envelope env = new Envelope(minX+dX,maxX-dX,minY+dY,maxY-dY);
-
-
-					List<FC> features = labor.cachedOutStoreQuery(env);
+					
+					List<FC> features = labor.cachedOutStoreQuery(env);//java.util.ConcurrentModificationException
 					char[] abc = "ABCDEFGHIJKLM".toCharArray();
 					int size = labor.getClasificador().getNumClasses()-1;
 					features.stream().forEach((c)->{

@@ -49,7 +49,7 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 		labor.setSemilla(siembra.getSemilla());//Cultivo(cultivo);
 		labor.setLayer(new LaborLayer());
 		labor.setEntreSurco(siembra.getEntreSurco());
-		labor.colAmount.set(SiembraLabor.COLUMNA_DOSIS_SEMILLA);
+		labor.colAmount.set(SiembraLabor.COLUMNA_KG_SEMILLA);
 
 		labor.setNombre("SiembraFertilizada "+siembra.getNombre()+"-"+fertilizacion.getNombre());//este es el nombre que se muestra en el progressbar
 	}

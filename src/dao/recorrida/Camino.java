@@ -19,6 +19,7 @@ import javax.persistence.Transient;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
 
@@ -137,18 +138,18 @@ public class Camino implements Comparable<Camino>{
 						Position pos = Position.fromDegrees(dLat,dLon);
 						positions.add(pos);
 					}catch(Exception e){
-						System.out.println("error al des serializar el poligono");
+						System.out.println("error al des serializar el camino");
 						e.printStackTrace();
 					}
 				}
 			}
 
-			Position p0 = positions.get(0);
-			Position pn = positions.get(positions.size()-1);
-			if(!p0.equals(pn)){
-				positions.add(positions.get(0));
-				//	System.out.println("completando el poligono para que sea cerrado");
-			}
+//			Position p0 = positions.get(0);
+//			Position pn = positions.get(positions.size()-1);
+//			if(!p0.equals(pn)){
+//				positions.add(positions.get(0));
+//				//	System.out.println("completando el poligono para que sea cerrado");
+//			}
 
 			GeometryFactory fact = new GeometryFactory();
 			Coordinate[] shell = new Coordinate[positions.size()];
@@ -157,7 +158,7 @@ public class Camino implements Comparable<Camino>{
 				shell[i]=new Coordinate(pos.getLongitude().degrees,pos.getLatitude().degrees);
 
 			}
-			LinearRing p = fact.createLinearRing(shell);
+			LineString p = fact.createLineString(shell);
 			this.setLongitud(p.getLength()/ProyectionConstants.metersToLat());
 		}catch(Exception e){
 			e.printStackTrace();

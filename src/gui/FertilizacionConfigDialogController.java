@@ -6,7 +6,10 @@ import java.util.Optional;
 
 import dao.Clasificador;
 import dao.Labor;
+import dao.LaborConfig;
+import dao.config.Configuracion;
 import dao.config.Fertilizante;
+import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
 import gui.utils.DateConverter;
 import javafx.beans.binding.Bindings;
@@ -49,10 +52,6 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 	@FXML
 	private TextField textPrecioFert;//ok
 
-
-
-
-
 	@FXML
 	private ComboBox<String> comboElev;//ok
 
@@ -61,8 +60,6 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 	
 	@FXML
 	private DatePicker datePickerFecha;//ok
-
-
 
 	@FXML
 	private TextField textCostoLaborHa;//ok
@@ -143,18 +140,16 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 			alert.initOwner(this.getDialogPane().getScene().getWindow());
 			alert.setTitle(Messages.getString("FertilizacionConfigDialogController.validacion")); //$NON-NLS-1$
 			alert.showAndWait();
-
 		}
 		
 		return isValid;
-
 	}
 
 
 
 	public void setLabor(FertilizacionLabor l) {
 		this.labor = l;
-
+		LaborConfig config = labor.config;//labor.getConfigLabor().getConfigProperties();
 		List<String> availableColums = labor.getAvailableColumns();
 		availableColums.sort((a,b)->{
 			return a.compareTo(b);
@@ -172,10 +167,15 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 		this.comboDosis.setItems(FXCollections.observableArrayList(availableColums));
 		this.comboDosis.valueProperty().bindBidirectional(labor.colKgHaProperty);
 
-	
+		//col fertilizante
 		this.comboFertilizante.setItems(FXCollections.observableArrayList(DAH.getAllFertilizantes()));
-		this.comboFertilizante.valueProperty().bindBidirectional(labor.fertilizanteProperty);
-
+		this.comboFertilizante.getSelectionModel().select(labor.getFertilizanteProperty().getValue());//viene inicializada con el default desde init()
+		this.comboFertilizante.valueProperty().addListener((obj,old,n)->{
+			labor.fertilizanteProperty.setValue(n);
+		//	if(n!=null)config.getConfigProperties().setProperty(FertilizacionLabor.f.CosechaLaborConstants.PRODUCTO_DEFAULT,n.getNombre());
+		});		
+		//this.comboFertilizante.setItems(FXCollections.observableArrayList(DAH.getAllFertilizantes()));
+		//this.comboFertilizante.valueProperty().bindBidirectional(labor.fertilizanteProperty);
 
 		StringConverter<Number> converter = new NumberStringConverter();
 
@@ -183,9 +183,9 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 		//Bindings.bindBidirectional(this.textPrecioFert.textProperty(), labor.precioInsumoProperty, converter);
 		this.textPrecioFert.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(FertilizacionLabor.COLUMNA_PRECIO_FERT, labor.getPrecioInsumo().toString()));
 		this.textPrecioFert.textProperty().addListener((obj,old,n)->{
-			
-				labor.setPrecioInsumo(converter.fromString(n).doubleValue());
-		
+
+			labor.setPrecioInsumo(converter.fromString(n).doubleValue());
+
 			//config.getConfigProperties().getPropertyOrDefault(CosechaLabor.PRECIO_GRANO,"0")
 			labor.config.getConfigProperties().setProperty(FertilizacionLabor.COLUMNA_PRECIO_FERT, n);
 		});

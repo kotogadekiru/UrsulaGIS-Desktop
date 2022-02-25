@@ -2,6 +2,7 @@ package tasks.procesar;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -170,6 +171,10 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 		}		
 
 		System.out.println("despues de guardar el shp el schema es: "+ shapeFile); //$NON-NLS-1$
+		try {
+		long bytes = Files.size(shapeFile.toPath());
+        System.out.println(String.format("%,d kilobytes", bytes / 1024));
+		}catch(Exception e) {e.printStackTrace();}
 		Configuracion config = Configuracion.getInstance();
 		config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
 		config.save();

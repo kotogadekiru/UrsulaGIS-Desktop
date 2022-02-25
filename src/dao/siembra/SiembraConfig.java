@@ -15,7 +15,7 @@ import javafx.beans.property.SimpleObjectProperty;
 public class SiembraConfig extends CosechaConfig {
 	//TODO agregar las keys a las propiedades especificas de la labor de fertilizacion
 	//ej: costo pasada, precioFert
-	public static enum Unidad {kgHa,milPlaHa,pla10MtLineal,plaMetroCuadrado}
+	public static enum Unidad {kgHa,milPlaHa,pla10MtLineal,pla1MtLineal,plaMetroCuadrado}
 	private static final String DOSIS_UNIDAD_KEY = "DOSIS_UNIDAD_KEY";
 	private SimpleObjectProperty<Unidad>  dosisUnitProperty;//property que contiene el factor de conversion
 	/**

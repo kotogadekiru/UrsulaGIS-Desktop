@@ -88,14 +88,21 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 	private double cantidadMinimaDeMuestrasPoligonoAMuestrear=0;
 	private Recorrida recorrida =null;
 
-	public GenerarRecorridaDirigidaTask(List<Labor<? extends LaborItem>> labores,double supMinima,double densidad,double cantMaxPoly){//RenderableLayer layer, FileDataStore store, double d, Double correccionRinde) {
+	/**
+	 * 
+	 * @param labores: labores a muestrear
+	 * @param supMinima: sup minima del poligono a muestrar 
+	 * @param hasPorMuestra: cantidad de has representadas por cada muestra
+	 * @param cantMinPoly: cantidad minima de muestras a generar por poligono
+	 */
+	public GenerarRecorridaDirigidaTask(List<Labor<? extends LaborItem>> labores,double supMinima,double hasPorMuestra,double cantMinPoly){//RenderableLayer layer, FileDataStore store, double d, Double correccionRinde) {
 		this.aMuestrear=labores;
 
 		//	super.labor = new Suelo();
 		//	super.labor.featureBuilder = new SimpleFeatureBuilder(super.labor.getPointType());
 		this.superficieMinimaAMuestrear=supMinima;
-		this.densidadDeMuestrasDeseada=1/densidad;// 1/has por muestra  = 1/20
-		this.cantidadMinimaDeMuestrasPoligonoAMuestrear=cantMaxPoly;
+		this.densidadDeMuestrasDeseada=1/hasPorMuestra;// 1/has por muestra  = 1/20
+		this.cantidadMinimaDeMuestrasPoligonoAMuestrear=cantMinPoly;
 
 
 		this.recorrida = new Recorrida();
@@ -229,6 +236,7 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 				}//termino de evaluar el poligono con tamanio suficiente
 				count++;
 				updateProgress(count, featureCount);
+				System.out.println("Termine de generar todos los puntos "+recorrida.muestras.size());
 			}//termino de recorrer el while de una labor
 			c.getLayer().setEnabled(false);
 		}//termino de recorrer todas las labores
@@ -240,6 +248,7 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 
 		//TODO crear un PathLayer con los puntos de itemsToShow
 		ordenarMuestras(recorrida.muestras);
+		System.out.println("Termine de ordenar las muestras");
 		Muestra first = recorrida.muestras.get(0);
 		
 		recorrida.setLatitude(first.latitude);
@@ -329,15 +338,14 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 	 * @param muestras
 	 */
 	private void ordenarMuestras(List<Muestra> muestras) {
-		System.out.println("items "+muestras.size());
+		//System.out.println("items "+muestras.size());
 		List<Position> positions = muestras.stream().map(m->m.getPosition()).collect(Collectors.toList());
 
 		Camino c = new Camino(positions);
 		SimplificarCaminoTask t = new SimplificarCaminoTask(c);
 		try {
 			c = t.call();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
+		} catch (Exception e) {			
 			e.printStackTrace();
 		}
 
@@ -349,12 +357,12 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 				Position pos =s.getPosition();
 				if(pos.latitude.equals(np.latitude)&& pos.longitude.equals(np.longitude)) {
 					newItems.add(s);
-					System.out.println("insertando "+pos+" suelo de "+muestras.indexOf(s)+" en "+newItems.indexOf(s));
+					//System.out.println("insertando "+pos+" suelo de "+muestras.indexOf(s)+" en "+newItems.indexOf(s));
 					break;	
 				}
 			}
 		}
-		System.out.println("newItems "+newItems.size());
+		//System.out.println("newItems "+newItems.size());
 		muestras.clear();
 		muestras.addAll(newItems);	
 	}

@@ -188,8 +188,7 @@ public class JuntarShapefilesTask {
 									//System.out.println("agregando el feature: "+joinedFeature);
 									map.put(poly,joinedFeature);
 								}
-							}
-							,
+							},
 							(map1, map2) -> map1.putAll(map2));
 
 			byPolygon.values().forEach(o->outCollection.add(o));

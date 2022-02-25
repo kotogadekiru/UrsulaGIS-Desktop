@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -14,7 +15,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
+import javafx.collections.ObservableList;
 import javafx.scene.chart.XYChart.Data;
 import javafx.scene.chart.XYChart.Series;
 import javafx.stage.FileChooser;
@@ -38,6 +41,7 @@ import dao.Poligono;
 import dao.OrdenDeCompra.OrdenCompra;
 import dao.OrdenDeCompra.OrdenCompraItem;
 import dao.config.Configuracion;
+import gui.JFXMain;
 
 
 
@@ -77,10 +81,11 @@ public class ExcelHelper {
 		config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
 		
 
-		File file = fileChooser.showSaveDialog(new Stage());
+		File file = fileChooser.showSaveDialog(JFXMain.stage);
+		if(file != null) {
 		 config.setProperty(Configuracion.LAST_FILE,file.getParent());
 		 config.save();
-
+		}
 		System.out.println("archivo seleccionado para guardar "+file);
 
 		return file;
@@ -259,6 +264,73 @@ public class ExcelHelper {
 			}
 		}
 
+		public void exportSeriesList(ObservableList<Series<Number, Number>> observableList) {//OK!
+			File outFile = getNewExcelFile();
+			XSSFWorkbook workbook = new XSSFWorkbook();				
+			//				Calendar periodoCalendar = Calendar.getInstance();
+			//				int sec = periodoCalendar.get(Calendar.SECOND);
+			//				int min = periodoCalendar.get(Calendar.MINUTE);
+			//				int hour = periodoCalendar.get(Calendar.HOUR_OF_DAY);
+			//				int day = periodoCalendar.get(Calendar.DAY_OF_MONTH);
+			//				int mes = periodoCalendar.get(Calendar.MONTH);//, Calendar.SHORT_FORMAT, Locale.getDefault());
+			//				int anio = periodoCalendar.get(Calendar.YEAR);//, Calendar.SHORT_FORMAT, Locale.getDefault());
+			//
+			//				String periodoName = String.valueOf(anio)+"-"+String.valueOf(mes)+"-"+String.valueOf(day)+"-"+String.valueOf(hour)+String.valueOf(min)+String.valueOf(sec);
+			//				// Create a blank sheet
+
+			Series s1= observableList.get(0);
+			String sheetName = s1.getName();
+			if(sheetName ==null){
+				sheetName="Data";
+			}
+			String xName = s1.getChart().getXAxis().getLabel();
+			String YName = s1.getChart().getYAxis().getLabel();
+			XSSFSheet sheet = workbook.createSheet(sheetName);
+
+			// This data needs to be written (Object[])
+			Map<String, Object[]> data = new TreeMap<String, Object[]>();
+			
+			data.put("0", new Object[] {"",	YName, ""});
+			List<String> labels = new ArrayList<String>();
+			labels.add(xName);
+			labels.addAll(observableList.stream().map(s->s.getName()).collect(Collectors.toList()));
+			data.put("1",labels.toArray());		
+			
+			for(int j=0;j<observableList.size();j++) {
+				Series s=observableList.get(j);
+				List<Data<Number,Number>> datos =s.getData();
+
+				for(int i =1;i<datos.size();i++){
+					//Number rinde = new Double(0);
+					Number yVal = datos.get(i).getYValue();
+				
+					Object[] d = data.get(String.valueOf(i+1));
+					if(d==null) {
+						d = new Object[observableList.size()+1];
+						d[0]=datos.get(i).getXValue();					
+					}
+						d[j+1]=yVal;
+						data.put(String.valueOf(i+1),d);
+					
+				}
+			}
+
+			// Iterate over data and write to sheet
+			writeDataToSheet( sheet, data);
+
+			try {
+				// Write the workbook in file system
+				FileOutputStream out = new FileOutputStream(outFile);
+				workbook.write(out);
+				out.close();
+				workbook.close();
+				System.out.println("el archivo excel fue guardado con exito.");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+
+		}
 
 		public void exportSeries(Series<String, Number> series) {//OK!
 			File outFile = getNewExcelFile();

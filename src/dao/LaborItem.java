@@ -141,7 +141,6 @@ public abstract class LaborItem implements Comparable<Object>{
 			return 0;
 		}
 		//return getAmount().compareTo(dao.getAmount());
-
 	}
 
 	public abstract Double getAmount();		

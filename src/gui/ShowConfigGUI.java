@@ -481,7 +481,7 @@ public class ShowConfigGUI {
 				ret.setMail(mail);
 				CotizarOdenDeCompraOnlineTask cotTask= new CotizarOdenDeCompraOnlineTask(ret); 
 			
-				main.executorPool.execute(()->cotTask.run());
+				JFXMain.executorPool.execute(cotTask);
 				//TODO enviar orden de compra a la nube. preguntar mail de contacto y subir la orden de compra a la nube
 				
 

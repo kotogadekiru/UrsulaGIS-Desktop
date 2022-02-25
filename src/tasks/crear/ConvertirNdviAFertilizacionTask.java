@@ -31,6 +31,7 @@ import gui.Messages;
 import gov.nasa.worldwindx.examples.analytics.ExportableAnalyticSurface;
 import tasks.ProcessMapTask;
 import tasks.ShowNDVITifFileTask;
+import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
 public class ConvertirNdviAFertilizacionTask extends ProcessMapTask<FertilizacionItem,FertilizacionLabor> {
@@ -202,7 +203,7 @@ public class ConvertirNdviAFertilizacionTask extends ProcessMapTask<Fertilizacio
 					// recortar si esta afuera del contorno del ndvi
 					if(contornoGeom!=null && !contornoGeom.covers(poly)) {//OK! funciona. no introducir poligonos empty!
 						try {
-						poly=poly.intersection(contornoGeom);
+						poly=GeometryHelper.getIntersection(poly,contornoGeom);
 						if(poly.isEmpty())continue;
 						//System.out.println("el contorno no cubre el polygono y la interseccion es: "+poly.toText());
 						}catch(Exception e) {//com.vividsolutions.jts.geom.TopologyException: Found null DirectedEdge

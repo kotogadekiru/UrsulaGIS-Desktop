@@ -36,7 +36,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 //	private static final String SEMILLAS_POR_BOLSA_KEY = "SEMILLAS_POR_BOLSA";
 
 	//esta columna es la que viene con los mapas de siembra //mentira las siembras vienen con Rate o AppIdRate o AppRate
-	public static final String COLUMNA_DOSIS_SEMILLA = "kgSemHa";//"SemillaK";//kgSemHa
+	public static final String COLUMNA_KG_SEMILLA = "kgSemHa";//"SemillaK";//kgSemHa
 	//public static final String COLUMNA_DOSIS_SEMILLA_ML = SiembraLabor.COLUMNA_SEM_10METROS;//"SemillaM";
 	
 	//esta columna es la que voy a exportar
@@ -56,6 +56,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 	public static final String COLUMNA_DOSIS_COSTADO= "Fert C";
 	public static final String COLUMNA_SEM_10METROS = "Sem10m";
 	public static final String COLUMNA_MILES_SEM_HA = "MilSemHa";
+	public static final String COLUMNA_SEM_ML = "Sem1m";
 
 
 //	public  SimpleDoubleProperty entreSurco =null; 
@@ -90,8 +91,8 @@ public class SiembraLabor extends Labor<SiembraItem> {
 
 		Configuracion properties = getConfigLabor().getConfigProperties();
 
-		colDosisSemilla = PropertyHelper.initStringProperty(SiembraLabor.COLUMNA_DOSIS_SEMILLA, properties, availableColums);
-		colAmount= new SimpleStringProperty(SiembraLabor.COLUMNA_DOSIS_SEMILLA);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
+		colDosisSemilla = PropertyHelper.initStringProperty(SiembraLabor.COLUMNA_KG_SEMILLA, properties, availableColums);
+		colAmount= new SimpleStringProperty(SiembraLabor.COLUMNA_KG_SEMILLA);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
 		
 //		entreSurco = new SimpleDoubleProperty(
 //				Double.parseDouble(properties.getPropertyOrDefault(
@@ -128,7 +129,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 	@Transient
 	public String getTypeDescriptors() {
 		String type = SiembraLabor.COLUMNA_SEM_10METROS + ":Double,"
-				+SiembraLabor.COLUMNA_DOSIS_SEMILLA + ":Double,"
+				+SiembraLabor.COLUMNA_KG_SEMILLA + ":Double,"
 				+ SiembraLabor.COLUMNA_DOSIS_LINEA + ":Double,"
 				+ SiembraLabor.COLUMNA_DOSIS_COSTADO + ":Double,"
 				+ SiembraLabor.COLUMNA_PRECIO_SEMILLA + ":Double,"
@@ -156,7 +157,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 					*(semilla.getPesoDeMil()/(1000*1000))/entreSurco;
 			siembraItem.setDosisHa(dosisSemillakgHa);
 		} else {
-			siembraItem.setDosisHa( LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DOSIS_SEMILLA)));	
+			siembraItem.setDosisHa( LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_KG_SEMILLA)));	
 			
 			Double kgM2 = siembraItem.getDosisHa()/ProyectionConstants.METROS2_POR_HA;//kg/m2
 			double semM2= (1000*1000*kgM2)/semilla.getPesoDeMil();//sem/m2
@@ -166,9 +167,6 @@ public class SiembraLabor extends Labor<SiembraItem> {
 		
 		siembraItem.setDosisFertLinea( LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DOSIS_LINEA)));
 		siembraItem.setDosisFertCostado( LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DOSIS_COSTADO)));
-//		siembraItem.setPrecioInsumo(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_PRECIO_SEMILLA)));
-//		siembraItem.setCostoLaborHa(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_PRECIO_PASADA)));	
-//		siembraItem.setImporteHa(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_IMPORTE_HA)));	
 		setPropiedadesLabor(siembraItem);
 		return siembraItem;
 	}
@@ -184,10 +182,15 @@ public class SiembraLabor extends Labor<SiembraItem> {
 		SiembraItem si = new SiembraItem(next);
 		super.constructFeatureContainer(si,next);
 		
-		//Double bolsasHa = LaborItem.getDoubleFromObj(next.getAttribute(colSemillasMetroProperty.get()));
-		//Double semillasMetro = bolsasHa*(ProyectionConstants.METROS2_POR_HA/entreSurco.get())/semillasPorBolsa.get();
-		si.setDosisML(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_SEM_10METROS)));
-		si.setDosisHa(LaborItem.getDoubleFromObj(next.getAttribute(colDosisSemilla.get())));
+		//si.setDosisML(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_SEM_10METROS)));
+		
+		si.setDosisHa(LaborItem.getDoubleFromObj(next.getAttribute(colDosisSemilla.get())));	
+			
+		Double kgM2 = si.getDosisHa()/ProyectionConstants.METROS2_POR_HA;//kg/m2
+		double semM2= (1000*1000*kgM2)/semilla.getPesoDeMil();//sem/m2
+		
+		si.setDosisML(semM2*entreSurco);// 1/entresurco=ml/m2 => sem/m2
+		
 		si.setDosisFertLinea( LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DOSIS_LINEA)));
 		si.setDosisFertCostado( LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DOSIS_COSTADO)));
 		setPropiedadesLabor(si);
@@ -208,7 +211,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 	@Transient
 	public static List<String> getRequieredColumns() {
 		List<String> requiredColumns = new ArrayList<String>();
-		requiredColumns.add(COLUMNA_DOSIS_SEMILLA);		
+		requiredColumns.add(COLUMNA_KG_SEMILLA);		
 		return requiredColumns;
 	}
 

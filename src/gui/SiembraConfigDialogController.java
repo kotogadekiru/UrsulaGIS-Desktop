@@ -183,20 +183,19 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 
 	
 		this.comboInsumo.setItems(FXCollections.observableArrayList(DAH.getAllSemillas()));//Semilla.semillas.values()));
-	//	this.comboInsumo.valueProperty().bindBidirectional(labor.semillaProperty);
+		
+		this.comboInsumo.valueProperty().addListener((obj,old,n)->{		
+			labor.setSemilla(n);
+			labor.config.getConfigProperties().setProperty(SiembraLabor.SEMILLA_DEFAULT, n.getNombre());
+		});
+		
 		String sDefautlName = labor.config.getConfigProperties().getPropertyOrDefault(SiembraLabor.SEMILLA_DEFAULT, "");
 		 
 		Optional<Semilla> sDefault = this.comboInsumo.getItems().stream().filter((s)->s.getNombre().equals(sDefautlName)).findFirst();
 		if(sDefault.isPresent()) {
 			this.comboInsumo.getSelectionModel().select(sDefault.get());
 		}
-		this.comboInsumo.valueProperty().addListener((obj,old,n)->{		
-			labor.setSemilla(n);
-			//labor.setPrecioLabor(converter.fromString(n).doubleValue());
-			labor.config.getConfigProperties().setProperty(SiembraLabor.SEMILLA_DEFAULT, n.getNombre());
-		});
-
-
+		
 		StringConverter<Number> converter = new NumberStringConverter();
 
 		//textPrecioGrano
@@ -239,6 +238,7 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 		unidades.put(Messages.getString("SiembraConfigDialogController.kgHa"),SiembraConfig.Unidad.kgHa); //$NON-NLS-1$
 		unidades.put(Messages.getString("SiembraConfigDialogController.milPlaHa"),SiembraConfig.Unidad.milPlaHa); //$NON-NLS-1$
 		unidades.put(Messages.getString("SiembraConfigDialogController.pla10MtLineal"),SiembraConfig.Unidad.pla10MtLineal); //$NON-NLS-1$
+		unidades.put(Messages.getString("SiembraConfigDialogController.pla1MtLineal"),SiembraConfig.Unidad.pla1MtLineal); //$NON-NLS-1$
 		unidades.put(Messages.getString("SiembraConfigDialogController.plaMetroCuadrado"),SiembraConfig.Unidad.plaMetroCuadrado); //$NON-NLS-1$
 
 

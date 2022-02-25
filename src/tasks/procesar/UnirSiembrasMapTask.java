@@ -41,20 +41,24 @@ public class UnirSiembrasMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 				this.siembras.add(l);
 			}
 		};
-
+		SiembraLabor sRef = this.siembras.get(0);
 		super.labor = new SiembraLabor();
 		//TODO asignar las columnas a  los valores estanar
-		labor.colAmount.set(SiembraLabor.COLUMNA_DOSIS_SEMILLA);
-		labor.colDosisSemilla.set(SiembraLabor.COLUMNA_DOSIS_SEMILLA);
+		labor.colAmount.set(SiembraLabor.COLUMNA_KG_SEMILLA);
+		labor.colDosisSemilla.set(SiembraLabor.COLUMNA_KG_SEMILLA);
 		labor.colAncho.set(SiembraLabor.COLUMNA_ANCHO);
 		labor.colCurso.set(SiembraLabor.COLUMNA_CURSO);
 		labor.colDistancia.set(SiembraLabor.COLUMNA_DISTANCIA);
 		labor.colElevacion.set(SiembraLabor.COLUMNA_ELEVACION);
 		//labor.colVelocidad.set(CosechaLabor.COLUMNA_VELOCIDAD);
 		//labor.colPasada.set(CosechaLabor.COLUMNA_ANCHO);
-
+		labor.setSemilla(sRef.getSemilla());
+		labor.setEntreSurco(sRef.getEntreSurco());
+		labor.setPrecioLabor(sRef.getPrecioLabor());
+		labor.setPrecioInsumo(sRef.getPrecioInsumo());
+		
 		labor.getConfiguracion().valorMetrosPorUnidadDistanciaProperty().set(1.0);
-		labor.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
+		//labor.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
 		String nombreProgressBar = "clonar cosecha";
 		if(_siembras.size()>1){
 			nombreProgressBar = "unir cosechas";

@@ -42,6 +42,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import utils.DAH;
 
 
 public class CotizarOdenDeCompraOnlineTask extends Task<String> {
@@ -114,6 +115,9 @@ public class CotizarOdenDeCompraOnlineTask extends Task<String> {
 		if(data !=null) {
 			OrdenCompra dbOrdenCompra = gson.fromJson(data, OrdenCompra.class);
 			Long id = dbOrdenCompra.getId();
+			DAH.save(dbOrdenCompra);//merge local recorrida
+			//	Long id = dbRecorrida.getId();
+			String dbUrl = dbOrdenCompra.getUrl();
 		//java.math.BigDecimal id = (java.math.BigDecimal) data.get("id");
 		//String prettyresponse = resContent.toPrettyString();
 		//System.out.println("prettyresponse "+prettyresponse);
@@ -133,7 +137,7 @@ public class CotizarOdenDeCompraOnlineTask extends Task<String> {
 		}
 		 */
 		//String urlGoto = "https://www.ursulagis.com/api/recorridas/4/";
-		String urlGoto = "https://www.ursulagis.com/api/orden_compra/"+id+"/";
+		String urlGoto =dbUrl;// "https://www.ursulagis.com/api/orden_compra/"+id+"/";
 		return urlGoto;
 		}
 		return "status Success but data null";

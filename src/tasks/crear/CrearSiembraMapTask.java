@@ -28,62 +28,48 @@ import utils.ProyectionConstants;
  */
 public class CrearSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 	Double plantasM2Objetivo = new Double(0);
-	Poligono poli=null;
+	List<Poligono> polis=null;
 
-	public CrearSiembraMapTask(SiembraLabor labor,Poligono _poli,Double _amount){
+	public CrearSiembraMapTask(SiembraLabor labor,List<Poligono> _poli,Double _amount){
 		super(labor);
 		plantasM2Objetivo=_amount;
-		poli=_poli;
+		polis=_poli;
 
 	}
 
 	public void doProcess() throws IOException {
-		SiembraItem ci = new SiembraItem();
 		Semilla semilla = labor.getSemilla();
 		System.out.println("semilla es "+semilla);
 		double entresurco = labor.getEntreSurco();
 		double pmil = semilla.getPesoDeMil();
 		double pg = semilla.getPG();
-		
-	
 		double metrosLinealesHa = ProyectionConstants.METROS2_POR_HA/entresurco;//23809 a 0.42
 		//System.out.println("metrosLinealesHa "+metrosLinealesHa);//metrosLinealesHa 52631.57894736842 ok!
 		double semillasHa = ProyectionConstants.METROS2_POR_HA*plantasM2Objetivo/pg;// si pg ==1 semillas= plantas. si pg es <1 => semillas>plantas
-	
+
 		double semillasMetroLineal = semillasHa/metrosLinealesHa;//si es trigo va en plantas /m2 si es maiz o soja va en miles de plantas por ha
 		//System.out.println("semillasMetroLineal "+semillasMetroLineal);//semillasMetroLineal 38.0 ok!
-	
-		ci.setDosisHa(semillasHa*pmil/(1000*1000));//1000semillas*1000gramos para pasar a kg/ha
-		
-		ci.setDosisML(semillasMetroLineal);
-		//dosis sembradora va en semillas cada 10mts
-		//dosis valorizacion va en unidad de compra; kg o bolsas de 80000 semillas o 50kg
 
-		labor.setPropiedadesLabor(ci);
-		GeometryFactory fact = new GeometryFactory();
-		List<? extends Position> positions = poli.getPositions();
-		Coordinate[] coordinates = new Coordinate[positions.size()];
-		for(int i=0;i<positions.size();i++){
-			Position p = positions.get(i);	
-			Coordinate c = new Coordinate(p.getLongitude().getDegrees(),p.getLatitude().getDegrees(),p.getElevation());
+		for(Poligono pol : this.polis) {
+			SiembraItem si = new SiembraItem();
+					
+			si.setDosisHa(semillasHa*pmil/(1000*1000));//1000semillas*1000gramos para pasar a kg/ha
+
+			si.setDosisML(semillasMetroLineal);
+			//dosis sembradora va en semillas cada 10mts
+			//dosis valorizacion va en unidad de compra; kg o bolsas de 80000 semillas o 50kg
 			
-			coordinates[i]=c;
-		}
-	//	if(coordinates[0]!=coordinates[coordinates.length-1]){
-			coordinates[coordinates.length-1]=coordinates[0];//en caso de que la geometria no este cerrada
-	//	}
-		Polygon poly = fact.createPolygon(coordinates);	
+			labor.setPropiedadesLabor(si);
 
-		ci.setGeometry(poly);
-		
-		labor.insertFeature(ci);
-				
+			si.setGeometry(pol.toGeometry());
+			si.setId(labor.getNextID());
+
+			labor.insertFeature(si);
+		}
 		labor.constructClasificador();
 
-		
 		runLater(this.getItemsList());
 		updateProgress(0, featureCount);
-
 	}
 
 
@@ -94,15 +80,15 @@ public class CrearSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 		df.setGroupingSize(3);
 		//densidad seeds/metro lineal
 		String tooltipText = new String(Messages.getString("ProcessSiembraMapTask.1")+ df.format(siembraFeature.getDosisML()) + Messages.getString("ProcessSiembraMapTask.2")); //$NON-NLS-1$ //$NON-NLS-2$
-		
+
 		Double seedsSup= siembraFeature.getDosisML()/labor.getEntreSurco();
 		if(seedsSup<100) {//plantas por ha
 			tooltipText=tooltipText.concat(df.format(seedsSup*ProyectionConstants.METROS2_POR_HA) + " s/"+ Messages.getString("ProcessSiembraMapTask.12")); //$NON-NLS-1$ //$NON-NLS-2$
-		
+
 		}else {
 			tooltipText=tooltipText.concat(df.format(seedsSup) + " s/"+Messages.getString("ProcessSiembraMapTask.10")); //s/m2
 		}
-			//kg semillas por ha
+		//kg semillas por ha
 		tooltipText=tooltipText.concat(Messages.getString("ProcessSiembraMapTask.3") + df.format(siembraFeature.getDosisHa()) + Messages.getString("ProcessSiembraMapTask.4")); //$NON-NLS-1$ //$NON-NLS-2$
 		//fert l
 		tooltipText=tooltipText.concat( Messages.getString("ProcessSiembraMapTask.5") + df.format(siembraFeature.getDosisFertLinea()) + Messages.getString("ProcessSiembraMapTask.6")		); //$NON-NLS-1$ //$NON-NLS-2$

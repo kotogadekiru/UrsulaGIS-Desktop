@@ -3,6 +3,7 @@ package dao.utils;
 import java.io.IOException;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
@@ -13,6 +14,8 @@ import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.factory.GeoTools;
 import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.opengis.feature.Feature;
+import org.opengis.feature.FeatureVisitor;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeType;
@@ -31,6 +34,8 @@ import dao.LaborItem;
 import utils.GeometryHelper;
 
 public class LaborDataStore<E> {
+	private static List<Labor> locked = Collections.synchronizedList(new ArrayList<Labor>());
+	
 	public static List<String> getAvailableColumns(Labor<? extends LaborItem> labor) {
 		List<String> availableColumns = new ArrayList<String>();
 		SimpleFeatureType sch=null;
@@ -126,12 +131,16 @@ public class LaborDataStore<E> {
 
 	@SuppressWarnings("unchecked")
 	public static List<? extends LaborItem> cachedOutStoreQuery(Envelope envelope, Labor<? extends LaborItem> labor){
+		checkLock(labor);
 		List<LaborItem> objects = new ArrayList<>();
 		List<SimpleFeature> cachedObjects = null;
 	//	synchronized(labor){
 			if( labor.treeCache == null ) {
 				LaborDataStore.updateAllCachedEnvelopes(envelope,labor);			
-			}
+			} 
+//			else {
+//				System.out.println("labor.treeCache != null "+labor.nombre);
+//			}
 			labor.cacheLastRead=LocalTime.now();
 			cachedObjects = labor.treeCache.query(envelope);// Exception in thread "pool-2-thread-5" java.util.ConcurrentModificationException
 
@@ -157,59 +166,71 @@ public class LaborDataStore<E> {
 				}
 			}
 	//	}
-
+		locked.remove(labor);//release labor lock
 		return objects;
 	}
+	private static void checkLock(Labor<? extends LaborItem> labor) {
+		while(locked.contains(labor)) {
+			//System.out.println("locked contains "+labor.nombre);
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		locked.add(labor);
+	}
 
+	/**
+	 * metodo que se ejecuta la primera vez que se hace un cachedOutStoreQuery y tree
+	 * @param envelope
+	 * @param labor
+	 */
 	private static void updateAllCachedEnvelopes(Envelope envelope,Labor<? extends LaborItem> labor){		
-		
+		//System.out.println(labor.nombre+" empezando updateAllCachedEnvelopes en "+Thread.currentThread().getId());
 		if(labor.outCollection == null) {
 			System.err.println("No se puede iterar sobre outCollection porque es null en "+labor.getNombre());
 			return;
 		}
-		Quadtree auxTreeCache = new Quadtree();
-		final Envelope auxTreeCacheEnvelope = new Envelope();
+
 		List<SimpleFeature> sFeaturesToAdd = new ArrayList<SimpleFeature>();
 		// cargar todas las features en memoria pero guardarlas indexadas en cachedEnvelopes
-		try {
-			FeatureReader<SimpleFeatureType, SimpleFeature> reader = labor.outCollection.reader();
-			while(reader.hasNext()) {
-				SimpleFeature next = reader.next();//java.util.ConcurrentModificationException
-				sFeaturesToAdd.add(next);
-			}	
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 		
-	//	@SuppressWarnings("unchecked")
-	//	Iterator<SimpleFeature> iterator = labor.outCollection.iterator();
-		//sFeaturesToAdd.forEachRemaining((sf)->{//java.util.ConcurrentModificationException
-		sFeaturesToAdd.stream().forEach(sf->{
-			Geometry g =(Geometry) sf.getDefaultGeometry();
-			Envelope ge = g.getEnvelopeInternal();
-			auxTreeCache.insert(ge, sf);
-
-//			if(auxTreeCacheEnvelope == null) {
-//				auxTreeCacheEnvelope = ge;
-//			} else {
+		Quadtree auxTreeCache = new Quadtree();
+		final Envelope auxTreeCacheEnvelope = new Envelope();
+		try {
+			SimpleFeatureIterator features = labor.outCollection.features();
+			while(features.hasNext()) {
+				//sFeaturesToAdd.add(features.next());	
+				SimpleFeature sf = features.next();
+				Geometry g =(Geometry) sf.getDefaultGeometry();
+				Envelope ge = g.getEnvelopeInternal();
+				auxTreeCache.insert(ge, sf);
 				auxTreeCacheEnvelope.expandToInclude(ge);
-		//	}
-		});
+			}
+		}catch(Exception e) {
+			//e.printStackTrace();
+		}
+	
+//		sFeaturesToAdd.stream().forEach(sf->{
+//			Geometry g =(Geometry) sf.getDefaultGeometry();
+//			Envelope ge = g.getEnvelopeInternal();
+//			auxTreeCache.insert(ge, sf);
+//			auxTreeCacheEnvelope.expandToInclude(ge);
+//		});
 		labor.treeCache = auxTreeCache;
 		labor.treeCacheEnvelope = auxTreeCacheEnvelope;
+		//System.out.println(labor.nombre+" termine updateAllCachedEnvelopes en "+Thread.currentThread().getId());
 	}
 
 	public static void dispose(Labor<? extends LaborItem> labor) {
+		checkLock(labor);
+		
 		if(labor.inStore!=null){
-
 			labor.inStore.dispose();
 			labor.inStore = null;
 		}
 
-		//		if(cachedEnvelopes!=null){
-		//			cachedEnvelopes.clear();
-		//			cachedEnvelopes = null;
-		//		}
 		labor.clearCache();
 
 		if(labor.outCollection!=null){
@@ -230,9 +251,11 @@ public class LaborDataStore<E> {
 			labor.layer.getValues().clear();
 			labor.layer=null;
 		}
-
+		locked.remove(labor);
 	}
+	
 	public static void insertFeature(LaborItem laborItem, Labor<? extends LaborItem> labor) {
+		checkLock(labor);
 		Geometry cosechaGeom = laborItem.getGeometry();
 		Envelope geomEnvelope=cosechaGeom.getEnvelopeInternal();
 
@@ -254,10 +277,13 @@ public class LaborDataStore<E> {
 			}
 			labor.insertFeature(fe);
 		}
-
+		locked.remove(labor);
 	}
+	
 	public static void changeFeature(SimpleFeature old, LaborItem ci, Labor<? extends LaborItem> labor) {
+		checkLock(labor);
 		labor.outCollection.remove(old);
 		labor.outCollection.add(ci.getFeature(labor.featureBuilder));
+		locked.remove(labor);
 	}
 }

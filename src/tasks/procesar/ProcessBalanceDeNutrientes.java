@@ -5,14 +5,20 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.DoubleStream;
 
+import org.geotools.data.FeatureReader;
 import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
 
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.Polygon;
 
 import dao.Labor;
+import dao.LaborItem;
 import dao.config.Cultivo;
 import dao.config.Fertilizante;
 import dao.cosecha.CosechaItem;
@@ -26,6 +32,8 @@ import gui.Messages;
 import gui.nww.LaborLayer;
 import tasks.ProcessMapTask;
 import tasks.crear.CrearSueloMapTask;
+import utils.GeometryHelper;
+import utils.PolygonValidator;
 import utils.ProyectionConstants;
 
 public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> {
@@ -83,16 +91,55 @@ public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> 
 					ReferencedEnvelope b = labor.outCollection.getBounds();
 					env.expandToInclude(b);
 				},	(env1, env2) -> env1.expandToInclude(env2));
-
-
 		
 		// 2 generar una grilla de ancho ="ancho" que cubra bounds
 		List<Polygon>  grilla = GrillarCosechasMapTask.construirGrilla(unionEnvelope, ancho);
+		
+		List<Geometry> geometriasActivas = labores.parallelStream().collect(
+				()->new ArrayList<Geometry>(),
+				(activas, labor) ->{		
+					List<LaborItem> features = (List<LaborItem>) labor.outStoreQuery(unionEnvelope);
+					activas.addAll(
+							features.parallelStream().collect(
+							()->new ArrayList<Geometry>(),
+							(list, f) -> list.add((Geometry) f.getGeometry()),
+							(env1, env2) -> env1.addAll(env2))
+							);
+//					 try {
+//						FeatureReader<SimpleFeatureType, SimpleFeature> reader = labor.outCollection.reader();
+//						while(reader.hasNext()) {
+//							activas.add((Geometry) reader.next().getDefaultGeometry());
+//						}
+//						reader.close();
+//					} catch (IOException e) {
+//						e.printStackTrace();
+//					}
+				},	(env1, env2) -> env1.addAll(env2));
+		
+		
+		
+		GeometryCollection activasCollection = ProyectionConstants.getGeometryFactory().createGeometryCollection( geometriasActivas.toArray(new Geometry[geometriasActivas.size()]));
+		Geometry cover =  activasCollection.buffer(0);
+		
+		List<Geometry> grillaCover = grilla.parallelStream().collect(
+				()->new ArrayList<Geometry>(),
+				(activas, poly) ->{					
+					Geometry intersection = GeometryHelper.getIntersection(poly, cover); 
+					if(intersection!=null) {
+						activas.add(intersection);
+					}
+				},	(env1, env2) -> env1.addAll(env2));
+		
+		//Set<Geometry> parts = GeometryHelper.obtenerIntersecciones(geometriasActivas);
+		//List<Polygon>  grilla = new ArrayList<Polygon>();
+		
+//		for(Geometry g:parts) {
+//			grilla.addAll(PolygonValidator.geometryToFlatPolygons(g));
+//		}
 
-
-		featureCount = grilla.size();
+		featureCount = grillaCover.size();
 		//List<SueloItem> itemsToShow = new ArrayList<SueloItem>();
-		for(Geometry geometry :grilla){//TODO usar streams paralelos
+		for(Geometry geometry :grillaCover){//TODO usar streams paralelos
 			SueloItem sueloItem = createSueloForPoly(geometry);		
 			if(sueloItem!=null){
 				labor.insertFeature(sueloItem);
@@ -123,21 +170,30 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 		Double kgNFert = getKgNFertilizacion(geomQuery);
 		Double kgNCosecha = getPpmNCosecha(geomQuery);
 		
+		
 		Double kgMoSuelo = getKgMoSuelo(geomQuery);
 		Double kgMoCosecha = getKgMoCosecha(geomQuery);
 		
 		Double 	elev = getElevCosecha(geomQuery);
 
 
-		if(kgPFert==0&&kgPSuelo==0&& kgPCosecha==0)return null;//descarto los que no tienen valores
-		Double newKgHaPSuelo = (kgPFert + kgPSuelo - kgPCosecha)
-				/ areaQuery;
-		
-		Double newKgHaNSuelo = (kgNFert + kgNSuelo  - kgNCosecha)//no tomo el n organico porque lo calculo al momento de hacer la recomendacion y no quiero duplicaciones
-				/ areaQuery;
-		
-		Double newKgHaMOSuelo = (kgMoSuelo + kgMoCosecha)
-				/ areaQuery;
+		if(kgPFert==0 
+				&&kgPSuelo==0
+				&& kgPCosecha==0 
+				&& kgNCosecha==0
+				&& kgNSuelo==0
+				&& kgNFert==0
+				&& kgMoSuelo == 0
+				&& kgMoCosecha == 0
+				&& elev == 10)return null;//descarto los que no tienen valores
+		//P
+		Double newKgHaPSuelo = (kgPFert + kgPSuelo - kgPCosecha) / areaQuery;
+		//no tomo el n organico porque lo calculo al momento de hacer la recomendacion y no quiero duplicaciones
+		//N
+		Double newKgHaNSuelo = (kgNFert + kgNSuelo  - kgNCosecha)	/ areaQuery;
+		//System.out.println("newKgHaNSuelo "+newKgHaNSuelo);
+		//MO
+		Double newKgHaMOSuelo = (kgMoSuelo + kgMoCosecha)/ areaQuery;
 
 //		System.out.println("\ncantFertilizante en el suelo= " + kgPSuelo);
 //		System.out.println("cantFertilizante agregada= " + kgPFert);
@@ -205,12 +261,15 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 				//double rindeItem = (Double) item.getRindeTnHa();
 				//double extraccionP = item.getRindeTnHa()*cultivo.getExtP();
 				Double kgPAbsHa = item.getRindeTnHa()*cultivo.getAbsN();//rindeItem * cultivo.getExtP();//solo me interesa reponer lo que extraje
-				Geometry pulvGeom = item.getGeometry();				
+				Geometry cGeom = item.getGeometry();				
 				Double area = 0.0;
 				try {
 					//XXX posible punto de error/ exceso de demora/ inneficicencia
-					Geometry inteseccionGeom = geometry.intersection(pulvGeom);// Computes a
-					area = ProyectionConstants.A_HAS(inteseccionGeom.getArea());
+					Geometry inteseccionGeom = GeometryHelper.getIntersection(geometry, cGeom);//geometry.intersection(pulvGeom);// Computes a
+					//interseccionGeom no deberia ser null porque viene de cachedOutStoreQuery
+					if(inteseccionGeom!=null) {
+						area=GeometryHelper.getHas(inteseccionGeom);
+					} 
 					// Geometry
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -232,8 +291,8 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 				Double area = 0.0;
 				try {
 					//XXX posible punto de error/ exceso de demora/ inneficicencia
-					Geometry inteseccionGeom = geometry.intersection(itGeom);// Computes a
-					area = ProyectionConstants.A_HAS(inteseccionGeom.getArea());
+					Geometry inteseccionGeom =GeometryHelper.getIntersection(geometry, itGeom);// geometry.intersection(itGeom);// Computes a
+					area=GeometryHelper.getHas(inteseccionGeom);
 					// Geometry
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -257,8 +316,8 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 				Double area = 0.0;
 				try {
 					//XXX posible punto de error/ exceso de demora/ inneficicencia
-					Geometry inteseccionGeom = geometry.intersection(pulvGeom);// Computes a
-					area = ProyectionConstants.A_HAS(inteseccionGeom.getArea());
+					Geometry inteseccionGeom = GeometryHelper.getIntersection(geometry, pulvGeom);//geometry.intersection(pulvGeom);// Computes a
+					area=GeometryHelper.getHas(inteseccionGeom);
 					// Geometry
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -307,8 +366,9 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 				Double area = 0.0;
 				try {
 					//XXX posible punto de error/ exceso de demora/ inneficicencia
-					Geometry inteseccionGeom = geometry.intersection(geom);// Computes a
-					area = ProyectionConstants.A_HAS(inteseccionGeom.getArea());
+					Geometry inteseccionGeom = GeometryHelper.getIntersection(geometry, geom);//geometry.intersection(geom);// Computes a
+					area=GeometryHelper.getHas(inteseccionGeom);
+					//area = ProyectionConstants.A_HAS(inteseccionGeom.getArea());
 					// Geometry
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -329,9 +389,9 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 
 				Double area = 0.0;
 				try {
-					//XXX posible punto de error/ exceso de demora/ inneficicencia
-					Geometry inteseccionGeom = geometry.intersection(geom);// Computes a
-					area = ProyectionConstants.A_HAS(inteseccionGeom.getArea());
+					//XXX posible punto de error/ exceso de demora/ inneficicencia					
+					Geometry inteseccionGeom = GeometryHelper.getIntersection(geometry, geom);//geometry.intersection(geom);// Computes a
+					area=GeometryHelper.getHas(inteseccionGeom);
 					// Geometry
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -353,8 +413,8 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 				Double area = 0.0;
 				try {
 					//XXX posible punto de error/ exceso de demora/ inneficicencia
-					Geometry inteseccionGeom = geometry.intersection(geom);// Computes a
-					area = ProyectionConstants.A_HAS(inteseccionGeom.getArea());
+					Geometry inteseccionGeom = GeometryHelper.getIntersection(geometry, geom);//geometry.intersection(geom);// Computes a
+					area=GeometryHelper.getHas(inteseccionGeom);
 					// Geometry
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -383,8 +443,8 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 				Double area = 0.0;
 				try {
 					//XXX posible punto de error/ exceso de demora/ inneficicencia
-					Geometry inteseccionGeom = geometry.intersection(geom);// Computes a
-					area = ProyectionConstants.A_HAS(inteseccionGeom.getArea());
+					Geometry inteseccionGeom = GeometryHelper.getIntersection(geometry, geom);//geometry.intersection(geom);// Computes a
+					area=GeometryHelper.getHas(inteseccionGeom);
 					// Geometry
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -407,8 +467,8 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 				Double area = 0.0;
 				try {
 					//XXX posible punto de error/ exceso de demora/ inneficicencia
-					Geometry inteseccionGeom = geometry.intersection(fertGeom);// Computes a
-					area = ProyectionConstants.A_HAS(inteseccionGeom.getArea());
+					Geometry inteseccionGeom = GeometryHelper.getIntersection(geometry, fertGeom);//geometry.intersection(fertGeom);// Computes a
+					area=GeometryHelper.getHas(inteseccionGeom);
 					// Geometry
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -431,8 +491,8 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 				Double area = 0.0;
 				try {
 					//XXX posible punto de error/ exceso de demora/ inneficicencia
-					Geometry inteseccionGeom = geometry.intersection(fertGeom);// Computes a
-					area = ProyectionConstants.A_HAS(inteseccionGeom.getArea());
+					Geometry inteseccionGeom = GeometryHelper.getIntersection(geometry, fertGeom);//geometry.intersection(fertGeom);// Computes a
+					area=GeometryHelper.getHas(inteseccionGeom);
 					// Geometry
 				} catch (Exception e) {
 					e.printStackTrace();

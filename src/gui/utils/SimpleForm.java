@@ -2,9 +2,15 @@ package gui.utils;
 
 import com.dooapp.fxform.FXForm;
 import com.dooapp.fxform.filter.ExcludeFilter;
+import com.dooapp.fxform.handler.ElementHandler;
+import com.dooapp.fxform.model.Element;
+import com.dooapp.fxform.view.FXFormNode;
 import com.dooapp.fxform.view.factory.DefaultFactoryProvider;
 
+import dao.Ndvi;
+import dao.Poligono;
 import dao.config.*;
+import gui.JFXMain;
 import javafx.beans.property.SimpleListProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -22,50 +28,60 @@ public class SimpleForm<T> {
 		
 		FXForm<T> fxForm = new FXForm<T>(myBean); 
 
+		
 		DefaultFactoryProvider factoryProvider = new DefaultFactoryProvider();
-		//TODO agregar factorys para los otros objetos de configuracion
+
 		factoryProvider.addFactory(
-				e -> {
-					return e.getName().equals("establecimiento");
-				},
+				e -> e.getClass().equals(Establecimiento.class)
+				,(Void v)->
 				new ListChoiceBoxFactory<Establecimiento>(
 						new SimpleListProperty<>(FXCollections
 								.observableArrayList(DAH
-										.getAllEstablecimientos()))));
+										.getAllEstablecimientos()))).call(null));
 		
 		factoryProvider.addFactory(
-				e -> {
-					return e.getName().equals("lote");
-				},
-				new ListChoiceBoxFactory<Lote>(
+				e ->  e.getClass().equals(Lote.class)
+				,(Void v)->	new ListChoiceBoxFactory<Lote>(
 						new SimpleListProperty<>(FXCollections
 								.observableArrayList(DAH
-										.getAllLotes()))));
+										.getAllLotes()))).call(null));
 		factoryProvider.addFactory(
-				e -> {
-					return e.getName().equals("cultivo");
-				},
-				new ListChoiceBoxFactory<Cultivo>(
+				e -> e.getClass().equals(Cultivo.class)
+				,(Void v)->	new ListChoiceBoxFactory<Cultivo>(
 						new SimpleListProperty<>(FXCollections
 								.observableArrayList(DAH
-										.getAllCultivos()))));
+										.getAllCultivos()))).call(null));
 		factoryProvider.addFactory(
-				e -> {
-					return e.getName().equals("empresa");
-				},
+				e -> e.getClass().equals(Empresa.class)
+				,(Void v)->
 				new ListChoiceBoxFactory<Empresa>(
 						new SimpleListProperty<>(FXCollections
 								.observableArrayList(DAH
-										.getAllEmpresas()))));
+										.getAllEmpresas()))).call(null));
 		
 		factoryProvider.addFactory(
-				e -> {
-					return e.getName().equals("campania");
-				},
+				e ->  e.getClass().equals(Campania.class)
+				,(Void v)->
 				new ListChoiceBoxFactory<Campania>(
 						new SimpleListProperty<>(FXCollections
 								.observableArrayList(DAH
-										.getAllCampanias()))));
+										.getAllCampanias()))).call(null));
+		
+		factoryProvider.addFactory(
+				e ->  e.getClass().equals(Poligono.class)
+				,(Void v)->
+				new ListChoiceBoxFactory<Poligono>(
+						new SimpleListProperty<>(FXCollections
+								.observableArrayList(DAH
+										.getAllPoligonos()))).call(null));
+		
+		factoryProvider.addFactory(
+				e ->  e.getClass().equals(Ndvi.class)
+				,(Void v)->
+				new ListChoiceBoxFactory<Ndvi>(
+						new SimpleListProperty<>(FXCollections
+								.observableArrayList(DAH
+										.getAllNdvi()))).call(null));
 
 		fxForm.setEditorFactoryProvider(factoryProvider);
 		fxForm.addFilters(new ExcludeFilter(new String[]{"id"}));
@@ -84,8 +100,8 @@ public class SimpleForm<T> {
 		Scene scene = new Scene(vbox, 300, 250);
 		VBox.setMargin(commitBtn, new Insets(0,0,0,5));
 		stage.setTitle("Editar "+myBean.getClass().getSimpleName());
-		stage.getIcons().add(new Image(ICON));
 		stage.setScene(scene);
+		stage.initOwner(JFXMain.stage);
 		stage.show();	
 	}
 }

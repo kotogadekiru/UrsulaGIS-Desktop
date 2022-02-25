@@ -2,6 +2,7 @@ package tasks.crear;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -17,11 +18,14 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 
+import dao.LaborConfig;
 import dao.Ndvi;
 import dao.Poligono;
+import dao.config.Configuracion;
 import dao.config.Cultivo;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
+import dao.utils.PropertyHelper;
 import gov.nasa.worldwind.geom.Sector;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gov.nasa.worldwindx.examples.analytics.AnalyticSurface.GridPointAttributes;
@@ -108,9 +112,17 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 		
 		double id=0;
 		
+		Configuracion config = Configuracion.getInstance();
+		String useSigmoidString = config.getPropertyOrDefault(this.getClass().getName()+".USE_SIGMOID", "false");
+		System.out.println(this.getClass().getName()+".USE_SIGMOID="+useSigmoidString);
+		Function<Double, Double> calcRinde = getRineForNDVILinealFunction(averageNdvi);
 		
+		if("true".equals(useSigmoidString)) {
+			System.out.println("usando interpolacion sigmoidea");
+			calcRinde = getRindeForNDVISigmoidFunction(averageNdvi);
+		}
 		//Function<Double, Double> calcRinde = getRineForNDVILinealFunction(averageNdvi);
-		Function<Double, Double> calcRinde = getRindeForNDVISigmoidFunction(averageNdvi);
+		
 		//Function<Double, Double> calcRinde = getRindeForNDVISmoothstepFunction(averageNdvi);
 		
 		
@@ -217,7 +229,7 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 		//b=0-a*0.1
 		double origenNdviRinde = 0-pendienteNdviRinde*NDVI_RINDE_CERO;
 		
-		List<Data> dataset = new ArrayList<Data>();
+		//List<Data> dataset = new ArrayList<Data>();
 		
 		Function<Double,Double> calcRinde = (ndvi)->pendienteNdviRinde*ndvi+origenNdviRinde;
 		return calcRinde;
@@ -233,13 +245,32 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 	private Function<Double, Double> getRindeForNDVISigmoidFunction(Double ndviProm) {
 		//lineal r=a*ndvi+b
 		//a=(r2-r1)/(ndvi2-ndvi1)=(rProm-0)/(ndviProm-0.1)
-		double pendienteNdviRinde = ndviProm>NDVI_RINDE_CERO?rindeProm/(ndviProm-NDVI_RINDE_CERO):1;
+		//double pendienteNdviRinde = ndviProm>NDVI_RINDE_CERO?rindeProm/(ndviProm-NDVI_RINDE_CERO):1;
 		//b=0-a*0.1
-		double origenNdviRinde = 0-pendienteNdviRinde*NDVI_RINDE_CERO;
-		double alfa = 2;
-		double beta = 2;
-		double pot = Math.pow(2, 2);//alfa^beta
-		Function<Double,Double> calcRinde = (ndvi)->2*rindeProm/(1+Math.exp(-(ndvi-ndviProm)*pot));
+		//double origenNdviRinde = 0-pendienteNdviRinde*NDVI_RINDE_CERO;
+		Configuracion config = Configuracion.getInstance();
+		 DecimalFormat dc = PropertyHelper.getDoubleConverter();	
+		 Number A =2;
+		 Number alfa=2;
+		 Number beta=2;
+		try {
+			 A = dc.parse(config.getPropertyOrDefault("ConvertirNdviACosechaTask.SigmoidA","2"));
+			 alfa = dc.parse(config.getPropertyOrDefault("ConvertirNdviACosechaTask.SigmoidAlfa","2"));
+			 beta = dc.parse(config.getPropertyOrDefault("ConvertirNdviACosechaTask.SigmoidBeta","2"));
+		
+			 //XXX aplastar sigmoidea entre rinde min y rinde max?
+		} catch (ParseException e) {		
+			e.printStackTrace();
+		}
+		
+		double max = this.labor.getMaxRindeProperty().get();
+		double min = this.labor.getMinRindeProperty().get();
+		double maxTimesRinde =2*(rindeProm-min);//A.doubleValue();
+		alfa=2;
+		beta=-4.4*ndviProm+5.6;//numeros magicos para que la sigmoidea sea solo un poco mas empinada que la lineal
+
+		double pot = Math.pow(alfa.doubleValue(), beta.doubleValue());//alfa^beta
+		Function<Double,Double> calcRinde = (ndvi)->min+maxTimesRinde/(1+Math.exp(-(ndvi-ndviProm)*pot));
 		return calcRinde;
 	}
 	

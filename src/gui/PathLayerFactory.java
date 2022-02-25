@@ -76,7 +76,7 @@ public class PathLayerFactory {
 
 				
 				double length =  measureTool.getLength();//esto lo hace despues de cada cuadro. no puedo volver a medir el area
-				if(valueProperty.get()!=length && length > 0 && Math.abs(camino.getLongitud()-length)>length*0.01){//solo actualizo si la diferencia es mayor al 1%
+				if(valueProperty.get()!=length && length > 0 && Math.abs(camino.getLongitud()-length)>2){//solo actualizo si la diferencia es mayor a 2m
 				//	DecimalFormat dc = new DecimalFormat("0.00"); //$NON-NLS-1$
 				//	dc.setGroupingSize(3);
 				//	dc.setGroupingUsed(true);

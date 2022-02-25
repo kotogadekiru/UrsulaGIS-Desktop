@@ -71,6 +71,7 @@ public class PolygonValidator {
 					return geom; // If the polygon is valid just return it
 				}
 				Polygonizer polygonizer = new Polygonizer();
+			
 				addPolygon((Polygon)geom, polygonizer);
 				return toPolygonGeometry(polygonizer.getPolygons(), geom.getFactory());
 			}else if(geom instanceof MultiPolygon){

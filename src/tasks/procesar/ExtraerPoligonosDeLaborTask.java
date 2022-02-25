@@ -1,20 +1,27 @@
 package tasks.procesar;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.feature.DefaultFeatureCollection;
+import org.geotools.referencing.GeodeticCalculator;
 import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.CoordinateFilter;
+import com.vividsolutions.jts.geom.CoordinateSequence;
+import com.vividsolutions.jts.geom.CoordinateSequenceFilter;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LineSegment;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
+import com.vividsolutions.jts.operation.buffer.BufferParameters;
 import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 
@@ -26,6 +33,7 @@ import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.utils.PropertyHelper;
+import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
 import gui.Messages;
 import javafx.concurrent.Task;
@@ -37,6 +45,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import utils.PolygonValidator;
 import utils.ProyectionConstants;
 
 public class ExtraerPoligonosDeLaborTask extends Task<List<Poligono>> {
@@ -143,39 +152,88 @@ public class ExtraerPoligonosDeLaborTask extends Task<List<Poligono>> {
 		return polygons;
 	}
 	
+	
+//	public static Poligono geometryToPoligonoNOt(Geometry g) {
+//		if(g instanceof Geometry){						
+//			Geometry mainBoundary = ((Geometry) g).getBoundary();
+//			if(mainBoundary.getNumGeometries() == 0)return null;
+//			Geometry seed = mainBoundary.getGeometryN(0);
+//			List<Position> iterable = geometryToPositions(seed);
+//			//iterable tiene las posiciones de la geometria 0 o contorno
+//			for(int n = 1; n < mainBoundary.getNumGeometries(); n++){//recorro las otras geometrias uniendolas a iterable en el punto mas cercano
+//				//Geometry toAdd =mainBoundary.getGeometryN(n);// mp.getGeometryN(0);
+//				//Coordinate[] cToAdd= toAdd.getCoordinates();
+//				List<Position> posNToAdd = geometryToPositions(mainBoundary.getGeometryN(n));
+//				//1 buscar los puntos de cada una de las geometrias que esten mas cerca
+//				int minIt=0;
+//				int minCoord=0;
+//				double minDistance=-1;
+//				for(int i=0;i < iterable.size();i++){
+//					Position itPos = iterable.get(i);					
+//					for(int j=0;j<posNToAdd.size();j++){
+//						
+//						Position pToAdd = posNToAdd.get(j);
+//						double dist = Position.linearDistance(pToAdd,itPos ).degrees;
+//						if(minDistance<0 || dist<minDistance){
+//							minDistance=dist;
+//							minIt=i;
+//							minCoord=j;												
+//						}
+//					}
+//				}			
+//				Position p0 = iterable.get(minIt);
+//				Position p1 = posNToAdd.get(minCoord);
+//				LineSegment ls=new LineSegment(p0.longitude.degrees,p0.latitude.degrees,p1.longitude.degrees,p1.latitude.degrees);
+//				GeometryFactory fact = ProyectionConstants.getGeometryFactory();
+//				Geometry conector = ls.toGeometry(fact).buffer(ProyectionConstants.metersToLongLat(0.25),3,BufferParameters.CAP_FLAT);
+//				
+//				GeometryCollection collection = fact.createGeometryCollection(new Geometry[] {seed,conector,mainBoundary.getGeometryN(n)});
+//				seed = collection.buffer(ProyectionConstants.metersToLongLat(0.25));
+//				iterable = geometryToPositions(seed);
+//			}
+//			Poligono poli = new Poligono();
+//			poli.setPositions(iterable);
+//			g=poli.toGeometry();
+////			try{	
+////				g = TopologyPreservingSimplifier.simplify(g, ProyectionConstants.metersToLongLat(10));
+////				g =g.buffer(0);
+////				for(Coordinate c : g.getBoundary().getCoordinates()){
+////					iterable.add(Position.fromDegrees(c.y, c.x));							
+////				}
+////				poli.setPositions(iterable);
+////			}catch(Exception e){
+////				e.printStackTrace();
+////			}
+//			
+//			double has = ProyectionConstants.A_HAS(g.getArea());
+//			poli.setArea(has);
+//			return poli;
+//		} else {return null;}
+//	}
+	
 	public static Poligono geometryToPoligono(Geometry g){			
 		//Object g=feature.getDefaultGeometry();
+		
 		if(g instanceof Geometry){						
-			ArrayList<Position> iterable = new ArrayList<Position>();
-			
-			try{	
-				TopologyPreservingSimplifier ts =new TopologyPreservingSimplifier((Geometry) g);
-				ts.setDistanceTolerance(ProyectionConstants.metersToLongLat(1));
-				g=	ts.getResultGeometry();
-			}catch(Exception e){
-				e.printStackTrace();
-			}
-			
 			Geometry mainBoundary = ((Geometry) g).getBoundary();
-			if(mainBoundary.getNumGeometries()==0)return null;
-			Geometry seed =mainBoundary.getGeometryN(0);
-			Coordinate[] coordinates = seed.getCoordinates();
-			for(Coordinate c : coordinates){
-				iterable.add(Position.fromDegrees(c.y, c.x));							
-			}
-
-			for(int n = 1;n<mainBoundary.getNumGeometries();n++){
-				Geometry toAdd =mainBoundary.getGeometryN(n);// mp.getGeometryN(0);
-				Coordinate[] cToAdd= toAdd.getCoordinates();
+			if(mainBoundary.getNumGeometries() == 0)return null;
+			Geometry seed = mainBoundary.getGeometryN(0);
+			List<Position> iterable = geometryToPositions(seed);
+			//iterable tiene las posiciones de la geometrya 0 o contorno
+			for(int n = 1; n < mainBoundary.getNumGeometries(); n++){//recooro las otras geometrias uniendolas a iterable en el punto mas cercano
+				//Geometry toAdd =mainBoundary.getGeometryN(n);// mp.getGeometryN(0);
+				//Coordinate[] cToAdd= toAdd.getCoordinates();
+				List<Position> posNToAdd = geometryToPositions(mainBoundary.getGeometryN(n));
 				//1 buscar los puntos de cada una de las geometrias que esten mas cerca
 				int minIt=0;
 				int minCoord=0;
 				double minDistance=-1;
-				for(int i=0;i<iterable.size();i++){
+				for(int i=0;i < iterable.size();i++){
 					Position itPos = iterable.get(i);
-					for(int j=0;j<cToAdd.length;j++){
-						Coordinate c=cToAdd[j];
-						Position pToAdd = Position.fromDegrees(c.y, c.x);
+					
+					for(int j=0;j<posNToAdd.size();j++){
+						
+						Position pToAdd = posNToAdd.get(j);
 						double dist = Position.linearDistance(pToAdd,itPos ).degrees;
 						if(minDistance<0 || dist<minDistance){
 							minDistance=dist;
@@ -184,32 +242,71 @@ public class ExtraerPoligonosDeLaborTask extends Task<List<Poligono>> {
 						}
 					}
 				}			
+				List<Position> arrayToInsert=new ArrayList<Position>();
 				//insertar en iterable position minIt las coordenadas de ToAdd empezando por minCoord
-				for(int j=0;j<cToAdd.length;j++){//empiezo en j=0
-					int index = (j+minCoord)%cToAdd.length;
+				for(int j=0; j<posNToAdd.size(); j++){//empiezo en j=0
+					int index = (minCoord+j)%posNToAdd.size();//recorro circularmente a partir del indice minCoord
 
-					Coordinate c = cToAdd[index];//para recorrer hasta cero al final
-					Position pToAdd = Position.fromDegrees(c.y, c.x);
-					int finalIndex = minIt+1+j;
-					iterable.add(finalIndex, pToAdd);			
+					//Coordinate c = //cToAdd[index];//para recorrer hasta cero al final
+					Position pToAdd = posNToAdd.get(index);// Position.fromDegrees(c.y, c.x);
+					//int finalIndex = minIt+1+j;
+					//iterable.add(finalIndex, pToAdd);
+					if(!arrayToInsert.contains(pToAdd)) {
+						arrayToInsert.add(pToAdd);//evito duplicar el principio y el fin del loop
+					} else {
+						//System.out.println("quitando el inicio");
+					}
 				}
 
-				Coordinate c = cToAdd[minCoord];//para recorrer hasta cero al final
-				Position pToAdd = Position.fromDegrees(c.y, c.x);
-				iterable.add(minIt+cToAdd.length+1,pToAdd);
-				iterable.add(minIt+cToAdd.length+2, iterable.get(minIt));
+				double halfWidth = ProyectionConstants.metersToLongLat(0.25);
+				
+				Position firstInsert = arrayToInsert.get(0);
+				Position antesfirstInsert = arrayToInsert.get(arrayToInsert.size()-1);//busco el ultimo
+				Angle dist = Position.linearDistance(firstInsert, antesfirstInsert);
+				
+				firstInsert = Position.interpolate(halfWidth/dist.degrees, firstInsert, antesfirstInsert);//retrocedo 1%				
+				arrayToInsert.add(firstInsert);//cierro el loop				
+				
+				firstInsert = arrayToInsert.get(0);
+				Position despuesfirstInsert = arrayToInsert.get(1);//busco el ultimo
+				dist = Position.linearDistance(firstInsert, despuesfirstInsert);
+				firstInsert = Position.interpolate(halfWidth/dist.degrees, firstInsert, despuesfirstInsert);//retrocedo 1%				
+				arrayToInsert.set(0,firstInsert);//cierro el loop
+				
+				Position lastInsert = iterable.get(minIt);
+				Position despueslastInsert = iterable.get(minIt+1);
+				dist = Position.linearDistance(lastInsert, despueslastInsert);				
+				lastInsert = Position.interpolate(halfWidth/dist.degrees, lastInsert, despueslastInsert);//retrocedo 1%		
+				arrayToInsert.add(lastInsert);
+								
+				iterable.addAll(minIt+1, arrayToInsert);								
 			}
+			//TODO simplificar iterable si los puntos estan muy cerca
 
-
-			if(!iterable.get(0).equals(iterable.get(iterable.size()-1))){
-				iterable.add(iterable.get(0));
-			}
 			Poligono poli = new Poligono();
 			poli.setPositions(iterable);
+
+			try{	
+				g = TopologyPreservingSimplifier.simplify(poli.toGeometry(), ProyectionConstants.metersToLongLat(0.25));
+				//g =g.buffer(0);		
+				poli.setPositions(geometryToPositions(g));
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+			
 			double has = ProyectionConstants.A_HAS(g.getArea());
 			poli.setArea(has);
 			return poli;
 		} else {return null;}
+	}
+
+	private static List<Position>  geometryToPositions( Geometry seed) {
+		List<Position> iterable=new ArrayList<Position>();
+		Coordinate[] coordinates = seed.getCoordinates();
+		for(Coordinate c : coordinates){
+			iterable.add(Position.fromDegrees(c.y, c.x));							
+		}
+		return iterable;
 	}
 
 	public static Poligono itemToPoligono(LaborItem feature){			

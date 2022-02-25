@@ -1,21 +1,16 @@
 package tasks;
 
-import java.awt.Desktop;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
-import java.util.Scanner;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
@@ -31,23 +26,22 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson.JacksonFactory;
 
-
 import dao.config.Configuracion;
 import gui.JFXMain;
+import gui.Messages;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
-import javafx.concurrent.Worker;
-import javafx.scene.control.Alert;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
@@ -56,7 +50,7 @@ import javafx.stage.Stage;
 
 public class UpdateTask  extends Task<File>{
 	private static final String UPDATE_URL ="https://www.ursulagis.com/update/";//TODO cambiar a https
-	//private static final String UPDATE_URL = "http://localhost:5000/update";
+	//private static final String UPDATE_URL = "http://localhost:5000/update/";
 	private static final String TASK_CLOSE_ICON = "/gui/event-close.png";
 	private ProgressBar progressBarTask;
 	private Pane progressPane;
@@ -117,7 +111,6 @@ public class UpdateTask  extends Task<File>{
 				super.updateProgress(readTot,ava);//readTot, ava);
 				bos.write(bytesIn, 0, read);
 			}
-			System.out.println("termine de leer");
 
 			is.close();
 			bos.close();
@@ -295,7 +288,6 @@ public class UpdateTask  extends Task<File>{
 		GenericUrl url = new GenericUrl(UPDATE_URL);//"http://www.ursulagis.com/update");// "http://www.lanacion.com.ar");
 		url.put("VERSION", JFXMain.VERSION);
 		
-		
 		DecimalFormat dc = new DecimalFormat("0,000");
 		dc.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(new Locale("EN")));
 		dc.setGroupingUsed(true);
@@ -305,6 +297,9 @@ public class UpdateTask  extends Task<File>{
 		String usr = conf.getPropertyOrDefault("USER", userString);//si no existia la clave se crea una nueva
 		conf.save();
 		url.put("USER", usr);
+		
+		System.out.println("calling url=> "+url);
+		//http://localhost:5000/update?VERSION=0.2.26&USER=693,468
 		//http://www.ursulagis.com/update?VERSION=0.2.20
 		HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 		JsonFactory JSON_FACTORY = new JacksonFactory();
@@ -320,85 +315,65 @@ public class UpdateTask  extends Task<File>{
 
 		try {
 			HttpRequest request = requestFactory.buildGetRequest(url);
-			HttpResponse response = request.execute();
-//			Scanner res = new Scanner(response.getContent());
-//			StringBuilder sb = new StringBuilder();
-//			while(res.hasNextLine()) {
-//				sb.append(res.next());
-//				//System.out.println(res.next());
-//			}
-//			res.close();
-//			System.out.println(sb.toString());
-			
+			HttpResponse response = request.execute();		
 			
 			GenericJson content = null;
 			try{
 				content = response.parseAs(GenericJson.class);//FIXME Unexpected character ('w' (code 119)): was expecting comma to separate OBJECT entries
 				UpdateTask.lastVersionNumber =(String) content.get("lastVersionNumber");
-			
-			//response.disconnect();
-			UpdateTask.lastVersionNumber =(String) content.get("lastVersionNumber");
-			//			UpdateRespone ur = response.parseAs(UpdateRespone.class);
-			//			System.out.println(ur);
-			
-			String message = (String)content.get("mensaje");
-			System.out.println(message);
-			if(message!=null){
-				Platform.runLater(()->{
-					Alert a = new Alert(AlertType.INFORMATION);
-					//a.initOwner(JFXMain.ICON);
-					Stage stage = (Stage) a.getDialogPane().getScene().getWindow();
-			        stage.getIcons().add(new Image(JFXMain.ICON));
-			        
-					WebView webView = new WebView();
-					WebEngine engine = webView.getEngine();
-					engine.loadContent(message);
-					//engine.load("https://www.ursulagis.com/");
-				//	engine.
-//					engine.getLoadWorker().stateProperty().addListener(new ChangeListener<Worker.State>() {
-//						@Override
-//						public void changed(ObservableValue<? extends Worker.State> observable, Worker.State oldValue,
-//								Worker.State newValue)  {
-//							String toBeopen = engine.getLoadWorker().getMessage().trim();
-//							System.out.println("tobeopen: " + toBeopen);
-//							//   if (toBeopen.contains("http://") || toBeopen.contains("https://")) {
-//							//    engine.getLoadWorker().cancel();
-//							try {
-//								Desktop.getDesktop().browse(new URL("http://www.ursulagis.com").toURI());
-//							} catch (IOException | URISyntaxException e) {
-//								// TODO Auto-generated catch block
-//								e.printStackTrace();
-//							}
-//
-//							// }
-//						}
-//					});
 
-
-					//   webView.setPrefSize(150, 60);
-					a.setHeaderText("");
-					a.setGraphic(null);
-
-					a.getDialogPane().setContent(webView);;
-					a.show();
-				
-				});
-				
-				
-			}
+				String message = (String)content.get("mensaje");
+				if(message!=null){
+					showWelcomeMessage(message);				
+				}
 			}catch(Exception e){
 				e.printStackTrace();
 			}
 			if(versionToDouble(lastVersionNumber)>versionToDouble(JFXMain.VERSION)){
-				UpdateTask.lastVersionURL = (String)content.get("lastVersionURL");
+				UpdateTask.lastVersionURL =(String)content.get("lastVersionURL");
 				return true;	
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 			return false;
 		}	
-
 		return false;
+	}
+
+	/**
+	 * metodo que muestra el mensaje de bienvenida
+	 * @param message
+	 */
+	private static void showWelcomeMessage(String message) {
+		Platform.runLater(()->{		    
+			WebView webView = new WebView();
+			// webView.setPrefSize(600, 400);
+			webView.autosize();
+			WebEngine engine = webView.getEngine();
+			engine.loadContent(message);
+
+			VBox v = new VBox();
+			VBox.setVgrow(webView, Priority.ALWAYS);
+			VBox.setMargin(webView, new Insets(10,10,10,10));
+			v.getChildren().add(webView);
+			Stage welcomeStage = new Stage();
+			
+			double height = webView.getPrefHeight();
+			double width = webView.getPrefWidth();
+			Scene scene = new Scene(v, width-150,height-100);
+			welcomeStage.setScene(scene);
+			welcomeStage.initOwner(JFXMain.stage);
+			welcomeStage.getIcons().addAll(JFXMain.stage.getIcons());
+			welcomeStage.setTitle(Messages.getString("UpdateTaskWelcome.Title"));//"Bienvenido!");
+			welcomeStage.show();
+			
+//			engine.getLoadWorker().stateProperty().addListener((observableState, oldState, newState)->{
+//				System.out.println("new state "+newState);
+//				if(State.SUCCEEDED.equals(newState)) {
+//					welcomeStage.show();
+//				}
+//			});			
+		});
 	}
 
 	public static Double versionToDouble(String ver){

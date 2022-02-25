@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,6 +21,8 @@ import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.expression.Literal;
 import org.opengis.filter.expression.PropertyName;
 
+import dao.config.Configuracion;
+import dao.utils.PropertyHelper;
 import gui.Messages;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -32,6 +35,7 @@ import utils.ProyectionConstants;
 import utils.UrsulaJenksNaturalBreaksFunction;
 @Data
 public class Clasificador {
+	private static final String CLASIFICADOR_MIN_AREA_JENKINS = "Clasificador.MIN_AREA_JENKINS";
 	public static final String NUMERO_CLASES_CLASIFICACION = "NUMERO_CLASES_CLASIFICACION";
 	private static final String CLASIFICADOR_JENKINS = "Jenkins";
 	private static final String CLASIFICADOR_DESVIOSTANDAR = "Desvio Standar";
@@ -91,7 +95,7 @@ public class Clasificador {
 		//	Double delta = histograma[1]-histograma[0];
 
 			if(index == 0){
-				rangoIni = "-inf ~ "+ df.format(histograma[0]);
+				rangoIni = "-inf ~ "+ df.format(histograma[0]);//java.lang.ArrayIndexOutOfBoundsException: 0
 			}else if(index < histograma.length ){
 				rangoIni = df.format(histograma[index-1])+" ~ "+ df.format(histograma[index]);
 			}else {
@@ -160,7 +164,16 @@ public class Clasificador {
 		histograma = null;
 		//TODO usar config. ancho grilla^2/10000
 		//Sup minima relevante 10m^2
-		double minArea = 70/(ProyectionConstants.METROS2_POR_HA*ProyectionConstants.A_HAS());
+		Configuracion config = Configuracion.getInstance();
+		 DecimalFormat dc = PropertyHelper.getDoubleConverter();		
+		 Number anchoGrilla = 70;
+		try {
+			 anchoGrilla = dc.parse(config.getPropertyOrDefault(CLASIFICADOR_MIN_AREA_JENKINS,"70"));
+		} catch (ParseException e) {		
+			e.printStackTrace();
+		}
+		
+		double minArea = anchoGrilla.doubleValue()/(ProyectionConstants.METROS2_POR_HA*ProyectionConstants.A_HAS());
 		NaturalBreaks func = new NaturalBreaks(amountColumn,this.getNumClasses(),minArea);
 		//UrsulaJenksNaturalBreaksFunction func = new UrsulaJenksNaturalBreaksFunction(amountColumn,this.getNumClasses(),minArea);
 		

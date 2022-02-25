@@ -124,8 +124,6 @@ public abstract class Labor<E extends LaborItem>  {
 	@Transient private static final String ANCHO_DEFAULT = "ANCHO_DEFAULT";
 	@Transient private static final String FECHA_KEY = "FECHA_KEY";
 
-
-
 	@Transient public Clasificador clasificador=null;	
 	@Transient public SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(getType());
 
@@ -510,7 +508,16 @@ public abstract class Labor<E extends LaborItem>  {
 		//
 		//		return objects;
 	}
-
+	
+	public int compareTo(Object dao){
+		if(dao !=null && Labor.class.isAssignableFrom(dao.getClass())){
+			
+			return id.compareTo(((Labor)dao).id);
+		} else {
+			return 0;
+		}
+	}
+	
 	public synchronized void clearCache(){//do not clear cache while people are working 
 		synchronized(this) {
 		if(treeCache!=null) {
@@ -638,7 +645,9 @@ public abstract class Labor<E extends LaborItem>  {
 	}
 
 	public void insertFeature(SimpleFeature f){
-		outCollection.add(f);
+		if(!outCollection.add(f)) {
+			System.err.println("No se pudo insertar la feature "+f);
+		}
 	}
 
 	public void constructClasificador() {

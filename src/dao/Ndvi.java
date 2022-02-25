@@ -37,7 +37,7 @@ import lombok.Setter;
 	@NamedQuery(name=Ndvi.FIND_NAME, query="SELECT o FROM Ndvi o where o.nombre = :name") ,
 	@NamedQuery(name=Ndvi.FIND_ACTIVOS, query="SELECT o FROM Ndvi o where o.activo = true") ,
 }) 
-public class Ndvi {
+public class Ndvi implements Comparable{//extends AbstractBaseEntity {
 	public static final String FIND_ALL="Ndvi.findAll";
 	public static final String FIND_NAME = "Ndvi.findName";
 	public static final String FIND_ACTIVOS = "Ndvi.findActivos";
@@ -117,6 +117,14 @@ public class Ndvi {
 		if(this.pixelArea==0) {
 			this.pixelArea=0.001;//0.008084403745300213;
 		}
+	}
+
+	@Override
+	public int compareTo(Object o) {
+		if(o instanceof Ndvi) {
+			return this.fecha.compareTo(((Ndvi) o).fecha);
+		}
+		return 0;
 	}
 
 

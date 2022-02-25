@@ -41,39 +41,28 @@ import utils.ProyectionConstants;
 
 public class CrearCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabor> {
 	Double rinde = new Double(0);
-	Poligono poli=null;
+	List<Poligono> polis=null;
 
-	public CrearCosechaMapTask(CosechaLabor cosechaLabor,Poligono _poli,Double _rinde){//RenderableLayer layer, FileDataStore store, double d, Double correccionRinde) {
+	public CrearCosechaMapTask(CosechaLabor cosechaLabor,List<Poligono> _poli,Double _rinde){//RenderableLayer layer, FileDataStore store, double d, Double correccionRinde) {
 		super(cosechaLabor);
 		rinde=_rinde;
-		poli=_poli;
+		polis=_poli;
 
 	}
 
 	public void doProcess() throws IOException {
+		for(Poligono poli : polis) {
 		CosechaItem ci = new CosechaItem();
 		ci.setRindeTnHa(rinde);
 //		ci.setPrecioTnGrano(labor.precioGranoProperty.get());
 //		ci.setCostoLaborHa(labor.precioLaborProperty.get());
 //		ci.setCostoLaborTn(labor.costoCosechaTnProperty.get());
 		labor.setPropiedadesLabor(ci);
-		GeometryFactory fact = new GeometryFactory();
-		List<? extends Position> positions = poli.getPositions();
-		Coordinate[] coordinates = new Coordinate[positions.size()];
-		for(int i=0;i<positions.size();i++){
-			Position p = positions.get(i);	
-			Coordinate c = new Coordinate(p.getLongitude().getDegrees(),p.getLatitude().getDegrees(),p.getElevation());
-			
-			coordinates[i]=c;
-		}
-		coordinates[coordinates.length-1]=coordinates[0];//en caso de que la geometria no este cerrada
-		
-		Polygon poly = fact.createPolygon(coordinates);	
 
-		ci.setGeometry(poly);
-		
+		ci.setGeometry(poli.toGeometry());
+		ci.setId(labor.getNextID());
 		labor.insertFeature(ci);
-				
+		}
 		labor.constructClasificador();
 
 		

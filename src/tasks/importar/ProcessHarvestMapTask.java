@@ -4,12 +4,18 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.geotools.data.FeatureReader;
+import org.geotools.data.FileDataStore;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -24,8 +30,16 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.util.AffineTransformation;
+import com.vividsolutions.jts.geom.util.NoninvertibleTransformationException;
+import com.vividsolutions.jts.operation.buffer.BufferOp;
+import com.vividsolutions.jts.operation.buffer.BufferParameters;
+import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
 import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
+import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;//TopologyPreservingSimplifier;
+import com.vividsolutions.jts.simplify.TaggedLineStringSimplifier;
 import com.vividsolutions.jts.util.GeometricShapeFactory;
+import com.vividsolutions.jts.densify.Densifier;
 
 import dao.Labor;
 import dao.LaborItem;
@@ -36,6 +50,7 @@ import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
 import javafx.geometry.Point2D;
 import tasks.ProcessMapTask;
+import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
 public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLabor> {
@@ -416,18 +431,18 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		//agruparlas por clase y hacer un buffer cero
 		//luego crear un feature promedio para cada poligono individual
 
-		//XXX inicializo la lista de las features por categoria
-		List<List<SimpleFeature>> colections = new ArrayList<List<SimpleFeature>>();
+		// inicializo la lista de las features por categoria
+		List<List<SimpleFeature>> itemsByCat = new ArrayList<List<SimpleFeature>>();
 		for(int i=0;i<labor.clasificador.getNumClasses();i++){
-			colections.add(i, new ArrayList<SimpleFeature>());
+			itemsByCat.add(i, new ArrayList<SimpleFeature>());
 		}
-		//XXX recorro las features y segun la categoria las voy asignando las features a cada lista de cada categoria
+		// recorro las features y segun la categoria las voy asignando las features a cada lista de cada categoria
 		SimpleFeatureIterator it = labor.outCollection.features();
 		while(it.hasNext()){
 			SimpleFeature f = it.next();
 			CosechaItem ci = this.labor.constructFeatureContainerStandar(f, false);
 			int cat = labor.getClasificador().getCategoryFor(ci.getAmount());//LaborItem.getDoubleFromObj(f.getAttribute(labor.colRendimiento.get())));
-			colections.get(cat).add(f);
+			itemsByCat.get(cat).add(f);
 		}
 		it.close();
 
@@ -436,14 +451,14 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		DefaultFeatureCollection newOutcollection =  new DefaultFeatureCollection(Messages.getString("ProcessHarvestMapTask.9"),labor.getType());		 //$NON-NLS-1$
 		//TODO pasar esto a parallel streams
 		//XXX por cada categoria 
-		for(int i=0;i<labor.clasificador.getNumClasses();i++){
+		for(int catIndex=0; catIndex < itemsByCat.size(); catIndex++){
 			List<Geometry> geometriesCat = new ArrayList<Geometry>();
 
 			//	Geometry slowUnion = null;
 			Double sumRinde=new Double(0);
 			Double sumatoriaAltura=new Double(0);
 			int n=0;
-			for(SimpleFeature f : colections.get(i)){//por cada item de la categoria i
+			for(SimpleFeature f : itemsByCat.get(catIndex)){//por cada item de la categoria i
 				Object geomObj = f.getDefaultGeometry();
 				geometriesCat.add((Geometry)geomObj);
 				sumRinde+=LaborItem.getDoubleFromObj(f.getAttribute(CosechaLabor.CosechaLaborConstants.COLUMNA_RENDIMIENTO));
@@ -454,33 +469,81 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			double elevProm = sumatoriaAltura/n;
 
 			double sumaDesvio2 = 0.0;
-			for(SimpleFeature f:colections.get(i)){
+			for(SimpleFeature f:itemsByCat.get(catIndex)){
 				double cantidadCosecha = LaborItem.getDoubleFromObj(f.getAttribute(CosechaLabor.CosechaLaborConstants.COLUMNA_RENDIMIENTO));	
 				sumaDesvio2+= Math.abs(rindeProm- cantidadCosecha);
 			}
 
 			double desvioPromedio = sumaDesvio2/n;
-			if(n>0){//si no hay ningun feature en esa categoria esto da out of bounds
-				GeometryFactory fact = geometriesCat.get(0).getFactory();
-				Geometry[] geomArray = new Geometry[geometriesCat.size()];
-				GeometryCollection colectionCat = fact.createGeometryCollection(geometriesCat.toArray(geomArray));
-
-				Geometry buffered = null;
+			if(n > 0){//si no hay ningun feature en esa categoria esto da out of bounds
 				double bufer= ProyectionConstants.metersToLongLat(0.25);
+				
+				
+//				GeometryFactory fact = geometriesCat.get(0).getFactory();
+//				GeometryCollection colectionCat = fact.createGeometryCollection(
+//						GeometryFactory.toGeometryArray(geometriesCat));
+			//	Geometry[] geomArray = new Geometry[geometriesCat.size()];
+			//	GeometryCollection colectionCat = fact.createGeometryCollection(geometriesCat.toArray(geomArray));
+			
+				Geometry buffered = null;
+			
 				try{
-					buffered = colectionCat.union();
-					buffered =buffered.buffer(bufer);
+					buffered = CascadedPolygonUnion.union(geometriesCat);
+					//buffered = at.transform(colectionCat);
+					buffered = buffered.buffer(bufer,1,BufferParameters.CAP_SQUARE);//sino le pongo buffer al resumir geometrias me quedan rectangulos medianos
+					//buffered = colectionCat.buffer(0,1,BufferParameters.CAP_SQUARE);
+					//	buffered = inverse.transform(buffered);
+					//buffered = buffered.buffer(-bufer,1,BufferParameters.CAP_ROUND);
+				//	buffered =buffered.buffer(bufer);
 				}catch(Exception e){
-					System.out.println(Messages.getString("ProcessHarvestMapTask.10")); //$NON-NLS-1$
+					System.out.println("probando union con parallelStream"); //$NON-NLS-1$
 					//java.lang.IllegalArgumentException: Comparison method violates its general contract!
-					try{
-						buffered= EnhancedPrecisionOp.buffer(colectionCat, bufer);//java.lang.IllegalArgumentException: Comparison method violates its general contract!
-					}catch(Exception e2){
-						e2.printStackTrace();
-					}
+//					try{
+//						buffered= EnhancedPrecisionOp.buffer(colectionCat, bufer);//java.lang.IllegalArgumentException: Comparison method violates its general contract!
+//					}catch(Exception e2){
+//						System.out.println("fallo EnhancedPrecisionOp!");
+//						e2.printStackTrace();
+						
+						//init
+						try {
+						Geometry[] array =	geometriesCat.parallelStream().collect(() -> new Geometry[1],
+										(unionArray, geom) -> {
+											Geometry union1 = unionArray[0];
+											if(union1==null) {
+												union1=geom;
+											}else {
+												union1 = union1.union(geom);	
+											}
+											unionArray[0]=union1;
+											},
+										(unionArray1, unionArray2) ->{
+											Geometry union1 = unionArray1[0];
+											Geometry union2 = unionArray2[0];
+											if(union1==null) {
+												union1=union2;
+											}else {
+												union1 = union1.union(union2);	
+											}
+											unionArray1[0]=union1;//.union(bufer,1,BufferParameters.CAP_SQUARE);//no junta los polis
+											}	
+										);
+						buffered=array[0].buffer(bufer,1,BufferParameters.CAP_SQUARE);
+					//	buffered=buffered.buffer(-bufer,1,BufferParameters.CAP_ROUND);
+						}catch(Exception e3) {
+							System.out.println("fallo unir poligonos en parallell stream");
+							e3.printStackTrace();							
+						}
+				 //}
 				}
+				//buffered=GeometryHelper.simplify(buffered);
+//				Densifier densifier = new Densifier(buffered);
+//				densifier.setDistanceTolerance(ProyectionConstants.metersToLongLat(2));
+//				buffered=densifier.getResultGeometry();
+//				//buffered = TopologyPreservingSimplifier.simplify(buffered, ProyectionConstants.metersToLongLat(2));
+//				buffered = DouglasPeuckerSimplifier.simplify(buffered, ProyectionConstants.metersToLongLat(5));
+				
 
-				SimpleFeature fIn = colections.get(i).get(0);
+				SimpleFeature fIn = itemsByCat.get(catIndex).get(0);
 				//TODO recorrer buffered y crear una feature por cada geometria de la geometry collection
 				for(int igeom=0;buffered!=null && igeom<buffered.getNumGeometries();igeom++){//null pointer exception at tasks.importar.ProcessHarvestMapTask.resumirGeometrias(ProcessHarvestMapTask.java:468)
 					Geometry g = buffered.getGeometryN(igeom);

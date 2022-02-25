@@ -1,6 +1,7 @@
 package utils;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +10,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
@@ -32,6 +34,7 @@ import dao.config.Lote;
 import dao.config.Semilla;
 import dao.cosecha.CosechaLabor;
 import dao.recorrida.Recorrida;
+import gui.JFXMain;
 
 public class DAH {
 	private static final String APPDATA = "APPDATA";
@@ -132,11 +135,56 @@ public class DAH {
 			EntityManagerFactory factory =  Persistence.createEntityManagerFactory("UrsulaGIS", properties);
 			//step 2
 			emLite = factory.createEntityManager();
+			
+//			String hUUID = JFXMain.config.getPropertyOrDefault("DAH.HAS_UUIDS", "False");
+//			if(!"True".equals(hUUID)) {
+//				//	runUpdates();
+//				JFXMain.config.setProperty("DAH.HAS_UUIDS", "True");
+//				JFXMain.config.save();
+//			}
+
 		}
 		return emLite;
 	}
 
+	public static void runUpdates() {
+		String table ="ORDENCOMPRA";
+		String col = "UUID";
 
+		DAH.transaction = emLite.getTransaction();
+		DAH.transaction.begin();
+		Query q = emLite.createNativeQuery("SELECT DISTINCT TABLE_NAME FROM information_schema.columns as c where c.TABLE_SCHEMA='PUBLIC' ");//and c.COLUMN_NAME='"+col+"'");// where Name = "+table); 
+		List<String> results = q.getResultList();
+		results.stream().forEach((tableName)->{
+			System.out.println("cheking "+tableName);
+			Query q2 = emLite.createNativeQuery("SELECT TABLE_NAME FROM information_schema.columns as c where c.TABLE_NAME='"+tableName+"' AND c.COLUMN_NAME='"+col+"'");
+			 if(!(q2.getResultList().size()>0)) {
+				 System.out.println("no hay uuids, creando");
+				 									//ALTER TABLE TABLE_NAME ADD COLUMN IF NOT EXISTS COLUMN_NAME VARCHAR(50);
+				 Query q3 = emLite.createNativeQuery("ALTER TABLE "+table+" ADD COLUMN IF NOT EXISTS "+col+" VARCHAR(36)");
+				 q3.executeUpdate();
+				 Query q4 = emLite.createNativeQuery("UPDATE "+table+" SET "+col+"=RANDOM_UUID() ");
+				 q4.executeUpdate();			 
+			 }
+		}
+		);
+			
+	
+//				"          AND Object_ID = Object_ID(N'schemaName."+table+"')");
+//		"ALTER TABLE TABLE_NAME ADD COLUMN IF NOT EXISTS COLUMN_NAME VARCHAR(50);"
+		
+//		\r\n" + 
+//		"BEGIN\r\n" + 
+//				" alter table "+table+" INSERT UUID varchar(255)\\r\\n"+
+//		//"UPDATE "+table+" set UUID=random_uuid();" + 
+//		"END");//
+//		UPDATE table_name
+//		SET column1 = value1, column2 = value2, ...
+//		WHERE condition;
+		
+		//q.executeUpdate();
+		DAH.commitTransaction();
+	}
 	//	public static EntityManager em(){
 	//		if(em == null){
 	//			String currentUsersHomeDir =System.getenv(APPDATA);

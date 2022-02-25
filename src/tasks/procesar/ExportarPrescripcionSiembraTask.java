@@ -3,7 +3,9 @@ package tasks.procesar;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.geotools.data.DataUtilities;
@@ -56,6 +58,7 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 	}
 	
 	public File call() {
+		try {
 		SimpleFeatureType type = null;
 		//*the_geom:    												:srid=4326,
 		//	String typeDescriptor = Messages.getString("JFXMain.341")+Polygon.class.getCanonicalName()+Messages.getString("JFXMain.342") //$NON-NLS-1$ //$NON-NLS-2$
@@ -65,10 +68,22 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 		//		//seeding
 		//		+ Messages.getString("JFXMain.345") + Messages.getString("JFXMain.346"); //$NON-NLS-1$ :java.lang.Long
 
+		
+//		Map<String,String> availableColums = new LinkedHashMap<String,String>();
+//		availableColums.put(Messages.getString("SiembraLabor.COLUMNA_SEM_10METROS"),SiembraLabor.COLUMNA_SEM_10METROS);//("Sem10ml");
+//		availableColums.put(Messages.getString("SiembraLabor.COLUMNA_DOSIS_SEMILLA"),SiembraLabor.COLUMNA_KG_SEMILLA);//("kgSemHa");
+//		availableColums.put(Messages.getString("SiembraLabor.COLUMNA_MILES_SEM_HA"),SiembraLabor.COLUMNA_MILES_SEM_HA);//("MilSemHa");
+//		availableColums.put(Messages.getString("SiembraLabor.COLUMNA_SEM_ML"),SiembraLabor.COLUMNA_SEM_ML);//("semML");
+		
+		String dosisClass = "java.lang.Long";
+		if(SiembraLabor.COLUMNA_SEM_ML.equals(unidad)) {
+			dosisClass = "java.lang.Float";
+		}
+		
 		String typeDescriptor = "*the_geom:"+Polygon.class.getCanonicalName()+":srid=4326,"//$NON-NLS-1$
-				+ SiembraLabor.COLUMNA_DOSIS_LINEA + ":java.lang.Long,"//$NON-NLS-1$
+				+ SiembraLabor.COLUMNA_DOSIS_LINEA +":java.lang.Long,"//java.lang.Long,"//$NON-NLS-1$
 				+ SiembraLabor.COLUMNA_DOSIS_COSTADO +":java.lang.Long,"//$NON-NLS-1$
-				+unidad+":java.lang.Long";//$NON-NLS-1$ semilla siempre tiene que ser la 3ra columna
+				+unidad+":"+dosisClass;//$NON-NLS-1$ semilla siempre tiene que ser la 3ra columna
 
 		System.out.println("creando type con: "+typeDescriptor); //$NON-NLS-1$ the_geom:Polygon:srid=4326,Fert L:java.lang.Long,Fert C:java.lang.Long,seeding:java.lang.Long
 		System.out.println("Long.SIZE="+Long.SIZE);//64bits=16bytes. ok!! //$NON-NLS-1$
@@ -108,11 +123,14 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 //				availableColums.add(SiembraLabor.COLUMNA_SEM_10METROS);//("Sem10ml");
 //				availableColums.add(SiembraLabor.COLUMNA_DOSIS_SEMILLA);//("kgSemHa");
 //				availableColums.add(SiembraLabor.COLUMNA_MILES_SEM_HA);//("MilSemHa");
-				Double semilla = fi.getDosisML()*10;///XXX aca hago magia para convertir de plantas por metro a plantas cada 10 metros
-				if(SiembraLabor.COLUMNA_DOSIS_SEMILLA.equals(unidad)) {
-					semilla = fi.getDosisHa();
+				Double semilla = Math.rint(fi.getDosisML()*10);///XXX aca hago magia para convertir de plantas por metro a plantas cada 10 metros
+				if(SiembraLabor.COLUMNA_KG_SEMILLA.equals(unidad)) {
+					semilla = Math.rint(fi.getDosisHa());
 				} else if(SiembraLabor.COLUMNA_MILES_SEM_HA.equals(unidad)) {
-					semilla = fi.getDosisML()*(10/laborToExport.getEntreSurco());
+					semilla = Math.rint(fi.getDosisML()*(10/laborToExport.getEntreSurco()));
+				} else if(SiembraLabor.COLUMNA_SEM_ML.equals(unidad)) {
+					semilla = fi.getDosisML();
+					System.out.println("Exportando prescripcion con dosis ML "+semilla);
 				}
 				Double linea = fi.getDosisFertLinea();
 				Double costado = fi.getDosisFertCostado();
@@ -120,7 +138,7 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 				//System.out.println("presc Dosis ="+semilla); //$NON-NLS-1$
 				fb.add(linea);
 				fb.add(costado);
-				fb.add(Math.round(semilla));
+				fb.add(semilla);
 
 				SimpleFeature exportFeature = fb.buildFeature(fi.getId().toString());
 				exportFeatureCollection.add(exportFeature);
@@ -175,6 +193,10 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 		config.save();
 		
 		return shapeFile;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 
@@ -198,6 +220,7 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 			List<LaborItem> done = new ArrayList<LaborItem>();		
 			for(LaborItem ar : itemsAReducir) {
 				Geometry gAr =ar.getGeometry();
+				@SuppressWarnings("unchecked")
 				List<LaborItem> vecinos =(List<LaborItem>) tree.query(gAr.getEnvelopeInternal());
 
 				if(vecinos.size()>0) {

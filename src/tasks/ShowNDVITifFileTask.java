@@ -498,7 +498,7 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 			//System.out.println("ndviProm "+ndviProm);
 
 			if(porcNubes>0.9) {
-				System.out.print("ignorando layer por nublado");
+				System.out.println("ignorando layer por nublado porcNubes = "+porcNubes);
 				return null;
 			}
 			//				surface.setValues(AnalyticSurface.createColorGradientValues(

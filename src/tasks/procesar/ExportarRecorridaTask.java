@@ -96,15 +96,14 @@ public class ExportarRecorridaTask extends ProgresibleTask<File>{
 			 for(String k : map.keySet()) {
 				 Object value = map.get(k);
 				 if(String.class.isAssignableFrom(value.getClass())) {				
-					 Double dValue = new Double(0);
-					 try {
-						 dValue=new Double((String)value);
+					
+//					 try {
+//						new Double((String)value);						 
+//					 }catch(Exception e) {
+//						 System.err.println("error tratando de parsear \""+value+"\" reemplazo por 0");
+//					}finally {
 						 sb.append(","+k + ":"+Double.class.getCanonicalName());
-						 
-						 
-					 }catch(Exception e) {
-						 System.err.println("error tratando de parsear \""+value+"\" reemplazo por 0");
-					}
+//					}
 					 //fb.add(dValue);
 					 
 				 } else if(Number.class.isAssignableFrom(value.getClass())) {

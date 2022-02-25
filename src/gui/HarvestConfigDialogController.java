@@ -293,12 +293,13 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 
 		//colCultivo ;
 		this.comboCultivo.setItems(FXCollections.observableArrayList(DAH.getAllCultivos()));
-		this.comboCultivo.getSelectionModel().select(labor.getCultivo());
+		
 		this.comboCultivo.valueProperty().addListener((obj,old,n)->{
 			labor.cultivo=n;
 			if(n!=null)config.setProperty(CosechaLabor.CosechaLaborConstants.PRODUCTO_DEFAULT,n.getNombre());
 		});
-
+		this.comboCultivo.getSelectionModel().select(labor.getCultivo());
+		
 		DecimalFormat converter = PropertyHelper.getDoubleConverter();
 
 		//textPrecioGrano
