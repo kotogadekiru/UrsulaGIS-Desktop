@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -306,8 +307,9 @@ public class ExcelHelper {
 				
 					Object[] d = data.get(String.valueOf(i+1));
 					if(d==null) {
-						d = new Object[observableList.size()+1];
-						d[0]=datos.get(i).getXValue();					
+						d = new Object[observableList.size()+1];					
+						
+						d[0]=LocalDate.ofEpochDay(datos.get(i).getXValue().longValue()).toString();					
 					}
 						d[j+1]=yVal;
 						data.put(String.valueOf(i+1),d);
