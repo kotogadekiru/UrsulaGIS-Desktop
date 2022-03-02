@@ -299,20 +299,24 @@ public class ExcelHelper {
 			
 			for(int j=0;j<observableList.size();j++) {
 				Series s=observableList.get(j);
-				List<Data<Number,Number>> datos =s.getData();
+				List<Data<Number,Number>> datos =s.getData();			
 
 				for(int i =1;i<datos.size();i++){
+					String sFecha = LocalDate.ofEpochDay(datos.get(i).getXValue().longValue()).toString();
 					//Number rinde = new Double(0);
 					Number yVal = datos.get(i).getYValue();
 				
-					Object[] d = data.get(String.valueOf(i+1));
+					Object[] d = data.get(sFecha);
 					if(d==null) {
 						d = new Object[observableList.size()+1];					
 						
-						d[0]=LocalDate.ofEpochDay(datos.get(i).getXValue().longValue()).toString();					
+						d[0]=sFecha;					
+					}else {
+						data.remove(sFecha);
 					}
 						d[j+1]=yVal;
-						data.put(String.valueOf(i+1),d);
+						data.put(sFecha,d);
+						//data.m
 					
 				}
 			}
