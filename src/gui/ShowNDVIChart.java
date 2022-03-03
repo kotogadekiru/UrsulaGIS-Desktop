@@ -25,6 +25,7 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Series;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
@@ -117,13 +118,41 @@ public class ShowNDVIChart extends VBox {
 		bottom.setRight(right);//getChildren().addAll(left,right);
 		bottom.setPadding(new Insets(5,5,5,5));
 		vbox.getChildren().add(bottom);
+		this.getStylesheets().add(getClass().getResource("chart.css").toExternalForm());
 		this.getChildren().add(vbox);
+		
+		/**
+         * Browsing through the Data and applying ToolTip
+         * as well as the class on hover
+         */
+        for (XYChart.Series<Number, Number> s : lineChart.getData()) {
+            for (XYChart.Data<Number, Number> d : s.getData()) {
+                Tooltip.install(d.getNode(), new Tooltip("Fecha: " +
+                		toString(d.getXValue()) + "\n" +
+                                "Number Of Events : " + d.getYValue()));
+
+                //Adding class on hover
+                d.getNode().setOnMouseEntered(event -> d.getNode().getStyleClass().add("onHover"));
+
+                //Removing class on exit
+                d.getNode().setOnMouseExited(event -> d.getNode().getStyleClass().remove("onHover"));
+            }
+        }
 		
 
 	
 		System.out.println("Mostre grafico");
 
 
+	}
+	
+	
+	private String toString(Number epochDay) {
+		try {
+			return LocalDate.ofEpochDay(epochDay.longValue()).toString();
+		}catch(Exception e) {
+			return "";
+		}				
 	}
 
 	private void doExportarExcell() {
