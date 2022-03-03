@@ -8,12 +8,14 @@ import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.poi.util.SystemOutLogger;
 
@@ -48,6 +50,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import utils.DAH;
 import utils.UnzipUtility;
 
 
@@ -94,11 +97,12 @@ public class GetNdviForLaborTask3 extends Task<List<Ndvi>>{
 	private LocalDate end;
 	private LocalDate begin;
 	private File downloadDir=null;
-	
+
 	private List<Ndvi> observableList =null;
-	
+
 	private DecimalFormat bdf = new DecimalFormat("#,###.00");
-	
+	private List<Ndvi> ndviToIgnore;
+
 	public GetNdviForLaborTask3(Object labor, File downloadDirectory,List<Ndvi> _observableList ) {
 		this.placementObject=labor;
 		downloadDir=downloadDirectory;
@@ -113,13 +117,13 @@ public class GetNdviForLaborTask3 extends Task<List<Ndvi>>{
 	public List<LocalDate> getSentinellAssets(Object placementObject){			
 		String polygons =getPolygonsFromLabor(placementObject);
 
-//		if(placementObject instanceof Labor){//FIXME esto esta ignorando las fechas configuradas
-//			Labor<?> c =(Labor<?>)placementObject;
-//			LocalDate endDate = DateConverter.asLocalDate((Date) c.getFecha());//fechaProperty.getValue(); // "1/8/2016" ->
-//			//System.out.println("parseando la fecha "+endDate);			
-//			end= endDate;
-//			begin=endDate.minusMonths(1);
-//		}
+		//		if(placementObject instanceof Labor){//FIXME esto esta ignorando las fechas configuradas
+		//			Labor<?> c =(Labor<?>)placementObject;
+		//			LocalDate endDate = DateConverter.asLocalDate((Date) c.getFecha());//fechaProperty.getValue(); // "1/8/2016" ->
+		//			//System.out.println("parseando la fecha "+endDate);			
+		//			end= endDate;
+		//			begin=endDate.minusMonths(1);
+		//		}
 
 		DateTimeFormatter format1 = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		String sEnd = format1.format(this.end);
@@ -186,11 +190,10 @@ public class GetNdviForLaborTask3 extends Task<List<Ndvi>>{
 					try {
 						Map<?,?> metadata = (Map<?,?>)((Map<?,?>)feature).get("metadata");
 						porcNubes = (BigDecimal)metadata.get("porcNubes");
-						System.out.println("porcNubes "+metadata.get("porcNubes"));//dateString 2018-03-08
+						//System.out.println("porcNubes "+metadata.get("porcNubes"));//dateString 2018-03-08
 					}catch(Exception e) {
 						e.printStackTrace();
 					}
-					
 
 					if(!assets.contains(assetDate)&&porcNubes.doubleValue()<90){
 						assets.add(assetDate);
@@ -226,9 +229,9 @@ public class GetNdviForLaborTask3 extends Task<List<Ndvi>>{
 				try {
 					Map<?,?> metadata = (Map<?,?>)((Map<?,?>)feature).get("metadata");
 					porcNubes = (BigDecimal)metadata.get("porcNubes");
-					System.out.println("porcNubes "+metadata.get("porcNubes"));//dateString 2018-03-08
-					
-					
+					//System.out.println("porcNubes "+metadata.get("porcNubes"));//dateString 2018-03-08
+
+
 					Object meanObject = metadata.get("meanNDVI");
 					String mean = "0.0";
 					if(meanObject instanceof BigDecimal) {
@@ -237,7 +240,7 @@ public class GetNdviForLaborTask3 extends Task<List<Ndvi>>{
 					} else {
 						System.out.println("no se de que clase es meanNDVI "+meanObject+ (meanObject!=null?" class " +meanObject.getClass().getCanonicalName():""));
 					}
-					
+
 				}catch(Exception e) {
 					e.printStackTrace();
 				}
@@ -276,21 +279,21 @@ public class GetNdviForLaborTask3 extends Task<List<Ndvi>>{
 						String fechaString = new String (fileName);
 
 						if(contornoP !=null){
-							System.out.println("mosntrando un ndvi con owner poli"+ contornoP);
+							//System.out.println("mosntrando un ndvi con owner poli"+ contornoP);
 							fileName = contornoP.getNombre() +" "+ fileName;
 						}
-						
-						
+
+
 						Ndvi ndvi = new Ndvi();
 						ndvi.setNombre(fileName);
 						ndvi.setF(tiffFile);				
 						ndvi.setContorno(contornoP);
-						
+
 						ndvi.setFecha(date);
 						ndvi.setMeanNDVI(meanNDVI.doubleValue());
 						ndvi.setPorcNubes(porcNubes.doubleValue());
-						
-						
+
+
 						files.add(ndvi);
 						//observableList.add(tiffFile);
 						//					} else {						
@@ -344,76 +347,107 @@ public class GetNdviForLaborTask3 extends Task<List<Ndvi>>{
 		String poligonoAsString=null;
 		if(labor instanceof Labor){
 			poligonoAsString = getPolygonsFromLabor(labor);
-		 } else if(labor instanceof Poligono) {
-			 poligono =((Poligono)labor);
-			 poligonoAsString=poligono.getPoligonoToString();
-		 }
+		} else if(labor instanceof Poligono) {
+			poligono =((Poligono)labor);
+			poligonoAsString=poligono.getPoligonoToString();
+		}
 		Poligono contornoP = poligono;
 		String polygons = poligonoAsString;
 		List<LocalDate> uniqueDates = getSentinellAssets(labor);//assents tiene la forma ["COPERNICUS/S2/20161221T141042_20161221T142209_T20HLG","COPERNICUS/S2/20161221T141042_20161221T142209_T20HLG"]
 		updateProgress(0, uniqueDates.size());
-		
+
 		System.out.println("procesando los dates unicos "+uniqueDates);
 		DateTimeFormatter format1 = DateTimeFormatter.ofPattern("yyyy-MM-dd");	
 
 		//IntegerProperty i=new SimpleIntegerProperty(0);
-		List<LocalDate> processed = Collections.synchronizedList(new ArrayList<LocalDate>());
+		
+		List<LocalDate> processedDates = Collections.synchronizedList(new ArrayList<LocalDate>());
 		List<Ndvi>  resFiles = uniqueDates.stream().collect( ()->new  ArrayList<Ndvi>(),
 				(tiffFiles, assetDate) ->{
 					String sEnd = format1.format(assetDate.plusDays(1));
 					String sBegin = format1.format(assetDate.minusDays(1));
 					System.out.println("buscando los ndvi entre "+sBegin+" y "+sEnd);
 
-					GenericUrl url = new GenericUrl(HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3);
+					List<Ndvi> loaded=null;
+					//TODO verificar si ya existe ese archivo cargado o en la base de datos y traerlo si existe
+					try {
+						//isShowing
+						//showingNDVI.stream().filter(ndvo->{return false;}).;
+						if(ndviToIgnore!=null) {
+							Stream<Ndvi> filtered = ndviToIgnore.stream().filter(n->{
+								return n.getFecha().equals(assetDate)&&n.getContorno().equals(contornoP);
+								});
+							long count = filtered.count();
+							if(count>0) {
+								System.out.println("skipping "+assetDate+" for "+contornoP);
+								return;//ya tengo ese ndvi cargado
+							}
+						}
+						loaded = DAH.getNdvi(contornoP,assetDate);
 
-					Map<String, String> req_data = new HashMap<String, String>();
-					req_data.put(GEE_POLYGONS_GET_REQUEST_KEY, polygons);
-					req_data.put(BEGIN, sBegin);
-					req_data.put(END, sEnd);
-					req_data.put(TOKEN, URSULA_GIS_TOKEN);
+						if(loaded!=null && loaded.size()>0) {
+							System.out.println("hay ndvi en base de datos.. cargando "+Arrays.toString(loaded.toArray()) );
+							loaded.stream().forEach((ndvi)->ndvi.loadFileFromContent());
+							observableList.addAll(loaded);//agrego a la lista de observables para que se vayan mostrando
+							tiffFiles.addAll(loaded);//agrego a la coleccion final
 
-					final HttpContent req_content = new JsonHttpContent(new JacksonFactory(), req_data);
+							processedDates.add(assetDate);
+							updateProgress(processedDates.size(), uniqueDates.size());
+						}
+					}catch(Exception e) {
+						e.printStackTrace();
+					}
+					if(loaded==null || loaded.size()==0) {//if the file is not in db
+						GenericUrl url = new GenericUrl(HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3);
 
-					/*
+						Map<String, String> req_data = new HashMap<String, String>();
+						req_data.put(GEE_POLYGONS_GET_REQUEST_KEY, polygons);
+						req_data.put(BEGIN, sBegin);
+						req_data.put(END, sEnd);
+						req_data.put(TOKEN, URSULA_GIS_TOKEN);
+
+						final HttpContent req_content = new JsonHttpContent(new JacksonFactory(), req_data);
+
+						/*
 					assets=["COPERNICUS/S2/20161221T141042_20161221T142209_T20HLG"]
 					polygons=[[[[-64.69101905822754,-34.860017354204885],[-64.69058990478516,-34.86705989785682],[-64.67016220092773,-34.86515847050267],[-64.67265129089355,-34.86198932721536]]]]
-					 */
-					System.out.println("calling url: "+url);
-					//for(int i=0;i<3;i++) {
-					HttpResponse response = makePostRequest(url,req_content);
+						 */
+						System.out.println("calling url: "+url);
+						//for(int i=0;i<3;i++) {
+						HttpResponse response = makePostRequest(url,req_content);
 
 
-					try {
-						List<Ndvi> tiffResponse = parseNDVIResponse(response,contornoP,assetDate);
+						try {
+							List<Ndvi> tiffResponse = parseNDVIResponse(response,contornoP,assetDate);
+							response.disconnect();
+							if(tiffResponse.size()>0) {
+								observableList.addAll(tiffResponse);//agrego a la lista de observables para que se vayan mostrando
+								tiffFiles.addAll(tiffResponse);//agrego a la coleccion final
 
-						response.disconnect();
-						if(tiffResponse.size()>0) {
-							
-							observableList.addAll(tiffResponse);//agrego a la lista de observables para que se vayan mostrando
-							tiffFiles.addAll(tiffResponse);//agrego a la coleccion final
-							
+								processedDates.add(assetDate);
+								updateProgress(processedDates.size(), uniqueDates.size());
 
-							processed.add(assetDate);
-							updateProgress(processed.size(), uniqueDates.size());
+								//		break;//salgo del for retry
+							}else {//retry
+								System.out.println("no hay files para agregar");
+								// no descargo porque estaba nublada
+								//Thread.sleep(1000);//esperar a seguir operando
+							}
 
-							//		break;//salgo del for retry
-						}else {//retry
-							System.out.println("no hay files para agregar");
-							// no descargo porque estaba nublada
-							//Thread.sleep(1000);//esperar a seguir operando
-						}
+						} catch (IOException e) {
+							e.printStackTrace();
 
-					} catch (IOException e) {
-						e.printStackTrace();
-
-					} 
-					//	}
+						} 
+					}
 
 				},
 				(list1, list2) -> list1.addAll(list2)
 				);
+
 		return resFiles;
 	}
+
+
 
 	private String getPolygonsFromLabor(Object labor) {
 		if(labor instanceof Labor){
@@ -616,6 +650,11 @@ public class GetNdviForLaborTask3 extends Task<List<Ndvi>>{
 	}
 	public void uninstallProgressBar() {		
 		progressPane.getChildren().remove(progressContainer);
+	}
+
+	public void setIgnoreNDVI(List<Ndvi> _ndviToIgnore) {
+		this.ndviToIgnore=_ndviToIgnore;
+		
 	}
 
 

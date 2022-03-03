@@ -1,6 +1,7 @@
 package utils;
 
 import java.io.File;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -431,6 +432,16 @@ public class DAH {
 		//  closeEm();
 		return results;
 	}
+	
+	public static List<Ndvi> getNdvi(Poligono contorno, LocalDate assetDate) {
+		TypedQuery<Ndvi> query =
+				em().createNamedQuery(Ndvi.FIND_BY_CONTORNO_DATE, Ndvi.class);
+		query.setParameter("contorno", contorno);
+		query.setParameter("date", assetDate);
+		List<Ndvi> results = query.getResultList();
+		//  closeEm();
+		return results;
+	}
 
 	public static List<Recorrida> getAllRecorridas() {
 		TypedQuery<Recorrida> query =
@@ -561,6 +572,8 @@ public class DAH {
 		List<OrdenCompra> results = (List<OrdenCompra> ) query.getResultList();
 		return results;
 	}
+
+
 
 
 

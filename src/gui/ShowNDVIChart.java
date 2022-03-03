@@ -81,15 +81,15 @@ public class ShowNDVIChart extends VBox {
 		
 		ObservableList<Series<Number, Number>> data = FXCollections.observableArrayList();// new ArrayList<Series<Number, Number>>();
 
-		Map<Poligono, List<SurfaceImageLayer>>  contornoMap = ndviLayers.stream().collect(
+		Map<String, List<SurfaceImageLayer>>  contornoMap = ndviLayers.stream().collect(
 				Collectors.groupingBy((l2)->{
 					Ndvi lNdvi = (Ndvi)l2.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-					return lNdvi.getContorno();// fecha me devuelve siempre hoy por eso no hace la animacion
+					return lNdvi.getContorno().getNombre();// fecha me devuelve siempre hoy por eso no hace la animacion
 				}));
 
 		contornoMap.keySet().stream().forEach((c)->{
 			XYChart.Series<Number,Number> sr = new XYChart.Series<Number,Number>(); 
-			sr.setName(c.getNombre() );
+			sr.setName(c );
 			contornoMap.get(c).stream().map(
 					(layer)->(Ndvi)layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR)).sorted((n1,n2)->n1.compareTo(n2)).forEachOrdered(lNdvi->{
 				

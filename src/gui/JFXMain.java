@@ -1775,6 +1775,17 @@ public class JFXMain extends Application {
 		return layersOfClazz.map(l->l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR)).collect(Collectors.toList());
 	}	
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private List<?> getObjectFromLayersOfClass(Class clazz){
+		LayerList layers = this.getWwd().getModel().getLayers();
+		Stream<Layer> layersOfClazz = layers.stream().filter(l->{
+			Object o = l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			return o!=null && clazz.isAssignableFrom(o.getClass());
+		});
+
+		return layersOfClazz.map(l->l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR)).collect(Collectors.toList());
+	}
+	
 	private List<Labor<?>> getLaboresCargadas() {
 		List<Labor<?>> recorridasActivas =new ArrayList<Labor<?>>();
 		LayerList layers = this.getWwd().getModel().getLayers();
@@ -2383,6 +2394,8 @@ public class JFXMain extends Application {
 				GetNdviForLaborTask3 task = new GetNdviForLaborTask3(p,downloadLocation,observableList);
 				task.setBeginDate(ndviDpDLG.initialDate);
 				task.setFinDate(ndviDpDLG.finalDate);
+				task.setIgnoreNDVI((List<Ndvi>) getObjectFromLayersOfClass(Ndvi.class));
+
 
 				System.out.println("procesando los datos entre "+ndviDpDLG.initialDate+" y "+ ndviDpDLG.finalDate);//hasta aca ok!
 				task.installProgressBar(progressBox);
@@ -2439,6 +2452,7 @@ public class JFXMain extends Application {
 			GetNdviForLaborTask3 task = new GetNdviForLaborTask3(placementObject,downloadLocation,observableList);
 			task.setBeginDate(ndviDpDLG.initialDate);
 			task.setFinDate(ndviDpDLG.finalDate);
+			task.setIgnoreNDVI((List<Ndvi>) getObjectFromLayersOfClass(Ndvi.class));
 
 			System.out.println("procesando los datos entre "+ndviDpDLG.initialDate+" y "+ ndviDpDLG.finalDate);//hasta aca ok!
 			task.installProgressBar(progressBox);
