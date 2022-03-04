@@ -70,7 +70,7 @@ public class ConvertirNdviAFertilizacionTask extends ProcessMapTask<Fertilizacio
 					|| value >= ndviMax){
 					continue;
 			} else{
-			//System.out.println("calculando el promedio para el valor "+value+" suma parcial "+sum+" size "+size);
+			System.out.println("calculando el promedio para el valor "+value+" suma parcial "+sum+" size "+size);
 			
 			max = Math.max(max,value);
 			min = Math.min(min,value);
@@ -162,6 +162,7 @@ public class ConvertirNdviAFertilizacionTask extends ProcessMapTask<Fertilizacio
 		Geometry contornoGeom =null;
 		if(contorno !=null) {
 			contornoGeom = contorno.toGeometry();
+			System.out.println("hay controno");
 		}
 		
 		for (int y = 0; y < height; y++){
@@ -205,11 +206,11 @@ public class ConvertirNdviAFertilizacionTask extends ProcessMapTask<Fertilizacio
 						try {
 						poly=GeometryHelper.getIntersection(poly,contornoGeom);
 						if(poly.isEmpty())continue;
-						//System.out.println("el contorno no cubre el polygono y la interseccion es: "+poly.toText());
 						}catch(Exception e) {//com.vividsolutions.jts.geom.TopologyException: Found null DirectedEdge
 							e.printStackTrace();//com.vividsolutions.jts.geom.TopologyException: side location conflict [ (-61.920393510481325, -33.66456750394795, NaN) ]
 						}
 					}
+	
 					ci.setGeometry(poly);
 					
 					SimpleFeature f = ci.getFeature(fBuilder);
