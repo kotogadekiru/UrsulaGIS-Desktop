@@ -3134,7 +3134,7 @@ public class JFXMain extends Application {
 	private void doConvertirNdviAFertilizacion(Ndvi ndvi) {
 		FertilizacionLabor labor = new FertilizacionLabor();
 		labor.setNombre(ndvi.getNombre());
-
+		
 		Date date = java.util.Date.from(ndvi.getFecha().atStartOfDay()
 				.atZone(ZoneId.systemDefault())
 				.toInstant());
@@ -3147,8 +3147,9 @@ public class JFXMain extends Application {
 			//System.out.println("el dialogo termino con cancel asi que no continuo con la cosecha"); //$NON-NLS-1$
 			labor.dispose();//libero los recursos reservados
 			return;
-		}							
-
+		}	
+		//seleccionar si usar o no outlayers
+		labor.getConfig().correccionOutlayersProperty().set(false);
 		//JFXMain.294=Fert Min
 		//JFXMain.295=Fert Max
 		DecimalFormat format=(DecimalFormat) DecimalFormat.getInstance();
