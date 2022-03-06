@@ -29,6 +29,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
@@ -104,11 +105,12 @@ public class ShowNDVIChart extends VBox {
 		lineChart = new LineChart<Number, Number>(xAxis, yAxis,data);				
 		lineChart.setAxisSortingPolicy(LineChart.SortingPolicy.X_AXIS);
 		
-		System.out.println("LowerBound "+ LocalDate.ofEpochDay((long) xAxis.getLowerBound()));
-		System.out.println("UpperBound "+ LocalDate.ofEpochDay((long) xAxis.getUpperBound()));
+//		System.out.println("LowerBound "+ LocalDate.ofEpochDay((long) xAxis.getLowerBound()));
+//		System.out.println("UpperBound "+ LocalDate.ofEpochDay((long) xAxis.getUpperBound()));
 
 		VBox vbox = new VBox(lineChart);
-		
+		VBox.setVgrow(lineChart, Priority.ALWAYS);
+		VBox.setVgrow(vbox, Priority.ALWAYS);
 		VBox right = new VBox();
 		Button exportButton = new Button(Messages.getString("CosechaHistoChart.16")); //$NON-NLS-1$
 		exportButton.setOnAction(a->{doExportarExcell();});

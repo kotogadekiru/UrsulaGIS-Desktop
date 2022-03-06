@@ -138,6 +138,7 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.media.AudioClip;
@@ -645,6 +646,7 @@ public class JFXMain extends Application {
 				Stage histoStage = new Stage();
 				histoStage.setTitle(Messages.getString("JFXMain.show_ndvi_chart"));
 				histoStage.getIcons().add(new Image(ICON));
+				VBox.setVgrow(sChart, Priority.ALWAYS);
 				Scene scene = new Scene(sChart, 800,450);
 				histoStage.setScene(scene);
 				histoStage.initOwner(JFXMain.stage);
