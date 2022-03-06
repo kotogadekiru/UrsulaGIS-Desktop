@@ -3148,8 +3148,8 @@ public class JFXMain extends Application {
 			labor.dispose();//libero los recursos reservados
 			return;
 		}	
-		//seleccionar si usar o no outlayers
-		labor.getConfig().correccionOutlayersProperty().set(false);
+		
+	
 		//JFXMain.294=Fert Min
 		//JFXMain.295=Fert Max
 		DecimalFormat format=(DecimalFormat) DecimalFormat.getInstance();
@@ -3251,6 +3251,20 @@ public class JFXMain extends Application {
 			return;
 		}
 
+		//con esto se decide si el mapa tiene correccion Outlayers
+				Alert alert = new Alert(AlertType.CONFIRMATION);
+				alert.setTitle("Filtrado con Outlayers");
+				alert.setHeaderText("Desea Suavizar el mapa con Outlayes");
+				alert.setContentText("Seleccione OK para usar oulayers");
+
+		Optional<ButtonType> result = alert.showAndWait();
+		if (result.get() == ButtonType.OK){
+			labor.getConfig().correccionOutlayersProperty().set(true);
+		} else {
+			labor.getConfig().correccionOutlayersProperty().set(false);		
+		}
+		
+		
 		ConvertirNdviAFertilizacionTask umTask = new ConvertirNdviAFertilizacionTask(labor,ndvi,dosisMax,dosisMin);
 		umTask.ndviMin=ndviMin;
 		umTask.ndviMax=ndviMax;

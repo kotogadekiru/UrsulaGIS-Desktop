@@ -79,7 +79,7 @@ public class ConvertirNdviAFertilizacionTask extends ProcessMapTask<Fertilizacio
 					|| value >= ndviMax){
 					continue;
 			} else{
-			System.out.println("calculando el promedio para el valor "+value+" suma parcial "+sum+" size "+size);
+			//System.out.println("calculando el promedio para el valor "+value+" suma parcial "+sum+" size "+size);
 			
 			max = Math.max(max,value);
 			min = Math.min(min,value);
@@ -255,9 +255,9 @@ public class ConvertirNdviAFertilizacionTask extends ProcessMapTask<Fertilizacio
 		}
 	//	
 		if (correguirOutlayer) {
-				System.out.println("corrigo outlayer");
+				//System.out.println("corrigo outlayer" + labor.config.getAnchoFiltroOutlayers());
 				corregirOutlayersParalell();
-				System.out.println("FIN... outlayer");
+				System.out.println("corrio outlayer");
 		}		
 		labor.constructClasificador();	
 		runLater(this.getItemsList());
@@ -334,7 +334,7 @@ public class ConvertirNdviAFertilizacionTask extends ProcessMapTask<Fertilizacio
 	
 	private void corregirOutlayersParalell() {			
 		//GeodeticCalculator calc = new GeodeticCalculator(DefaultEllipsoid.WGS84); 
-
+		System.out.println("se corrige Pralel otlayers");
 		//1) crear un circulo de radio a definir y centro en el centroide de la cosecha
 		double ancho = 10;
 		double alfa = 0;
@@ -343,7 +343,7 @@ public class ConvertirNdviAFertilizacionTask extends ProcessMapTask<Fertilizacio
 		Coordinate distanciaLongLat = constructCoordinate(alfa+ Math.PI / 2, distancia);
 		
 		int initOutCollectionSize = labor.outCollection.size();
-		System.out.println("Cantidad de colectios:" + initOutCollectionSize);
+		//System.out.println("Cantidad de colectios:" + initOutCollectionSize);
 		SimpleFeature[] arrayF = new SimpleFeature[labor.outCollection.size()];
 		labor.outCollection.toArray(arrayF);
 		List<SimpleFeature> outFeatures = Arrays.asList(arrayF);
