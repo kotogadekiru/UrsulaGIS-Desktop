@@ -3134,7 +3134,7 @@ public class JFXMain extends Application {
 	private void doConvertirNdviAFertilizacion(Ndvi ndvi) {
 		FertilizacionLabor labor = new FertilizacionLabor();
 		labor.setNombre(ndvi.getNombre());
-
+		
 		Date date = java.util.Date.from(ndvi.getFecha().atStartOfDay()
 				.atZone(ZoneId.systemDefault())
 				.toInstant());
@@ -3147,8 +3147,9 @@ public class JFXMain extends Application {
 			//System.out.println("el dialogo termino con cancel asi que no continuo con la cosecha"); //$NON-NLS-1$
 			labor.dispose();//libero los recursos reservados
 			return;
-		}							
-
+		}	
+		
+	
 		//JFXMain.294=Fert Min
 		//JFXMain.295=Fert Max
 		DecimalFormat format=(DecimalFormat) DecimalFormat.getInstance();
@@ -3250,6 +3251,20 @@ public class JFXMain extends Application {
 			return;
 		}
 
+		//con esto se decide si el mapa tiene correccion Outlayers
+				Alert alert = new Alert(AlertType.CONFIRMATION);
+				alert.setTitle("Filtrado con Outlayers");
+				alert.setHeaderText("Desea Suavizar el mapa con Outlayes");
+				alert.setContentText("Seleccione OK para usar oulayers");
+
+		Optional<ButtonType> result = alert.showAndWait();
+		if (result.get() == ButtonType.OK){
+			labor.getConfig().correccionOutlayersProperty().set(true);
+		} else {
+			labor.getConfig().correccionOutlayersProperty().set(false);		
+		}
+		
+		
 		ConvertirNdviAFertilizacionTask umTask = new ConvertirNdviAFertilizacionTask(labor,ndvi,dosisMax,dosisMin);
 		umTask.ndviMin=ndviMin;
 		umTask.ndviMax=ndviMax;
@@ -4630,6 +4645,7 @@ public class JFXMain extends Application {
 	}
 
 	public static void main(String[] args) {
+		System.setProperty("prism.order", "es2");
 		Application.launch(JFXMain.class, args);
 	}
 

@@ -1028,6 +1028,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
+		System.out.println("devolviendo itemList size "+cItems.size());
 		return cItems;
 	}
 

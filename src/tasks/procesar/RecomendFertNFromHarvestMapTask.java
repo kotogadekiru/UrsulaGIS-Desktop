@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 
@@ -35,78 +36,96 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 	private List<FertilizacionLabor> fertilizaciones;
 	private Double minFert=null;
 	private Double maxFert=null;
-	
+
 	public RecomendFertNFromHarvestMapTask(FertilizacionLabor labor,CosechaLabor cosechaEstimada, List<Suelo> _suelos, List<FertilizacionLabor> _fert) {
 		super(labor);
 		this.cosecha =cosechaEstimada;
 		this.suelos=_suelos;
 		this.fertilizaciones=_fert;
 	}
-	
-	public void doProcess() throws IOException {			
-		featureCount = cosecha.outCollection.size();
-		//List<FertilizacionItem> itemsToShow = new ArrayList<FertilizacionItem>();
-		Cultivo cultivo = cosecha.getCultivo();
-		Fertilizante fert = this.labor.fertilizanteProperty.getValue();
 
-		//TODO calcular el balance de nitrogeno en el suelo luego de la fertilizacion 
-		//y completar lo que haga falta para la cosecha estimada;
-		List<CosechaItem> cItems = new ArrayList<CosechaItem>();
-		FeatureReader<SimpleFeatureType, SimpleFeature> reader =cosecha.outCollection.reader();
-		while (reader.hasNext()) {
-			SimpleFeature simpleFeature = reader.next();
-			CosechaItem ci = cosecha.constructFeatureContainerStandar(simpleFeature,false);
-			cItems.add(ci);
+	public void doProcess() {	
+		try {
+			featureCount = cosecha.outCollection.size();
+			//List<FertilizacionItem> itemsToShow = new ArrayList<FertilizacionItem>();
+			Cultivo cultivo = cosecha.getCultivo();
+			Fertilizante fert = this.labor.fertilizanteProperty.getValue();
+
+			//TODO calcular el balance de nitrogeno en el suelo luego de la fertilizacion 
+			//y completar lo que haga falta para la cosecha estimada;
+			List<CosechaItem> cItems = new ArrayList<CosechaItem>();
+			FeatureReader<SimpleFeatureType, SimpleFeature> reader =cosecha.outCollection.reader();
+			while (reader.hasNext()) {
+				SimpleFeature simpleFeature = reader.next();
+				CosechaItem ci = cosecha.constructFeatureContainerStandar(simpleFeature,false);
+				cItems.add(ci);
+			}
+			reader.close();
+			ForkJoinPool myPool = new ForkJoinPool(4);
+			myPool.submit(() ->{
+
+				cItems.parallelStream().forEach(cItem->{
+					try {
+						FertilizacionItem fi = new FertilizacionItem();			
+						//synchronized(labor){							
+						fi.setId(labor.getNextID());
+						labor.setPropiedadesLabor(fi);
+						//}
+						Geometry geom = PolygonValidator.validate(cItem.getGeometry());
+						if(geom==null) {
+							System.out.println("item geom es null");
+							return;
+						}
+						Double areaGeom =  ProyectionConstants.A_HAS(geom.getArea());
+						fi.setGeometry(geom);
+						double absN = cItem.getRindeTnHa()*cultivo.getAbsN();
+						double dispNSuelo = getNDisponibleSuelo(geom);//incluye el organico a mineralizar.
+
+						//System.out.println("kg disponible suelo: " + dispNSuelo+ "areaGeom:"+areaGeom);
+						dispNSuelo = dispNSuelo / areaGeom;
+
+						double dispNFert = getNDisponibleFert(geom) / areaGeom;
+						//System.out.println("absN="+absN+" dispSuelo="+dispNSuelo+" dispNFert="+dispNFert);
+						double nAAplicar= absN-dispNSuelo-dispNFert;
+
+
+						nAAplicar = Math.max(0, nAAplicar);
+						double reposicionN = nAAplicar / (fert.getPorcN()/100);
+
+						//	System.out.println("Rinde "+cItem.getAmount()+" Nreq "+absN+" nAAplicar="+nAAplicar+" "+fert.getNombre()+" "+reposicionN);
+
+						if(this.minFert != null && this.minFert>0 &&this.minFert > reposicionN) {
+							reposicionN = minFert;
+						}
+						if(this.maxFert != null && this.maxFert>0 && this.maxFert < reposicionN) {
+							reposicionN = maxFert;
+						}
+						fi.setDosistHa(reposicionN);
+						fi.setElevacion(10d);
+						labor.setPropiedadesLabor(fi);
+						//segun el cultivo de la cosecha
+
+						//System.out.println("insertando "+fi);
+						labor.insertFeature(fi);
+						//itemsToShow.add(fi);
+						featureNumber++;
+						//System.out.println("inserte la feature "+featureNumber+" "+fi);
+						updateProgress(featureNumber, featureCount);
+					}catch(Exception e) {
+						System.err.println("error al procesar el item "+cItem);
+						e.printStackTrace();
+					}
+				});
+			}
+			//list.parallelStream().forEach(/* Do Something */);
+					).get();
+			System.out.println("construyendo clasificador");
+			labor.constructClasificador();
+			runLater(getItemsList());
+			updateProgress(0, featureCount);	
+		}catch(Exception e) {
+			e.printStackTrace();
 		}
-		reader.close();
-
-		cItems.parallelStream().forEach(cItem->{
-			FertilizacionItem fi = new FertilizacionItem();			
-			synchronized(labor){							
-				fi.setId(labor.getNextID());
-				labor.setPropiedadesLabor(fi);
-			}
-			Geometry geom = PolygonValidator.validate(cItem.getGeometry());
-			Double areaGeom =  ProyectionConstants.A_HAS(geom.getArea());
-			fi.setGeometry(geom);
-			double absN = cItem.getRindeTnHa()*cultivo.getAbsN();
-			double dispNSuelo = getNDisponibleSuelo(geom);//incluye el organico a mineralizar.
-
-			//System.out.println("kg disponible suelo: " + dispNSuelo+ "areaGeom:"+areaGeom);
-			dispNSuelo = dispNSuelo / areaGeom;
-
-			double dispNFert = getNDisponibleFert(geom) / areaGeom;
-			//System.out.println("absN="+absN+" dispSuelo="+dispNSuelo+" dispNFert="+dispNFert);
-			double nAAplicar= absN-dispNSuelo-dispNFert;
-			
-			
-			nAAplicar = Math.max(0, nAAplicar);
-			double reposicionN = nAAplicar / (fert.getPorcN()/100);
-
-		//	System.out.println("Rinde "+cItem.getAmount()+" Nreq "+absN+" nAAplicar="+nAAplicar+" "+fert.getNombre()+" "+reposicionN);
-			
-			if(this.minFert != null && this.minFert>0 &&this.minFert > reposicionN) {
-				reposicionN = minFert;
-			}
-			if(this.maxFert != null && this.maxFert>0 && this.maxFert < reposicionN) {
-				reposicionN = maxFert;
-			}
-			fi.setDosistHa(reposicionN);
-			fi.setElevacion(10d);
-			labor.setPropiedadesLabor(fi);
-			//segun el cultivo de la cosecha
-
-
-			labor.insertFeature(fi);
-			//itemsToShow.add(fi);
-			featureNumber++;
-		//	System.out.println("agregando la feature "+featureNumber+" "+fi);
-			updateProgress(featureNumber, featureCount);
-		});
-
-		labor.constructClasificador();
-		runLater(getItemsList());
-		updateProgress(0, featureCount);	
 	}
 
 
@@ -170,9 +189,9 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 				return DoubleStream.of( (kgNHa +kgNOrganicoHa)* area);				
 			});
 		}).sum();
-//					System.out
-//					.println("la cantidad de kgNSuelo acumulado en el suelo es = "
-//							+ kgNSuelo+" en "+ ProyectionConstants.A_HAS(geometry.getArea()));
+		//					System.out
+		//					.println("la cantidad de kgNSuelo acumulado en el suelo es = "
+		//							+ kgNSuelo+" en "+ ProyectionConstants.A_HAS(geometry.getArea()));
 
 		return kgNSuelo;
 	}
