@@ -491,7 +491,7 @@ public class ConfigGUI {
 				tDialog.setTitle(Messages.getString("ShowConfigGUI.cotizarOnlineMailTitle"));
 				tDialog.showAndWait();
 			
-				String mail=	tDialog.getResult();
+				String mail = tDialog.getResult();
 				
 				ret.setMail(mail);
 				CotizarOdenDeCompraOnlineTask cotTask= new CotizarOdenDeCompraOnlineTask(ret); 
