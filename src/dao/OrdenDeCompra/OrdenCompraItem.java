@@ -1,5 +1,7 @@
 package dao.OrdenDeCompra;
 
+import java.math.BigDecimal;
+
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.CascadeType;
@@ -33,12 +35,12 @@ public class OrdenCompraItem {
 	@ManyToOne
 	private OrdenCompra ordenCompra =null;
 	
-	@ManyToOne//(cascade=CascadeType.DETACH)
+	@ManyToOne(cascade= {CascadeType.DETACH})
 	private Producto producto =null;
 	
 	private Double cantidad = 0.0;
 	private Double precio = 0.0;
-	private Double importe = 0.0;
+	private BigDecimal importe2 = BigDecimal.valueOf(0.0);
 	
 	public OrdenCompraItem() {
 		
@@ -49,8 +51,8 @@ public class OrdenCompraItem {
 		this.cantidad=cantidad2;
 	}
 	
-	public double getImporte() {
-		this.importe = cantidad*precio;
-		return this.importe;
+	public BigDecimal getImporte() {
+		this.importe2 = BigDecimal.valueOf(cantidad*precio);
+		return this.importe2;
 	}
 }

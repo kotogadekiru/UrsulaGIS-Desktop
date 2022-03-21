@@ -31,6 +31,7 @@ public abstract class MercatorTileUrlBuilder implements TileUrlBuilder
     @Override
     public URL getURL(Tile tile, String imageFormat) throws MalformedURLException
     {
+    	//tile.getSector().getCentroid()
         return getMercatorURL(tile.getColumn(), (1 << (tile.getLevelNumber() + firstLevelOffset)) - 1 - tile.getRow(), tile.getLevelNumber() + firstLevelOffset);
     }
 

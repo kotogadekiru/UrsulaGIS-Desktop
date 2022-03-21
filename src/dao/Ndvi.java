@@ -84,6 +84,9 @@ public class Ndvi implements Comparable{//extends AbstractBaseEntity {
 	
 	public void updateContent(){
 		//File file = new File("C:\\mavan-hibernate-image-mysql.gif");
+		if(f==null) {
+			loadFileFromContent();
+		}
         content = new byte[(int) f.length()];
 
         try {

@@ -35,11 +35,11 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import utils.ExcelHelper;
 //agrege que extende de vbox 
-public class ShowNDVIChart extends VBox {
+public class NDVIChart extends VBox {
 	private WorldWindow wwd;
 	private LineChart<Number,Number> lineChart =null;
 
-	public ShowNDVIChart(WorldWindow _wwd) {
+	public NDVIChart(WorldWindow _wwd) {
 		super ();//sueper
 		this.wwd=_wwd;
 		//	this.layerPanel=_lP;

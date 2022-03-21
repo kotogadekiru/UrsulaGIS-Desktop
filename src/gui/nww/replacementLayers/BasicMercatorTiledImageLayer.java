@@ -32,7 +32,7 @@ public class BasicMercatorTiledImageLayer extends BasicTiledImageLayer
         params.setValue(AVKey.FORMAT_SUFFIX, formatSuffix);
         params.setValue(AVKey.TILE_WIDTH, tileSize);
         params.setValue(AVKey.TILE_HEIGHT, tileSize);
-        params.setValue(AVKey.DATASET_NAME, "*");
+        params.setValue(AVKey.DATASET_NAME, name);
         params.setValue(AVKey.DATA_CACHE_NAME, "Earth/Mercator/" + name);
         params.setValue(AVKey.TILE_URL_BUILDER, buider);
 

@@ -4,6 +4,7 @@ import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.persistence.Inheritance;
 
 import lombok.AccessLevel;
@@ -16,7 +17,8 @@ import lombok.Setter;
 @Inheritance(strategy=javax.persistence.InheritanceType.TABLE_PER_CLASS)
 public abstract class Producto {
 	
-	@javax.persistence.Id @GeneratedValue
+	@Id 
+	@GeneratedValue
 	private Long id=null;
 	
 	public abstract String getNombre();

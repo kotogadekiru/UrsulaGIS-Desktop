@@ -17,13 +17,13 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.scene.control.Alert.AlertType;
 
-public class NdviDatePickerDialog {
+public class NDVIDatePickerDialog {
 	private Stage owner=null;
 	
 	public LocalDate initialDate = LocalDate.now();
 	public LocalDate finalDate = LocalDate.now();
 	
-	public NdviDatePickerDialog(Stage _owner){
+	public NDVIDatePickerDialog(Stage _owner){
 		owner=_owner;
 	}
 

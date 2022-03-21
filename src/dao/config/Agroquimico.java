@@ -30,8 +30,8 @@ public class Agroquimico extends Producto implements Comparable<Agroquimico>{
 	public static final String FIND_NAME="Agroquimico.findName";
 	
 	
-	@Id @GeneratedValue
-	private Long id=null;
+//	@Id @GeneratedValue
+//	private Long id=null;
 	
 	private StringProperty nombre = new SimpleStringProperty();
 	//private Property<Cultivo> productoProperty=new SimpleObjectProperty<Cultivo>();//values().iterator().next());;
@@ -54,13 +54,13 @@ public class Agroquimico extends Producto implements Comparable<Agroquimico>{
 	}
 
 	//@Id @GeneratedValue
-	public Long getId(){
-		return this.id;
-	}
-	
-	public void setId(Long id){
-		this.id=id;
-	}
+//	public Long getId(){
+//		return this.id;
+//	}
+//	
+//	public void setId(Long id){
+//		this.id=id;
+//	}
 	
 	public String getNombre(){
 		return this.nombre.get();
@@ -95,6 +95,6 @@ public class Agroquimico extends Producto implements Comparable<Agroquimico>{
 
 	@Override
 	public int compareTo(Agroquimico o) {
-		return (int) (this.id-o.getId());
+		return (int) (this.getId()-o.getId());
 	}
 }

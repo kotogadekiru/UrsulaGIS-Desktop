@@ -345,10 +345,11 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 	public Layer call() {	
 		try{
 
-			RasterWraperApache wrapper = loadRaster(file);
-
-
-			String fileName = file.getName();
+			RasterWraperApache wrapper = loadRaster(ndvi);
+			String fileName="";
+			String fechaString="";
+			if(file!=null) {
+			fileName = file.getName();
 			fileName= fileName.replace(".tif", "");
 			//COPERNICUSS220170328T140051_20170328T140141_T20HNH.nd.tif
 			if(fileName.contains("COPERNICUSS2")){
@@ -367,7 +368,8 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 			}
 			//en este punto fileName tiene la fecha en formato 2017-03-28 es decir dd-MM-yyyy
 
-			String fechaString = new String (fileName);
+			 fechaString = new String (fileName);
+			}
 
 //			if(ownerPoli !=null){
 //				System.out.println("mosntrando un ndvi con owner poli"+ ownerPoli);
@@ -896,6 +898,24 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	public RasterWraperApache loadRaster(Ndvi target) throws IOException {
+		//System.out.println("loading raster target "+target.getName());
+
+
+		TIFFImage tiffImage = TiffReader.readTiff(target.getContent());
+
+		List<FileDirectory> directories = tiffImage.getFileDirectories();
+		FileDirectory directory = directories.get(0);
+		
+		Rasters rasters = directory.readRasters();
+
+		Set<FileDirectoryEntry> entries = directory.getEntries();
+
+		RasterWraperApache wrapper = new RasterWraperApache(rasters,entries);
+
+		return wrapper;
 	}
 
 

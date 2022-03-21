@@ -1,4 +1,5 @@
 package dao.OrdenDeCompra;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -6,6 +7,7 @@ import java.util.UUID;
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -32,6 +34,7 @@ import lombok.Setter;
 }) 
 //@UuidGenerator(name="EMP_ID_GEN")
 public class OrdenCompra extends AbstractBaseEntity {
+	private static final long serialVersionUID = 1L;
 	public static final String FIND_ALL="OrdenCompra.findAll";	
 //    @Id
 //    @GeneratedValue(generator="EMP_ID_GEN")
@@ -46,14 +49,20 @@ public class OrdenCompra extends AbstractBaseEntity {
 	@OneToMany(cascade=CascadeType.ALL, mappedBy="ordenCompra",orphanRemoval=true)
 	private List<OrdenCompraItem> items=new ArrayList<OrdenCompraItem>();
 	
-	private Double importeTotal=null;
+	//@Column(precision=30, scale=6)
+	private BigDecimal importeTotal2=new BigDecimal(0.0);
 	
 //	public void setItems(List<OrdenCompraItem> _items) {
 //		this.items=_items;
 //	}
 //	
-	public Double getImporteTotal() {
-		this.importeTotal=items.stream().mapToDouble(i->i.getImporte()).sum(); 
-		return importeTotal;
+	public BigDecimal getImporteTotal() {
+		if(items!=null && items.size()>0) {
+			this.importeTotal2=BigDecimal.valueOf(items.stream().mapToDouble(i->i.getImporte().doubleValue()).sum()); 
+		} else {
+			this.importeTotal2 = new BigDecimal(0.0);
+		}
+		//System.out.println("devolviendo importe total "+this.importeTotal2);
+		return importeTotal2;
 	}
 }

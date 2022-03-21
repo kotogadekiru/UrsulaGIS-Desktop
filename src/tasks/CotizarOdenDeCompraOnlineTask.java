@@ -12,6 +12,7 @@ import javax.persistence.ManyToOne;
 import com.google.api.client.http.ByteArrayContent;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
+import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpRequestInitializer;
@@ -31,6 +32,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
 import dao.OrdenDeCompra.OrdenCompra;
+import dao.config.Configuracion;
 import dao.recorrida.Recorrida;
 import api.StandardResponse;
 import javafx.concurrent.Task;
@@ -50,7 +52,7 @@ public class CotizarOdenDeCompraOnlineTask extends Task<String> {
 	private static final String MMG_GUI_EVENT_CLOSE_PNG = "/gui/event-close.png";
 	public static final String ZOOM_TO_KEY = "ZOOM_TO";
 
-	public static final String INSERT_URL = "https://www.ursulagis.com/api/orden_compra/insert/";
+	public static final String INSERT_URL = "https://www.ursulagis.com/api/orden/insert/";
 	//public static final String INSERT_URL = "http://localhost:5000/api/recorridas/insert/";
 	private ProgressBar progressBarTask;
 	private Pane progressPane;
@@ -94,7 +96,7 @@ public class CotizarOdenDeCompraOnlineTask extends Task<String> {
 	  	
 	
 	  	final HttpContent content = new ByteArrayContent("application/json", json_body.getBytes("UTF8") );
-
+	 
 		//final HttpContent req_content = new JsonHttpContent(new JacksonFactory(), content);
 
 		HttpResponse response = makePostRequest(url,content);
@@ -161,7 +163,11 @@ public class CotizarOdenDeCompraOnlineTask extends Task<String> {
 			@Override
 			public boolean shouldSkipField(FieldAttributes arg0) {
 				if (arg0.getAnnotation(ManyToOne.class) != null)
+					return false;
+				if(arg0.getName().equals("ordenCompra")) {
+					System.out.println("skipping ordenCompra in json "+arg0);
 					return true;
+				}
 
 				return false;
 			}
@@ -218,8 +224,8 @@ public class CotizarOdenDeCompraOnlineTask extends Task<String> {
 						request.setParser(new JsonObjectParser(JSON_FACTORY));
 						request.setReadTimeout(0);
 						request.setConnectTimeout(0);
-
-
+						HttpHeaders headers = request.getHeaders();//USER=693,468
+						headers.set("USER", Configuracion.getInstance().getPropertyOrDefault("USER", "nonefound"));
 					}
 				});//java.net.SocketException: Address family not supported by protocol family: connect
 

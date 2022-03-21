@@ -4,10 +4,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Locale;
 
+import gov.nasa.worldwind.avlist.AVKey;
+
 
 
 public class GoogleLayer extends BasicMercatorTiledImageLayer {
-
+	 private static long lastReq=0;
     public enum Type {
         ROADMAP("Google road map", "m", ".png", false),
         //ROADMAP2("Google road map 2", "r", ".png", false),
@@ -35,10 +37,13 @@ public class GoogleLayer extends BasicMercatorTiledImageLayer {
 
     public GoogleLayer(Type type) {
         super(type.name, 22, 256, type.overlay, type.suffix, new URLBuilder(type.lyrs).setFirstLevelOffset(3));
+    	//this.setName("GoogleLayer");
+    	 //this.setValue(AVKey.DATA_CACHE_NAME,"GoogleLayer");
     }
 
     private static class URLBuilder extends MercatorTileUrlBuilder {
         private String lyrs;
+       
 
         URLBuilder(String lyrs) {
             this.lyrs = lyrs;
@@ -46,7 +51,17 @@ public class GoogleLayer extends BasicMercatorTiledImageLayer {
 
         @Override
         protected URL getMercatorURL(int x, int y, int z) throws MalformedURLException {
-            return new URL("https://mt.google.com/vt/lyrs="+lyrs+"&x="+x+"&y="+y+"&z="+z+"&hl="+Locale.getDefault().getLanguage());
+        	//http://b.andy.sandbox.cloudmade.com/tiles/cycle/
+        	//https://maps.googleapis.com/maps/api/staticmap?center=Berkeley,CA&zoom=14&size=256x256&key=yourkey
+        	long now = System.currentTimeMillis();	
+        	long elapsed = now-GoogleLayer.lastReq;
+        	if(elapsed>1000) {
+        		GoogleLayer.lastReq=now;
+        		URL url = new URL("https://mt.google.com/vt/lyrs="+lyrs+"&x="+x+"&y="+y+"&z="+z+"&hl="+Locale.getDefault().getLanguage());
+        		//System.out.println("elapsed= "+elapsed +" downloading url "+url);        	
+        		return url;
+        	}
+        	return null;
         }
     }
 

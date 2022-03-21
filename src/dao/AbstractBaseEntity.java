@@ -36,6 +36,8 @@ public abstract class AbstractBaseEntity implements Serializable {
 			return false;
 		}
 		AbstractBaseEntity other = (AbstractBaseEntity) obj;
-		return getUuid().equals(other.getUuid());
+		if(getUuid()!=null) {
+			return getUuid().equals(other.getUuid());
+		}else return false;
 	}
 }

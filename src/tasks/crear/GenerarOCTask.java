@@ -92,7 +92,7 @@ public class GenerarOCTask  extends Task<OrdenCompra>{
 		OrdenCompra oc=new OrdenCompra();		
 		oc.setDescription(description.toString());
 		oc.setItems(new ArrayList<OrdenCompraItem>(prodCantidadMap.values()));
-		oc.getItems().stream().forEach((item)->item.setOrdenCompra(oc));
+		//oc.getItems().stream().forEach((item)->item.setOrdenCompra(oc));
 		
 		return oc;
 	}

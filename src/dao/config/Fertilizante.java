@@ -77,8 +77,8 @@ fertilizantes.put("Yeso Agricola",new Fertilizante("Yeso Agricola",0.0,0.0,0,17)
 //fertilizantes.put("Superfosfato de calcio",new Fertilizante("Superfosfato de calcio",0.0,17,0.0,0.0));
 	}
 	
-	@Id @GeneratedValue
-	private Long id=null;
+//	@Id @GeneratedValue
+//	private Long id=null;
 	
 	String nombre = new String();
 	
@@ -110,7 +110,7 @@ fertilizantes.put("Yeso Agricola",new Fertilizante("Yeso Agricola",0.0,0.0,0,17)
 
 	@Override
 	public int compareTo(Fertilizante o) {
-		return (int) (this.id-o.getId());
+		return (int) (this.getId()-o.getId());
 	}
 }
 

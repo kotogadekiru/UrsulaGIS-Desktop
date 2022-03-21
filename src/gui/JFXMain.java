@@ -151,6 +151,7 @@ import javafx.stage.Stage;
 import tasks.CompartirRecorridaTask;
 import tasks.ExportLaborMapTask;
 import tasks.GetNdviForLaborTask3;
+import tasks.GetNdviForLaborTask4;
 import tasks.GoogleGeocodingHelper;
 import tasks.ProcessMapTask;
 import tasks.ReadJDHarvestLog;
@@ -525,7 +526,7 @@ public class JFXMain extends Application {
 		addMenuItem(Messages.getString("JFXMain.exportarPantallaMenuItem"),(a)->doSnapshot(),menuExportar); //$NON-NLS-1$
 
 		/*Menu Configuracion*/
-		final Menu menuConfiguracion = (new ShowConfigGUI(this)).contructConfigMenu();
+		final Menu menuConfiguracion = (new ConfigGUI(this)).contructConfigMenu();
 
 		MenuItem actualizarMI=addMenuItem(Messages.getString("JFXMain.configUpdate"),null,menuConfiguracion); //$NON-NLS-1$
 		actualizarMI.setOnAction((a)->doUpdate(actualizarMI));
@@ -641,7 +642,7 @@ public class JFXMain extends Application {
 		rootNodeNDVI.add(new LayerAction((layer)->{ //$NON-NLS-1$
 
 			Platform.runLater(()->{
-				ShowNDVIChart sChart= new ShowNDVIChart(this.getWwd());
+				NDVIChart sChart= new NDVIChart(this.getWwd());
 				sChart.doShowNDVIChart();
 				Stage histoStage = new Stage();
 				histoStage.setTitle(Messages.getString("JFXMain.show_ndvi_chart"));
@@ -1149,7 +1150,7 @@ public class JFXMain extends Application {
 				//mostrar un dialogo para editar el nombre del poligono
 				Recorrida recorrida =(Recorrida)layerObject;
 
-				ShowConfigGUI confGUI = new ShowConfigGUI(this);
+				ConfigGUI confGUI = new ConfigGUI(this);
 				confGUI.doShowRecorridaTable(Collections.singletonList(recorrida));
 
 				//				TextInputDialog nombreDialog = new TextInputDialog(recorrida.getNombre());
@@ -1723,7 +1724,7 @@ public class JFXMain extends Application {
 			gOCTask.uninstallProgressBar();
 
 			playSound();
-			(new ShowConfigGUI(this)).doShowOrdenCompra(ret);
+			(new ConfigGUI(this)).doShowOrdenCompraItems(ret);
 
 			System.out.println("SiembraFertTask succeded"); //$NON-NLS-1$
 		});
@@ -2309,7 +2310,7 @@ public class JFXMain extends Application {
 	 */
 	private void doCompartirRecorrida(Recorrida recorrida) {		
 		if(recorrida.getUrl()!=null && recorrida.getUrl().length()>0) {			
-			new ShowConfigGUI(this).showQR(recorrida.getUrl());
+			new ConfigGUI(this).showQR(recorrida.getUrl());
 			//XXX editar la recorrida remota con la informacion actualizada de la local?
 			//XXX recupero la recorrida remota?
 			return;
@@ -2321,9 +2322,11 @@ public class JFXMain extends Application {
 			String ret = (String)handler.getSource().getValue();
 			recorrida.setUrl(ret);
 			DAH.save(recorrida);
-			new ShowConfigGUI(this).showQR(ret);
+			if(ret!=null) {
+				new ConfigGUI(this).showQR(ret);
+			}
 			//XXX agregar boton de actualizar desde la nube?
-			task.uninstallProgressBar();
+			task.uninstallProgressBar();			
 		});
 		System.out.println("ejecutando Compartir Recorrida"); //$NON-NLS-1$
 		executorPool.submit(task);
@@ -2332,7 +2335,7 @@ public class JFXMain extends Application {
 
 	// junta las muestras con mismo nombre y permite completar los datos de las objervaciones
 	private void doAsignarValoresRecorrida(Recorrida recorrida) {
-		new ShowConfigGUI(this).doAsignarValoresRecorrida(recorrida);
+		new ConfigGUI(this).doAsignarValoresRecorrida(recorrida);
 	}
 
 	public void doShowRecorrida(Recorrida recorrida) {
@@ -2365,7 +2368,7 @@ public class JFXMain extends Application {
 		LocalDate fin =null;
 
 		//fin = dateChooser(fin);
-		NdviDatePickerDialog ndviDpDLG = new NdviDatePickerDialog(JFXMain.stage);
+		NDVIDatePickerDialog ndviDpDLG = new NDVIDatePickerDialog(JFXMain.stage);
 		LocalDate ret = ndviDpDLG.ndviDateChooser(fin);
 		if(ret ==null)return;//seleccionar fecha termino en cancel.
 		//System.out.println(Messages.getString("JFXMain.212")+ndviDpDLG.initialDate+Messages.getString("JFXMain.213")+ndviDpDLG.finalDate); //$NON-NLS-1$ //$NON-NLS-2$
@@ -2393,7 +2396,7 @@ public class JFXMain extends Application {
 					}			
 				});
 
-				GetNdviForLaborTask3 task = new GetNdviForLaborTask3(p,downloadLocation,observableList);
+				GetNdviForLaborTask4 task = new GetNdviForLaborTask4(p,observableList);
 				task.setBeginDate(ndviDpDLG.initialDate);
 				task.setFinDate(ndviDpDLG.finalDate);
 				task.setIgnoreNDVI((List<Ndvi>) getObjectFromLayersOfClass(Ndvi.class));
@@ -2424,7 +2427,7 @@ public class JFXMain extends Application {
 			fin= DateConverter.asLocalDate((Date)((Labor<?>)placementObject).getFecha());
 		} 
 		//fin = dateChooser(fin);
-		NdviDatePickerDialog ndviDpDLG = new NdviDatePickerDialog(JFXMain.stage);
+		NDVIDatePickerDialog ndviDpDLG = new NDVIDatePickerDialog(JFXMain.stage);
 		LocalDate ret = ndviDpDLG.ndviDateChooser(fin);
 		if(ret ==null)return;//seleccionar fecha termino en cancel.
 		//System.out.println(Messages.getString("JFXMain.212")+ndviDpDLG.initialDate+Messages.getString("JFXMain.213")+ndviDpDLG.finalDate); //$NON-NLS-1$ //$NON-NLS-2$
@@ -2451,7 +2454,7 @@ public class JFXMain extends Application {
 				}			
 			});
 
-			GetNdviForLaborTask3 task = new GetNdviForLaborTask3(placementObject,downloadLocation,observableList);
+			GetNdviForLaborTask4 task = new GetNdviForLaborTask4((Poligono)placementObject, observableList);
 			task.setBeginDate(ndviDpDLG.initialDate);
 			task.setFinDate(ndviDpDLG.finalDate);
 			task.setIgnoreNDVI((List<Ndvi>) getObjectFromLayersOfClass(Ndvi.class));
@@ -2463,8 +2466,8 @@ public class JFXMain extends Application {
 					((Poligono)placementObject).getLayer().setEnabled(false);
 				}
 				task.uninstallProgressBar();
+				System.out.println("termine de descargar todos los ndvi de "+placementObject);
 			});
-			System.out.println(Messages.getString("JFXMain.217")); //$NON-NLS-1$
 			executorPool.submit(task);
 		}
 	}
@@ -2493,6 +2496,7 @@ public class JFXMain extends Application {
 	}
 
 	private void showNdviTiffFile(File file, Object placementObject,Ndvi _ndvi) {
+		System.out.println("showing ndvi "+_ndvi.getNombre());
 		ShowNDVITifFileTask task = new ShowNDVITifFileTask(file,_ndvi);
 		if( placementObject!=null && Poligono.class.isAssignableFrom(placementObject.getClass())){
 			task.setPoligono((Poligono) placementObject);
@@ -3831,7 +3835,7 @@ public class JFXMain extends Application {
 
 			//si viene con recorridas seleccionadas permito editarlas?
 			recorrida.setMuestras(muestras);
-			new ShowConfigGUI(this).doAsignarValoresRecorrida(recorrida);//esto guarda una recorrida neuva
+			new ConfigGUI(this).doAsignarValoresRecorrida(recorrida);//esto guarda una recorrida neuva
 		}
 
 		ConvertirASueloTask csTask = new ConvertirASueloTask(cosecha,recorrida);

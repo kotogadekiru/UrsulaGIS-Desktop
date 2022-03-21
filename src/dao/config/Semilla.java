@@ -33,8 +33,8 @@ public class Semilla extends Producto{
 	public static final String SEMILLA_DE_SOJA = "Semilla de Soja";
 	public static final String SEMILLA_DE_MAIZ = "Semilla de Maiz";
 	
-	@Id @GeneratedValue
-	private Long id=null;
+//	@Id @GeneratedValue
+//	private Long id=null;
 	private String nombre = new String();
 	/**
 	 * poder germinativo

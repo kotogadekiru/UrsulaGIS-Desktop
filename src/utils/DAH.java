@@ -68,6 +68,7 @@ public class DAH {
 
 	public static void rollbackTransaction() {
 		DAH.transaction.rollback();
+		DAH.transaction=null;
 	}
 
 	public static EntityManager emODB(){

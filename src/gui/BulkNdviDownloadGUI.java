@@ -60,6 +60,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import tasks.GetNDVI2ForLaborTask;
 import tasks.GetNdviForLaborTask3;
+import tasks.GetNdviForLaborTask4;
 import tasks.procesar.ExtraerPoligonosDeLaborTask;
 import utils.DAH;
 import utils.ExcelHelper;
@@ -328,7 +329,7 @@ public class BulkNdviDownloadGUI {
 		}
 	
 		public void processSelectedPoligonsNDVI(ObservableList<Poligono> poligons) {
-			NdviDatePickerDialog ndviDpDLG = new NdviDatePickerDialog(null);
+			NDVIDatePickerDialog ndviDpDLG = new NDVIDatePickerDialog(null);
 			LocalDate ret = ndviDpDLG.ndviDateChooser(null);
 			if(ret!=null) { 
 				this.finalLd = ndviDpDLG.finalDate;
@@ -359,7 +360,7 @@ public class BulkNdviDownloadGUI {
 		
 	public 	List<Ndvi> requestNDVIForPolyDateDateByDate( Poligono p) {
 		List<Ndvi> ret = new ArrayList<Ndvi>();
-		GetNdviForLaborTask3 task = new GetNdviForLaborTask3(null,null,null);
+		GetNdviForLaborTask4 task = new GetNdviForLaborTask4(null,null);
 		task.setFinDate(this.finalLd);
 		task.setBeginDate(this.startLd);
 		List<LocalDate> fechasP = task.getSentinellAssets(p);

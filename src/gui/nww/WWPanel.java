@@ -51,12 +51,11 @@ public class WWPanel extends JPanel {
 
 		// Create the default model as described in the current worldwind
 		// properties.
-		Model m = (Model) WorldWind
-				.createConfigurationComponent(AVKey.MODEL_CLASS_NAME);
+		Model m = (Model) WorldWind.createConfigurationComponent(AVKey.MODEL_CLASS_NAME);
 //		final ElevationModel elevationModel = new ZeroElevationModel(){
 //		m.getGlobe().setElevationModel(elevationModel);
 		
-		m.getLayers().clear();//TODO remover esto que es debug
+		//m.getLayers().clear();//TODO remover esto que es debug
 		AVList crs = new AVListImpl();
 		crs.setValue(AVKey.COORDINATE_SYSTEM, "EPSG:4326");
 
@@ -70,17 +69,39 @@ public class WWPanel extends JPanel {
 				
 		//m.getLayers().add(new GIBS_PlaceLabels());
 	
-		m.getLayers().add(
-				new WMSTiledImageLayer(
+		m.getLayers().add(	new WMSTiledImageLayer(
 						WWXML.openDocumentFile("gui/nww/replacementLayers/GIBS_BlueMarble.xml", null),
 				null));
+		
 		m.getLayers().add(new Sentinel2Layer());
+		
+		double transicion =3*1000;
+		
+//		GoogleTiledImageLayer sat = new GoogleTiledImageLayer();
+//		sat.setValue(AVKey.DATA_CACHE_NAME, "/Earth/Google/Satellite");
+//		sat.setMinActiveAltitude(transicion);
+//		sat.setMaxActiveAltitude(2*transicion);
+//		m.getLayers().add(sat);
+		
+		GoogleLayer sat = new GoogleLayer(GoogleLayer.Type.SATELLITE);
+		sat.setValue(AVKey.DATA_CACHE_NAME, "/Earth/Google/Satelite");
+		sat.setMinActiveAltitude(transicion+1);
+		sat.setMaxActiveAltitude(2*transicion);
+		m.getLayers().add(sat);
+		
+		WMSTiledImageLayer bing = new WMSTiledImageLayer(
+				WWXML.openDocumentFile("gui/nww/replacementLayers/BingImageryEmxsys.xml", null),
+		null);
+		bing.setMaxActiveAltitude(transicion);
+		bing.setMinActiveAltitude(0);
+		m.getLayers().add(bing);
+	
+		GoogleLayer roads = new GoogleLayer(GoogleLayer.Type.ROADS);
+		roads.setValue(AVKey.DATA_CACHE_NAME, "/Earth/Google/Roads");
+		roads.setMinActiveAltitude(0);
+		roads.setMaxActiveAltitude(2*transicion);
+		m.getLayers().add(roads);
 
-		m.getLayers().add(
-				new WMSTiledImageLayer(
-						WWXML.openDocumentFile("gui/nww/replacementLayers/BingImageryEmxsys.xml", null),
-				null));
-		//m.getLayers().add(new GoogleLayer(GoogleLayer.Type.SATELLITE));
 		
 //		m.getLayers().add(
 //				new WMSTiledImageLayer(
@@ -94,14 +115,13 @@ public class WWPanel extends JPanel {
 //		m.getLayers().add(	new BasicMercatorTiledImageLayer(WWXML.openDocumentFile("gui/nww/replacementLayers/GoogleTiledImage.xml", null),
 //				null));//add roads and political boundaries
 		
-		m.getLayers().add(new CompassLayer());		
+		//m.getLayers().add(new CompassLayer());		
 		this.wwd.setModel(m);
 		
 		
 		
 		// Setup a select listener for the worldmap click-and-go feature
-		this.wwd.addSelectListener(new ClickAndGoSelectListener(this
-				.getWwd(), WorldMapLayer.class));
+		this.wwd.addSelectListener(new ClickAndGoSelectListener(this.getWwd(), WorldMapLayer.class));
 
 		this.add((Component) this.wwd, BorderLayout.CENTER);
 		//this.setCenter(wwd);

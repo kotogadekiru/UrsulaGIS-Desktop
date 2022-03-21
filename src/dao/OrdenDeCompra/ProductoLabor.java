@@ -39,11 +39,7 @@ public class ProductoLabor extends Producto {
 		laboresDefault.put(LABOR_DE_COSECHA,new ProductoLabor(LABOR_DE_COSECHA));//ok
 	}
 		
-	@Id @GeneratedValue
-	private Long id=null;
-	
 	String nombre = new String();
-	
 	
 	public ProductoLabor() {
 		

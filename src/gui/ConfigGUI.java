@@ -75,11 +75,11 @@ import tasks.procesar.ExportarPrescripcionSiembraTask;
 import utils.DAH;
 import utils.ExcelHelper;
 
-public class ShowConfigGUI {
+public class ConfigGUI {
 	private static final String DD_MM_YYYY = "dd/MM/yyyy";
 	JFXMain main=null;
 	
-	public ShowConfigGUI(JFXMain _main) {
+	public ConfigGUI(JFXMain _main) {
 		this.main=_main;		
 	}
 
@@ -119,7 +119,7 @@ public class ShowConfigGUI {
 		addMenuItem(Messages.getString("JFXMain.configPoligonosMI"),(a)->doConfigPoligonos(),menuConfiguracion); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.configNDVIMI"),(a)->doShowNdviTable(),menuConfiguracion); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.configRecorridaMI"),(a)->doShowRecorridaTable(),menuConfiguracion); //$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.OrdenCompra"),(a)->doShowOCTable(),menuConfiguracion); //$NON-NLS-1$
+		addMenuItem(Messages.getString("JFXMain.OrdenCompra"),(a)->doShowOrdenesCompra(),menuConfiguracion); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.362"),(a)->doShowLaboresTable(),menuConfiguracion); //$NON-NLS-1$
 
 		addMenuItem(Messages.getString("JFXMain.configIdiomaMI"),(a)->doChangeLocale(),menuConfiguracion); //$NON-NLS-1$
@@ -136,7 +136,7 @@ public class ShowConfigGUI {
 		//acercaDe.setHeaderText(this.TITLE_VERSION+"\n"+this.BUILD_INFO+"\nVisitar www.ursulagis.com");
 		//acercaDe.contentTextProperty().set();
 		String content =   "<b>"+JFXMain.TITLE_VERSION+"</b><br>" //$NON-NLS-1$ //$NON-NLS-2$
-		+ ShowConfigGUI.getBuildInfo()
+		+ ConfigGUI.getBuildInfo()
 		+ "<br><b>" +Messages.getString("JFXMain.visitarUrsulaGIS.com")+"</b>"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
 		WebView webView = new WebView();
@@ -197,8 +197,23 @@ public class ShowConfigGUI {
 
 			SmartTableView<Fertilizante> table = new SmartTableView<Fertilizante>(dataLotes);//,dataLotes);
 			table.setEditable(true);
-
+			table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
 			table.setOnDoubleClick(()->new Fertilizante(Messages.getString("JFXMain.374"))); //$NON-NLS-1$
+			table.setEliminarAction(
+					list->{
+						Platform.runLater(()->{		
+						try {
+							System.out.println("removing fertilizantes "+list.size());
+							List<Object> objs = new ArrayList(list);
+							DAH.removeAll(objs);
+							DAH.commitTransaction();
+						}catch(Exception e) {
+							e.printStackTrace();
+							DAH.rollbackTransaction();
+						}
+						});
+					}
+					);
 
 
 			Scene scene = new Scene(table, 800, 600);
@@ -433,7 +448,7 @@ public class ShowConfigGUI {
 			}
 	}
 	
-	public void doShowOrdenCompra(OrdenCompra ret) {
+	public void doShowOrdenCompraItems(OrdenCompra ret) {
 		Platform.runLater(()->{
 			final ObservableList<OrdenCompraItem> data =
 					FXCollections.observableArrayList(
@@ -441,8 +456,8 @@ public class ShowConfigGUI {
 							);
 
 			SmartTableView<OrdenCompraItem> table = new SmartTableView<OrdenCompraItem>(data,
-					Arrays.asList("Id"),
-					Arrays.asList("Producto","Cantidad")
+					Arrays.asList("Id"),//rejected
+					Arrays.asList("Producto","Cantidad")//order
 					);
 			table.setEditable(true);
 			//			table.setOnDoubleClick(()->new Poligono());
@@ -505,67 +520,55 @@ public class ShowConfigGUI {
 
 	}
 	
-	public void doShowOCTable() {
-		List<OrdenCompra> list = DAH.getAllOrdenesCompra();
-		Platform.runLater(()->{
+	public void doShowOrdenesCompra() {		
+		Platform.runLater(()->{		
 			final ObservableList<OrdenCompra> data =
-					FXCollections.observableArrayList(
-							list
-							);
+					FXCollections.observableArrayList(DAH.getAllOrdenesCompra());
 
 			SmartTableView<OrdenCompra> table = new SmartTableView<OrdenCompra>(data,
-					Arrays.asList("Id"),
-					Arrays.asList("Producto","Cantidad")
+					Arrays.asList("Id","Url","Uuid"),
+					Arrays.asList("Description","ImporteTotal","Mail")
 					);
 			table.setEditable(true);
+			table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
 			table.setOnShowClick((oc)->{
-				this.doShowOrdenCompra(oc);
+				this.doShowOrdenCompraItems(oc);
 			});
-			//			table.setOnDoubleClick(()->new Poligono());
-			//			table.setOnShowClick((ndvi)->{
-			//				//poli.setActivo(true);
-			//				doShowNDVI(ndvi);
-			//
-			//			});
+			
+			table.setEliminarAction(
+					list->{
+						Platform.runLater(()->{		
+						try {
+							System.out.println("removing ordenes de compra "+list.size());
+							DAH.beginTransaction();						
+//							list.stream().forEach(oc->{
+//								DAH.removeAll(oc.getItems());	
+//							});
+//							DAH.save(list.get(0).getRecorrida());
+							List<Object> objs = new ArrayList(list);
+							DAH.removeAll(objs);
+							DAH.commitTransaction();
+						}catch(Exception e) {
+							e.printStackTrace();
+							DAH.rollbackTransaction();
+						}
+						});
+					}
+					);
+			
 
-//			VBox v=new VBox();
-//			v.getChildren().add(table);
-//			HBox h = new HBox();
-//			Button guardarB = new Button("Guardar");
-//			guardarB.setOnAction(actionEvent->{
-//				System.out.println("implementar GuardarOrden de compra action");
-//				DAH.save(ret);
-//			});
-//			Button exportarB = new Button("Exportar");
-//			exportarB.setOnAction(actionEvent->{
-//				actionEvent.getSource()
-//				ExcelHelper helper = new ExcelHelper();
-//				helper.exportOrdenCompra(ret);
-//			});
-
-//			Button cotizarOblineB = new Button("Cotizar OnLine");
-//			cotizarOblineB.setOnAction(actionEvent->{
-//				//TODO enviar orden de compra a la nube. preguntar mail de contacto y subir la orden de compra a la nube
-//				
-//
-//			});
-//			h.getChildren().addAll(guardarB,exportarB,cotizarOblineB);
-
-//			v.getChildren().add(h);
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
 			tablaStage.setTitle(Messages.getString("JFXMain.OrdenCompra")); //$NON-NLS-1$
 			tablaStage.setScene(scene);
 
-			tablaStage.onHiddenProperty().addListener((o,old,n)->{
-				main.getLayerPanel().update(main.getWwd());
-				//getWwd().redraw();
-			});
+//			tablaStage.onHiddenProperty().addListener((o,old,n)->{
+//				main.getLayerPanel().update(main.getWwd());				
+//			});
 
 			tablaStage.show();	 
-		});	
-
+		});
 	}
 
 
@@ -873,7 +876,7 @@ public class ShowConfigGUI {
 	}
 	
 	public  void showQR(String ret) {
-		BufferedImage qr = ShowConfigGUI.generateQR(ret);
+		BufferedImage qr = ConfigGUI.generateQR(ret);
 		Image image = SwingFXUtils.toFXImage(qr, null);
 
 		Alert a = new Alert(AlertType.INFORMATION);

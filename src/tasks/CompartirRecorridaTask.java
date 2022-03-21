@@ -15,6 +15,7 @@ import javax.persistence.ManyToOne;
 import com.google.api.client.http.ByteArrayContent;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
+import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpRequestInitializer;
@@ -164,8 +165,7 @@ public class CompartirRecorridaTask extends Task<String> {
 			}
 			@Override
 			public boolean shouldSkipField(FieldAttributes arg0) {
-				if (arg0.getAnnotation(ManyToOne.class) != null)
-					return true;
+				if (arg0.getAnnotation(ManyToOne.class) != null)return true;
 
 				return false;
 			}
@@ -222,6 +222,8 @@ public class CompartirRecorridaTask extends Task<String> {
 						request.setParser(new JsonObjectParser(JSON_FACTORY));
 						request.setReadTimeout(0);
 						request.setConnectTimeout(0);
+						HttpHeaders headers = request.getHeaders();//USER=693,468
+						headers.set("USER", Configuracion.getInstance().getPropertyOrDefault("USER", "nonefound"));
 
 
 					}
@@ -229,7 +231,7 @@ public class CompartirRecorridaTask extends Task<String> {
 
 		try {
 			HttpRequest request = requestFactory.buildPostRequest(url, req_content);//(url);
-			request.getHeaders().set("USER", getUser());
+			//request.getHeaders().set("USER", getUser());
 			response= request.execute();
 		} catch (Exception e) {			
 			e.printStackTrace();
@@ -238,15 +240,7 @@ public class CompartirRecorridaTask extends Task<String> {
 		return response;
 	}
 	
-	private String getUser() {
-		DecimalFormat dc = new DecimalFormat("0,000");
-		dc.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(new Locale("EN")));
-		dc.setGroupingUsed(true);
-		String userString = dc.format(Math.random()*1000000);
-		Configuracion conf = Configuracion.getInstance();
-		String usr = conf.getPropertyOrDefault("USER", userString);//si no existia la clave se crea una nueva
-		return usr;
-	}
+
 	public void installProgressBar(Pane progressBox) {
 		this.progressPane= progressBox;
 		progressBarTask = new ProgressBar();			
