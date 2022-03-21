@@ -77,7 +77,7 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 	private static final String BASE_URL = "https://gee-api-helper.herokuapp.com";
 
 	private static final String HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3 = BASE_URL+"/ndvi_v4";//"/ndvi_v4";//+"/gndvi_v4_SR";//"/ndvi_v3";//ndvi_v5
-	private static final String HTTPS_GEE_API_HELPER_HEROKUAPP_COM_S2_PRODUCT_FINDER = BASE_URL+"/s2_product_finder_v3";
+	private static final String HTTPS_GEE_API_HELPER_HEROKUAPP_COM_S2_PRODUCT_FINDER = BASE_URL+"/s2_product_finder_v4";
 	private static final String GEE_POLYGONS_GET_REQUEST_KEY = "polygons";
 
 	private static final String ID = "id";
@@ -87,7 +87,7 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 	private static final String BEGIN = "begin"; //Data availability (time)	Jun 23, 2015 - Apr 18, 2017
 	private static final String PATH2 = "path2";
 
-	private static final String COPERNICUS_S2 = "COPERNICUSS2_HARMONIZED";// <a href=
+	private static final String COPERNICUS_S2 = "COPERNICUSS2";// <a href= COPERNICUSS2_HARMONIZED
 
 	private Poligono placementObject = null;
 	private LocalDate end=null;
@@ -162,7 +162,10 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 				i++;
 				updateProgress(i, ((List<?>)data).size());
 				if(feature instanceof Map){
-					String assetString = (String)((Map<?,?>)feature).get(ID);
+					String assetString = (String)((Map<?,?>)feature).get(ID);//fixme porque no usar date?
+					
+					System.out.println("asset id to download "+assetString);
+					//COPERNICUSS2_HARMONIZED20220317T140049_20220317T140814_T20HPH
 					LocalDate assetDate = getAssetDate(assetString);
 					BigDecimal porcNubes=new BigDecimal(0);
 					try {

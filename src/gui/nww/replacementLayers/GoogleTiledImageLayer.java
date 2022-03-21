@@ -56,7 +56,7 @@ public class GoogleTiledImageLayer extends BasicMercatorTiledImageLayer
 					+"&zoom="+ (tile.getLevelNumber()+3)
 					+"&size="+size+"x"+size
 					+"&maptype=hybrid"//satellite terrain roadmap hybrid
-					+"&key="+ "AIzaSyAjaTBN4kTCJ7TZCzDZ15Eqs7NdYexoGRA");
+					+"&key="+ "[YOUR KEY]");
 			//			URL url = new URL(tile.getLevel().getService()
 //					+ (tile.getLevelNumber() + 3)
 //					+"/"+ tile.getColumn()
