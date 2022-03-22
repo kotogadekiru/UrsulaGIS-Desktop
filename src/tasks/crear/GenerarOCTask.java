@@ -100,7 +100,7 @@ public class GenerarOCTask  extends Task<OrdenCompra>{
 	private void putItem(Map<Producto, OrdenCompraItem> items, Producto producto, Double cantidad,Double precio) {
 		if(items.containsKey(producto)) {
 			OrdenCompraItem existente = items.get(producto);
-			existente.setPrecio((existente.getImporte()+precio*cantidad)/(existente.getCantidad()+cantidad));
+			existente.setPrecio((existente.getImporte().doubleValue()+precio*cantidad)/(existente.getCantidad()+cantidad));
 			existente.setCantidad(existente.getCantidad()+cantidad);
 			items.put(producto, existente);
 		} else {
