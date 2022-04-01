@@ -38,6 +38,7 @@ import utils.ExcelHelper;
 public class NDVIChart extends VBox {
 	private WorldWindow wwd;
 	private LineChart<Number,Number> lineChart =null;
+	private double ndviAcum;
 
 	public NDVIChart(WorldWindow _wwd) {
 		super ();//sueper
@@ -46,10 +47,10 @@ public class NDVIChart extends VBox {
 
 	}
 
-	public void doShowNDVIChart() {
+	public void doShowNDVIChart(boolean acumulado) {
 		//TODO agregar grafico con la evolucion del ndvi promedio, la superficie de nubes agua y cultivo
 		List<SurfaceImageLayer> ndviLayers = extractLayers();
-
+	
 		//System.out.println("mostrar grafico");
 		final NumberAxis xAxis = new NumberAxis();
 		xAxis.setLabel("Fecha");
@@ -80,7 +81,7 @@ public class NDVIChart extends VBox {
 		
 		final NumberAxis yAxis = new NumberAxis();
 		yAxis.setLabel("NDVI");
-		
+		ndviAcum = 0;
 		ObservableList<Series<Number, Number>> data = FXCollections.observableArrayList();// new ArrayList<Series<Number, Number>>();
 
 		Map<String, List<SurfaceImageLayer>>  contornoMap = ndviLayers.stream().collect(
@@ -88,16 +89,23 @@ public class NDVIChart extends VBox {
 					Ndvi lNdvi = (Ndvi)l2.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 					return lNdvi.getContorno().getNombre();// fecha me devuelve siempre hoy por eso no hace la animacion
 				}));
-
+		
+		//lNdvi.getMeanNDVI().doubleValue();
 		contornoMap.keySet().stream().forEach((c)->{
 			XYChart.Series<Number,Number> sr = new XYChart.Series<Number,Number>(); 
 			sr.setName(c );
 			contornoMap.get(c).stream().map(
 					(layer)->(Ndvi)layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR)).sorted((n1,n2)->n1.compareTo(n2)).forEachOrdered(lNdvi->{
 				
+				//acumulo el ndvi		
+				if (acumulado == true)
+						ndviAcum = ndviAcum + lNdvi.getMeanNDVI().doubleValue();
+				else
+						ndviAcum = lNdvi.getMeanNDVI().doubleValue();
+					
 				xAxis.setLowerBound(Math.min(xAxis.getLowerBound(),lNdvi.getFecha().toEpochDay()-5));
 				xAxis.setUpperBound(Math.max(xAxis.getUpperBound(),lNdvi.getFecha().toEpochDay()+5));
-				sr.getData().add(new XYChart.Data<Number, Number>(lNdvi.getFecha().toEpochDay(), lNdvi.getMeanNDVI().doubleValue()));
+				sr.getData().add(new XYChart.Data<Number, Number>(lNdvi.getFecha().toEpochDay(), ndviAcum));
 			});
 			data.add(sr);	
 		});
