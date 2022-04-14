@@ -643,7 +643,7 @@ public class JFXMain extends Application {
 
 			Platform.runLater(()->{
 				NDVIChart sChart= new NDVIChart(this.getWwd());
-				sChart.doShowNDVIChart();
+				sChart.doShowNDVIChart(false);
 				Stage histoStage = new Stage();
 				histoStage.setTitle(Messages.getString("JFXMain.show_ndvi_chart"));
 				histoStage.getIcons().add(new Image(ICON));
@@ -657,6 +657,25 @@ public class JFXMain extends Application {
 
 			return "mostre el grafico del ndvi";
 		},Messages.getString("JFXMain.show_ndvi_chart")));
+		
+		rootNodeNDVI.add(new LayerAction((layer)->{ //$NON-NLS-1$
+
+			Platform.runLater(()->{
+				NDVIChart sChart= new NDVIChart(this.getWwd());
+				sChart.doShowNDVIChart(true);
+				Stage histoStage = new Stage();
+				histoStage.setTitle(Messages.getString("Mostrar Grafico Acumulado"));
+				histoStage.getIcons().add(new Image(ICON));
+				VBox.setVgrow(sChart, Priority.ALWAYS);
+				Scene scene = new Scene(sChart, 800,450);
+				histoStage.setScene(scene);
+				histoStage.initOwner(JFXMain.stage);
+				histoStage.show();
+			});
+
+
+			return "mostre el grafico del ndvi";
+		},Messages.getString("Mostrar Grafico Acumulado")));
 
 
 		//Exporta todos los ndvi cargados a un archivo excel donde las filas son las coordenadas y las columnas son los valores en esa fecha
@@ -2496,7 +2515,7 @@ public class JFXMain extends Application {
 	}
 
 	private void showNdviTiffFile(File file, Object placementObject,Ndvi _ndvi) {
-		System.out.println("showing ndvi "+_ndvi.getNombre());
+		if(_ndvi!=null)System.out.println("showing ndvi "+_ndvi.getNombre());
 		ShowNDVITifFileTask task = new ShowNDVITifFileTask(file,_ndvi);
 		if( placementObject!=null && Poligono.class.isAssignableFrom(placementObject.getClass())){
 			task.setPoligono((Poligono) placementObject);
