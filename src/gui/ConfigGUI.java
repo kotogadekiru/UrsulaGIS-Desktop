@@ -526,7 +526,7 @@ public class ConfigGUI {
 					FXCollections.observableArrayList(DAH.getAllOrdenesCompra());
 
 			SmartTableView<OrdenCompra> table = new SmartTableView<OrdenCompra>(data,
-					Arrays.asList("Id","Url","Uuid"),
+					Arrays.asList("Id","Url","Uuid","ImporteTotal2"),
 					Arrays.asList("Description","ImporteTotal","Mail")
 					);
 			table.setEditable(true);
@@ -539,7 +539,7 @@ public class ConfigGUI {
 					list->{
 						Platform.runLater(()->{		
 						try {
-							System.out.println("removing ordenes de compra "+list.size());
+							//System.out.println("removing ordenes de compra "+list.size());
 							DAH.beginTransaction();						
 //							list.stream().forEach(oc->{
 //								DAH.removeAll(oc.getItems());	

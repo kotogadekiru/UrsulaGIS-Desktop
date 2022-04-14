@@ -123,6 +123,7 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 	public ShowNDVITifFileTask(File f,Ndvi _ndvi){
 		file =f;
 		ndvi=_ndvi;
+		
 		Handler consoleHandler = new ConsoleHandler();
 		consoleHandler.setLevel(Level.ALL);
 		log.addHandler(consoleHandler);
@@ -343,6 +344,12 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 	}
 	
 	public Layer call() {	
+		if(ndvi==null) {
+			ndvi=new Ndvi();
+			ndvi.setF(this.file);
+			ndvi.updateContent();
+			System.out.println("loading ndvi from file");
+	}
 		try{
 
 			RasterWraperApache wrapper = loadRaster(ndvi);
@@ -375,7 +382,7 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 //				System.out.println("mosntrando un ndvi con owner poli"+ ownerPoli);
 //				fileName = ownerPoli.getNombre() +" "+ fileName;
 //			}
-			if(ndvi!=null) {
+			if(ndvi!=null && ndvi.getNombre()!=null) {
 				fileName = ndvi.getNombre();
 			}
 

@@ -508,6 +508,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 						try {
 						Geometry[] array =	geometriesCat.parallelStream().collect(() -> new Geometry[1],
 										(unionArray, geom) -> {
+											try {
 											Geometry union1 = unionArray[0];
 											if(union1==null) {
 												union1=geom;
@@ -515,6 +516,15 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 												union1 = union1.union(geom);	
 											}
 											unionArray[0]=union1;
+											}catch(Exception error_uniendo) {
+												error_uniendo.printStackTrace();
+												System.out.println("skipping union of "+geom);
+												if(unionArray[0]==null) {
+													unionArray[0]=geom;
+												}else {
+													//nada
+												}
+											}
 											},
 										(unionArray1, unionArray2) ->{
 											Geometry union1 = unionArray1[0];
@@ -531,7 +541,19 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 					//	buffered=buffered.buffer(-bufer,1,BufferParameters.CAP_ROUND);
 						}catch(Exception e3) {
 							System.out.println("fallo unir poligonos en parallell stream");
-							e3.printStackTrace();							
+							e3.printStackTrace();
+							for(Geometry gu: geometriesCat) {
+								try {
+								if(buffered!=null) {
+									buffered=gu;
+								}else {
+									buffered=buffered.union(gu);
+								}
+								}catch(Exception e4) {
+									e4.printStackTrace();
+								}
+							}
+						
 						}
 				 //}
 				}

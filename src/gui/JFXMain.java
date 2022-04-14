@@ -664,7 +664,7 @@ public class JFXMain extends Application {
 				NDVIChart sChart= new NDVIChart(this.getWwd());
 				sChart.doShowNDVIChart(true);
 				Stage histoStage = new Stage();
-				histoStage.setTitle(Messages.getString("Mostrar Grafico Acumulado"));
+				histoStage.setTitle(Messages.getString("JFXMain.show_ndvi_acum_chart"));
 				histoStage.getIcons().add(new Image(ICON));
 				VBox.setVgrow(sChart, Priority.ALWAYS);
 				Scene scene = new Scene(sChart, 800,450);
@@ -675,7 +675,7 @@ public class JFXMain extends Application {
 
 
 			return "mostre el grafico del ndvi";
-		},Messages.getString("Mostrar Grafico Acumulado")));
+		},Messages.getString("JFXMain.show_ndvi_acum_chart")));
 
 
 		//Exporta todos los ndvi cargados a un archivo excel donde las filas son las coordenadas y las columnas son los valores en esa fecha

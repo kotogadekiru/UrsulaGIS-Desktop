@@ -242,9 +242,8 @@ public class ConvertirNdviAFertilizacionTask extends ProcessMapTask<Fertilizacio
 		}
 		
 		
-		
-		
 	
+		
 		if(labor.inCollection == null){
 			labor.inCollection = new DefaultFeatureCollection("internal",labor.getType());
 		}
@@ -255,7 +254,7 @@ public class ConvertirNdviAFertilizacionTask extends ProcessMapTask<Fertilizacio
 		}
 	//	
 		if (correguirOutlayer) {
-				//System.out.println("corrigo outlayer" + labor.config.getAnchoFiltroOutlayers());
+				//System.out.println("corrijo outlayer" + labor.config.getAnchoFiltroOutlayers());
 				corregirOutlayersParalell();
 				System.out.println("corrio outlayer");
 		}		
@@ -334,7 +333,7 @@ public class ConvertirNdviAFertilizacionTask extends ProcessMapTask<Fertilizacio
 	
 	private void corregirOutlayersParalell() {			
 		//GeodeticCalculator calc = new GeodeticCalculator(DefaultEllipsoid.WGS84); 
-		System.out.println("se corrige Pralel otlayers");
+		System.out.println("se corrije Paralel outliers");
 		//1) crear un circulo de radio a definir y centro en el centroide de la cosecha
 		double ancho = 10;
 		double alfa = 0;

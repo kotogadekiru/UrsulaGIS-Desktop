@@ -16,6 +16,7 @@ import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.LayerList;
 import gov.nasa.worldwind.layers.SurfaceImageLayer;
 import gui.nww.LayerPanel;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -38,7 +39,7 @@ import utils.ExcelHelper;
 public class NDVIChart extends VBox {
 	private WorldWindow wwd;
 	private LineChart<Number,Number> lineChart =null;
-	private double ndviAcum;
+
 
 	public NDVIChart(WorldWindow _wwd) {
 		super ();//sueper
@@ -81,7 +82,7 @@ public class NDVIChart extends VBox {
 		
 		final NumberAxis yAxis = new NumberAxis();
 		yAxis.setLabel("NDVI");
-		ndviAcum = 0;
+	
 		ObservableList<Series<Number, Number>> data = FXCollections.observableArrayList();// new ArrayList<Series<Number, Number>>();
 
 		Map<String, List<SurfaceImageLayer>>  contornoMap = ndviLayers.stream().collect(
@@ -94,18 +95,34 @@ public class NDVIChart extends VBox {
 		contornoMap.keySet().stream().forEach((c)->{
 			XYChart.Series<Number,Number> sr = new XYChart.Series<Number,Number>(); 
 			sr.setName(c );
+			LocalDate[] lastFecha =new LocalDate[1];//.now();
+			SimpleDoubleProperty ndviAcumProp = new SimpleDoubleProperty(0);
+		
 			contornoMap.get(c).stream().map(
 					(layer)->(Ndvi)layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR)).sorted((n1,n2)->n1.compareTo(n2)).forEachOrdered(lNdvi->{
-				
-				//acumulo el ndvi		
-				if (acumulado == true)
-						ndviAcum = ndviAcum + lNdvi.getMeanNDVI().doubleValue();
-				else
-						ndviAcum = lNdvi.getMeanNDVI().doubleValue();
+				LocalDate fecha = lNdvi.getFecha();
+				long dias=0;
+				if(lastFecha[0]==null) {
+					System.out.println("ajustando lastFecha a "+fecha);
+					lastFecha[0]=fecha;
 					
+				} else {
+					
+					dias = java.time.temporal.ChronoUnit.DAYS.between(lastFecha[0], fecha);
+					System.out.println("calculando dias entre "+lastFecha[0]+" y "+fecha+" = "+dias);
+					lastFecha[0]=fecha;
+				}
+				//acumulo el ndvi		
+				if (acumulado == true) {
+					System.out.println("acumulando dias "+dias);
+					ndviAcumProp.set(ndviAcumProp.get()+lNdvi.getMeanNDVI().doubleValue()*dias);
+					//ndviAcum += lNdvi.getMeanNDVI().doubleValue()*dias;
+				}else {
+					ndviAcumProp.set( lNdvi.getMeanNDVI().doubleValue());
+				}	
 				xAxis.setLowerBound(Math.min(xAxis.getLowerBound(),lNdvi.getFecha().toEpochDay()-5));
 				xAxis.setUpperBound(Math.max(xAxis.getUpperBound(),lNdvi.getFecha().toEpochDay()+5));
-				sr.getData().add(new XYChart.Data<Number, Number>(lNdvi.getFecha().toEpochDay(), ndviAcum));
+				sr.getData().add(new XYChart.Data<Number, Number>(lNdvi.getFecha().toEpochDay(), ndviAcumProp.get()));
 			});
 			data.add(sr);	
 		});
