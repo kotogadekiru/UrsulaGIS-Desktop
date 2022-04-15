@@ -1,5 +1,7 @@
 package gui;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -91,48 +93,45 @@ public class NDVIChart extends VBox {
 					return lNdvi.getContorno().getNombre();// fecha me devuelve siempre hoy por eso no hace la animacion
 				}));
 		
-		//lNdvi.getMeanNDVI().doubleValue();
 		contornoMap.keySet().stream().forEach((c)->{
 			XYChart.Series<Number,Number> sr = new XYChart.Series<Number,Number>(); 
 			sr.setName(c );
 			LocalDate[] lastFecha =new LocalDate[1];//.now();
 			SimpleDoubleProperty ndviAcumProp = new SimpleDoubleProperty(0);
 		
-			contornoMap.get(c).stream().map(
-					(layer)->(Ndvi)layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR)).sorted((n1,n2)->n1.compareTo(n2)).forEachOrdered(lNdvi->{
+			contornoMap.get(c).stream()
+			.map((layer)->(Ndvi)layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR))
+			.sorted((n1,n2)->n1.compareTo(n2))
+			.forEachOrdered(lNdvi->{
 				LocalDate fecha = lNdvi.getFecha();
 				long dias=0;
 				if(lastFecha[0]==null) {
-					System.out.println("ajustando lastFecha a "+fecha);
-					lastFecha[0]=fecha;
-					
-				} else {
-					
+					lastFecha[0]=fecha;					
+				} else {					
 					dias = java.time.temporal.ChronoUnit.DAYS.between(lastFecha[0], fecha);
-					System.out.println("calculando dias entre "+lastFecha[0]+" y "+fecha+" = "+dias);
 					lastFecha[0]=fecha;
 				}
 				//acumulo el ndvi		
 				if (acumulado == true) {
-					System.out.println("acumulando dias "+dias);
 					ndviAcumProp.set(ndviAcumProp.get()+lNdvi.getMeanNDVI().doubleValue()*dias);
-					//ndviAcum += lNdvi.getMeanNDVI().doubleValue()*dias;
 				}else {
 					ndviAcumProp.set( lNdvi.getMeanNDVI().doubleValue());
 				}	
 				xAxis.setLowerBound(Math.min(xAxis.getLowerBound(),lNdvi.getFecha().toEpochDay()-5));
 				xAxis.setUpperBound(Math.max(xAxis.getUpperBound(),lNdvi.getFecha().toEpochDay()+5));
-				sr.getData().add(new XYChart.Data<Number, Number>(lNdvi.getFecha().toEpochDay(), ndviAcumProp.get()));
+				BigDecimal bd = new BigDecimal(ndviAcumProp.get()).setScale(2, RoundingMode.HALF_EVEN);
+				
+				sr.getData().add(new XYChart.Data<Number, Number>(lNdvi.getFecha().toEpochDay(), bd.doubleValue()));
+				
 			});
 			data.add(sr);	
 		});
-
+		xAxis.setTickLabelRotation(90);
+		xAxis.setTickUnit(5);
+		
 		lineChart = new LineChart<Number, Number>(xAxis, yAxis,data);				
 		lineChart.setAxisSortingPolicy(LineChart.SortingPolicy.X_AXIS);
 		
-//		System.out.println("LowerBound "+ LocalDate.ofEpochDay((long) xAxis.getLowerBound()));
-//		System.out.println("UpperBound "+ LocalDate.ofEpochDay((long) xAxis.getUpperBound()));
-
 		VBox vbox = new VBox(lineChart);
 		VBox.setVgrow(lineChart, Priority.ALWAYS);
 		VBox.setVgrow(vbox, Priority.ALWAYS);
@@ -154,9 +153,13 @@ public class NDVIChart extends VBox {
          */
         for (XYChart.Series<Number, Number> s : lineChart.getData()) {
             for (XYChart.Data<Number, Number> d : s.getData()) {
-                Tooltip.install(d.getNode(), new Tooltip("Fecha: " +
-                		toString(d.getXValue()) + "\n" +
-                                "NDVI: " + d.getYValue()));
+                Tooltip.install(d.getNode(), 
+                		new Tooltip(
+                				"NDVI: " + d.getYValue()
+                				+ "\n" +
+                				Messages.getString("JFXMain.show_ndvi_chart.Fecha")+": " + toString(d.getXValue())                               
+                                )
+                		);
 
                 //Adding class on hover
                 d.getNode().setOnMouseEntered(event -> d.getNode().getStyleClass().add("onHover"));
