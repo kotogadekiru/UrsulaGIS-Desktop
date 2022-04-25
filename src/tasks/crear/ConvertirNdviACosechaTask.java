@@ -156,7 +156,7 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 					ci.setId(id);
 					ci.setElevacion(elev);
 					ProyectionConstants.setLatitudCalculo(lat);
-					double ancho =lonStep * ProyectionConstants.metersToLong();
+					double ancho =lonStep * ProyectionConstants.metersToLong()*1E10;
 					ci.setAncho(ancho);
 					ci.setDistancia(ancho);
 					
