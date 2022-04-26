@@ -32,6 +32,7 @@ import gov.nasa.worldwindx.examples.analytics.AnalyticSurface.GridPointAttribute
 import gov.nasa.worldwindx.examples.analytics.ExportableAnalyticSurface;
 import tasks.ProcessMapTask;
 import tasks.ShowNDVITifFileTask;
+import utils.GeometryHelper;
 import utils.ProyectionConstants;
 import utils.Logistic.Data;
 
@@ -156,9 +157,10 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 					ci.setId(id);
 					ci.setElevacion(elev);
 					ProyectionConstants.setLatitudCalculo(lat);
-					double ancho =lonStep * ProyectionConstants.metersToLong();
+					double ancho =lonStep / ProyectionConstants.metersToLong();
+					double distancia  = latStep /ProyectionConstants.metersToLat();
 					ci.setAncho(ancho);
-					ci.setDistancia(ancho);
+					ci.setDistancia(distancia);
 					
 					//Double rindeNDVI = new Double(pendienteNdviRinde*ndvi+origenNdviRinde);//aproximacion lineal
 					Double rindeNDVI = new Double(calcRinde.apply(ndvi));//aproximacion logaritmica
@@ -178,7 +180,7 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 					// recortar si esta afuera del contorno del ndvi
 					if(contornoGeom!=null && !contornoGeom.covers(poly)) {//OK! funciona. no introducir poligonos empty!
 						try {
-						poly=poly.intersection(contornoGeom);
+						poly= GeometryHelper.getIntersection(poly, contornoGeom);//poly.intersection(contornoGeom);
 						if(poly.isEmpty())continue;
 						//System.out.println("el contorno no cubre el polygono y la interseccion es: "+poly.toText());
 						}catch(Exception e) {//com.vividsolutions.jts.geom.TopologyException: Found null DirectedEdge

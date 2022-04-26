@@ -27,6 +27,7 @@ import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 import dao.LaborItem;
 import dao.config.Cultivo;
 import dao.config.Fertilizante;
+import dao.config.Semilla;
 import dao.cosecha.CosechaItem;
 import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
@@ -87,6 +88,15 @@ import utils.ProyectionConstants;
 			double totalHa = fertilizacion.getCantidadLabor();
 		    double promedio = totalFerti/totalHa;
 			System.out.println("Area: " + totalHa + " Dosis: " + totalFerti + " Promedio: " + promedio);
+			Semilla semilla = labor.getSemilla();
+			System.out.println("semilla es "+semilla);
+			double entresurco = labor.getEntreSurco();
+			double pmil = semilla.getPesoDeMil();
+			double pg = semilla.getPG();
+			double metrosLinealesHa = ProyectionConstants.METROS2_POR_HA/entresurco;//23809 a 0.42
+			//System.out.println("metrosLinealesHa "+metrosLinealesHa);//metrosLinealesHa 52631.57894736842 ok!
+			// si pg ==1 semillas= plantas. si pg es <1 => semillas>plantas
+
 			while (reader.hasNext()) {
 				SimpleFeature simpleFeature = reader.next();
 				FertilizacionItem fi = fertilizacion.constructFeatureContainerStandar(simpleFeature,false);
@@ -139,9 +149,11 @@ import utils.ProyectionConstants;
 				
 				System.out.println("la dosis final es : " + dosis );
 				
-				si.setDosisHa(dosis);//solo queda poner la formula para guardar el valor de la dosis 
-					
-					
+				double semillasHa = ProyectionConstants.METROS2_POR_HA*dosis/pg;
+				
+				si.setDosisHa(semillasHa*pmil/(1000*1000));//solo queda poner la formula para guardar el valor de la dosis 
+				//si.setDosisML(dosis);	
+				
 					
 					labor.setPropiedadesLabor(si);
 				//segun el cultivo de la cosecha
@@ -176,7 +188,8 @@ import utils.ProyectionConstants;
 					"Densidad Fertilizante: " + df.format(fertFeature.getDosisFertCostado())
 					+ " Kg/Ha\n" + "Densidad Siembra: "
 					+ df.format(fertFeature.getDosisHa()) + " \n"
-					//+ "Sup: "
+					+ "Semilla ML: "
+					+ df.format(fertFeature.getDosisML()) + " \n"
 					//+ df.format(area * ProyectionConstants.METROS2_POR_HA)
 					//+ " m2\n"
 					// +"feature: " + featureNumber

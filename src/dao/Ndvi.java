@@ -31,14 +31,14 @@ import lombok.Setter;
 
 @Getter
 @Setter(value = AccessLevel.PUBLIC)
-@Entity @Access(AccessType.FIELD)
+@Entity //@Access(AccessType.FIELD)
 @NamedQueries({
 	@NamedQuery(name=Ndvi.FIND_ALL, query="SELECT c FROM Ndvi c ORDER BY lower(c.nombre)") ,
 	@NamedQuery(name=Ndvi.FIND_NAME, query="SELECT o FROM Ndvi o where o.nombre = :name") ,
 	@NamedQuery(name=Ndvi.FIND_ACTIVOS, query="SELECT o FROM Ndvi o where o.activo = true") ,
 	@NamedQuery(name=Ndvi.FIND_BY_CONTORNO_DATE, query="SELECT o FROM Ndvi o where o.contorno = :contorno and o.fecha = :date") ,
 }) 
-public class Ndvi implements Comparable{//extends AbstractBaseEntity {
+public class Ndvi implements Comparable<Object>{//extends AbstractBaseEntity {
 	public static final String FIND_ALL="Ndvi.findAll";
 	public static final String FIND_NAME = "Ndvi.findName";
 	public static final String FIND_ACTIVOS = "Ndvi.findActivos";
@@ -48,8 +48,8 @@ public class Ndvi implements Comparable{//extends AbstractBaseEntity {
 	private Long id=null;
 	private String nombre=null;
 
-	@Temporal(TemporalType.DATE)
-	@Convert(converter = LocalDateAttributeConverter.class)
+//	@Temporal(TemporalType.DATE)
+//	@Convert(converter = LocalDateAttributeConverter.class)
 	private LocalDate fecha=LocalDate.now();
 	
 	private Double meanNDVI=null;

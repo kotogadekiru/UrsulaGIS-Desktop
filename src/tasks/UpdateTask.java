@@ -360,7 +360,7 @@ public class UpdateTask  extends Task<File>{
 			
 			double height = webView.getPrefHeight();
 			double width = webView.getPrefWidth();
-			Scene scene = new Scene(v, width-150,height-100);
+			Scene scene = new Scene(v, width-150+60,height-100+90);
 			welcomeStage.setScene(scene);
 			welcomeStage.initOwner(JFXMain.stage);
 			welcomeStage.getIcons().addAll(JFXMain.stage.getIcons());

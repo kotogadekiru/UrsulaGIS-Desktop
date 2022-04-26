@@ -31,6 +31,7 @@ import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
 import gui.nww.LaborLayer;
 import tasks.ProcessMapTask;
+import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
 public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor> {
@@ -254,7 +255,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 			Geometry g = cPoly.getGeometry();
 			try{
 				
-				g= EnhancedPrecisionOp.intersection(poly,g);
+				g= GeometryHelper.getIntersection(poly, g);//EnhancedPrecisionOp.intersection(poly,g);
 				Double areaInterseccion = g.getArea();
 				areaPoly+=areaInterseccion;
 				areasIntersecciones.put(cPoly,areaInterseccion);
@@ -275,7 +276,9 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 			double rindeProm=0,desvioPromedio=0,ancho=0,distancia=0,elev=0,rumbo=0;// , pesos=0;
 			ancho=labor.getConfiguracion().getAnchoGrilla();
 			distancia=ancho;
-		
+		if(this.rellenarHuecos) {//si se indico rellenar huecos hago la suma de kg en vez del promedio
+			areaPoly=poly.getArea();
+		}
 	//		double pesoTotal=0;
 		for(CosechaItem cPoly : areasIntersecciones.keySet()){
 				Double gArea = areasIntersecciones.get(cPoly);//cPoly.getGeometry();
