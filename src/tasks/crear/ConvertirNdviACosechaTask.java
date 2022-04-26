@@ -181,7 +181,7 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 					if(contornoGeom!=null && !contornoGeom.covers(poly)) {//OK! funciona. no introducir poligonos empty!
 						try {
 						poly= GeometryHelper.getIntersection(poly, contornoGeom);//poly.intersection(contornoGeom);
-						if(poly.isEmpty())continue;
+						if(poly==null || poly.isEmpty())continue;
 						//System.out.println("el contorno no cubre el polygono y la interseccion es: "+poly.toText());
 						}catch(Exception e) {//com.vividsolutions.jts.geom.TopologyException: Found null DirectedEdge
 							e.printStackTrace();//com.vividsolutions.jts.geom.TopologyException: side location conflict [ (-61.920393510481325, -33.66456750394795, NaN) ]
