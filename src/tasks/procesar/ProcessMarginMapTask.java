@@ -262,7 +262,7 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 		Double importeFijo = costoFijoHa*areaMargen;
 
 		importeCosecha = getImporteCosecha(harvestPolygon);
-		//System.out.println("ingreso por cosecha=" + importeCosecha);
+		System.out.println("ingreso por cosecha=" + importeCosecha);
 
 		importePulv = getImportePulv(harvestPolygon);
 		importeFert = getImporteFert(harvestPolygon);
@@ -300,7 +300,7 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 		//TODO agregar al importe de cosecha el importe de flete y comercializacion
 		double fletePorTN =this.labor.costoFleteProperty.getValue().doubleValue();
 		double costoTN = this.labor.costoTnProperty.getValue().doubleValue();
-	//	double cantidadCosechas = getCantidadLabores(geometry,cosechas);
+		//double cantidadCosechas = getCantidadLabores(geometry,cosechas);
 		
 		return getImporteLabores(geometry,cosechas,(-fletePorTN-costoTN));
 	}

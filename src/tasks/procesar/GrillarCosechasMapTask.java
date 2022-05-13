@@ -276,9 +276,9 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 			double rindeProm=0,desvioPromedio=0,ancho=0,distancia=0,elev=0,rumbo=0;// , pesos=0;
 			ancho=labor.getConfiguracion().getAnchoGrilla();
 			distancia=ancho;
-		if(this.rellenarHuecos) {//si se indico rellenar huecos hago la suma de kg en vez del promedio
-			areaPoly=poly.getArea();
-		}
+//		if(this.rellenarHuecos) {//si se indico rellenar huecos hago la suma de kg en vez del promedio
+//			areaPoly=poly.getArea();
+//		}
 	//		double pesoTotal=0;
 		for(CosechaItem cPoly : areasIntersecciones.keySet()){
 				Double gArea = areasIntersecciones.get(cPoly);//cPoly.getGeometry();

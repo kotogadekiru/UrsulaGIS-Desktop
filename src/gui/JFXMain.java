@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.DecimalFormat;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.imageio.ImageIO;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -207,11 +209,11 @@ public class JFXMain extends Application {
 	//	private static final double MIN_VALUE = 0.2;
 	public static Configuracion config = Configuracion.getInstance();
 
-	public static final String VERSION = "0.2.27"; //$NON-NLS-1$
+	public static final String VERSION = "0.2.27.2"; //$NON-NLS-1$
 	public static final String TITLE_VERSION = "Ursula GIS-"+VERSION; //$NON-NLS-1$
 	public static final String buildDate = "23/04/2022";
-
-	public static final String ICON ="gui/ursula_logo_2020.png";//"gui/32x32-icon-earth.png";// "gui/1-512.png";//UrsulaGIS-Desktop/src/gui/32x32-icon-earth.png //$NON-NLS-1$
+	///UrsulaGIS-Desktop/src/gui/ursula_logo_2020.png
+	public static  final String ICON ="gui/ursula_logo_2020.png";//"gui/32x32-icon-earth.png";// "gui/1-512.png";//UrsulaGIS-Desktop/src/gui/32x32-icon-earth.png //$NON-NLS-1$
 	private static final String SOUND_FILENAME = "gui/exito4.mp3";//"gui/Alarm08.wav";//"Alarm08.wav" funciona desde eclipse pero no desde el jar  //$NON-NLS-1$
 
 
@@ -230,11 +232,15 @@ public class JFXMain extends Application {
 
 
 	@Override
-	public void start(Stage primaryStage) throws Exception {
+	public void start(Stage primaryStage) {
+		try {
 		JFXMain.stage = primaryStage;
 
 		primaryStage.setTitle(TITLE_VERSION);
-		primaryStage.getIcons().add(new Image(ICON));
+		
+			URL url = JFXMain.class.getClassLoader().getResource(ICON);
+
+			primaryStage.getIcons().add(new Image(url.toURI().toString()));
 
 		Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 
@@ -275,6 +281,10 @@ public class JFXMain extends Application {
 
 		//start clearCache cronJob
 		startClearCacheCronJob();
+		}catch(Exception e) {
+			System.out.println("no se pudo hascer start de JFXMain.start(stage)");
+			e.printStackTrace();
+		}
 	}
 
 	private void startClearCacheCronJob() {
@@ -4670,8 +4680,27 @@ public class JFXMain extends Application {
 	}
 
 	public static void main(String[] args) {
-		System.setProperty("prism.order", "es2");
-		Application.launch(JFXMain.class, args);
+		try
+		  {
+			System.setProperty("prism.order", "es2");
+			Application.launch(JFXMain.class, args);
+		  }
+		  catch (Exception e)
+		  {
+			  JOptionPane.showMessageDialog(null,"hola: " + e.getMessage());
+			    try
+			    {
+			      PrintWriter pw = new PrintWriter(new File("ursula_error.log"));
+			      e.printStackTrace(pw);
+			      pw.close();
+			    }
+			    catch (IOException e1)
+			    {
+			      e1.printStackTrace();
+			    }
+		   }	
+		
+	
 	}
 
 }

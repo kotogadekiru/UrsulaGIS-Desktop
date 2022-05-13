@@ -56,24 +56,33 @@
 	<classpathentry exported="true" kind="lib" path="libs/org.eclipse.persistence.jpa.modelgen_2.7.1.v20171221-bd47e8f.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/org.eclipse.persistence.jpars_2.7.1.v20171221-bd47e8f.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/javax.persistence_2.2.0.v201708071007.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/WorldWindJava"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/WorldWindJava"/>
 	<classpathentry exported="true" kind="lib" path="libs/tiff-2.0.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/xercesImpl.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/xml-apis.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/jSerialComm-2.7.0.jar"/>
-	<classpathentry kind="lib" path="libs/gdal/gluegen-rt-natives-linux-amd64.jar"/>
-	<classpathentry kind="lib" path="libs/gdal/gluegen-rt-natives-linux-i586.jar"/>
-	<classpathentry kind="lib" path="libs/gdal/gluegen-rt-natives-macosx-universal.jar"/>
-	<classpathentry kind="lib" path="libs/gdal/gluegen-rt-natives-windows-amd64.jar"/>
-	<classpathentry kind="lib" path="libs/gdal/gluegen-rt-natives-windows-i586.jar"/>
-	<classpathentry kind="lib" path="libs/gdal/gluegen-rt.jar"/>
-	<classpathentry kind="lib" path="libs/gdal/jogl-all-natives-linux-amd64.jar"/>
-	<classpathentry kind="lib" path="libs/gdal/jogl-all-natives-linux-i586.jar"/>
-	<classpathentry kind="lib" path="libs/gdal/jogl-all-natives-macosx-universal.jar"/>
-	<classpathentry kind="lib" path="libs/gdal/jogl-all-natives-windows-amd64.jar"/>
-	<classpathentry kind="lib" path="libs/gdal/jogl-all-natives-windows-i586.jar"/>
-	<classpathentry kind="lib" path="libs/gdal/jogl-all.jar"/>
-	<classpathentry kind="lib" path="libs/zxing/core-3.4.1.jar"/>
-	<classpathentry kind="lib" path="libs/zxing/javase-3.4.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gdal/gluegen-rt-natives-linux-amd64.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gdal/gluegen-rt-natives-linux-i586.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gdal/gluegen-rt-natives-macosx-universal.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gdal/gluegen-rt-natives-windows-amd64.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gdal/gluegen-rt-natives-windows-i586.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gdal/gluegen-rt.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gdal/jogl-all-natives-linux-amd64.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gdal/jogl-all-natives-linux-i586.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gdal/jogl-all-natives-macosx-universal.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gdal/jogl-all-natives-windows-amd64.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gdal/jogl-all-natives-windows-i586.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gdal/jogl-all.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/zxing/core-3.4.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/zxing/javase-3.4.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gdal.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gluegen-rt-natives-windows-amd64.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gluegen-rt-natives-windows-i586.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gluegen-rt.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/jogl-all-natives-windows-amd64.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/jogl-all-natives-windows-i586.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/jogl-all.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/worldwind.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/worldwindx.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

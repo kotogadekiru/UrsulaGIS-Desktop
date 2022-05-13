@@ -125,6 +125,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 		maxRindeProperty = PropertyHelper.initDoubleProperty(CosechaLabor.CosechaLaborConstants.MAX_RINDE_KEY, "20", properties);
 		
 		precioGrano = PropertyHelper.initDouble(CosechaLabor.CosechaLaborConstants.PRECIO_GRANO, "0", properties);
+		this.setPrecioInsumo(precioGrano);
 		costoCosechaTn = PropertyHelper.initDouble(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_TN, "0", properties);
 
 		String productoKEY = properties.getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.PRODUCTO_DEFAULT, Cultivo.MAIZ);
@@ -234,6 +235,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 				Double rindeH = ci.getRindeTnHa();
 				Double k = 100/(100+moisture);
 				ci.setRindeTnHa(rindeH*k);
+				ci.setPrecioTnGrano(this.precioGrano);
 			}
 			
 			//CAMBIO LA ELEVACION DE PIES A METROS
@@ -251,7 +253,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 	}
 
 	public void setPropiedadesLabor(CosechaItem ci){
-		ci.precioTnGrano =this.getPrecioInsumo();//precioGranoProperty.get();
+		ci.precioTnGrano = Math.max(this.getPrecioInsumo(),this.precioGrano);//precioGranoProperty.get();
 		ci.costoLaborHa=this.getPrecioLabor();
 		ci.costoLaborTn=this.getCostoCosechaTn();
 	}

@@ -107,7 +107,12 @@ public class Configuracion{
 //	}
 
 	public static Configuracion getInstance() {
-		return  new Configuracion();
+		try {
+			return  new Configuracion();
+		}catch(Exception e) {
+			System.out.println("error al conseguir la instancia de configuracion");
+			return null;
+		}
 		//return LazyHolder.INSTANCE;
 	}
 

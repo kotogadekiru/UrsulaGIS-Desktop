@@ -17,6 +17,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.IntersectionMatrix;
+import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
@@ -111,8 +112,14 @@ public class GeometryHelper {
 	public static Point constructPoint(Position e) {
 		Coordinate A = new Coordinate(e.getLongitude().getDegrees(), e.getLatitude().getDegrees());// X-l+d
 		GeometryFactory fact = ProyectionConstants.getGeometryFactory();
-		Point point = fact.createPoint(A);
+		Point point = fact.createPoint(A);		
 		return point;
+	}
+	
+	public static LineString constructLineString(Position p1, Position p2) {
+		Coordinate[] coords ={constructPoint(p1).getCoordinate(),constructPoint(p2).getCoordinate()};
+		GeometryFactory fact = ProyectionConstants.getGeometryFactory();
+		return fact.createLineString(coords);
 	}
 	
 	/**

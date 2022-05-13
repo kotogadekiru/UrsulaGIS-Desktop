@@ -34,7 +34,7 @@ import javax.swing.JPanel;
 
 //FIXME cambiar a javaFX SwingNode
 public class WWPanel extends JPanel {
-	
+
 	private static final long serialVersionUID = -7158127157119827058L;
 	protected WorldWindow wwd;
 	protected StatusBar statusBar;
@@ -45,81 +45,93 @@ public class WWPanel extends JPanel {
 		super(new BorderLayout());
 
 		this.wwd =new WorldWindowGLJPanel();// this.createWorldWindow();
-		
-	//	((Component) this.wwd).setSize((int)canvasSize.getWidth()/4,(int) canvasSize.getHeight()/4);
+
+		//	((Component) this.wwd).setSize((int)canvasSize.getWidth()/4,(int) canvasSize.getHeight()/4);
 		((Component) this.wwd).setPreferredSize(canvasSize);
 
 		// Create the default model as described in the current worldwind
 		// properties.
 		Model m = (Model) WorldWind.createConfigurationComponent(AVKey.MODEL_CLASS_NAME);
-//		final ElevationModel elevationModel = new ZeroElevationModel(){
-//		m.getGlobe().setElevationModel(elevationModel);
-		
+		//		final ElevationModel elevationModel = new ZeroElevationModel(){
+		//		m.getGlobe().setElevationModel(elevationModel);
+
 		//m.getLayers().clear();//TODO remover esto que es debug
 		AVList crs = new AVListImpl();
 		crs.setValue(AVKey.COORDINATE_SYSTEM, "EPSG:4326");
 
-	
-//		
+
+		//		
 		//
-		
-//		https://emxsys.net/worldwind25/wms
-//			https://emxsys.net/worldwind26/elev
-//			https://emxsys.net/worldwind27/wms/virtualearth
-				
+
+		//		https://emxsys.net/worldwind25/wms
+		//			https://emxsys.net/worldwind26/elev
+		//			https://emxsys.net/worldwind27/wms/virtualearth
+
 		//m.getLayers().add(new GIBS_PlaceLabels());
-	
-		m.getLayers().add(	new WMSTiledImageLayer(
-						WWXML.openDocumentFile("gui/nww/replacementLayers/GIBS_BlueMarble.xml", null),
-				null));
-		
-		m.getLayers().add(new Sentinel2Layer());
-		
+		try {
+			m.getLayers().add(	new WMSTiledImageLayer(
+					WWXML.openDocumentFile("gui/nww/replacementLayers/GIBS_BlueMarble.xml", null),
+					null));
+		}catch(Exception e) {
+			System.out.println("fallo la carga del layer en gui/nww/replacementLayers/GIBS_BlueMarble.xml");
+			e.printStackTrace();
+		}
+		try {
+			m.getLayers().add(new Sentinel2Layer());
+		}catch(Exception e) {
+			System.out.println("fallo la carga del layer en Sentinel2Layer");
+			e.printStackTrace();
+		}
 		double transicion =3*1000;
-		
-//		GoogleTiledImageLayer sat = new GoogleTiledImageLayer();
-//		sat.setValue(AVKey.DATA_CACHE_NAME, "/Earth/Google/Satellite");
-//		sat.setMinActiveAltitude(transicion);
-//		sat.setMaxActiveAltitude(2*transicion);
-//		m.getLayers().add(sat);
-		
+
+		//		GoogleTiledImageLayer sat = new GoogleTiledImageLayer();
+		//		sat.setValue(AVKey.DATA_CACHE_NAME, "/Earth/Google/Satellite");
+		//		sat.setMinActiveAltitude(transicion);
+		//		sat.setMaxActiveAltitude(2*transicion);
+		//		m.getLayers().add(sat);
+
 		GoogleLayer sat = new GoogleLayer(GoogleLayer.Type.SATELLITE);
 		sat.setValue(AVKey.DATA_CACHE_NAME, "/Earth/Google/Satelite");
 		sat.setMinActiveAltitude(transicion+1);
 		sat.setMaxActiveAltitude(2*transicion);
 		m.getLayers().add(sat);
-		
-		WMSTiledImageLayer bing = new WMSTiledImageLayer(
-				WWXML.openDocumentFile("gui/nww/replacementLayers/BingImageryEmxsys.xml", null),
-		null);
-		bing.setMaxActiveAltitude(transicion);
-		bing.setMinActiveAltitude(0);
-		m.getLayers().add(bing);
-	
+
+		try {
+			WMSTiledImageLayer bing = new WMSTiledImageLayer(
+					WWXML.openDocumentFile("gui/nww/replacementLayers/BingImageryEmxsys.xml", null),
+					null);
+			bing.setMaxActiveAltitude(transicion);
+			bing.setMinActiveAltitude(0);
+			m.getLayers().add(bing);
+		}catch(Exception e) {
+			System.out.println("fallo la carga del layer en gui/nww/replacementLayers/BingImageryEmxsys.xml");
+			e.printStackTrace();
+		}
+
 		GoogleLayer roads = new GoogleLayer(GoogleLayer.Type.ROADS);
 		roads.setValue(AVKey.DATA_CACHE_NAME, "/Earth/Google/Roads");
 		roads.setMinActiveAltitude(0);
 		roads.setMaxActiveAltitude(2*transicion);
 		m.getLayers().add(roads);
 
-		
-//		m.getLayers().add(
-//				new WMSTiledImageLayer(
-//						WWXML.openDocumentFile("gui/nww/replacementLayers/GIBS_PlaceLabels.xml", null),
-//				crs.copy()));//add city names and such
-//		m.getLayers().add(
-//				new WMSTiledImageLayer(
-//						WWXML.openDocumentFile("gui/nww/replacementLayers/GIBS_ReferenceFeatures.xml", null),
-//				null));//add roads and political boundaries
-		
-//		m.getLayers().add(	new BasicMercatorTiledImageLayer(WWXML.openDocumentFile("gui/nww/replacementLayers/GoogleTiledImage.xml", null),
-//				null));//add roads and political boundaries
-		
+
+		//		m.getLayers().add(
+		//				new WMSTiledImageLayer(
+		//						WWXML.openDocumentFile("gui/nww/replacementLayers/GIBS_PlaceLabels.xml", null),
+		//				crs.copy()));//add city names and such
+		//		m.getLayers().add(
+		//				new WMSTiledImageLayer(
+		//						WWXML.openDocumentFile("gui/nww/replacementLayers/GIBS_ReferenceFeatures.xml", null),
+		//				null));//add roads and political boundaries
+
+		//		m.getLayers().add(	new BasicMercatorTiledImageLayer(WWXML.openDocumentFile("gui/nww/replacementLayers/GoogleTiledImage.xml", null),
+		//				null));//add roads and political boundaries
+
 		//m.getLayers().add(new CompassLayer());		
 		this.wwd.setModel(m);
-		
-		
-		
+
+
+
 		// Setup a select listener for the worldmap click-and-go feature
 		this.wwd.addSelectListener(new ClickAndGoSelectListener(this.getWwd(), WorldMapLayer.class));
 
@@ -141,18 +153,18 @@ public class WWPanel extends JPanel {
 
 	//@Override
 	public void setPreferredSize(Dimension dim){
-	//	super.setPrefSize(dim.getWidth(),dim.getHeight());
+		//	super.setPrefSize(dim.getWidth(),dim.getHeight());
 		super.setPreferredSize(dim);
 		((Component) this.wwd).setPreferredSize(dim);
 		//this.wwd.redraw();
 
 	}
 
-//	protected WorldWindow createWorldWindow() {//Este es el unico metodo de cambie de AppPanel porque sino no andaba con JavaFX
-//		//return new WorldWindowGLCanvas();
-//		return new WorldWindowGLJPanel();
-//		//return new WorldWindow();
-//	}
+	//	protected WorldWindow createWorldWindow() {//Este es el unico metodo de cambie de AppPanel porque sino no andaba con JavaFX
+	//		//return new WorldWindowGLCanvas();
+	//		return new WorldWindowGLJPanel();
+	//		//return new WorldWindow();
+	//	}
 
 	public WorldWindow getWwd() {
 		return wwd;

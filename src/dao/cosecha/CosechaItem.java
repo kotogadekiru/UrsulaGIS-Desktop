@@ -48,6 +48,7 @@ public class CosechaItem extends LaborItem {
 
 	public Double getImporteHa() {
 		this.importeHa =  this.rindeTnHa *(this.precioTnGrano-this.costoLaborTn)-costoLaborHa;
+		
 		return importeHa;
 	}
 
