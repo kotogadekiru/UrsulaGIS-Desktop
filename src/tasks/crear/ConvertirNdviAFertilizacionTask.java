@@ -121,8 +121,8 @@ public class ConvertirNdviAFertilizacionTask extends ProcessMapTask<Fertilizacio
 		
 		GeometryFactory fact = new GeometryFactory();
 		
-		double latStep = -sector.getDeltaLatDegrees() / (double) (height-1);//-1
-		double lonStep = sector.getDeltaLonDegrees() / (double) (width-1);
+		double latStep = -sector.getDeltaLatDegrees() / (double) (height);//-1
+		double lonStep = sector.getDeltaLonDegrees() / (double) (width);
 		
 		//List<FertilizacionItem> itemsToShow = new ArrayList<FertilizacionItem>();
 		
