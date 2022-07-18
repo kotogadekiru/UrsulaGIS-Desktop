@@ -184,8 +184,8 @@ public class LayerPanel extends VBox {
 					labor2 != null && labor2 instanceof Ndvi) {
 					 l1Name =((Ndvi)labor1).getNombre();
 					 l2Name =((Ndvi)labor2).getNombre();
-					 //si empiezan con el mismo nombre los ordeno por fecha
-					if(	l1Name.startsWith(l2Name.substring(0, l2Name.length()-"02-01-2018".length()))){ //$NON-NLS-1$
+					 //si empi1=null ezan con el mismo nombre los ordeno por fecha
+					if(	l1Name!=null && l1Name.startsWith(l2Name.substring(0, l2Name.length()-"02-01-2018".length()))){ //$NON-NLS-1$
 						try {
 							LocalDate fecha1 = ((Ndvi)labor1).getFecha();
 							LocalDate fecha2 = ((Ndvi)labor2).getFecha();

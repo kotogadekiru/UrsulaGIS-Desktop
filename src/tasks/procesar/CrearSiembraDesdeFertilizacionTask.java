@@ -176,35 +176,35 @@ import utils.ProyectionConstants;
 	}
 		
 		@Override
-		protected ExtrudedPolygon getPathTooltip(Geometry poly, SiembraItem fertFeature,ExtrudedPolygon  renderablePolygon) {
+		protected ExtrudedPolygon getPathTooltip(Geometry poly, SiembraItem siembraFeature,ExtrudedPolygon  renderablePolygon) {
+			double area = poly.getArea() *ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+			DecimalFormat df = new DecimalFormat("#,###.##");//$NON-NLS-2$
+			df.setGroupingUsed(true);
+			df.setGroupingSize(3);
+			//densidad seeds/metro lineal
+			String tooltipText = new String(Messages.getString("ProcessSiembraMapTask.1")+ df.format(siembraFeature.getDosisML()) + Messages.getString("ProcessSiembraMapTask.2")); //$NON-NLS-1$ //$NON-NLS-2$
 
-			double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-			//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
-			DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
+			Double seedsSup= siembraFeature.getDosisML()/labor.getEntreSurco();
+			if(seedsSup<100) {//plantas por ha
+				tooltipText=tooltipText.concat(df.format(seedsSup*ProyectionConstants.METROS2_POR_HA) + " s/"+ Messages.getString("ProcessSiembraMapTask.12")); //$NON-NLS-1$ //$NON-NLS-2$
 
-			String tooltipText = new String(// TODO ver si se puede instalar un
-					// boton
-					// que permita editar el dato
-					"Densidad Fertilizante: " + df.format(fertFeature.getDosisFertCostado())
-					+ " Kg/Ha\n" + "Densidad Siembra: "
-					+ df.format(fertFeature.getDosisHa()) + " \n"
-					+ "Semilla ML: "
-					+ df.format(fertFeature.getDosisML()) + " \n"
-					//+ df.format(area * ProyectionConstants.METROS2_POR_HA)
-					//+ " m2\n"
-					// +"feature: " + featureNumber
-					);
-			if(area<1){
-				tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
-				//	tooltipText=tooltipText.concat( "SupOrig: "+df.format(area2 ) + "m2\n");
-			} else {
-				tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
+			}else {
+				tooltipText=tooltipText.concat(df.format(seedsSup) + " s/"+Messages.getString("ProcessSiembraMapTask.10")); //s/m2
 			}
+			//kg semillas por ha
+			tooltipText=tooltipText.concat(Messages.getString("ProcessSiembraMapTask.3") + df.format(siembraFeature.getDosisHa()) + Messages.getString("ProcessSiembraMapTask.4")); //$NON-NLS-1$ //$NON-NLS-2$
+			//fert l
+			tooltipText=tooltipText.concat( Messages.getString("ProcessSiembraMapTask.5") + df.format(siembraFeature.getDosisFertLinea()) + Messages.getString("ProcessSiembraMapTask.6")		); //$NON-NLS-1$ //$NON-NLS-2$
+			//fert costo
+			tooltipText=tooltipText.concat( Messages.getString("ProcessSiembraMapTask.7") + df.format(siembraFeature.getImporteHa()) + Messages.getString("ProcessSiembraMapTask.8")		); //$NON-NLS-1$ //$NON-NLS-2$
 
-			//List  paths = 
-			return super.getExtrudedPolygonFromGeom(poly, fertFeature,tooltipText, renderablePolygon);
+			if(area<1){
+				tooltipText=tooltipText.concat( Messages.getString("ProcessSiembraMapTask.9")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("ProcessSiembraMapTask.10")); //$NON-NLS-1$ //$NON-NLS-2$
+			} else {
+				tooltipText=tooltipText.concat(Messages.getString("ProcessSiembraMapTask.11")+df.format(area ) + Messages.getString("ProcessSiembraMapTask.12")); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+			return super.getExtrudedPolygonFromGeom(poly, siembraFeature,tooltipText,renderablePolygon);	
 
-			//return null;
 		}
 		
 			@Override

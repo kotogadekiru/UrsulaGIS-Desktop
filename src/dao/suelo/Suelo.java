@@ -27,6 +27,7 @@ import utils.ProyectionConstants;
 //@Entity
 public class Suelo extends Labor<SueloItem>{
 	private static final double DENSIDAD_SUELO_KG = 1.2*1000;//+-0.4 Arenoso 1650, franco 1400, arcilloso 1250
+	//utilizando una densidad aparente promedio para todos los sitios de 1,3. 
 	//los nombres de las columnas estandar
 	public static final String COLUMNA_N = "PPM_N";
 	public static final String COLUMNA_P = "PPM_P";
