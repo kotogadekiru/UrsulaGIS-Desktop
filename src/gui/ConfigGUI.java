@@ -68,6 +68,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.web.WebView;
@@ -349,7 +350,7 @@ public class ConfigGUI {
 
 		//for(String nombre : nombresMuestraMap.keySet()) {
 		// Map<String,Number> props =null;
-		String column_Nombre = 	Messages.getString("JFXMain.clase");//"Clase";
+		String column_Nombre = 	Messages.getString("ProcessMapTask.categoria");//"Clase";
 		//String column_Valor = "Densidad pl/m2";
 		int clases = cosecha.getClasificador().getNumClasses();
 		///System.out.println("clases "+clases);
@@ -412,12 +413,18 @@ public class ConfigGUI {
 		tabla.getColumns().add(dColumn);			
 
 
-		Scene scene = new Scene(tabla, 800, 600);
+		BorderPane bp = new BorderPane();
+		bp.setCenter(tabla);
+		Button accept =new Button("Aceptar");
+		
+		bp.setBottom(accept);
+		Scene scene = new Scene(bp, 200, 300);
 		Stage tablaStage = new Stage();
 		tablaStage.getIcons().add(new Image(JFXMain.ICON));
 		tablaStage.setTitle(Messages.getString("Recorrida.asignarValores")); //$NON-NLS-1$
 		tablaStage.setScene(scene);
-
+		
+		accept.setOnAction((e)->{tablaStage.close();});
 
 
 		tablaStage.showAndWait();	 
