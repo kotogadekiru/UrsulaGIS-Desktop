@@ -8,6 +8,7 @@ import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -38,6 +39,7 @@ import dao.config.Establecimiento;
 import dao.config.Fertilizante;
 import dao.config.Lote;
 import dao.config.Semilla;
+import dao.cosecha.CosechaLabor;
 import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
 import gov.nasa.worldwind.geom.Position;
@@ -78,32 +80,32 @@ import utils.ExcelHelper;
 public class ConfigGUI {
 	private static final String DD_MM_YYYY = "dd/MM/yyyy";
 	JFXMain main=null;
-	
+
 	public ConfigGUI(JFXMain _main) {
 		this.main=_main;		
 	}
 
 	public static String getBuildInfo() {
 		//Esta aplicacion fue compilada el 11 de Febrero de 2020.
-	
-	
+
+
 		DateTimeFormatter inDTFormater = DateTimeFormatter.ofPattern(DD_MM_YYYY);
 		LocalDate compileDate =  LocalDate.parse(JFXMain.buildDate, inDTFormater);	
 		//DateFormat outDTFormater = DateFormat.getDateInstance(DateFormat.FULL, Messages.getLocale());
-		
+
 		DateTimeFormatter dft= DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL);
 		dft = dft.withLocale(Messages.getLocale());
-		
+
 		//String localizedBuidDate = outDTFormater.format(DateConverter.asDate(compileDate));
 		String localizedBuidDate =  dft.format(compileDate);
-	//Esta aplicacion fue compilada el 11 de Febrero de 2020.
-		 return Messages.getString("JFXMain.info1")+localizedBuidDate //TODO crear una dateTimeFomrater y localizar el formato segun el locale Elegido
-					+Messages.getString("JFXMain.info2") //$NON-NLS-1$ version compilada el 
-					+Messages.getString("JFXMain.inf3") //$NON-NLS-1$
-					+Messages.getString("JFXMain.info3") //$NON-NLS-1$
-					+Messages.getString("JFXMain.info4"); //$NON-NLS-1$
+		//Esta aplicacion fue compilada el 11 de Febrero de 2020.
+		return Messages.getString("JFXMain.info1")+localizedBuidDate //TODO crear una dateTimeFomrater y localizar el formato segun el locale Elegido
+				+Messages.getString("JFXMain.info2") //$NON-NLS-1$ version compilada el 
+				+Messages.getString("JFXMain.inf3") //$NON-NLS-1$
+				+Messages.getString("JFXMain.info3") //$NON-NLS-1$
+				+Messages.getString("JFXMain.info4"); //$NON-NLS-1$
 	}
-	
+
 	public Menu contructConfigMenu() {
 		/*Menu Configuracion*/
 		final Menu menuConfiguracion = new Menu(Messages.getString("JFXMain.configuracionMenu")); //$NON-NLS-1$
@@ -136,8 +138,8 @@ public class ConfigGUI {
 		//acercaDe.setHeaderText(this.TITLE_VERSION+"\n"+this.BUILD_INFO+"\nVisitar www.ursulagis.com");
 		//acercaDe.contentTextProperty().set();
 		String content =   "<b>"+JFXMain.TITLE_VERSION+"</b><br>" //$NON-NLS-1$ //$NON-NLS-2$
-		+ ConfigGUI.getBuildInfo()
-		+ "<br><b>" +Messages.getString("JFXMain.visitarUrsulaGIS.com")+"</b>"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				+ ConfigGUI.getBuildInfo()
+				+ "<br><b>" +Messages.getString("JFXMain.visitarUrsulaGIS.com")+"</b>"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
 		WebView webView = new WebView();
 		webView.getEngine().loadContent("<html>"+content+"</html>"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -160,7 +162,7 @@ public class ConfigGUI {
 							DAH.getAllCultivos()
 							);
 
-		//	SmartTableView<Cultivo> table = new SmartTableView<Cultivo>(dataLotes);//,dataLotes);
+			//	SmartTableView<Cultivo> table = new SmartTableView<Cultivo>(dataLotes);//,dataLotes);
 			SmartTableView<Cultivo> table = new SmartTableView<Cultivo>(dataLotes,
 					Arrays.asList("Id"),
 					Arrays.asList("AbsN","AbsK","AbsP")
@@ -202,15 +204,15 @@ public class ConfigGUI {
 			table.setEliminarAction(
 					list->{
 						Platform.runLater(()->{		
-						try {
-							System.out.println("removing fertilizantes "+list.size());
-							List<Object> objs = new ArrayList(list);
-							DAH.removeAll(objs);
-							DAH.commitTransaction();
-						}catch(Exception e) {
-							e.printStackTrace();
-							DAH.rollbackTransaction();
-						}
+							try {
+								System.out.println("removing fertilizantes "+list.size());
+								List<Object> objs = new ArrayList(list);
+								DAH.removeAll(objs);
+								DAH.commitTransaction();
+							}catch(Exception e) {
+								e.printStackTrace();
+								DAH.rollbackTransaction();
+							}
 						});
 					}
 					);
@@ -327,127 +329,223 @@ public class ConfigGUI {
 			}
 		});	
 	}
-	
+
 	public void doShowRecorridaTable() {
 		doShowRecorridaTable(DAH.getAllRecorridas());
-		
+
 	}
-	
-	
+
+	/**
+	 * metodo que toma una cosecha y permite asignar valores para cada clase de la cosecha
+	 * @param cosecha
+	 * @return devuelve el map con los valores asignados
+	 */
+	public Map<String,Double> doAsignarValoresCosecha(CosechaLabor cosecha,String column_Valor) {
+		//List<Muestra> muestras = cosecha.getMuestras();
+		//Map<String, List<Muestra>> nombresMuestraMap = muestras.stream().collect(Collectors.groupingBy(Muestra::getNombre));
+
+		List<Map<String,Object>> data = new ArrayList<Map<String,Object>>();
+
+
+		//for(String nombre : nombresMuestraMap.keySet()) {
+		// Map<String,Number> props =null;
+		String column_Nombre = 	Messages.getString("JFXMain.clase");//"Clase";
+		//String column_Valor = "Densidad pl/m2";
+		int clases = cosecha.getClasificador().getNumClasses();
+		///System.out.println("clases "+clases);
+		for(int i = clases-1;  i>-1; i--) {	 
+			//System.out.print("categoria "+i);
+			String nombre = cosecha.getClasificador().getLetraCat(i);		 
+			//System.out.println(" letra "+nombre);
+			Map<String,Object> initialD = new LinkedHashMap<String,Object>();
+			initialD.put(column_Nombre, nombre);
+			initialD.put(column_Valor, 0.0);
+			data.add(initialD);
+		}
+
+		TableView<Map<String,Object>> tabla = new TableView<Map<String,Object>>( FXCollections.observableArrayList(data));
+		tabla.setEditable(true);
+		TableColumn<Map<String,Object>,String> columnNombre = new TableColumn<Map<String,Object>,String>(column_Nombre);
+		columnNombre.setEditable(false);
+		columnNombre.setCellFactory(TextFieldTableCell.forTableColumn());
+		columnNombre.setCellValueFactory(//new PropertyValueFactory<>(propName)
+				cellData ->{
+					String stringValue = null;
+					try{
+						stringValue =(String)  cellData.getValue().get(column_Nombre);						
+						return new SimpleStringProperty(stringValue);	
+					}catch(Exception e){
+						//System.out.println("La creacion de SimpleStringProperty en getStringColumn "+name +" con valor: "+stringValue);
+
+						return new SimpleStringProperty("sin datos");
+					}
+				});
+		columnNombre.setOnEditCommit(cellEditingEvent -> { 
+			int row = cellEditingEvent.getTablePosition().getRow();
+			Map<String,Object> p = cellEditingEvent.getTableView().getItems().get(row);
+			try {
+				p.put(column_Nombre, cellEditingEvent.getNewValue());
+				tabla.refresh();
+			} catch (Exception e) {	e.printStackTrace();}
+		});		
+
+		tabla.getColumns().add(columnNombre);
+
+
+		DoubleTableColumn<Map<String,Object>> dColumn = new DoubleTableColumn<Map<String,Object>>(column_Valor,
+				(p)->{	try {
+					Number n =(Number) p.get(column_Valor);
+					if(n!=null) {
+						return n.doubleValue();
+					} else {
+						return 0.0;
+					}
+				} catch (Exception e) {	e.printStackTrace();}
+				return null;
+				},(p,d)->{ try {
+
+					p.put(column_Valor,d);
+					tabla.refresh();
+				} catch (Exception e) {	e.printStackTrace();}
+				});
+		dColumn.setEditable(true);
+		tabla.getColumns().add(dColumn);			
+
+
+		Scene scene = new Scene(tabla, 800, 600);
+		Stage tablaStage = new Stage();
+		tablaStage.getIcons().add(new Image(JFXMain.ICON));
+		tablaStage.setTitle(Messages.getString("Recorrida.asignarValores")); //$NON-NLS-1$
+		tablaStage.setScene(scene);
+
+
+
+		tablaStage.showAndWait();	 
+		Map<String,Double> ret = new HashMap<String,Double>();
+		for(Map<String,Object> ma : data) {
+			String k = (String) ma.get(column_Nombre);
+			Double valor = (Double) ma.get(column_Valor);
+			ret.put(k, valor);
+
+		}
+		return ret;
+	}
+
+
 	public void doAsignarValoresRecorrida(Recorrida recorrida) {
 		List<Muestra> muestras = recorrida.getMuestras();
-		 Map<String, List<Muestra>> nombresMuestraMap = muestras.stream().collect(Collectors.groupingBy(Muestra::getNombre));
-			
-		 List<Map<String,Object>> data = new ArrayList<Map<String,Object>>();
-	
-		 Map<String,Number> props =null;
-		 for(String nombre : nombresMuestraMap.keySet()) {
-			 Muestra m0 = nombresMuestraMap.get(nombre).get(0);
-			 //"{\"PPM P\":\"\",\"PPM K\":\"\",\"Agua Perf\":\"\",\"PPM N\":\"\",\"Prof Napa\":\"\",\"PPM MO\":\"\",\"PPM S\":\"\"}"
-			 String obs = m0.getObservacion();
-				 
-			 @SuppressWarnings("unchecked")
+		Map<String, List<Muestra>> nombresMuestraMap = muestras.stream().collect(Collectors.groupingBy(Muestra::getNombre));
+
+		List<Map<String,Object>> data = new ArrayList<Map<String,Object>>();
+
+		Map<String,Number> props =null;
+		for(String nombre : nombresMuestraMap.keySet()) {
+			Muestra m0 = nombresMuestraMap.get(nombre).get(0);
+			//"{\"PPM P\":\"\",\"PPM K\":\"\",\"Agua Perf\":\"\",\"PPM N\":\"\",\"Prof Napa\":\"\",\"PPM MO\":\"\",\"PPM S\":\"\"}"
+			String obs = m0.getObservacion();
+
+			@SuppressWarnings("unchecked")
 			Map<String,String> map = new Gson().fromJson(obs, Map.class);	 
-			 
-			 props = new LinkedHashMap<String,Number>();
-			 for(String k : map.keySet()) {
-				 Object value = map.get(k);
-				 if(String.class.isAssignableFrom(value.getClass())) {				
-					 Double dValue = new Double(0);
-					 try { dValue=new Double((String)value);
-					 }catch(Exception e) {System.err.println("error tratando de parsear \""+value+"\" reemplazo por 0");}
-					 props.put(k, dValue);//ojo number format exception
-				 } else if(Number.class.isAssignableFrom(value.getClass())) {
-					 props.put(k, (Number)value);
-				 }			
-			 }
-			 
-			 Map<String,Object> initialD = new LinkedHashMap<String,Object>();
-			 //System.out.println("agregando la observacion con nombre "+nombre);
-			 initialD.put("Nombre", nombre);
-			 
-			 initialD.putAll(props);
-			
-			 data.add(initialD);
-		 }
-			
-		 TableView<Map<String,Object>> tabla = new TableView<Map<String,Object>>( FXCollections.observableArrayList(data));
-		 tabla.setEditable(true);
-			TableColumn<Map<String,Object>,String> columnNombre = new TableColumn<Map<String,Object>,String>("Nombre");
-			columnNombre.setEditable(false);
-			columnNombre.setCellFactory(TextFieldTableCell.forTableColumn());
-			columnNombre.setCellValueFactory(//new PropertyValueFactory<>(propName)
-					cellData ->{
-						String stringValue = null;
-						try{
-						 stringValue =(String)  cellData.getValue().get("Nombre");						
+
+			props = new LinkedHashMap<String,Number>();
+			for(String k : map.keySet()) {
+				Object value = map.get(k);
+				if(String.class.isAssignableFrom(value.getClass())) {				
+					Double dValue = new Double(0);
+					try { dValue=new Double((String)value);
+					}catch(Exception e) {System.err.println("error tratando de parsear \""+value+"\" reemplazo por 0");}
+					props.put(k, dValue);//ojo number format exception
+				} else if(Number.class.isAssignableFrom(value.getClass())) {
+					props.put(k, (Number)value);
+				}			
+			}
+
+			Map<String,Object> initialD = new LinkedHashMap<String,Object>();
+			//System.out.println("agregando la observacion con nombre "+nombre);
+			initialD.put("Nombre", nombre);
+
+			initialD.putAll(props);
+
+			data.add(initialD);
+		}
+
+		TableView<Map<String,Object>> tabla = new TableView<Map<String,Object>>( FXCollections.observableArrayList(data));
+		tabla.setEditable(true);
+		TableColumn<Map<String,Object>,String> columnNombre = new TableColumn<Map<String,Object>,String>("Nombre");
+		columnNombre.setEditable(false);
+		columnNombre.setCellFactory(TextFieldTableCell.forTableColumn());
+		columnNombre.setCellValueFactory(//new PropertyValueFactory<>(propName)
+				cellData ->{
+					String stringValue = null;
+					try{
+						stringValue =(String)  cellData.getValue().get("Nombre");						
 						return new SimpleStringProperty(stringValue);	
-						}catch(Exception e){
-							//System.out.println("La creacion de SimpleStringProperty en getStringColumn "+name +" con valor: "+stringValue);
-							
-							return new SimpleStringProperty("sin datos");
+					}catch(Exception e){
+						//System.out.println("La creacion de SimpleStringProperty en getStringColumn "+name +" con valor: "+stringValue);
+
+						return new SimpleStringProperty("sin datos");
+					}
+				});
+		columnNombre.setOnEditCommit(cellEditingEvent -> { 
+			int row = cellEditingEvent.getTablePosition().getRow();
+			Map<String,Object> p = cellEditingEvent.getTableView().getItems().get(row);
+			try {
+				p.put("Nombre", cellEditingEvent.getNewValue());
+				tabla.refresh();
+			} catch (Exception e) {	e.printStackTrace();}
+		});		
+
+		tabla.getColumns().add(columnNombre);
+		for(String k : props.keySet()) {
+
+			DoubleTableColumn<Map<String,Object>> dColumn = new DoubleTableColumn<Map<String,Object>>(k,
+					(p)->{	try {
+						Number n =(Number) p.get(k);
+						if(n!=null) {
+							return n.doubleValue();
+						} else {
+							return 0.0;
 						}
+					} catch (Exception e) {	e.printStackTrace();}
+					return null;
+					},(p,d)->{ try {
+
+						p.put(k,d);
+						tabla.refresh();
+					} catch (Exception e) {	e.printStackTrace();}
 					});
-					columnNombre.setOnEditCommit(cellEditingEvent -> { 
-						int row = cellEditingEvent.getTablePosition().getRow();
-						Map<String,Object> p = cellEditingEvent.getTableView().getItems().get(row);
-						try {
-							p.put("Nombre", cellEditingEvent.getNewValue());
-							tabla.refresh();
-						} catch (Exception e) {	e.printStackTrace();}
-					});		
+			dColumn.setEditable(true);
+			tabla.getColumns().add(dColumn);			
+		}
 
-			tabla.getColumns().add(columnNombre);
-			for(String k : props.keySet()) {
-				
-				DoubleTableColumn<Map<String,Object>> dColumn = new DoubleTableColumn<Map<String,Object>>(k,
-						(p)->{	try {
-							Number n =(Number) p.get(k);
-							if(n!=null) {
-								return n.doubleValue();
-							} else {
-								return 0.0;
-							}
-						} catch (Exception e) {	e.printStackTrace();}
-						return null;
-						},(p,d)->{ try {
-						
-							p.put(k,d);
-							tabla.refresh();
-						} catch (Exception e) {	e.printStackTrace();}
-						});
-				dColumn.setEditable(true);
-				tabla.getColumns().add(dColumn);			
+		Scene scene = new Scene(tabla, 800, 600);
+		Stage tablaStage = new Stage();
+		tablaStage.getIcons().add(new Image(JFXMain.ICON));
+		tablaStage.setTitle(Messages.getString("Recorrida.asignarValores")); //$NON-NLS-1$
+		tablaStage.setScene(scene);
+
+		//			tablaStage.onHiddenProperty().addListener((o,old,n)->{
+		//				this.getLayerPanel().update(this.getWwd());
+		//				
+		//				//getWwd().redraw();
+		//			});
+
+		tablaStage.showAndWait();	 
+		//System.out.println("hidding tablastage");
+		//Al terminar de editar recoger la informacion y guardar los cambios
+		for(Map<String,Object> ma : data) {
+			String k = (String) ma.get("Nombre");
+			//System.out.println("persisting changes for "+k);
+			List<Muestra> muestrasNombre = nombresMuestraMap.get(k);
+			for(Muestra m : muestrasNombre) {
+				ma.remove("Nombre");
+				m.setObservacion(new Gson().toJson(ma));
+				//System.out.println("setting observaciones "+m.getObservacion());
+				DAH.save(m);
 			}
-		 
-			Scene scene = new Scene(tabla, 800, 600);
-			Stage tablaStage = new Stage();
-			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("Recorrida.asignarValores")); //$NON-NLS-1$
-			tablaStage.setScene(scene);
-
-//			tablaStage.onHiddenProperty().addListener((o,old,n)->{
-//				this.getLayerPanel().update(this.getWwd());
-//				
-//				//getWwd().redraw();
-//			});
-
-			tablaStage.showAndWait();	 
-			//System.out.println("hidding tablastage");
-			//Al terminar de editar recoger la informacion y guardar los cambios
-			for(Map<String,Object> ma : data) {
-				String k = (String) ma.get("Nombre");
-				//System.out.println("persisting changes for "+k);
-				List<Muestra> muestrasNombre = nombresMuestraMap.get(k);
-				for(Muestra m : muestrasNombre) {
-					ma.remove("Nombre");
-					m.setObservacion(new Gson().toJson(ma));
-					//System.out.println("setting observaciones "+m.getObservacion());
-					DAH.save(m);
-				}
-			}
+		}
 	}
-	
+
 	public void doShowOrdenCompraItems(OrdenCompra ret) {
 		Platform.runLater(()->{
 			final ObservableList<OrdenCompraItem> data =
@@ -470,13 +568,13 @@ public class ConfigGUI {
 			VBox v=new VBox();
 			v.getChildren().add(table);
 			HBox h = new HBox();
-			
+
 			Button guardarB = new Button(Messages.getString("JFXMain.saveAction"));//TODO traducir
 			guardarB.setOnAction(actionEvent->{
 				//System.out.println("implementar GuardarOrden de compra action");
 				DAH.save(ret);
 			});
-			
+
 			Button exportarB = new Button(Messages.getString("JFXMain.exportar"));//TODO traducir
 			exportarB.setOnAction(actionEvent->{
 				ExcelHelper helper = new ExcelHelper();
@@ -490,15 +588,15 @@ public class ConfigGUI {
 				tDialog.initOwner(JFXMain.stage);
 				tDialog.setTitle(Messages.getString("ShowConfigGUI.cotizarOnlineMailTitle"));
 				tDialog.showAndWait();
-			
+
 				String mail = tDialog.getResult();
-				
+
 				ret.setMail(mail);
 				CotizarOdenDeCompraOnlineTask cotTask= new CotizarOdenDeCompraOnlineTask(ret); 
-			
+
 				JFXMain.executorPool.execute(cotTask);
 				//TODO enviar orden de compra a la nube. preguntar mail de contacto y subir la orden de compra a la nube
-				
+
 
 			});
 			h.getChildren().addAll(guardarB,exportarB,cotizarOblineB);
@@ -519,7 +617,7 @@ public class ConfigGUI {
 		});	
 
 	}
-	
+
 	public void doShowOrdenesCompra() {		
 		Platform.runLater(()->{		
 			final ObservableList<OrdenCompra> data =
@@ -534,28 +632,28 @@ public class ConfigGUI {
 			table.setOnShowClick((oc)->{
 				this.doShowOrdenCompraItems(oc);
 			});
-			
+
 			table.setEliminarAction(
 					list->{
 						Platform.runLater(()->{		
-						try {
-							//System.out.println("removing ordenes de compra "+list.size());
-							DAH.beginTransaction();						
-//							list.stream().forEach(oc->{
-//								DAH.removeAll(oc.getItems());	
-//							});
-//							DAH.save(list.get(0).getRecorrida());
-							List<Object> objs = new ArrayList(list);
-							DAH.removeAll(objs);
-							DAH.commitTransaction();
-						}catch(Exception e) {
-							e.printStackTrace();
-							DAH.rollbackTransaction();
-						}
+							try {
+								//System.out.println("removing ordenes de compra "+list.size());
+								DAH.beginTransaction();						
+								//							list.stream().forEach(oc->{
+								//								DAH.removeAll(oc.getItems());	
+								//							});
+								//							DAH.save(list.get(0).getRecorrida());
+								List<Object> objs = new ArrayList(list);
+								DAH.removeAll(objs);
+								DAH.commitTransaction();
+							}catch(Exception e) {
+								e.printStackTrace();
+								DAH.rollbackTransaction();
+							}
 						});
 					}
 					);
-			
+
 
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
@@ -563,9 +661,9 @@ public class ConfigGUI {
 			tablaStage.setTitle(Messages.getString("JFXMain.OrdenCompra")); //$NON-NLS-1$
 			tablaStage.setScene(scene);
 
-//			tablaStage.onHiddenProperty().addListener((o,old,n)->{
-//				main.getLayerPanel().update(main.getWwd());				
-//			});
+			//			tablaStage.onHiddenProperty().addListener((o,old,n)->{
+			//				main.getLayerPanel().update(main.getWwd());				
+			//			});
 
 			tablaStage.show();	 
 		});
@@ -574,41 +672,41 @@ public class ConfigGUI {
 
 	public void doShowLaboresTable() {
 		List<? extends Labor<?>> recorridas = DAH.getAllLabores();
-//		Platform.runLater(()->{
-//			final ObservableList<? extends Labor<?>> data = FXCollections.observableArrayList(recorridas);
-//
-//			SmartTableView<? extends Labor<?>> table = new SmartTableView<Labor>(data,
-//					Arrays.asList("Id","Posicion"),
-//					Arrays.asList("Nombre","Observacion","Latitude","Longitude")
-//					);
-//			table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
-//			table.setEditable(true);
-//			//			table.setOnDoubleClick(()->new Poligono());
-//			table.setOnShowClick((recorrida)->{
-//				//poli.setActivo(true);
-//				//main.doShowRecorrida(recorrida);
-//			});
-//			
-//			table.addSecondaryClickConsumer("Editar",(r)-> {
-//				//doShowMuestrasTable(r.getMuestras());
-//			});
-//
-//			Scene scene = new Scene(table, 800, 600);
-//			Stage tablaStage = new Stage();
-//			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-//			tablaStage.setTitle(Messages.getString("JFXMain.configRecorridaMI")); //$NON-NLS-1$
-//			tablaStage.setScene(scene);
-//
-//			tablaStage.onHiddenProperty().addListener((o,old,n)->{
-//				main.getLayerPanel().update(main.getWwd());
-//				//getWwd().redraw();
-//			});
-//
-//			tablaStage.show();	 
-//		});	
-		
+		//		Platform.runLater(()->{
+		//			final ObservableList<? extends Labor<?>> data = FXCollections.observableArrayList(recorridas);
+		//
+		//			SmartTableView<? extends Labor<?>> table = new SmartTableView<Labor>(data,
+		//					Arrays.asList("Id","Posicion"),
+		//					Arrays.asList("Nombre","Observacion","Latitude","Longitude")
+		//					);
+		//			table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
+		//			table.setEditable(true);
+		//			//			table.setOnDoubleClick(()->new Poligono());
+		//			table.setOnShowClick((recorrida)->{
+		//				//poli.setActivo(true);
+		//				//main.doShowRecorrida(recorrida);
+		//			});
+		//			
+		//			table.addSecondaryClickConsumer("Editar",(r)-> {
+		//				//doShowMuestrasTable(r.getMuestras());
+		//			});
+		//
+		//			Scene scene = new Scene(table, 800, 600);
+		//			Stage tablaStage = new Stage();
+		//			tablaStage.getIcons().add(new Image(JFXMain.ICON));
+		//			tablaStage.setTitle(Messages.getString("JFXMain.configRecorridaMI")); //$NON-NLS-1$
+		//			tablaStage.setScene(scene);
+		//
+		//			tablaStage.onHiddenProperty().addListener((o,old,n)->{
+		//				main.getLayerPanel().update(main.getWwd());
+		//				//getWwd().redraw();
+		//			});
+		//
+		//			tablaStage.show();	 
+		//		});	
+
 	}
-	
+
 	public void doShowRecorridaTable(List<Recorrida> recorridas) {
 		Platform.runLater(()->{
 			final ObservableList<Recorrida> data = FXCollections.observableArrayList(recorridas);
@@ -624,7 +722,7 @@ public class ConfigGUI {
 				//poli.setActivo(true);
 				main.doShowRecorrida(recorrida);
 			});
-			
+
 			table.addSecondaryClickConsumer("Editar",(r)-> {
 				doShowMuestrasTable(r.getMuestras());
 			});
@@ -642,9 +740,9 @@ public class ConfigGUI {
 
 			tablaStage.show();	 
 		});	
-		
+
 	}
-	
+
 	public void doShowMuestrasTable(List<Muestra> muestras) {
 		Platform.runLater(()->{
 			final ObservableList<Muestra> data = FXCollections.observableArrayList(muestras);
@@ -656,7 +754,7 @@ public class ConfigGUI {
 			table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
 			table.setEliminarAction(
 					list->{
-						
+
 						try {
 							DAH.beginTransaction();						
 							list.stream().forEach(m->{
@@ -669,21 +767,21 @@ public class ConfigGUI {
 						}catch(Exception e) {
 							DAH.rollbackTransaction();
 						}
-						
+
 					}
 					);
 			table.setEditable(true);
 			//			table.setOnDoubleClick(()->new Poligono());
-//			table.setOnShowClick((recorrida)->{
-//				//poli.setActivo(true);
-//				main.doShowRecorrida(recorrida);
-//			});
-//			
-//			table.addSecondaryClickConsumer("editarRecorrida",(r)->
-//			{
-//				
-//				
-//			});
+			//			table.setOnShowClick((recorrida)->{
+			//				//poli.setActivo(true);
+			//				main.doShowRecorrida(recorrida);
+			//			});
+			//			
+			//			table.addSecondaryClickConsumer("editarRecorrida",(r)->
+			//			{
+			//				
+			//				
+			//			});
 
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
@@ -698,9 +796,9 @@ public class ConfigGUI {
 
 			tablaStage.show();	 
 		});	
-		
+
 	}
-	
+
 
 	public void doShowNdviTable() {
 		Platform.runLater(()->{
@@ -861,7 +959,7 @@ public class ConfigGUI {
 		});
 
 	}
-	
+
 	/**
 	 * Funcion util para vincular un metodo con un item en un menu
 	 * @param name nombre para mostrar en el menu
@@ -874,7 +972,7 @@ public class ConfigGUI {
 		parent.getItems().addAll(menuItemProductos);
 		return menuItemProductos;
 	}
-	
+
 	public  void showQR(String ret) {
 		BufferedImage qr = ConfigGUI.generateQR(ret);
 		Image image = SwingFXUtils.toFXImage(qr, null);
@@ -899,11 +997,11 @@ public class ConfigGUI {
 		a.show();
 	}
 
-	
-	
+
+
 	public static BufferedImage generateQR(String code) {
-	    QRCodeWriter barcodeWriter = new QRCodeWriter();
-	    BitMatrix bitMatrix;
+		QRCodeWriter barcodeWriter = new QRCodeWriter();
+		BitMatrix bitMatrix;
 		try {
 			bitMatrix = barcodeWriter.encode(code, BarcodeFormat.QR_CODE, 200, 200);
 			return MatrixToImageWriter.toBufferedImage(bitMatrix);
@@ -913,6 +1011,6 @@ public class ConfigGUI {
 			return null;
 		}
 
-	    
+
 	}
 }

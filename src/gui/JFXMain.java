@@ -160,6 +160,8 @@ import tasks.ReadJDHarvestLog;
 import tasks.ShowNDVITifFileTask;
 import tasks.ShowRecorridaDirigidaTask;
 import tasks.UpdateTask;
+import tasks.crear.ConvertirAFertilizacionTask;
+import tasks.crear.ConvertirASiembraTask;
 import tasks.crear.ConvertirASueloTask;
 import tasks.crear.ConvertirNdviACosechaTask;
 import tasks.crear.ConvertirNdviAFertilizacionTask;
@@ -757,6 +759,13 @@ public class JFXMain extends Application {
 
 			return "converti a Siembra";	
 		},1));
+		
+		rootNodeP.add(new LayerAction(Messages.getString("JFXMain.poligonToFertAction"),(layer)->{
+			doConvertirPoligonosAFertilizacion();
+
+			return "converti a fertilizacion";	
+		},1));
+		
 		rootNodeP.add(new LayerAction(Messages.getString("JFXMain.poligonToHarvestAction"),(layer)->{
 			doConvertirPoligonosACosecha();
 
@@ -1109,7 +1118,7 @@ public class JFXMain extends Application {
 		poligonosP.add(constructPredicate(Messages.getString("JFXMain.poligonToFertAction"),(layer)->{
 			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 			if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){	
-				doCrearFertilizacion((Poligono) layerObject);
+				doCrearFertilizacion(Collections.singletonList((Poligono) layerObject));
 			}
 			return "converti a Fertilizacion"; //$NON-NLS-1$
 		}));
@@ -1383,6 +1392,23 @@ public class JFXMain extends Application {
 			return "Suelo Creado" + layer.getName(); //$NON-NLS-1$
 		}));
 
+		/**
+		 * Accion permite crear un mapa de suelo desde un mapa de potencial de rendimiento
+		 */
+		cosechasP.add(constructPredicate(Messages.getString("JFXMain.doCrearSiembra"),(layer)->{
+			doCrearSiembra((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+			return "Siembra Creada" + layer.getName(); //$NON-NLS-1$
+		}));
+
+		/**
+		 * Accion permite crear un mapa de suelo desde un mapa de potencial de rendimiento
+		 */
+		cosechasP.add(constructPredicate(Messages.getString("JFXMain.doCrearFertilizacion"),(layer)->{
+			doCrearFertilizacion((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+			return "Fertilizacion Creada" + layer.getName(); //$NON-NLS-1$
+		}));
+		
+		
 		/**
 		 * Accion permite exportar la cosecha como shp de puntos
 		 */
@@ -2980,6 +3006,43 @@ public class JFXMain extends Application {
 
 	}
 
+	private void doConvertirPoligonosAFertilizacion() {
+		List<Poligono> geometriasActivas = new ArrayList<Poligono>();
+		//1 obtener los poligonos activos
+		//String nombre = Messages.getString("JFXMain.poligonIntersectionNamePrefix");
+		LayerList layers = this.getWwd().getModel().getLayers();
+		for (Layer l : layers) {
+			Object o = l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			if (l.isEnabled() && o instanceof Poligono){
+				Poligono p = (Poligono)o;
+				geometriasActivas.add(p);
+				//l.setEnabled(false);
+				//p.setActivo(false);
+				//nombre=nombre+" "+p.getNombre();
+			}
+		}
+		System.out.println("generando fertilizacion para "+geometriasActivas.size()+" poligonos");
+		doCrearFertilizacion(geometriasActivas);
+		//		Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+		//		if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){
+		//			//
+		//			//List<Poligono> geometriasActivas = new ArrayList<Poligono>();
+		//			//1 obtener los poligonos activos
+		//			LayerList layers = this.getWwd().getModel().getLayers();
+		//			for (Layer l : layers) {
+		//				Object o = l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+		//				if (l.isEnabled() && o instanceof Poligono){
+		//					Poligono p = (Poligono)o;
+		//					geometriasActivas.add(p);
+		//				}
+		//			}
+		//			System.out.println("convirtiendo poligonos a siembra");
+		//			//doConvertirASiembra((Polygon) layerObject);
+		//			doCrearSiembra(geometriasActivas);
+		//		}
+
+	}
+	
 	private void doCrearSiembra(List<Poligono> polis) {
 		SiembraLabor labor = new SiembraLabor();
 		LaborLayer layer = new LaborLayer();
@@ -3016,10 +3079,10 @@ public class JFXMain extends Application {
 		JFXMain.executorPool.execute(umTask);		
 	}
 
-	private void doCrearFertilizacion(Poligono poli) {
+	private void doCrearFertilizacion(List<Poligono> polis) {
 		FertilizacionLabor labor = new FertilizacionLabor();
-
-		labor.setNombre(poli.getNombre()+" "+Messages.getString("JFXMain.fertilizacion")); //$NON-NLS-1$ //$NON-NLS-2$
+		labor.setNombre(polis.get(0).getNombre()+" "+Messages.getString("JFXMain.fertilizacion")); //$NON-NLS-1$ //$NON-NLS-2$
+		//labor.setNombre(poli.getNombre()+" "+Messages.getString("JFXMain.fertilizacion")); //$NON-NLS-1$ //$NON-NLS-2$
 		LaborLayer layer = new LaborLayer();
 		labor.setLayer(layer);
 		Optional<FertilizacionLabor> cosechaConfigured= FertilizacionConfigDialogController.config(labor);
@@ -3035,7 +3098,7 @@ public class JFXMain extends Application {
 		Optional<String> anchoOptional = anchoDialog.showAndWait();
 		Double rinde = PropertyHelper.parseDouble(anchoOptional.get()).doubleValue();//Double.valueOf(anchoOptional.get());
 
-		CrearFertilizacionMapTask umTask = new CrearFertilizacionMapTask(labor,poli,rinde);
+		CrearFertilizacionMapTask umTask = new CrearFertilizacionMapTask(labor,polis,rinde);
 		umTask.installProgressBar(progressBox);
 
 		umTask.setOnSucceeded(handler -> {
@@ -3043,7 +3106,8 @@ public class JFXMain extends Application {
 			//fertilizaciones.add(ret);
 			insertBeforeCompass(getWwd(), ret.getLayer());
 			this.getLayerPanel().update(this.getWwd());
-			poli.getLayer().setEnabled(false);
+			//poli.getLayer().setEnabled(false);
+			polis.stream().forEach(p->p.getLayer().setEnabled(false));
 			umTask.uninstallProgressBar();
 			viewGoTo(ret);
 			umTask.uninstallProgressBar();
@@ -3882,6 +3946,79 @@ public class JFXMain extends Application {
 		JFXMain.executorPool.execute(csTask);
 	}
 
+	/**
+	 * toma una cosecha, pregunta las densidades deseadas para cada ambiente
+	 * y crea una siembra teniendo la informacion ingresada y la categoria a la que pertenece cada poligono
+	 * @param cosecha
+	 */
+	private void doCrearSiembra(CosechaLabor cosecha) {
+		
+		SiembraLabor siembra = new SiembraLabor();
+		LaborLayer layer = new LaborLayer();
+		siembra.setLayer(layer);
+		siembra.setNombre(cosecha.getNombre()+" "+Messages.getString("JFXMain.255")); //$NON-NLS-1$ //$NON-NLS-2$
+		Optional<SiembraLabor> siembraConfigured= SiembraConfigDialogController.config(siembra);
+		if(!siembraConfigured.isPresent()){//
+			System.out.println(Messages.getString("JFXMain.256")); //$NON-NLS-1$
+			siembra.dispose();//libero los recursos reservados
+			return;
+		}		
+
+		Map<String,Double> mapClaseValor = new ConfigGUI(this).doAsignarValoresCosecha(cosecha,Messages.getString("JFXMain.Densidad"));//"Densidad pl/m2"
+		
+
+		ConvertirASiembraTask csTask = new ConvertirASiembraTask(cosecha,siembra,mapClaseValor);
+
+		csTask.installProgressBar(progressBox);
+
+		csTask.setOnSucceeded(handler -> {
+			cosecha.getLayer().setEnabled(false);
+			SiembraLabor ret = (SiembraLabor)handler.getSource().getValue();
+			insertBeforeCompass(getWwd(), ret.getLayer());
+			this.getLayerPanel().update(this.getWwd());
+			csTask.uninstallProgressBar();
+			viewGoTo(ret);
+			playSound();
+		});//fin del OnSucceeded
+		JFXMain.executorPool.execute(csTask);
+	}
+	
+	/**
+	 * toma una cosecha, pregunta las densidades deseadas para cada ambiente
+	 * y crea una siembra teniendo la informacion ingresada y la categoria a la que pertenece cada poligono
+	 * @param cosecha
+	 */
+	private void doCrearFertilizacion(CosechaLabor cosecha) {
+		
+		FertilizacionLabor siembra = new FertilizacionLabor();
+		LaborLayer layer = new LaborLayer();
+		siembra.setLayer(layer);
+		siembra.setNombre(cosecha.getNombre()+" "+Messages.getString("JFXMain.255")); //$NON-NLS-1$ //$NON-NLS-2$
+		Optional<FertilizacionLabor> siembraConfigured= FertilizacionConfigDialogController.config(siembra);
+		if(!siembraConfigured.isPresent()){//
+			System.out.println(Messages.getString("JFXMain.256")); //$NON-NLS-1$
+			siembra.dispose();//libero los recursos reservados
+			return;
+		}		
+
+		Map<String,Double> mapClaseValor = new ConfigGUI(this).doAsignarValoresCosecha(cosecha,Messages.getString("JFXMain.Dosis"));//"Densidad pl/m2"
+		
+
+		ConvertirAFertilizacionTask csTask = new ConvertirAFertilizacionTask(cosecha,siembra,mapClaseValor);
+
+		csTask.installProgressBar(progressBox);
+
+		csTask.setOnSucceeded(handler -> {
+			cosecha.getLayer().setEnabled(false);
+			FertilizacionLabor ret = (FertilizacionLabor)handler.getSource().getValue();
+			insertBeforeCompass(getWwd(), ret.getLayer());
+			this.getLayerPanel().update(this.getWwd());
+			csTask.uninstallProgressBar();
+			viewGoTo(ret);
+			playSound();
+		});//fin del OnSucceeded
+		JFXMain.executorPool.execute(csTask);
+	}
 
 	/**
 	 * genera un layer de fertilizacion a partir de una cosecha
