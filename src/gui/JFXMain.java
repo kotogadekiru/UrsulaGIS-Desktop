@@ -904,6 +904,9 @@ public class JFXMain extends Application {
 				if(poli.getId()!=null){
 					DAH.save(poli);
 				}
+			
+				
+				
 			}
 			if(layerObject instanceof Ndvi){
 				Ndvi ndvi = (Ndvi) layerObject;
@@ -912,6 +915,14 @@ public class JFXMain extends Application {
 					DAH.save(ndvi);
 				}
 			}
+			MeasureTool mt = (MeasureTool)layer.getValue(PoligonLayerFactory.MEASURE_TOOL);		
+			if(mt!=null) {
+				mt.setArmed(false);
+				
+				//mt.clear();
+				mt.dispose();
+			}
+			
 			layer.dispose();
 			getLayerPanel().update(getWwd());
 			return "layer removido" + layer.getName(); //$NON-NLS-1$
@@ -3122,7 +3133,7 @@ public class JFXMain extends Application {
 		LaborLayer layer = new LaborLayer();
 		labor.setLayer(layer);
 		//labor.setNombre(poli.getNombre());
-		labor.setNombre(polis.get(0).getNombre()+" "+Messages.getString("JFXMain.255")); //$NON-NLS-1$ //$NON-NLS-2$
+		labor.setNombre(polis.get(0).getNombre()+" "+Messages.getString("JFXMain.cosecha")); //$NON-NLS-1$ //$NON-NLS-2$
 		Optional<CosechaLabor> cosechaConfigured= HarvestConfigDialogController.config(labor);
 		if(!cosechaConfigured.isPresent()){//
 			System.out.println(Messages.getString("JFXMain.266")); //$NON-NLS-1$

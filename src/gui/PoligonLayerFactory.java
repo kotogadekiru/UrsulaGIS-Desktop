@@ -26,7 +26,10 @@ import javafx.stage.Modality;
 import utils.ProyectionConstants;
 
 public class PoligonLayerFactory {
+
 	
+	public static final String MEASURE_TOOL = "MeasureTool";
+
 	public static MeasureTool createMeasureTool(WorldWindow wwd, RenderableLayer surfaceLayer) {
 		MeasureTool measureTool = new MeasureTool(wwd,surfaceLayer);
 		measureTool.setController(new MeasureToolController());
@@ -44,11 +47,17 @@ public class PoligonLayerFactory {
 	@SuppressWarnings("unchecked")
 	static public MeasureTool createPoligonLayer(Poligono poli, WorldWindow wwd,LayerPanel layerPanel){
 		RenderableLayer surfaceLayer = new RenderableLayer();
+//		{
+//		    public void dispose() {
+//		    	//todo MeasureTool clear or dispose
+//		    	super.dispose();
+//		    }
+//		};
 		poli.setLayer(surfaceLayer);
 		surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, poli);
 		surfaceLayer.setValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR, poli.getClass());
 		MeasureTool measureTool = createMeasureTool(wwd, surfaceLayer);
-		
+		surfaceLayer.setValue(MEASURE_TOOL, measureTool);
 		List<Position> positions = poli.getPositions();
 
 		measureTool.setPositions((ArrayList<? extends Position>) positions);
@@ -88,6 +97,7 @@ public class PoligonLayerFactory {
 				}                	                  
 			}
 		});	
+		//measureTool.setArmed(false);//XXX trato de evitar que measure tool se coma toda la memoria
 		return measureTool;
 	}
 	
