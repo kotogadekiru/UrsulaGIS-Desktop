@@ -115,7 +115,7 @@ public class NDVIHistoChart extends VBox {
 			histograma[i]=delta*i+ShowNDVITifFileTask.MIN_VALUE;
 			
 		}
-		numClasses=histograma.length+1;//histograma tiene un elemento menos que clases porque se extiende a inf
+		numClasses=histograma.length;//histograma tiene un elemento menos que clases porque se extiende a inf
 		
 		//numClasses = 9;//ndvi.clasificador.getNumClasses();
 		Double[] superficies = null;

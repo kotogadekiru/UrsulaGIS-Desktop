@@ -21,6 +21,8 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 
+import dao.config.Lote;
+
 import javax.persistence.AccessType;
 
 import gov.nasa.worldwind.geom.Angle;
@@ -44,10 +46,11 @@ public class Poligono implements Comparable<Poligono>{
 	public static final String FIND_ALL="Poligono.findAll";
 	public static final String FIND_NAME = "Poligono.findName";
 	public static final String FIND_ACTIVOS = "Poligono.findActivos";
-	
-//	@Id @GeneratedValue
+
+	//@Id @GeneratedValue
 	private Long id=null;
 	private String nombre="";
+	private Lote lote=null;
 	private double area=-1;
 	/**
 	 * indica si se muestra al inicio
@@ -59,7 +62,7 @@ public class Poligono implements Comparable<Poligono>{
 	private List<Position> positions = new ArrayList<Position>();
 	@Transient
 	private Layer layer =null;
-	
+
 
 	private static DecimalFormat lonLatFormat = null;
 	static {
@@ -71,17 +74,17 @@ public class Poligono implements Comparable<Poligono>{
 		lonLatFormat.getDecimalFormatSymbols().setGroupingSeparator(',');
 		lonLatFormat.setMinimumFractionDigits(8);
 	}
-	
+
 	public Poligono(){
-	
+
 		//this.setPositionsString("{{-35.462175934426305,-61.5357421901391}{-35.462175934426305,-61.5357421901391}{-35.5221036194563,-61.54692846191018}{-35.51801142905433,-61.48036800329617}{-35.462175934426305,-61.5357421901391}}");
 	}
-	
+
 	@Id @GeneratedValue
 	public Long getId(){
 		return this.id;
 	}
-	
+
 	public String getPositionsString(){
 		StringBuilder sb = new StringBuilder();
 		sb.append(COORDINATE_OPEN);
@@ -90,15 +93,15 @@ public class Poligono implements Comparable<Poligono>{
 			Double dLon= p.getLongitude().degrees;
 			String sLat =lonLatFormat.format(dLat);
 			String sLon = lonLatFormat.format(dLon);
-			
-//			if(!sLon.equals(dLon.toString())){
-//				System.out.println("hubo un error al serializar el poligono! "+sLon+ " != "+dLon);
-//			}
+
+			//			if(!sLon.equals(dLon.toString())){
+			//				System.out.println("hubo un error al serializar el poligono! "+sLon+ " != "+dLon);
+			//			}
 			String s = COORDINATE_OPEN+sLat+COORDITANTE_SEPARATOR+sLon+COORDINATE_CLOSE;
 			sb.append(s);// {-33,00000000,91375176,00000000}
-		//	System.out.println("agregando al double de positions => "+ COORDINATE_OPEN+dLat+COORDITANTE_SEPARATOR+dLon+COORDINATE_CLOSE);
-		//	System.out.println("agregando al string de positions => "+ s);
-			
+			//	System.out.println("agregando al double de positions => "+ COORDINATE_OPEN+dLat+COORDITANTE_SEPARATOR+dLon+COORDINATE_CLOSE);
+			//	System.out.println("agregando al string de positions => "+ s);
+
 		}
 		sb.append(COORDINATE_CLOSE);
 		positionsString=sb.toString();
@@ -113,65 +116,66 @@ public class Poligono implements Comparable<Poligono>{
 	public void setPositionsString(String s){
 		positions.clear();
 		try{
-		positionsString=s.substring(1, s.length()-2);//descarto el primer "{" y el ultimo "}"
-		String[] parts = s.split("\\{");
-		for (int i = 0; i < parts.length; i++) {
-			String p = parts[i];
-			if(p.contains(COORDITANTE_SEPARATOR)){
-			String[] latlon = p.substring(0,p.length()-2).split(COORDITANTE_SEPARATOR);
-			String lat = latlon[0];
-			String lon = latlon[1];
-			try{
-				Double dLat = lonLatFormat.parse(lat).doubleValue();// new Double(lon);
-				Double dLon = lonLatFormat.parse(lon).doubleValue();// new Double(lon);
-			
-//				if(!lon.equals(dLon.toString())){
-//					System.out.println("orig lon, parsed lon "+lon+" , "+dLon);
-//					System.out.println("no son iguales");
-//				}
-			Position pos = Position.fromDegrees(dLat,dLon);
-			positions.add(pos);
-			}catch(Exception e){
-				System.out.println("error al des serializar el poligono");
-				e.printStackTrace();
+			if(s.length()<2)return;
+			positionsString=s.substring(1, s.length()-2);//descarto el primer "{" y el ultimo "}"
+			String[] parts = s.split("\\{");
+			for (int i = 0; i < parts.length; i++) {
+				String p = parts[i];
+				if(p.contains(COORDITANTE_SEPARATOR)){
+					String[] latlon = p.substring(0,p.length()-2).split(COORDITANTE_SEPARATOR);
+					String lat = latlon[0];
+					String lon = latlon[1];
+					try{
+						Double dLat = lonLatFormat.parse(lat).doubleValue();// new Double(lon);
+						Double dLon = lonLatFormat.parse(lon).doubleValue();// new Double(lon);
+
+						//				if(!lon.equals(dLon.toString())){
+						//					System.out.println("orig lon, parsed lon "+lon+" , "+dLon);
+						//					System.out.println("no son iguales");
+						//				}
+						Position pos = Position.fromDegrees(dLat,dLon);
+						positions.add(pos);
+					}catch(Exception e){
+						System.out.println("error al des serializar el poligono");
+						e.printStackTrace();
+					}
+				}
 			}
+
+			//XXX comento esto porque tengo miedo que me este borrando puntos reales.
+			//		Position anterior=null,actual =null;
+			//		List <Position> aRemover = new ArrayList<Position>();
+			//		for(int i = 1;positions.size()>1 && i<positions.size();i++){
+			//			anterior = positions.get(i-1);
+			//			actual = positions.get(i);
+			//			if(anterior.equals(actual)){
+			//				aRemover.add(actual);				
+			//			}			
+			//		}
+			//		//System.out.println("Eliminando duplicados "+aRemover);
+			//		positions.removeAll(aRemover);
+
+			Position p0 = positions.get(0);
+			Position pn = positions.get(positions.size()-1);
+			if(!p0.equals(pn)){
+				positions.add(positions.get(0));
+				//	System.out.println("completando el poligono para que sea cerrado");
 			}
-		}
-	
-	//XXX comento esto porque tengo miedo que me este borrando puntos reales.
-//		Position anterior=null,actual =null;
-//		List <Position> aRemover = new ArrayList<Position>();
-//		for(int i = 1;positions.size()>1 && i<positions.size();i++){
-//			anterior = positions.get(i-1);
-//			actual = positions.get(i);
-//			if(anterior.equals(actual)){
-//				aRemover.add(actual);				
-//			}			
-//		}
-//		//System.out.println("Eliminando duplicados "+aRemover);
-//		positions.removeAll(aRemover);
-		
-		Position p0 = positions.get(0);
-		Position pn = positions.get(positions.size()-1);
-		if(!p0.equals(pn)){
-			positions.add(positions.get(0));
-		//	System.out.println("completando el poligono para que sea cerrado");
-		}
-		
-		GeometryFactory fact = new GeometryFactory();
-		Coordinate[] shell = new Coordinate[positions.size()];
-		for(int i =0; i<positions.size();i++){
-			Position pos=positions.get(i);
-		shell[i]=new Coordinate(pos.getLongitude().degrees,pos.getLatitude().degrees);
-			
-		}
-		Polygon p = fact.createPolygon(shell);
-		this.setArea(ProyectionConstants.A_HAS(p.getArea()));
+
+			GeometryFactory fact = new GeometryFactory();
+			Coordinate[] shell = new Coordinate[positions.size()];
+			for(int i =0; i<positions.size();i++){
+				Position pos=positions.get(i);
+				shell[i]=new Coordinate(pos.getLongitude().degrees,pos.getLatitude().degrees);
+
+			}
+			Polygon p = fact.createPolygon(shell);
+			this.setArea(ProyectionConstants.A_HAS(p.getArea()));
 		}catch(Exception e){
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void setNombre(String n){
 		this.nombre=n;
 		if(this.layer!=null){
@@ -179,30 +183,30 @@ public class Poligono implements Comparable<Poligono>{
 			dc.setGroupingSize(3);
 			dc.setGroupingUsed(true);
 			String formated = dc.format(this.area)+Messages.getString("PoligonLayerFactory.4"); //$NON-NLS-1$
-			
+
 			layer.setName(nombre+" "+formated);
 		}
 	}
 	@Transient
 	public void setLayer(Layer l){
-		
+
 		this.layer=l;
 		DecimalFormat dc = new DecimalFormat("0.00");
 		dc.setGroupingSize(3);
 		dc.setGroupingUsed(true);
 		layer.setName(nombre+" "+dc.format(area)+Messages.getString("PoligonLayerFactory.4"));
 	}
-	
+
 	@Transient
 	public Layer getLayer(){
 		return this.layer;
 	}
-	
+
 	@Transient
 	public List<Position> getPositions(){
 		return this.positions;
 	}
-	
+
 	public void setArea(double a){
 		this.area =a;
 		if(this.layer!=null){
@@ -212,28 +216,33 @@ public class Poligono implements Comparable<Poligono>{
 			layer.setName(nombre+" "+dc.format(area)+Messages.getString("PoligonLayerFactory.4"));
 		}
 	}
-	
+
 	public boolean getActivo(){
 		return activo;
 	}
-	
+
 	public String toString(){
 		return this.getNombre();
 	}
-	
+
 	public Geometry toGeometry(){
-		GeometryFactory fact = new GeometryFactory();
-		List<? extends Position> positions = this.getPositions();
-		Coordinate[] coordinates = new Coordinate[positions.size()];
-		for(int i=0;i<positions.size();i++){
-			Position p = positions.get(i);	
-			Coordinate c = new Coordinate(p.getLongitude().getDegrees(),p.getLatitude().getDegrees(),p.getElevation());
-			
-			coordinates[i]=c;
+		try {
+			GeometryFactory fact = new GeometryFactory();
+			List<? extends Position> positions = this.getPositions();
+			Coordinate[] coordinates = new Coordinate[positions.size()];
+			for(int i=0;i<positions.size();i++){
+				Position p = positions.get(i);	
+				Coordinate c = new Coordinate(p.getLongitude().getDegrees(),p.getLatitude().getDegrees(),p.getElevation());
+
+				coordinates[i]=c;
+			}
+			coordinates[coordinates.length-1]=coordinates[0];//en caso de que la geometria no este cerrada
+			Polygon poly = fact.createPolygon(coordinates);	
+			return poly;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return null;
 		}
-		coordinates[coordinates.length-1]=coordinates[0];//en caso de que la geometria no este cerrada
-		Polygon poly = fact.createPolygon(coordinates);	
-		return poly;
 	}
 
 	@Override
@@ -241,13 +250,13 @@ public class Poligono implements Comparable<Poligono>{
 		if(p==null || p.getNombre()==null )return -1;
 		return this.getNombre().compareToIgnoreCase(p.getNombre());
 	}
-	
-//	@Override
-//	public boolean equals(Object o) {
-//		if(o!= null || ! (o instanceof Poligono)) return false;
-//		return this.getPoligonoToString().equals(((Poligono)o).positionsString);
-//	}
-	
+
+	//	@Override
+	//	public boolean equals(Object o) {
+	//		if(o!= null || ! (o instanceof Poligono)) return false;
+	//		return this.getPoligonoToString().equals(((Poligono)o).positionsString);
+	//	}
+
 	/**
 	 * metodo que devuelve el string necesario para consultar el ndvi
 	 * @return

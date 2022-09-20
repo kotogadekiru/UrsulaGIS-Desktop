@@ -172,8 +172,8 @@ public class CosechaHistoChart extends VBox {
 			Double area = geometry.getArea() * ProyectionConstants.A_HAS();
 			int categoria = labor.getClasificador().getCategoryFor(rinde);
 
-			Double sup = superficies[categoria];
-			Double prod = producciones[categoria];
+			Double sup = categoria<superficies.length? superficies[categoria]:superficies[superficies.length-1];
+			Double prod =  categoria<producciones.length? producciones[categoria]:producciones[producciones.length-1]; //producciones[categoria];
 			if (sup == null) sup = new Double(0);
 			if (prod == null) prod = new Double(0);
 			superficies[categoria] = sup + area;	
@@ -198,7 +198,7 @@ public class CosechaHistoChart extends VBox {
 		series.setName("Histograma");
 
 		// Create a XYChart.Data object for each month. Add it to the series.
-
+		TooltipUtil.setupCustomTooltipBehavior(50, 60000, 50);
 		for (int j = 0; j <numClasses; j++) {
 			//FIXME esto solo funciona despues de pedir una cosecha. en otro caso el clasifier se cambia y muestra datos equivocados
 
@@ -221,20 +221,25 @@ public class CosechaHistoChart extends VBox {
 			Data<String, Number> cData = new XYChart.Data<>(label, superficie);
 			cData.setExtraValue(produccion);
 			String color = getColorString(j);
-			TooltipUtil.setupCustomTooltipBehavior(50, 60000, 50);
+		
+			
 			cData.nodeProperty().addListener(new ChangeListener<Node>() {
-
 				@Override
-				public void changed(ObservableValue<? extends Node> ov,
-						Node oldNode, Node newNode) {
+				public void changed(ObservableValue<? extends Node> ov,	Node oldNode, Node newNode) {
 					if (newNode != null) {
 						newNode.setStyle("-fx-bar-fill: " + color + ";"); //$NON-NLS-1$ //$NON-NLS-2$
 						DecimalFormat df = new DecimalFormat("0.00"); //$NON-NLS-1$
 						df.setGroupingSize(3);
 						df.setGroupingUsed(true);
 						
-						double val = cData.getYValue().doubleValue();
-						Tooltip tooltip = new Tooltip(df.format(val)+Messages.getString("CosechaHistoChart.21")+" "+df.format(val/superficieTotal*100)+"%"); //$NON-NLS-1$ //$NON-NLS-2$
+						double sup = cData.getYValue().doubleValue();//superficie
+						double prod = (Double)cData.getExtraValue();
+						Tooltip tooltip = new Tooltip(
+								Messages.getString("CosechaHistoChart.10") +" "+df.format(prod/sup)
+								//25has
+								+"\n"+Messages.getString("CosechaHistoChart.21")+" "+df.format(sup)
+								//66% lote
+								+" "+df.format(sup/superficieTotal*100)+"%"); //$NON-NLS-1$ //$NON-NLS-2$
 						tooltip.autoHideProperty().set(false);
 						Tooltip.install(newNode,tooltip );		
 						

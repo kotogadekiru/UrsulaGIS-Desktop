@@ -51,7 +51,7 @@ import utils.DAH;
 
 public class CompartirRecorridaTask extends Task<String> {
 	
-	private static final String GET_RECORRIDAS_BY_ID_URL = "https://www.ursulagis.com/api/recorridas/id/";
+	//private static final String GET_RECORRIDAS_BY_ID_URL = "https://www.ursulagis.com/api/recorridas/id/";
 	private static final String MMG_GUI_EVENT_CLOSE_PNG = "/gui/event-close.png";
 	public static final String ZOOM_TO_KEY = "ZOOM_TO";
 

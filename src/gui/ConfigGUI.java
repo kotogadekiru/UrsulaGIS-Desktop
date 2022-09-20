@@ -293,7 +293,7 @@ public class ConfigGUI {
 
 			SmartTableView<Poligono> table = new SmartTableView<Poligono>(data,
 					Arrays.asList("Id","PoligonoToString"),
-					Arrays.asList("Activo","Nombre","Area","PositionsString")
+					Arrays.asList("Activo","Nombre","Lote","Area","PositionsString")
 					);
 			table.setEditable(true);
 			table.getSelectionModel().setSelectionMode(
@@ -602,7 +602,7 @@ public class ConfigGUI {
 				CotizarOdenDeCompraOnlineTask cotTask= new CotizarOdenDeCompraOnlineTask(ret); 
 
 				JFXMain.executorPool.execute(cotTask);
-				//TODO enviar orden de compra a la nube. preguntar mail de contacto y subir la orden de compra a la nube
+				// enviar orden de compra a la nube. preguntar mail de contacto y subir la orden de compra a la nube
 
 
 			});
@@ -821,7 +821,7 @@ public class ConfigGUI {
 			table.setEditable(true);
 			//			table.setOnDoubleClick(()->new Poligono());
 			table.setOnShowClick((ndvi)->{
-				//poli.setActivo(true);
+				ndvi.setActivo(true);
 				main.doShowNDVI(ndvi);
 			});
 
@@ -906,7 +906,9 @@ public class ConfigGUI {
 			if(data.size()<1){
 				data.add(new Lote());
 			}
-			SmartTableView<Lote> table = new SmartTableView<Lote>(data);//,data);
+			SmartTableView<Lote> table = new SmartTableView<Lote>(data,
+					Arrays.asList("Id"),                 //rejected
+					Arrays.asList("Nombre","Contorno"));//order
 			table.setEditable(true);
 			table.setOnDoubleClick(()->new Lote(Messages.getString("JFXMain.388"))); //$NON-NLS-1$
 

@@ -424,7 +424,10 @@ public class BulkNdviDownloadGUI {
 		List<Ndvi> ndviValues = values.stream().map(v->{
 			Ndvi ndvi = new Ndvi();
 			ndvi.setNombre(p.getNombre()+" "+v[0]);
-			ndvi.setF(new File(v[3]));//pongo path en file				
+//			File f = new File(v[3]);
+//			ndvi.updateContent(f);
+//			f.delete();
+			//ndvi.setF(new File(v[3]));//pongo path en file				
 			ndvi.setContorno(p);
 			try {
 				ndvi.setMeanNDVI(new Double(v[1]));//number format exception epty string

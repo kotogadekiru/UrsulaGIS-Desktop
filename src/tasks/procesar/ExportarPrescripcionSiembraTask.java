@@ -214,7 +214,7 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 			Geometry gAr =ar.getGeometry();
 			tree.insert(gAr.getEnvelopeInternal(), ar);
 		}
-		List<LaborItem> itemsAReducir =items.subList(100, items.size()-1);
+		List<LaborItem> itemsAReducir =items.subList(99, items.size()-1);//99 es el indice de la zona numero 100
 		int n=0;
 		while(itemsAReducir.size()>0 || n>10) {
 			List<LaborItem> done = new ArrayList<LaborItem>();		

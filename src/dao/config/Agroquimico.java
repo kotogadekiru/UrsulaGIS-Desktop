@@ -33,7 +33,7 @@ public class Agroquimico extends Producto implements Comparable<Agroquimico>{
 //	@Id @GeneratedValue
 //	private Long id=null;
 	
-	private StringProperty nombre = new SimpleStringProperty();
+	private String nombre = new String();
 	//private Property<Cultivo> productoProperty=new SimpleObjectProperty<Cultivo>();//values().iterator().next());;
 
 	public static Map<String,Agroquimico> agroquimicos = new HashMap<String,Agroquimico>();
@@ -50,7 +50,7 @@ public class Agroquimico extends Producto implements Comparable<Agroquimico>{
 
 	
 	public Agroquimico(String _nombre) {
-		nombre.set(_nombre);
+		nombre=_nombre;
 	}
 
 	//@Id @GeneratedValue
@@ -61,37 +61,7 @@ public class Agroquimico extends Producto implements Comparable<Agroquimico>{
 //	public void setId(Long id){
 //		this.id=id;
 //	}
-	
-	public String getNombre(){
-		return this.nombre.get();
-	}
 
-	public void setNombre(String n){
-		if(this.nombre==null){
-			 nombre = new SimpleStringProperty();
-		}
-		this.nombre.set(n);
-	}
-
-	/**
-	 * @return the nombre
-	 */
-	@Transient
-	public StringProperty getNombreProperty() {
-		return nombre;
-	}
-
-	/**
-	 * @param nombre the nombre to set
-	 */
-	public void setNombreProperty(StringProperty nombre) {
-		this.nombre = nombre;
-	}
-
-	@Override
-	public String toString() {
-		return nombre.getValue();
-	}
 
 	@Override
 	public int compareTo(Agroquimico o) {

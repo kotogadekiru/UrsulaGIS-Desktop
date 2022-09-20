@@ -4,18 +4,12 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.geotools.data.FeatureReader;
-import org.geotools.data.FileDataStore;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
-import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -30,16 +24,10 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.util.AffineTransformation;
-import com.vividsolutions.jts.geom.util.NoninvertibleTransformationException;
-import com.vividsolutions.jts.operation.buffer.BufferOp;
 import com.vividsolutions.jts.operation.buffer.BufferParameters;
 import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
 import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
-import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;//TopologyPreservingSimplifier;
-import com.vividsolutions.jts.simplify.TaggedLineStringSimplifier;
 import com.vividsolutions.jts.util.GeometricShapeFactory;
-import com.vividsolutions.jts.densify.Densifier;
 
 import dao.Labor;
 import dao.LaborItem;
@@ -50,7 +38,6 @@ import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
 import javafx.geometry.Point2D;
 import tasks.ProcessMapTask;
-import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
 public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLabor> {

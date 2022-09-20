@@ -52,7 +52,9 @@ public class CotizarOdenDeCompraOnlineTask extends Task<String> {
 	private static final String MMG_GUI_EVENT_CLOSE_PNG = "/gui/event-close.png";
 	public static final String ZOOM_TO_KEY = "ZOOM_TO";
 
-	public static final String INSERT_URL = "https://www.ursulagis.com/api/orden/insert/";
+	public static final String BASE_URL = "https://www.ursulagis.com";
+	//public static final String BASE_URL = "http://localhost:5000";
+	public static final String INSERT_URL = BASE_URL+"/api/orden/insert/";
 	//public static final String INSERT_URL = "http://localhost:5000/api/recorridas/insert/";
 	private ProgressBar progressBarTask;
 	private Pane progressPane;
@@ -66,7 +68,7 @@ public class CotizarOdenDeCompraOnlineTask extends Task<String> {
 	
 	public CotizarOdenDeCompraOnlineTask(OrdenCompra orden) {
 		this.ordenCompra = orden;
-		this.mail=mail;
+		//this.mail=mail;
 		System.out.println("compartiendo OrdenCompra "+orden);
 		System.out.println("muestras "+orden.getItems().size());
 	}
@@ -115,6 +117,8 @@ public class CotizarOdenDeCompraOnlineTask extends Task<String> {
 		//Map<String,String> message = (Map<String, String>) resContent.get("data");
 		//System.out.println("message "+message);
 		if(data !=null) {
+			// Failed to invoke public dao.OrdenDeCompra.Producto() with no args
+			//FIXME cambiar estrategia de producto a JoinedTable y crear un descerializador que convierta de producto a productoGenerico o fertilizacion etc.
 			OrdenCompra dbOrdenCompra = gson.fromJson(data, OrdenCompra.class);
 			Long id = dbOrdenCompra.getId();
 			DAH.save(dbOrdenCompra);//merge local recorrida

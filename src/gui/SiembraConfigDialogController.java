@@ -200,7 +200,9 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 
 		//textPrecioGrano
 		//Bindings.bindBidirectional(this.textPrecioFert.textProperty(), labor.precioInsumoProperty, converter);
+		
 		this.textPrecioFert.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(SiembraLabor.COLUMNA_PRECIO_SEMILLA, labor.getPrecioInsumo().toString()));
+		labor.setPrecioInsumo(converter.fromString(textPrecioFert.textProperty().get()).doubleValue());
 		this.textPrecioFert.textProperty().addListener((obj,old,n)->{			
 			labor.setPrecioInsumo(converter.fromString(n).doubleValue());
 			labor.config.getConfigProperties().setProperty(SiembraLabor.COLUMNA_PRECIO_SEMILLA, n);
@@ -210,12 +212,16 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 		//Bindings.bindBidirectional(this.textCostoLaborHa.textProperty(), labor.precioLaborProperty, converter);
 		//TODO tomar el valor de la labor y si es null levantar la configuracion. sino tomar el valor de la labor.
 		this.textCostoLaborHa.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(SiembraLabor.COLUMNA_PRECIO_PASADA, labor.getPrecioLabor().toString()));
+		labor.setPrecioLabor(converter.fromString(this.textCostoLaborHa.textProperty().get()).doubleValue());
 		this.textCostoLaborHa.textProperty().addListener((obj,old,n)->{			
 			labor.setPrecioLabor(converter.fromString(n).doubleValue());
 			labor.config.getConfigProperties().setProperty(SiembraLabor.COLUMNA_PRECIO_PASADA, n);
 		});
 		
+		//System.out.println("valor entresurco Labor = "+converter.toString(labor.getEntreSurco()));
+		//System.out.println("valor entresurco default = "+labor.config.getConfigProperties().getPropertyOrDefault(SiembraLabor.ENTRE_SURCO_DEFAULT_KEY,null));
 		this.textEntresurco.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(SiembraLabor.ENTRE_SURCO_DEFAULT_KEY, converter.toString(labor.getEntreSurco())));
+		labor.setEntreSurco(converter.fromString(this.textEntresurco.textProperty().get()).doubleValue());//inicializo el entresurco de la labor con lo del texProperty
 		//this.textEntresurco.textProperty().set(converter.toString(labor.getEntreSurco()));
 		this.textEntresurco.textProperty().addListener((obj,old,n)->{			
 			labor.setEntreSurco(converter.fromString(n).doubleValue());

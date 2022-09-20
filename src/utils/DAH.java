@@ -40,7 +40,7 @@ import gui.JFXMain;
 public class DAH {
 	private static final String APPDATA = "APPDATA";
 	private static final String OBJECTDB_DB_URSULAGIS_ODB = "$ursulaGIS.odb";
-	private static final String H2_URSULAGIS_DB = "ursulaGIS.h2";//mv.db
+	private static final String H2_URSULAGIS_DB = "ursulaGIS.h2;AUTO_SERVER=TRUE";//mv.db
 	//private static final String OBJECTDB_DB_MONITORES_H2 = "$ursulaGIS.odb";
 	//	private static final String SQLLITE_PU = "UrsulaGIS";
 	/**

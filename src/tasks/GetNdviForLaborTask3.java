@@ -388,7 +388,7 @@ public class GetNdviForLaborTask3 extends Task<List<Ndvi>>{
 
 						if(loaded!=null && loaded.size()>0) {
 							System.out.println("hay ndvi en base de datos.. cargando "+Arrays.toString(loaded.toArray()) );
-							loaded.stream().forEach((ndvi)->ndvi.loadFileFromContent());
+							//loaded.stream().forEach((ndvi)->ndvi.loadFileFromContent());
 							observableList.addAll(loaded);//agrego a la lista de observables para que se vayan mostrando
 							tiffFiles.addAll(loaded);//agrego a la coleccion final
 

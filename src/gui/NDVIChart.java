@@ -155,7 +155,8 @@ public class NDVIChart extends VBox {
             for (XYChart.Data<Number, Number> d : s.getData()) {
                 Tooltip.install(d.getNode(), 
                 		new Tooltip(
-                				"NDVI: " + d.getYValue()
+                				s.getName()
+                				+"\nNDVI: " + d.getYValue()
                 				+ "\n" +
                 				Messages.getString("JFXMain.show_ndvi_chart.Fecha")+": " + toString(d.getXValue())                               
                                 )

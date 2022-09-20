@@ -223,22 +223,7 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 					System.out.println("downloaded file "+nameBytes[0]+" size "+((byte[])nameBytes[1]).length);
 					if(nameBytes!=null) {
 						String fileName = (String) nameBytes[0];
-						fileName= fileName.replace(".tif", "");
-						//COPERNICUSS220170328T140051_20170328T140141_T20HNH.nd.tif
-						if(fileName.contains("COPERNICUSS2")){
-							fileName=fileName.replace("COPERNICUSS2", "");
-							fileName=fileName.substring(0, "20170328".length());//anio
-							fileName=fileName.substring("201703".length(), fileName.length())//dia
-									+"-"+fileName.substring("2017".length(), "201703".length())//mes
-									+"-"+fileName.substring(0, "2017".length());//anio
-
-						} else if(fileName.contains("LANDSATLC08C01T1_TOALC08_XXXXXX_")){
-							fileName=fileName.replace("LANDSATLC08C01T1_TOALC08_XXXXXX_", "");
-							fileName=fileName.substring(0, "20170328".length());
-							fileName=fileName.substring("201703".length(), fileName.length())
-									+"-"+fileName.substring("2017".length(), "201703".length())
-									+"-"+fileName.substring(0, "2017".length());
-						}
+						fileName = extractNameFromFileName(fileName);
 						//en este punto fileName tiene la fecha en formato 2017-03-28 es decir dd-MM-yyyy
 
 						//String fechaString = new String (fileName);
@@ -264,6 +249,25 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 				}			
 			}}
 		return ndviList;
+	}
+	public static String extractNameFromFileName(String fileName) {
+		fileName= fileName.replace(".tif", "");
+		//COPERNICUSS220170328T140051_20170328T140141_T20HNH.nd.tif
+		if(fileName.contains("COPERNICUSS2")){
+			fileName=fileName.replace("COPERNICUSS2", "");
+			fileName=fileName.substring(0, "20170328".length());//anio
+			fileName=fileName.substring("201703".length(), fileName.length())//dia
+					+"-"+fileName.substring("2017".length(), "201703".length())//mes
+					+"-"+fileName.substring(0, "2017".length());//anio
+
+		} else if(fileName.contains("LANDSATLC08C01T1_TOALC08_XXXXXX_")){
+			fileName=fileName.replace("LANDSATLC08C01T1_TOALC08_XXXXXX_", "");
+			fileName=fileName.substring(0, "20170328".length());
+			fileName=fileName.substring("201703".length(), fileName.length())
+					+"-"+fileName.substring("2017".length(), "201703".length())
+					+"-"+fileName.substring(0, "2017".length());
+		}
+		return fileName;
 	}
 
 	public static LocalDate getAssetDate(String assetID){
@@ -333,7 +337,7 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 
 						if(loaded!=null && loaded.size()>0) {
 							System.out.println("hay ndvi en base de datos.. cargando "+Arrays.toString(loaded.toArray()) );
-							loaded.stream().forEach((ndvi)->ndvi.loadFileFromContent());
+							//loaded.stream().forEach((ndvi)->ndvi.loadFileFromContent());
 							observableList.addAll(loaded);//agrego a la lista de observables para que se vayan mostrando
 							tiffFiles.addAll(loaded);//agrego a la coleccion final
 

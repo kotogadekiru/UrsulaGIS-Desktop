@@ -170,7 +170,7 @@ public class LayerPanel extends VBox {
 			});
 		}
 
-//ordenar los ndvi por fecha
+		//ordenar los ndvi por fecha
 		for(TreeItem<Layer> item : rootItem.getChildren()){
 			try{ item.getChildren().sort((c1,c2)->{
 				//fijarse si es de tipo ndvi
@@ -181,23 +181,25 @@ public class LayerPanel extends VBox {
 				String l2Name =c2.getValue().getName();
 
 				if(labor1 != null && labor1 instanceof Ndvi && 
-					labor2 != null && labor2 instanceof Ndvi) {
-					 l1Name =((Ndvi)labor1).getNombre();
-					 l2Name =((Ndvi)labor2).getNombre();
-					 //si empi1=null ezan con el mismo nombre los ordeno por fecha
-					if(	l1Name!=null && l1Name.startsWith(l2Name.substring(0, l2Name.length()-"02-01-2018".length()))){ //$NON-NLS-1$
-						try {
-							LocalDate fecha1 = ((Ndvi)labor1).getFecha();
-							LocalDate fecha2 = ((Ndvi)labor2).getFecha();
-						//	System.out.println("comprarando fecha1= "+fecha1+" con fecha2= "+fecha2);
-							return fecha1.compareTo(fecha2);
-						}catch(Exception e) {
-							return l1Name.compareToIgnoreCase(l2Name);
-						}
-					} 
-				} //else {//ordenar el resto por nombre
-
-					return l1Name.compareToIgnoreCase(l2Name);
+						labor2 != null && labor2 instanceof Ndvi) {
+					l1Name =((Ndvi)labor1).getNombre();
+					l2Name =((Ndvi)labor2).getNombre();
+					//si empi1=null ezan con el mismo nombre los ordeno por fecha
+					if(l2Name!=null && l2Name.length()>"02-01-2018".length()) {
+						String nombreLote = l2Name.substring(0, l2Name.length()-"02-01-2018".length());
+						if(	l1Name!=null && nombreLote!=null && l1Name.startsWith(nombreLote)){ //$NON-NLS-1$
+							try {
+								LocalDate fecha1 = ((Ndvi)labor1).getFecha();
+								LocalDate fecha2 = ((Ndvi)labor2).getFecha();
+								//	System.out.println("comprarando fecha1= "+fecha1+" con fecha2= "+fecha2);
+								return fecha1.compareTo(fecha2);
+							}catch(Exception e) {
+								return l1Name.compareToIgnoreCase(l2Name);
+							}
+						} 
+					} //else {//ordenar el resto por nombre
+				}
+				return l1Name.compareToIgnoreCase(l2Name);
 				//}
 			});
 			}catch(Exception e){
@@ -221,7 +223,7 @@ public class LayerPanel extends VBox {
 		RenderableLayer rootLayer = new RenderableLayer();
 		rootLayer.setName(Messages.getString("LayerPanel.layerRootLabel")); //$NON-NLS-1$
 		rootItem = new CheckBoxTreeItem<Layer>(rootLayer);
-		
+
 		RenderableLayer poliLayer = new RenderableLayer();
 		poliLayer.setName(Messages.getString("LayerPanel.rootItemNamePoligono")); //$NON-NLS-1$
 		poliLayer.setValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR, Poligono.class);
@@ -230,7 +232,7 @@ public class LayerPanel extends VBox {
 		rootItems.put(Poligono.class, poliItem);
 		rootItem.getChildren().add(poliItem);
 
-		
+
 		RenderableLayer pulvLayer = new RenderableLayer();
 		pulvLayer.setName(Messages.getString("LayerPanel.pulvLabel")); //$NON-NLS-1$
 		pulvLayer.setValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR, PulverizacionLabor.class);
@@ -354,12 +356,12 @@ public class LayerPanel extends VBox {
 						if(key.isAssignableFrom(valueClass)
 								|| (key==null && valueClass==null)){	
 							layersP.addAll(actions.get(key));
-							
+
 						}					
 					}
 					constructMenuItem(nuLayer, menu, layersP);
 				}
-				
+
 				cell.setContextMenu(menu);
 			});
 			return cell;
@@ -393,7 +395,7 @@ public class LayerPanel extends VBox {
 				}
 				return act.apply(null);	
 			}};
-			
+
 			LayerAction lAction = new LayerAction(removeSelected);
 			lAction.name=removeSelected.apply(null);
 			return lAction;
