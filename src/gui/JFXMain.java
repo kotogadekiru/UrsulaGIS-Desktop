@@ -4021,9 +4021,13 @@ public class JFXMain extends Application {
 		}		
 
 		Map<String,Double> mapClaseValor = new ConfigGUI(this).doAsignarValoresCosecha(cosecha,Messages.getString("JFXMain.Densidad"));//"Densidad pl/m2"
-
-
-		ConvertirASiembraTask csTask = new ConvertirASiembraTask(cosecha,siembra,mapClaseValor);
+		//fetilizante
+		Map<String,Double> mapFLClaseValor = new ConfigGUI(this).doAsignarValoresCosecha(cosecha,Messages.getString("JFXMain.fertilizantesMenuItem"));//"Densidad pl/m2"
+		//fertilizane costado
+		Map<String,Double> mapFCClaseValor = new ConfigGUI(this).doAsignarValoresCosecha(cosecha,Messages.getString("JFXMain.fertilizantesMenuItem"));//"Densidad pl/m2"
+		
+//constructor con los parametros de siembra y fertiliacion. 
+		ConvertirASiembraTask csTask = new ConvertirASiembraTask(cosecha,siembra,mapClaseValor,mapFLClaseValor,mapFCClaseValor);
 
 		csTask.installProgressBar(progressBox);
 
