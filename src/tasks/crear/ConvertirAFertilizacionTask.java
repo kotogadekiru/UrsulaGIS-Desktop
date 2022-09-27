@@ -37,10 +37,10 @@ import utils.ProyectionConstants;
  *
  */
 public class ConvertirAFertilizacionTask extends ProcessMapTask<FertilizacionItem,FertilizacionLabor> {
-	Map<String,Double> dosisMap = null;//new Double(0);
+	Map<String,Double[]> dosisMap = null;//new Double(0);
 	CosechaLabor cosecha=null;
 
-	public ConvertirAFertilizacionTask(CosechaLabor _cosecha,FertilizacionLabor labor,Map<String,Double> valores){
+	public ConvertirAFertilizacionTask(CosechaLabor _cosecha,FertilizacionLabor labor,Map<String,Double[]> valores){
 		super(labor);
 		dosisMap=valores;
 		cosecha=_cosecha;
@@ -66,7 +66,7 @@ public class ConvertirAFertilizacionTask extends ProcessMapTask<FertilizacionIte
 			SimpleFeature simpleFeature = reader.next();
 			CosechaItem ci = cosecha.constructFeatureContainerStandar(simpleFeature,false);			
 			String nombre = cl.getLetraCat(cl.getCategoryFor(ci.getRindeTnHa()));
-			double dosis = dosisMap.get(nombre);
+			double dosis = dosisMap.get(nombre)[0];
 			//double semillasHa = ProyectionConstants.METROS2_POR_HA*plantasM2Objetivo/pg;// si pg ==1 semillas= plantas. si pg es <1 => semillas>plantas
 			//double semillasMetroLineal = semillasHa/metrosLinealesHa;//si es trigo va en plantas /m2 si es maiz o soja va en miles de plantas por ha
 			

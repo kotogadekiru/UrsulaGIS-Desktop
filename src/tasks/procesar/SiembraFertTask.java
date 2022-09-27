@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalDouble;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.geometry.BoundingBox;
@@ -20,6 +23,7 @@ import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 
+import dao.Labor;
 import dao.LaborItem;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.siembra.SiembraItem;
@@ -28,8 +32,15 @@ import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
 import gui.nww.LaborLayer;
 import tasks.ProcessMapTask;
+import utils.GeometryHelper;
 import utils.PolygonValidator;
 import utils.ProyectionConstants;
+
+/**
+ * clase que toma una siembra y una fertilizacion y genera una nueva siembra que combian las dos.
+ * @author quero
+ *
+ */
 
 public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 	/**
@@ -39,12 +50,15 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 	private SiembraLabor siembra;
 	private FertilizacionLabor fertilizacion;
 	//	private SimpleFeatureType type = null;
+	private boolean esFertLinea=true;
 
 
-	public SiembraFertTask(SiembraLabor _siembra, FertilizacionLabor _fertilizacion){//RenderableLayer layer, FileDataStore store, double d, Double correccionRinde) {
+	public SiembraFertTask(SiembraLabor _siembra, FertilizacionLabor _fertilizacion,boolean _esFertLinea){//RenderableLayer layer, FileDataStore store, double d, Double correccionRinde) {
 		super( new SiembraLabor());
 		this.siembra=_siembra;
 		this.fertilizacion=_fertilizacion;
+		this.esFertLinea=_esFertLinea;
+
 
 		labor.setSemilla(siembra.getSemilla());//Cultivo(cultivo);
 		labor.setLayer(new LaborLayer());
@@ -64,35 +78,88 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 	protected void doProcess() throws IOException {
 		//	long init = System.currentTimeMillis();
 		// TODO 1 obtener el bounds general que cubre a todas las cosechas
-		ReferencedEnvelope unionEnvelope = siembra.outCollection.getBounds();
-		unionEnvelope.expandToInclude(fertilizacion.outCollection.getBounds());
+		//ReferencedEnvelope unionEnvelope = siembra.outCollection.getBounds();
+		//unionEnvelope.expandToInclude(fertilizacion.outCollection.getBounds());
 		double anchoGrilla = labor.getConfiguracion().getAnchoGrilla();
 
+		List<Labor<?>> labores = new LinkedList<Labor<?>>();
+		labores.add(siembra);
+		labores.add(fertilizacion);
+		
+		ReferencedEnvelope unionEnvelope = labores.parallelStream().collect(
+				()->new ReferencedEnvelope(),
+				(env, labor) ->{		
+					ReferencedEnvelope b = labor.outCollection.getBounds();
+					env.expandToInclude(b);
+				},	(env1, env2) -> env1.expandToInclude(env2));
 
 
 		// 2 generar una grilla de ancho ="ancho" que cubra bounds
-		List<Polygon>  grilla = construirGrilla(unionEnvelope, anchoGrilla);
+		//TODO no construir una grilla, explotar todos los poligonos de las siembras y cosechas como en balance de nutrientes
+//		List<Polygon>  grilla = construirGrilla(unionEnvelope, anchoGrilla);
 		//System.out.println("creando una grilla con "+grilla.size()+" elementos");
 		// 3 recorrer cada pixel de la grilla promediando los valores y generando los nuevos items de la cosecha
 
-		featureCount = grilla.size();
+		//obtener una lista con todas las geometrias de las labores
+		List<Geometry> geometriasActivas = labores.parallelStream().collect(
+				()->new ArrayList<Geometry>(),
+				(activas, labor) ->{		
+					List<LaborItem> features = (List<LaborItem>) labor.outStoreQuery(unionEnvelope);
+					activas.addAll(
+							features.parallelStream().collect(
+							()->new ArrayList<Geometry>(),
+							(list, f) -> list.add((Geometry) f.getGeometry()),
+							(env1, env2) -> env1.addAll(env2))
+							);
+				},	(env1, env2) -> env1.addAll(env2));
+		
+		Set<Geometry> partes = GeometryHelper.obtenerIntersecciones(geometriasActivas);
+		List<Polygon> grillaCover =  partes.parallelStream().collect(
+				()->new ArrayList<Polygon>(),
+				(activas, poly) ->{					
+					if(poly!=null) {
+						activas.addAll(PolygonValidator.geometryToFlatPolygons(poly));
+					}
+				},	(env1, env2) -> env1.addAll(env2));
+	
+		
+		//unir las geometrias de todas las labores para obtener un poligono de contorno
+//		GeometryCollection activasCollection = ProyectionConstants.getGeometryFactory().createGeometryCollection( geometriasActivas.toArray(new Geometry[geometriasActivas.size()]));
+//		Geometry cover =  activasCollection.buffer(0);
+		//intersectar la grilla con el contorno
+//		List<Polygon> grillaCover = grilla.parallelStream().collect(
+//				()->new ArrayList<Polygon>(),
+//				(activas, poly) ->{					
+//					Geometry intersection = GeometryHelper.getIntersection(poly, cover); 
+//					if(intersection!=null) {
+//						activas.addAll(PolygonValidator.geometryToFlatPolygons(intersection));
+//						//activas.add(intersection);
+//					}
+//				},	(env1, env2) -> env1.addAll(env2));
+		
+		featureCount = grillaCover.size();
 
 		int clasesA = siembra.clasificador.getNumClasses();
 		//int clasesB = fertilizacion.clasificador.getNumClasses();
 		//claseAB = clasesA*claseB(r)+claseA(r)
-		ConcurrentHashMap< Integer,List<Object[]>> byBicluster =	grilla.parallelStream().collect(
-				() -> new  ConcurrentHashMap< Integer,List<Object[]>>(),(map, poly) -> {
+		ConcurrentHashMap< Integer,List<Object[]>> byBicluster = grillaCover.parallelStream().collect(
+				() -> new  ConcurrentHashMap< Integer,List<Object[]>>(),
+				(map, poly) -> {
 					try{
 						List siembrasPoly=this.siembra.cachedOutStoreQuery(poly.getEnvelopeInternal()); 
 						List fertilizacionesPoly=this.fertilizacion.cachedOutStoreQuery(poly.getEnvelopeInternal()); 
 						if(siembrasPoly.size()<1 && fertilizacionesPoly.size()<1)return;
 						Object[] siembraItem = construirFeatureGeometric(siembrasPoly,poly);     //geometry y amount
 						Object[] fertilizacionItem = construirFeatureGeometric(fertilizacionesPoly,poly);
-						
+
 						//System.out.println("siembra grilla item "+siembraItem[1]);
 						//System.out.println("fert grilla item "+fertilizacionItem[1]);
 						List<Polygon> flatPolygons = PolygonValidator.geometryToFlatPolygons(poly);//(Geometry) siembraItem[0]);
 						Double dosisHa = new Double((double) siembraItem[1]);//.fi.getDosistHa();
+						Double dosisFertLHa = new Double((double) siembraItem[2]);//.fi.getDosistHa();
+						Double dosisFertCHa = new Double((double) siembraItem[3]);//.fi.getDosistHa();
+						
+						
 						Double fertHa = new Double((double) fertilizacionItem[1]);//.fi.getDosistHa();
 						int claseFert = fertilizacion.clasificador.getCategoryFor(fertHa) ;
 						int claseSiembra = siembra.clasificador.getCategoryFor(dosisHa);
@@ -102,10 +169,25 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 						if(catFeatures==null)catFeatures=new ArrayList<Object[]>();
 
 						for(Polygon p : flatPolygons){
-							Object[] values = {p,dosisHa,fertHa,new Double(0)}; 
+							//TODO segun la siembra tenga fertilizacion en la linea o no poner el dato fertHa en 2 o 3
+							Object[] values = new Object[4];
+							values[0] = p;
+							values[1] = dosisHa;
+							values[2]=dosisFertLHa;
+							values[3]=dosisFertCHa;
+							if(esFertLinea) {
+
+								values[2] = fertHa;
+							//	values[3] = new Double(0); 
+							}else {
+							//	values[2] = new Double(0); // traer el dato de fert l de la siembra
+								values[3] = fertHa;
+							}
 							catFeatures.add(values);
 						}
 						map.put(index, catFeatures);
+						featureNumber++;
+						updateProgress(featureNumber, featureCount);
 					}catch(Exception e){
 						System.err.println("error al construir un elemento de la grilla");
 						e.printStackTrace();
@@ -121,14 +203,17 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 					});
 				}
 				);
-
+//		List<Object[]> resumidas = byBicluster.values().stream().collect(
+//				()->new ArrayList<Object[]>(), 
+//				(l,v)->	l.addAll(v), 
+//				(l1,l2)->l1.addAll(l2)); 
 		//XXX byPolygon contiene un map con la categoria de destino y todos los simplefeatures
 		List<Object[]> resumidas = resumirGeometrias(byBicluster);
-		
+
 		//double entresurco = siembra.getEntreSurco();
 		double pesoSKg = labor.getSemilla().getPesoDeMil()/(1000*1000);//141
 		//double metrosLHA = ProyectionConstants.METROS2_POR_HA/entresurco;//23,809.52
-		
+
 
 		List<SiembraItem> itemsToShow = new ArrayList<SiembraItem>();
 		Double id = 0d;
@@ -136,20 +221,21 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 			SiembraItem si = new SiembraItem();
 			si.setId(id);
 			id++;
-		
+
 			si.setDosisHa((Double)value[1]);
-			
+
 			Double seedsM2=si.getDosisHa()/(pesoSKg*ProyectionConstants.METROS2_POR_HA);
-			
+
 			double sML=seedsM2*labor.getEntreSurco();//esto es 0.42
-			
+
 			//double semillasMl =(si.getDosisHa()/pesoSKg)/metrosLHA; 
 			System.out.println("dosisML "+sML);
 			si.setDosisML(sML*10);//multipolicar por 10 porque al insertarla se divide por 10
 			si.setDosisFertLinea((Double)value[2]);
+			si.setDosisFertCostado((Double)value[3]);
 			labor.setPropiedadesLabor(si);
 			si.setGeometry((Geometry)value[0]);
-			
+
 			//System.out.println("termine de crear una siembra resumida : "+ci.toString());
 			labor.insertFeature(si); //aca se divide por 10
 			itemsToShow.add(si);		
@@ -169,27 +255,28 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 		List<Object[]> objects = new  ArrayList<Object[]>();
 		for(Integer clase:  byBicluster.keySet()) {
 			List<Object[]> cluster = byBicluster.get(clase);//.values()
+			//objects.addAll(cluster);
 			System.out.println("resumiendo el cluster "+clase+" con "+cluster.size()+" features");
 			objects.addAll(construirFeatureResumido(cluster));
 		}
 		//System.out.println("biClustersCreados "+objects.size()+"");
 		return objects;
-//		return byBicluster.values().stream().collect(
-//				() -> new  ArrayList<Object[]>(),
-//				(list,features) ->list.addAll(construirFeatureResumido(features)),
-//				(list1, list2) -> list1.addAll(list2)
-//				);
+		//		return byBicluster.values().stream().collect(
+		//				() -> new  ArrayList<Object[]>(),
+		//				(list,features) ->list.addAll(construirFeatureResumido(features)),
+		//				(list1, list2) -> list1.addAll(list2)
+		//				);
 	}
-	
+
+	// metodo que resume todos los elementos de una misma categoria
 	private List<Object[]> construirFeatureResumidoGeometrico(List<Object[]> cluster){
 		List<Object[]> ret = new ArrayList<Object[]>();
-		
+
 		if(cluster.size()<1){
 			System.out.println("no hay features en el cluster");
 			return ret;
 		}
 
-		//List<Geometry> aUnir = new ArrayList<Geometry>();
 		Geometry[] geomArray = new Geometry[cluster.size()];
 
 		double amountProm=0,fertProm=0;
@@ -203,10 +290,10 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 		}
 		amountProm=amountProm/n;
 		fertProm=fertProm/n;
-		
+
 		Geometry union = geomArray[0];//.get(0);
 		GeometryFactory fact = union.getFactory();
-		
+
 		GeometryCollection colectionCat = fact.createGeometryCollection(geomArray);
 
 		try{
@@ -266,14 +353,15 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 
 		List<Object[]> catFeatures = new ArrayList<Object[]>();// new HashMap<Geometry,Double>();
 		if(areaPoly>getAreaMinimaLongLat()){
-			double siembraProm=0,fertProm = 0;
+			double siembraProm=0,fertPromL = 0,fertPromC = 0;
 
 			for(Object[] f : cluster){			
 				Double gArea = ((Geometry)f[0]).getArea();
 				//			if(gArea==null)continue;
 				double peso = gArea/areaPoly;
 				siembraProm+=peso*(double)f[1];//LaborItem.getDoubleFromObj(f.getAttribute(SIEMBRA_COLUMN));
-				fertProm+=peso*(double)f[2];//LaborItem.getDoubleFromObj(f.getAttribute(LINEA_COLUMN));
+				fertPromL+=peso*(double)f[2];//LaborItem.getDoubleFromObj(f.getAttribute(LINEA_COLUMN));
+				fertPromC+=peso*(double)f[3];//LaborItem.getDoubleFromObj(f.getAttribute(LINEA_COLUMN));
 			}
 
 			GeometryFactory fact = aUnir.get(0).getFactory();
@@ -292,7 +380,7 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 
 			for(Polygon p:flatPolygons){
 				//synchronized(fb) {
-				Object[] values = {p,siembraProm,fertProm,new Double(0)}; 
+				Object[] values = {p,siembraProm,fertPromL,fertPromC}; 
 				//fb.addAll(values);
 				//SimpleFeature exportFeature = fb.buildFeature(null);//fb concurrentes ponen los mismos ids?
 
@@ -302,18 +390,20 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 		}
 		return catFeatures;
 	}
-	
-	
+
+
 	/**
 	 * 
-	 * @param siembrasPoly lista de cosechasitems que se intersectan con el poligono de entrada
+	 * @param siembrasPoly lista de laborItems que se intersectan con el poligono de entrada
 	 * @param poly ; el poligono a partir del cual se crea el cosecha Item promedio
-	 * @return SimpleFeature de tipo CosechaItemStandar que represente a cosechasPoly 
+	 * @return new Object[2]{geom,dosisSiembra o dosisFert segun lista de items de entrada}
 	 */
 	private Object[] construirFeatureGeometric(List<LaborItem> siembrasPoly, Polygon poly) {
-		Object[] ret = new Object[2];
+		Object[] ret = new Object[4];
 		ret[0]=poly;
 		ret[1]=0d;
+		ret[2]=0d;
+		ret[3]=0d;
 		if(siembrasPoly.size()<1){
 			return ret;
 		}
@@ -322,22 +412,36 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 
 		//siembrasPoly.stream().mapToDouble(LaborItem::getAmount).average();
 		double amountProm=0;
-		OptionalDouble opt = siembrasPoly.stream().mapToDouble(LaborItem::getAmount).average();
-		if(opt.isPresent()) {
-			amountProm=opt.getAsDouble();
+		double fertLProm=0;
+		double fertCProm=0;
+//		OptionalDouble opt = siembrasPoly.stream().mapToDouble(LaborItem::getAmount).average();
+//		if(opt.isPresent()) {
+//			amountProm=opt.getAsDouble();
+//		}
+		int n=0;
+		double areaTotal=0;
+		for(LaborItem li : siembrasPoly){
+			double intersection = li.getGeometry().intersection(poly).getArea();
+			areaTotal+=intersection;
+			amountProm+=li.getAmount()*intersection;
+			if(li instanceof SiembraItem) {
+				SiembraItem si = (SiembraItem)li;
+				fertLProm+=si.getDosisFertLinea()*intersection;
+				fertCProm+=si.getDosisFertCostado()*intersection;
+			}
+
 		}
-		//		int n=0;
-		//		for(LaborItem li : siembrasPoly){
-		//			n++;
-		//			amountProm+=li.getAmount();
-		//		}
-		//		amountProm=amountProm/n;
+		amountProm=amountProm/areaTotal;
+		fertLProm=fertLProm/areaTotal;
+		fertCProm=fertCProm/areaTotal;
 
 		ret[1]=amountProm;
+		ret[2]=fertLProm;
+		ret[3]=fertCProm;
 
 		return ret;
 	}
-	
+
 
 	/**
 	 * 
@@ -345,63 +449,64 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 	 * @param poly ; el poligono a partir del cual se crea el cosecha Item promedio
 	 * @return SimpleFeature de tipo CosechaItemStandar que represente a cosechasPoly 
 	 */
-	private Object[] construirFeature(List<LaborItem> siembrasPoly, Polygon poly) {
-		Object[] ret = new Object[2];
-		ret[0]=poly;
-		ret[1]=0d;
-		if(siembrasPoly.size()<1){
-			return ret;
-		}
-
-		List<Geometry> intersections = new ArrayList<Geometry>();
-		// sumar todas las supferficies, y calcular el promedio ponderado de cada una de las variables por la superficie superpuesta
-		Geometry union = poly;
-		double areaPoly = 0;
-		Map<LaborItem,Double> areasIntersecciones = new HashMap<LaborItem,Double>();
-		for(LaborItem cPoly : siembrasPoly){			
-			//XXX si es una cosecha de ambientes el area es importante
-			Geometry g = cPoly.getGeometry();
-			List<Polygon> flatP = PolygonValidator.geometryToFlatPolygons(g);
-			for(Polygon fp:flatP) {
-				try{
-					g= EnhancedPrecisionOp.intersection(poly,fp);
-					Double areaInterseccion = g.getArea();
-					areaPoly+=areaInterseccion;
-					areasIntersecciones.put(cPoly,areaInterseccion);
-					if(union==null){
-						union = g;		//union es la geometria que se va a devolver al final
-					}
-					intersections.add(g);
-				}catch(Exception e){
-					System.err.println("no se pudo hacer la interseccion entre\n"+poly+"\n y\n"+fp);
-				}		
-			}
-		}
-
-		//	Object[] ret = new Object[2];// new HashMap<Geometry,Double>();
-
-		double amountProm=0;
-		for(LaborItem li : areasIntersecciones.keySet()){
-			Double gArea = areasIntersecciones.get(li);
-			if(gArea==null)continue;
-			double peso = gArea/areaPoly;
-			amountProm+=li.getAmount()*peso;
-		}
-		if(intersections.size()>0) {
-
-			GeometryFactory fact = intersections.get(0).getFactory();
-			Geometry[] geomArray = new Geometry[intersections.size()];
-			GeometryCollection colectionCat = fact.createGeometryCollection(intersections.toArray(geomArray));
-
-			try{
-				union = colectionCat.convexHull();//esto hace que no se cubra el area entre polygonos a menos que la grilla sea mas grande que el area
-			}catch(Exception e){
-
-			}
-			ret[0]=union;ret[1]=amountProm;
-		}
-		return ret;
-	}
+	//	private Object[] construirFeature(List<LaborItem> siembrasPoly, Polygon poly) {
+	//		Object[] ret = new Object[2];
+	//		ret[0]=poly;
+	//		ret[1]=0d;
+	//		if(siembrasPoly.size()<1){
+	//			return ret;
+	//		}
+	//
+	//		List<Geometry> intersections = new ArrayList<Geometry>();
+	//		// sumar todas las supferficies, y calcular el promedio ponderado de cada una de las variables por la superficie superpuesta
+	//		Geometry union = poly;
+	//		double areaPoly = 0;
+	//		Map<LaborItem,Double> areasIntersecciones = new HashMap<LaborItem,Double>();
+	//		for(LaborItem cPoly : siembrasPoly){			
+	//			//XXX si es una cosecha de ambientes el area es importante
+	//			Geometry g = cPoly.getGeometry();
+	//			List<Polygon> flatP = PolygonValidator.geometryToFlatPolygons(g);
+	//			for(Polygon fp:flatP) {
+	//				try{
+	//					g= EnhancedPrecisionOp.intersection(poly,fp);
+	//					Double areaInterseccion = g.getArea();
+	//					areaPoly+=areaInterseccion;
+	//					areasIntersecciones.put(cPoly,areaInterseccion);
+	//					if(union==null){
+	//						union = g;		//union es la geometria que se va a devolver al final
+	//					}
+	//					intersections.add(g);
+	//				}catch(Exception e){
+	//					System.err.println("no se pudo hacer la interseccion entre\n"+poly+"\n y\n"+fp);
+	//				}		
+	//			}
+	//		}
+	//
+	//		//	Object[] ret = new Object[2];// new HashMap<Geometry,Double>();
+	//
+	//		double amountProm=0;
+	//		for(LaborItem li : areasIntersecciones.keySet()){
+	//			Double gArea = areasIntersecciones.get(li);
+	//			if(gArea==null)continue;
+	//			double peso = gArea/areaPoly;
+	//			amountProm+=li.getAmount()*peso;
+	//		}
+	//		if(intersections.size()>0) {
+	//
+	//			GeometryFactory fact = intersections.get(0).getFactory();
+	//			Geometry[] geomArray = new Geometry[intersections.size()];
+	//			GeometryCollection colectionCat = fact.createGeometryCollection(intersections.toArray(geomArray));
+	//
+	//			try{
+	//				union = colectionCat.convexHull();//esto hace que no se cubra el area entre polygonos a menos que la grilla sea mas grande que el area
+	//			}catch(Exception e){
+	//
+	//			}
+	//			ret[0]=union;
+	//			ret[1]=amountProm;
+	//		}
+	//		return ret;
+	//	}
 
 	private double getAreaMinimaLongLat() {
 		return labor.config.supMinimaProperty().doubleValue()*ProyectionConstants.metersToLong()*ProyectionConstants.metersToLat();
@@ -470,18 +575,19 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 		df.setGroupingSize(3);
 		//densidad seeds/metro lineal
 		String tooltipText = new String(Messages.getString("ProcessSiembraMapTask.1")+ df.format(siembraFeature.getDosisML()) + Messages.getString("ProcessSiembraMapTask.2")); //$NON-NLS-1$ //$NON-NLS-2$
-		
+
 		Double seedsSup= siembraFeature.getDosisML()/labor.getEntreSurco();
 		if(seedsSup<100) {//plantas por ha
 			tooltipText=tooltipText.concat(df.format(seedsSup*ProyectionConstants.METROS2_POR_HA) + " s/"+ Messages.getString("ProcessSiembraMapTask.12")); //$NON-NLS-1$ //$NON-NLS-2$
-		
+
 		}else {
 			tooltipText=tooltipText.concat(df.format(seedsSup) + " s/"+Messages.getString("ProcessSiembraMapTask.10")); //s/m2
 		}
-			//kg semillas por ha
-		tooltipText=tooltipText.concat(Messages.getString("ProcessSiembraMapTask.3") + " "+df.format(siembraFeature.getDosisHa()) + Messages.getString("ProcessSiembraMapTask.4")); //$NON-NLS-1$ //$NON-NLS-2$
-		//fert l
-		tooltipText=tooltipText.concat( Messages.getString("ProcessSiembraMapTask.5") +" "+ df.format(siembraFeature.getDosisFertLinea()) + Messages.getString("ProcessSiembraMapTask.6")		); //$NON-NLS-1$ //$NON-NLS-2$
+		//kg semillas por ha
+		tooltipText=tooltipText.concat("S "+Messages.getString("ProcessSiembraMapTask.3") + " "+df.format(siembraFeature.getDosisHa()) + Messages.getString("ProcessSiembraMapTask.4")); //$NON-NLS-1$ //$NON-NLS-2$
+		//fert l		
+		tooltipText=tooltipText.concat( Messages.getString("JFXMain.FertL") +": "+ df.format(siembraFeature.getDosisFertLinea()) + Messages.getString("ProcessSiembraMapTask.6")		); //$NON-NLS-1$ //$NON-NLS-2$
+		tooltipText=tooltipText.concat( Messages.getString("JFXMain.FertC") +": "+ df.format(siembraFeature.getDosisFertCostado()) + Messages.getString("ProcessSiembraMapTask.6")		); //$NON-NLS-1$ //$NON-NLS-2$
 		//fert costo
 		tooltipText=tooltipText.concat( Messages.getString("ProcessSiembraMapTask.7") + " "+df.format(siembraFeature.getImporteHa()) + Messages.getString("ProcessSiembraMapTask.8")		); //$NON-NLS-1$ //$NON-NLS-2$
 

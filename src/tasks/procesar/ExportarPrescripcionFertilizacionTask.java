@@ -404,7 +404,7 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 
 	
 	
-	
+	//FIXME se pierden geometrias
 	public void reabsorverZonasChicas( List<LaborItem> items) {
 		try {
 		//TODO reabsorver zonas mas chicas a las mas grandes vecinas

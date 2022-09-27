@@ -35,10 +35,10 @@ import utils.ProyectionConstants;
  *
  */
 public class ConvertirASiembraTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
-	Map<String,Double> plantasM2ObjetivoMap = null;//new Double(0);
+	Map<String,Double[]> plantasM2ObjetivoMap = null;//new Double(0);
 	CosechaLabor cosecha=null;
 
-	public ConvertirASiembraTask(CosechaLabor _cosecha,SiembraLabor labor,Map<String,Double> valores){
+	public ConvertirASiembraTask(CosechaLabor _cosecha,SiembraLabor labor,Map<String,Double[]> valores){
 		super(labor);
 		plantasM2ObjetivoMap=valores;
 		cosecha=_cosecha;
@@ -64,14 +64,17 @@ public class ConvertirASiembraTask extends ProcessMapTask<SiembraItem,SiembraLab
 			SimpleFeature simpleFeature = reader.next();
 			CosechaItem ci = cosecha.constructFeatureContainerStandar(simpleFeature,false);			
 			String nombre = cl.getLetraCat(cl.getCategoryFor(ci.getRindeTnHa()));
-			double plantasM2Objetivo = plantasM2ObjetivoMap.get(nombre);
+			double plantasM2Objetivo = plantasM2ObjetivoMap.get(nombre)[0];
+			double fertL = plantasM2ObjetivoMap.get(nombre)[1];
+			double fertC = plantasM2ObjetivoMap.get(nombre)[2];
 			double semillasHa = ProyectionConstants.METROS2_POR_HA*plantasM2Objetivo/pg;// si pg ==1 semillas= plantas. si pg es <1 => semillas>plantas
 			double semillasMetroLineal = semillasHa/metrosLinealesHa;//si es trigo va en plantas /m2 si es maiz o soja va en miles de plantas por ha
 			
 			SiembraItem si = new SiembraItem();
 			
 			si.setDosisHa(semillasHa*pmil/(1000*1000));//1000semillas*1000gramos para pasar a kg/ha
-
+			si.setDosisFertLinea(fertL);
+			si.setDosisFertCostado(fertC);
 			si.setDosisML(semillasMetroLineal);
 			//dosis sembradora va en semillas cada 10mts
 			//dosis valorizacion va en unidad de compra; kg o bolsas de 80000 semillas o 50kg
@@ -125,8 +128,9 @@ public class ConvertirASiembraTask extends ProcessMapTask<SiembraItem,SiembraLab
 		}
 		//kg semillas por ha
 		tooltipText=tooltipText.concat(Messages.getString("ProcessSiembraMapTask.3") + df.format(siembraFeature.getDosisHa()) + Messages.getString("ProcessSiembraMapTask.4")); //$NON-NLS-1$ //$NON-NLS-2$
-		//fert l
-		tooltipText=tooltipText.concat( Messages.getString("ProcessSiembraMapTask.5") + df.format(siembraFeature.getDosisFertLinea()) + Messages.getString("ProcessSiembraMapTask.6")		); //$NON-NLS-1$ //$NON-NLS-2$
+		//fert l		
+		tooltipText=tooltipText.concat( Messages.getString("JFXMain.FertL") +": "+ df.format(siembraFeature.getDosisFertLinea()) + Messages.getString("ProcessSiembraMapTask.6")		); //$NON-NLS-1$ //$NON-NLS-2$
+		tooltipText=tooltipText.concat( Messages.getString("JFXMain.FertC") +": "+ df.format(siembraFeature.getDosisFertCostado()) + Messages.getString("ProcessSiembraMapTask.6")		); //$NON-NLS-1$ //$NON-NLS-2$
 		//fert costo
 		tooltipText=tooltipText.concat( Messages.getString("ProcessSiembraMapTask.7") + df.format(siembraFeature.getImporteHa()) + Messages.getString("ProcessSiembraMapTask.8")		); //$NON-NLS-1$ //$NON-NLS-2$
 

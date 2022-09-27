@@ -341,7 +341,7 @@ public class ConfigGUI {
 	 * @param cosecha
 	 * @return devuelve el map con los valores asignados
 	 */
-	public Map<String,Double> doAsignarValoresCosecha(CosechaLabor cosecha,String column_Valor) {
+	public Map<String,Double[]> doAsignarValoresCosecha(CosechaLabor cosecha,String[] column_Valores) {
 		//List<Muestra> muestras = cosecha.getMuestras();
 		//Map<String, List<Muestra>> nombresMuestraMap = muestras.stream().collect(Collectors.groupingBy(Muestra::getNombre));
 
@@ -360,12 +360,15 @@ public class ConfigGUI {
 			//System.out.println(" letra "+nombre);
 			Map<String,Object> initialD = new LinkedHashMap<String,Object>();
 			initialD.put(column_Nombre, nombre);
-			initialD.put(column_Valor, 0.0);
+			for(String column_Valor : column_Valores) {
+				initialD.put(column_Valor, 0.0);
+			}
 			data.add(initialD);
 		}
 
 		TableView<Map<String,Object>> tabla = new TableView<Map<String,Object>>( FXCollections.observableArrayList(data));
 		tabla.setEditable(true);
+		
 		TableColumn<Map<String,Object>,String> columnNombre = new TableColumn<Map<String,Object>,String>(column_Nombre);
 		columnNombre.setEditable(false);
 		columnNombre.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -392,7 +395,7 @@ public class ConfigGUI {
 
 		tabla.getColumns().add(columnNombre);
 
-
+		for(String column_Valor : column_Valores) {
 		DoubleTableColumn<Map<String,Object>> dColumn = new DoubleTableColumn<Map<String,Object>>(column_Valor,
 				(p)->{	try {
 					Number n =(Number) p.get(column_Valor);
@@ -411,14 +414,13 @@ public class ConfigGUI {
 				});
 		dColumn.setEditable(true);
 		tabla.getColumns().add(dColumn);			
-
+		}
 
 		BorderPane bp = new BorderPane();
 		bp.setCenter(tabla);
-		Button accept =new Button("Aceptar");
-		
+		Button accept =new Button(Messages.getString("Recorrida.Aceptar"));
 		bp.setBottom(accept);
-		Scene scene = new Scene(bp, 200, 300);
+		Scene scene = new Scene(bp, 400, 300);
 		Stage tablaStage = new Stage();
 		tablaStage.getIcons().add(new Image(JFXMain.ICON));
 		tablaStage.setTitle(Messages.getString("Recorrida.asignarValores")); //$NON-NLS-1$
@@ -428,10 +430,15 @@ public class ConfigGUI {
 
 
 		tablaStage.showAndWait();	 
-		Map<String,Double> ret = new HashMap<String,Double>();
+		Map<String,Double[]> ret = new HashMap<String,Double[]>();
 		for(Map<String,Object> ma : data) {
 			String k = (String) ma.get(column_Nombre);
-			Double valor = (Double) ma.get(column_Valor);
+			//for(String column_Valor : column_Valores) {
+			Double [] valor = new Double[column_Valores.length];
+			for(int i=0;i<column_Valores.length;i++) {
+				Double d = (Double) ma.get(column_Valores[i]);
+				valor[i]=d;
+			}
 			ret.put(k, valor);
 
 		}

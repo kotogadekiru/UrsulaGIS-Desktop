@@ -1867,15 +1867,28 @@ public class JFXMain extends Application {
 
 		FertilizacionLabor fertEnabled = getFertilizacionesSeleccionadas().get(0);
 
+		boolean esFertLinea=true;
+		Alert selectTipoFert = new Alert(Alert.AlertType.CONFIRMATION);
+		selectTipoFert.initOwner(JFXMain.stage);
+		selectTipoFert.setTitle("Seleccione tipo fertilizacion");
+		selectTipoFert.setContentText("Seleccione OK si es fertilizacion en la linea");
+		Optional<ButtonType> esFertLineaOP = selectTipoFert.showAndWait();
+		if(!esFertLineaOP.isPresent()) {
+			return;
+		} else if(!esFertLineaOP.get().equals(ButtonType.OK)){
+			esFertLinea=false;
+		}
+		
 
-		SiembraFertTask siembraFertTask = new SiembraFertTask(siembraEnabled, fertEnabled);
+		SiembraFertTask siembraFertTask = new SiembraFertTask(siembraEnabled, fertEnabled,esFertLinea);
 
 		siembraFertTask.installProgressBar(progressBox);
 
 		siembraFertTask.setOnSucceeded(handler -> {
 			SiembraLabor ret = (SiembraLabor)handler.getSource().getValue();
 			siembraFertTask.uninstallProgressBar();
-
+			siembraEnabled.getLayer().setEnabled(false);
+			fertEnabled.getLayer().setEnabled(false);
 			//	this.siembras.add(ret);
 			insertBeforeCompass(getWwd(), ret.getLayer());
 			this.getLayerPanel().update(this.getWwd());
@@ -4019,8 +4032,12 @@ public class JFXMain extends Application {
 			siembra.dispose();//libero los recursos reservados
 			return;
 		}		
-
-		Map<String,Double> mapClaseValor = new ConfigGUI(this).doAsignarValoresCosecha(cosecha,Messages.getString("JFXMain.Densidad"));//"Densidad pl/m2"
+		String[] columnas = new String[]{
+				Messages.getString("JFXMain.Densidad"),
+				Messages.getString("JFXMain.FertL"),
+				Messages.getString("JFXMain.FertC")
+				};
+		Map<String,Double[]> mapClaseValor = new ConfigGUI(this).doAsignarValoresCosecha(cosecha,columnas);//"Densidad pl/m2"
 
 
 		ConvertirASiembraTask csTask = new ConvertirASiembraTask(cosecha,siembra,mapClaseValor);
@@ -4057,9 +4074,9 @@ public class JFXMain extends Application {
 			return;
 		}		
 
-		Map<String,Double> mapClaseValor = new ConfigGUI(this).doAsignarValoresCosecha(cosecha,Messages.getString("JFXMain.Dosis"));//"Densidad pl/m2"
+		Map<String,Double[]> mapClaseValor = new ConfigGUI(this).doAsignarValoresCosecha(cosecha,new String[] {Messages.getString("JFXMain.Dosis")});//"Densidad pl/m2"
 
-
+		
 		ConvertirAFertilizacionTask csTask = new ConvertirAFertilizacionTask(cosecha,siembra,mapClaseValor);
 
 		csTask.installProgressBar(progressBox);

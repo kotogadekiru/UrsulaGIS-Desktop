@@ -71,12 +71,12 @@ public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> 
 	}
 
 	public void doProcess() throws IOException {
-		//TODO establecer los bounds de los inputs
-		//TODO crear una grilla cubriendo los bounds
-		//TODO para cada item de la grilla calcular el balance de nutrientes y producir el nuevo suelo
-		//TODO crear el clasificador
-		//TODO crear los paths
-		//TODO devolver el nuevo suelo
+		// establecer los bounds de los inputs
+		// crear una grilla cubriendo los bounds
+		// para cada item de la grilla calcular el balance de nutrientes y producir el nuevo suelo
+		// crear el clasificador
+		// crear los paths
+		// devolver el nuevo suelo
 		featureNumber = 0;
 
 		double ancho = labor.getConfigLabor().getAnchoGrilla();
@@ -94,7 +94,7 @@ public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> 
 		
 		// 2 generar una grilla de ancho ="ancho" que cubra bounds
 		List<Polygon>  grilla = GrillarCosechasMapTask.construirGrilla(unionEnvelope, ancho);
-		
+		//obtener una lista con todas las geometrias de las labores
 		List<Geometry> geometriasActivas = labores.parallelStream().collect(
 				()->new ArrayList<Geometry>(),
 				(activas, labor) ->{		
@@ -105,22 +105,13 @@ public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> 
 							(list, f) -> list.add((Geometry) f.getGeometry()),
 							(env1, env2) -> env1.addAll(env2))
 							);
-//					 try {
-//						FeatureReader<SimpleFeatureType, SimpleFeature> reader = labor.outCollection.reader();
-//						while(reader.hasNext()) {
-//							activas.add((Geometry) reader.next().getDefaultGeometry());
-//						}
-//						reader.close();
-//					} catch (IOException e) {
-//						e.printStackTrace();
-//					}
 				},	(env1, env2) -> env1.addAll(env2));
 		
 		
-		
+		//unir las geometrias de todas las labores para obtener un poligono de contorno
 		GeometryCollection activasCollection = ProyectionConstants.getGeometryFactory().createGeometryCollection( geometriasActivas.toArray(new Geometry[geometriasActivas.size()]));
 		Geometry cover =  activasCollection.buffer(0);
-		
+		//intersectar la grilla con el contorno
 		List<Geometry> grillaCover = grilla.parallelStream().collect(
 				()->new ArrayList<Geometry>(),
 				(activas, poly) ->{					
@@ -130,15 +121,17 @@ public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> 
 					}
 				},	(env1, env2) -> env1.addAll(env2));
 		
+		//este codigo comentado permitia hacer el balance sobre los ambientes 
+		//en vez de la grilla
 		//Set<Geometry> parts = GeometryHelper.obtenerIntersecciones(geometriasActivas);
 		//List<Polygon>  grilla = new ArrayList<Polygon>();
 		
-//		for(Geometry g:parts) {
-//			grilla.addAll(PolygonValidator.geometryToFlatPolygons(g));
-//		}
+		//for(Geometry g:parts) {
+		//		grilla.addAll(PolygonValidator.geometryToFlatPolygons(g));
+		//}
 
 		featureCount = grillaCover.size();
-		//List<SueloItem> itemsToShow = new ArrayList<SueloItem>();
+
 		for(Geometry geometry :grillaCover){//TODO usar streams paralelos
 			SueloItem sueloItem = createSueloForPoly(geometry);		
 			if(sueloItem!=null){
