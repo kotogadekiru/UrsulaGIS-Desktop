@@ -5,11 +5,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.persistence.Access;
 import javax.persistence.AccessType;
@@ -39,7 +36,6 @@ import org.opengis.feature.type.AttributeDescriptor;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
-import dao.OrdenDeCompra.Producto;
 import dao.OrdenDeCompra.ProductoLabor;
 import dao.config.Configuracion;
 import dao.utils.LaborDataStore;

@@ -52,10 +52,13 @@ public class NDVIHistoChart extends VBox {
 //	private Double produccionTotal= new Double(0);
 //	private Double entropia= new Double(0);
 	private int numClasses;
-
+	private DecimalFormat df = new DecimalFormat("0.00"); //$NON-NLS-1$
+	
 	public NDVIHistoChart(Ndvi ndvi) {
 		super();
-
+		df.setGroupingSize(3);
+		df.setGroupingUsed(true);
+		
 		Handler consoleHandler = new ConsoleHandler();
 		consoleHandler.setLevel(Level.ALL);
 		log.addHandler(consoleHandler);
@@ -73,7 +76,7 @@ public class NDVIHistoChart extends VBox {
 		chart.getData().add(series);
 		VBox.getVgrow(chart);
 		this.getChildren().add(chart);
-		DecimalFormat df = new DecimalFormat("0.00"); //$NON-NLS-1$
+		//DecimalFormat df = new DecimalFormat("0.00"); //$NON-NLS-1$
 		BorderPane bottom = new BorderPane();
 		
 		double superficieCultivo = superficieTotal-superficieAgua-superficieNube;
@@ -97,6 +100,9 @@ public class NDVIHistoChart extends VBox {
 		bottom.setRight(right);//getChildren().addAll(left,right);
 		bottom.setPadding(new Insets(5,5,5,5));
 		this.getChildren().add(bottom);
+		
+		
+
 	}
 
 
@@ -108,22 +114,26 @@ public class NDVIHistoChart extends VBox {
 
 	private XYChart.Series<String, Number> createSeries(Ndvi ndvi) {	
 	   //Double[] histograma = new Double[]{ShowNDVITifFileTask.MIN_VALUE,0.29, 0.38, 0.46, 0.55, 0.64, 0.73, 0.81, ShowNDVITifFileTask.MAX_VALUE};
-		Double[] histograma = new Double[]{ShowNDVITifFileTask.MIN_VALUE,0.2125, 0.3250, 0.4375, 0.5500, 0.6625, 0.7750, 0.8875, ShowNDVITifFileTask.MAX_VALUE};
-		
-		double delta = (ShowNDVITifFileTask.MAX_VALUE-ShowNDVITifFileTask.MIN_VALUE)/(8-0);
-		for(int i =1;i<8;i++) {
-			histograma[i]=delta*i+ShowNDVITifFileTask.MIN_VALUE;
-			
+		Double[] histograma = new Double[]{0.20,0.30,0.40,0.50,0.60,0.70,0.80,0.90,ShowNDVITifFileTask.MAX_VALUE};
+
+
+
+		double delta = (ShowNDVITifFileTask.MAX_VALUE-ShowNDVITifFileTask.MIN_VALUE)/(histograma.length);
+		for(int i =0;i<histograma.length;i++) {
+			histograma[i]=ShowNDVITifFileTask.MIN_VALUE+delta*(i+1);			
 		}
+		//FIXME este histograma va de -infinito a +infinito. deberia ir de ShowNDVITifFileTask.MIN_VALUE a ShowNDVITifFileTask.MAX_VALUE
 		numClasses=histograma.length;//histograma tiene un elemento menos que clases porque se extiende a inf
 		
 		//numClasses = 9;//ndvi.clasificador.getNumClasses();
 		Double[] superficies = null;
 		String[] colorStrings = null;
+		Double[] ndvisCat = null;
 		
 	//	if(numClasses<colors.length){
 			superficies = new Double[numClasses];
 			colorStrings = new String[numClasses];
+			ndvisCat = new Double[numClasses];
 //		}else{
 //			superficies = new Double[colors.length];
 //			colorStrings = new String[colors.length];
@@ -182,12 +192,17 @@ public class NDVIHistoChart extends VBox {
 					+","+color.getBlue()+")"; //$NON-NLS-1$ //$NON-NLS-2$
 					colorStrings[categoria]=colorString;
 			//	}
+					
+					
 				Double sup = superficies[categoria];		
 				
 				//System.out.println("value: "+value+" categoria: "+categoria+" sup:"+sup);
 
 				if (sup == null) sup = new Double(0);		
 				superficies[categoria] = sup + ndvi.getPixelArea();	
+				Double ndviCat = ndvisCat[categoria];
+				if(ndviCat==null)ndviCat = new Double(0);
+				ndvisCat[categoria] = (ndviCat*sup + value*ndvi.getPixelArea())/superficies[categoria];	
 
 				this.superficieTotal+=ndvi.getPixelArea();
 				this.ndviPromedio+=value;
@@ -206,13 +221,19 @@ public class NDVIHistoChart extends VBox {
 		XYChart.Series<String, Number> series = new XYChart.Series<>();
 
 
-		for (int iCat = 0; iCat <numClasses; iCat++) {
+		for (int iCat = 0; iCat <histograma.length; iCat++) {
 			String label =clasi.getCategoryNameFor(iCat);//classifier.getTitle(j);
+			if(iCat==0)label= df.format(ShowNDVITifFileTask.MIN_VALUE) +" ~ "+ df.format(histograma[0]);
+			//if(iCat==histograma.length)label=  df.format(histograma[iCat-1])+" ~ "+ ShowNDVITifFileTask.MAX_VALUE;
 			Number superficie = superficies[iCat];
 			if (superficie == null)		superficie = new Double(0);
 			//System.out.println("value: "+label+" categoria: "+iCat+" sup:"+superficie);
 			Data<String, Number> cData = new XYChart.Data<>(label, superficie);
-		
+			if(superficie.doubleValue()>0) {
+				cData.setExtraValue(ndvisCat[iCat]);
+			} else { 
+				cData.setExtraValue(new Double(0));
+			}
 			String color = getColorString(iCat,colorStrings);
 			TooltipUtil.setupCustomTooltipBehavior(50, 60000, 50);
 			cData.nodeProperty().addListener(( ov, oldNode, newNode)-> {
@@ -220,11 +241,13 @@ public class NDVIHistoChart extends VBox {
 						if(color!=null){
 							newNode.setStyle("-fx-bar-fill: " + color + ";"); //$NON-NLS-1$ //$NON-NLS-2$
 						}
-						DecimalFormat df = new DecimalFormat("0.00"); //$NON-NLS-1$
-						df.setGroupingSize(3);
-						df.setGroupingUsed(true);
-						double val = cData.getYValue().doubleValue();
-						Tooltip tooltip = new Tooltip(df.format(val)+Messages.getString("NDVIHistoChart.has1")+df.format(val/superficieTotal*100)+"%"); //$NON-NLS-1$ //$NON-NLS-2$
+						
+						double has = cData.getYValue().doubleValue();
+						double ndviProm = (double)cData.getExtraValue();
+						Tooltip tooltip = new Tooltip(
+								Messages.getString("NDVIHistoChart.ndvi_promedio")+df.format(ndviProm)+"\n"
+								+df.format(has)+Messages.getString("NDVIHistoChart.has1")
+								+df.format(has/superficieTotal*100)+"%"); //$NON-NLS-1$ //$NON-NLS-2$
 						tooltip.autoHideProperty().set(false);
 						Tooltip.install(newNode,tooltip );					
 					}				
@@ -235,12 +258,12 @@ public class NDVIHistoChart extends VBox {
 	}
 
 
-	private String getColorString(int absCat) {
-		int length =colors.length;
-		int clases = numClasses;//las clases van de cero a numclases -1 para un total de numclases
-		int colorIndex = absCat*(length/clases);
-		return colors[colorIndex];
-	}
+//	private String getColorString(int absCat) {
+//		int length =colors.length;
+//		int clases = numClasses;//las clases van de cero a numclases -1 para un total de numclases
+//		int colorIndex = absCat*(length/clases);
+//		return colors[colorIndex];
+//	}
 	
 	private String getColorString(int absCat,String[] colors) {
 		int length =colors.length;

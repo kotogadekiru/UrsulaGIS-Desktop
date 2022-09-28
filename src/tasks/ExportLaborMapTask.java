@@ -17,7 +17,6 @@ import org.geotools.referencing.crs.DefaultGeographicCRS;
 
 import dao.Labor;
 import dao.config.Configuracion;
-import javafx.concurrent.Task;
 
 
 public class ExportLaborMapTask extends ProgresibleTask<File>{

@@ -4,11 +4,8 @@ import java.awt.Font;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -20,7 +17,6 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -53,15 +49,12 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.densify.Densifier;
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryCollection;
-import com.vividsolutions.jts.geom.GeometryFactory;
 
 import dao.Labor;
 import dao.Ndvi;
 import dao.Poligono;
 import dao.OrdenDeCompra.OrdenCompra;
 import dao.config.Configuracion;
-import dao.config.Lote;
 import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
@@ -118,7 +111,6 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.embed.swing.SwingNode;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.geometry.Insets;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -127,7 +119,6 @@ import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
@@ -142,22 +133,18 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.media.AudioClip;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import tasks.CompartirRecorridaTask;
 import tasks.ExportLaborMapTask;
-import tasks.GetNdviForLaborTask3;
 import tasks.GetNdviForLaborTask4;
 import tasks.GoogleGeocodingHelper;
 import tasks.ProcessMapTask;
@@ -2470,6 +2457,7 @@ public class JFXMain extends Application {
 	 * descargar los tiff correspondientes a un polygono y mostrarlos como ndvi
 	 * @param placementObject
 	 */
+	@SuppressWarnings("unchecked")
 	private void doGetNdviTiffFiles(List<Poligono> poligonos) {//ndvi2
 		LocalDate fin =null;
 
@@ -2527,6 +2515,7 @@ public class JFXMain extends Application {
 	 * descargar los tiff correspondientes a un polygono y mostrarlos como ndvi
 	 * @param placementObject
 	 */
+	@SuppressWarnings("unchecked")
 	private void doGetNdviTiffFile(Object placementObject) {//ndvi2
 		LocalDate fin =null;
 		if(placementObject !=null && Labor.class.isAssignableFrom(placementObject.getClass())){
@@ -2992,7 +2981,7 @@ public class JFXMain extends Application {
 		LaborLayer layer = new LaborLayer();
 		labor.setLayer(layer);
 
-		//TODO modificar el dialog controler para poder ingresarl el caldo
+		//TODO modificar el dialog controler para poder ingresar el caldo
 		Optional<PulverizacionLabor> cosechaConfigured= PulverizacionConfigDialogController.config(labor);
 		if(!cosechaConfigured.isPresent()){//
 			System.out.println(Messages.getString("JFXMain.249")); //$NON-NLS-1$
@@ -3496,14 +3485,12 @@ public class JFXMain extends Application {
 				dosisC=df.parse(dc.getText()).doubleValue();
 				if(dosisC==0)dosisC=(double) 0;
 			} catch (ParseException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			try {
 				minSem=df.parse(min.getText()).doubleValue();
 				if(minSem==0)minSem=(double) 0;
 			} catch (ParseException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			try {
@@ -3900,8 +3887,26 @@ public class JFXMain extends Application {
 	}
 
 
-	private void doGuardarLabor(Labor<?> layerObject) {
-		DAH.save(layerObject);		
+	private void doGuardarLabor(Labor<?> labor) {
+		String nombre = labor.getNombre();
+		File shapeFile =  FileHelper.getNewShapeFile(nombre);
+
+		ExportLaborMapTask ehTask = new ExportLaborMapTask(labor,shapeFile);
+		ehTask.installProgressBar(progressBox);
+
+		ehTask.setOnSucceeded(handler -> {
+			
+			File shpFile = (File) handler.getSource().getValue();
+			if(shpFile!=null){
+				//TODO seleccionar todos los archivos del shpFile y ponerlos en un zip
+				//agregar el zip a la labor como el file
+				DAH.save(labor);		
+			}
+			playSound();
+			ehTask.uninstallProgressBar();
+		});
+		executorPool.execute(ehTask);
+	
 	}
 
 	// generar un layer de fertilizacion a partir de una cosecha
@@ -4683,7 +4688,7 @@ public class JFXMain extends Application {
 
 
 	private void doExportPrescripcionSiembra(SiembraLabor laborToExport) {
-		//TODO preguntar en que unidad exportar la dosis de semilla
+		//preguntar en que unidad exportar la dosis de semilla
 		Dialog<String> d= new Dialog<String>();
 		d.initOwner(JFXMain.stage);//exportarSiembraAction
 		d.setTitle(Messages.getString("JFXMain.doExportPrescripcionSiembraTitle"));//"Seleccione unidad de dosis semilla");
