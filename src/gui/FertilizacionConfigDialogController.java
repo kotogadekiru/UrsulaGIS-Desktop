@@ -104,7 +104,7 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 		this.setResultConverter(e -> {		
 			if(ButtonType.OK.equals(e)){					
 				if(chkMakeDefault.selectedProperty().get()){
-					labor.getConfigLabor().getConfigProperties().save();
+					labor.getConfigLabor().save();//.getConfigProperties().save();
 				}				
 				return labor;
 
@@ -149,7 +149,7 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 
 	public void setLabor(FertilizacionLabor l) {
 		this.labor = l;
-		LaborConfig config = labor.config;//labor.getConfigLabor().getConfigProperties();
+		LaborConfig config = labor.getConfigLabor();//labor.getConfigLabor().getConfigProperties();
 		List<String> availableColums = labor.getAvailableColumns();
 		availableColums.sort((a,b)->{
 			return a.compareTo(b);
@@ -181,22 +181,22 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 
 		//textPrecioGrano
 		//Bindings.bindBidirectional(this.textPrecioFert.textProperty(), labor.precioInsumoProperty, converter);
-		this.textPrecioFert.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(FertilizacionLabor.COLUMNA_PRECIO_FERT, labor.getPrecioInsumo().toString()));
+		this.textPrecioFert.textProperty().set(labor.getConfigLabor().getConfigProperties().getPropertyOrDefault(FertilizacionLabor.COLUMNA_PRECIO_FERT, labor.getPrecioInsumo().toString()));
 		this.textPrecioFert.textProperty().addListener((obj,old,n)->{
 
 			labor.setPrecioInsumo(converter.fromString(n).doubleValue());
 
 			//config.getConfigProperties().getPropertyOrDefault(CosechaLabor.PRECIO_GRANO,"0")
-			labor.config.getConfigProperties().setProperty(FertilizacionLabor.COLUMNA_PRECIO_FERT, n);
+			labor.getConfigLabor().getConfigProperties().setProperty(FertilizacionLabor.COLUMNA_PRECIO_FERT, n);
 		});
 
 		//textCostoCosechaHa
 		//Bindings.bindBidirectional(this.textCostoLaborHa.textProperty(), labor.precioLaborProperty, converter);
-		this.textCostoLaborHa.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(FertilizacionLabor.COLUMNA_PRECIO_PASADA, labor.getPrecioLabor().toString()));
+		this.textCostoLaborHa.textProperty().set(labor.getConfigLabor().getConfigProperties().getPropertyOrDefault(FertilizacionLabor.COLUMNA_PRECIO_PASADA, labor.getPrecioLabor().toString()));
 		this.textCostoLaborHa.textProperty().addListener((obj,old,n)->{			
 			labor.setPrecioLabor(converter.fromString(n).doubleValue());
 			//config.getConfigProperties().getPropertyOrDefault(CosechaLabor.PRECIO_GRANO,"0")
-			labor.config.getConfigProperties().setProperty(FertilizacionLabor.COLUMNA_PRECIO_PASADA, n);
+			labor.getConfigLabor().getConfigProperties().setProperty(FertilizacionLabor.COLUMNA_PRECIO_PASADA, n);
 		});
 
 

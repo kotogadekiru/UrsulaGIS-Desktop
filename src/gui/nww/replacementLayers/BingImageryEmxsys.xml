@@ -10,7 +10,7 @@
 <Layer version="1" layerType="TiledImageLayer">
     <DisplayName>Bing Imagery EXMSYS</DisplayName>
     <Service serviceName="OGC:WMS" version="1.1.1">
-        <GetCapabilitiesURL>https://emxsys.net/worldwind27/wms/virtualearth</GetCapabilitiesURL>
+        <GetCapabilitiesURL>https://worldwind27.arc.nasa.gov/wms/virtualearth</GetCapabilitiesURL>
         <GetMapURL>https://worldwind27.arc.nasa.gov/wms/virtualearth</GetMapURL>
         <LayerNames>ve-h</LayerNames>
     </Service>
@@ -41,10 +41,10 @@
             <LatLon units="degrees" latitude="90" longitude="180"/>
         </NorthEast>
     </Sector>
-    <ScreenCredit creditType="ScreenImage">
-        <FileName>images/Bing_32x32.png</FileName>
-        <Link>http://www.microsoft.com/maps/assets/docs/terms.aspx/</Link>
-    </ScreenCredit>
+<!--     <ScreenCredit creditType="ScreenImage"> -->
+<!--         <FileName>images/Bing_32x32.png</FileName> -->
+<!--         <Link>http://www.microsoft.com/maps/assets/docs/terms.aspx/</Link> -->
+<!--     </ScreenCredit> -->
     <RetrievalTimeouts>
         <ReadTimeout>
             <Time units="milliseconds" value="30000"/>

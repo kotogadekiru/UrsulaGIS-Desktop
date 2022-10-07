@@ -31,9 +31,11 @@ import com.vividsolutions.jts.util.GeometricShapeFactory;
 
 import dao.Labor;
 import dao.LaborItem;
+import dao.config.Configuracion;
 import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
+import dao.siembra.SiembraConfig;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
 import javafx.geometry.Point2D;
@@ -337,7 +339,10 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		} else { 
 			System.out.println(Messages.getString("ProcessHarvestMapTask.8")); //$NON-NLS-1$
 		}
-		if(((CosechaConfig)labor.config).calibrarRindeProperty().get()){
+		CosechaConfig config = (CosechaConfig)labor.getConfiguracion();
+		Configuracion props = config.getConfigProperties();
+
+		if((config).calibrarRindeProperty().get()){
 			//TODO obtener el promedio ponderado por la superficie y calcular el 
 			//indice de correccion necesario para llegar al rinde objetivo
 			//		reader = labor.getOutStore().getFeatureReader();
@@ -353,7 +358,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		labor.constructClasificador();
 
 		//	List<CosechaItem> itemsToShow = new ArrayList<CosechaItem>();
-		if(labor.config.resumirGeometriasProperty().getValue()){
+		if(config.resumirGeometriasProperty().getValue()){
 			//itemsToShow = 
 			resumirGeometrias();
 			//labor.constructClasificador();//los items cambiaron
@@ -913,7 +918,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		double sumatoriaAltura = 0;				
 		double divisor = 0;
 		// cambiar el promedio directo por el metodo de kriging de interpolacion. ponderando los rindes por su distancia al cuadrado de la muestra
-		double ancho = labor.config.getAnchoFiltroOutlayers();
+		double ancho = labor.getConfiguracion().getAnchoFiltroOutlayers();
 		//la distancia no deberia ser mayor que 2^1/2*ancho, me tomo un factor de 10 por seguridad e invierto la escala para tener mejor representatividad
 		//en vez de tomar de 0 a inf, va de ancho*(10-2^1/2) a 0
 		ancho = Math.sqrt(2)*ancho;

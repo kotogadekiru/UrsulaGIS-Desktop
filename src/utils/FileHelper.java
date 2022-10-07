@@ -108,6 +108,7 @@ public class FileHelper {
 		//Configuracion config = Configuracion.getInstance();
 		File lastFile = null;
 		Configuracion config = JFXMain.config;
+		config.loadProperties();
 		String lastFileName =config.getPropertyOrDefault(Configuracion.LAST_FILE,Messages.getString("JFXMain.405")); //$NON-NLS-1$
 		if(lastFileName != null){
 			lastFile = new File(lastFileName);
@@ -205,6 +206,7 @@ public class FileHelper {
 		File lastFile = null;
 		//Configuracion config =Configuracion.getInstance();
 		Configuracion config = JFXMain.config;
+		config.loadProperties();
 		String lastFileName = config.getPropertyOrDefault(Configuracion.LAST_FILE,null);
 		if(lastFileName != null){
 			lastFile = new File(lastFileName);
@@ -246,6 +248,7 @@ public class FileHelper {
 		File lastFile = null;
 		//Configuracion config =Configuracion.getInstance();
 		Configuracion config = JFXMain.config;
+		config.loadProperties();
 		String lastFileName = config.getPropertyOrDefault(Configuracion.LAST_FILE,null);
 		if(lastFileName != null){
 			lastFile = new File(lastFileName);
@@ -285,6 +288,7 @@ public class FileHelper {
 		File lastFile = null;
 		//Configuracion config =Configuracion.getInstance();
 		Configuracion config = JFXMain.config;
+		config.loadProperties();
 		String lastFileName = config.getPropertyOrDefault(Configuracion.LAST_FILE,null);
 		if(lastFileName != null){
 			lastFile = new File(lastFileName);

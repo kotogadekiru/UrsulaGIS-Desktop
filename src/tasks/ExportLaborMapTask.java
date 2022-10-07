@@ -108,6 +108,7 @@ public class ExportLaborMapTask extends ProgresibleTask<File>{
 		}		
 		//TODO guardar un archivo txt con la configuracion de la labor para que quede como registro de las operaciones
 		 Configuracion config = Configuracion.getInstance();
+		 	config.loadProperties();
 			config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
 			config.save();
 			

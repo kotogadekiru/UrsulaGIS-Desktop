@@ -100,7 +100,7 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 		this.setResultConverter(e -> {		
 			if(ButtonType.OK.equals(e)){					
 				if(chkMakeDefault.selectedProperty().get()){
-					labor.getConfigLabor().getConfigProperties().save();
+					labor.getConfigLabor().save();
 				}				
 				return labor;
 
@@ -176,7 +176,7 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 		StringConverter<Number> converter = new NumberStringConverter(Messages.getLocale());
 		this.textPrecioInsumo.textProperty().addListener((obj,old,n)->{
 			labor.setPrecioInsumo(converter.fromString(n).doubleValue());
-			labor.config.getConfigProperties().setProperty(PulverizacionLabor.COLUMNA_PRECIO_PASADA, n);
+			labor.getConfigLabor().getConfigProperties().setProperty(PulverizacionLabor.COLUMNA_PRECIO_PASADA, n);
 		});
 		//textPrecioGrano
 		//Bindings.bindBidirectional(this.textPrecioInsumo.textProperty(), labor.precioInsumoProperty, converter);
@@ -185,7 +185,7 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 		//Bindings.bindBidirectional(this.textCostoLaborHa.textProperty(), labor.precioLaborProperty, converter);
 		this.textCostoLaborHa.textProperty().addListener((obj,old,n)->{
 			labor.setPrecioLabor(converter.fromString(n).doubleValue());
-			labor.config.getConfigProperties().setProperty(PulverizacionLabor.COLUMNA_IMPORTE_HA, n);
+			labor.getConfigLabor().getConfigProperties().setProperty(PulverizacionLabor.COLUMNA_IMPORTE_HA, n);
 		});
 
 

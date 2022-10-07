@@ -351,10 +351,10 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		
 
 		//textDistanciasRegimen
-		Bindings.bindBidirectional(this.textDistanciasRegimen.textProperty(), labor.config.cantDistanciasEntradaRegimenProperty(), converter);
+		Bindings.bindBidirectional(this.textDistanciasRegimen.textProperty(), labor.getConfigLabor().cantDistanciasEntradaRegimenProperty(), converter);
 
 		//textSupMin
-		Bindings.bindBidirectional(this.textSupMin.textProperty(), labor.config.supMinimaProperty(), converter);
+		Bindings.bindBidirectional(this.textSupMin.textProperty(), labor.getConfigLabor().supMinimaProperty(), converter);
 
 		//TODO cambiar cbMetrosPorUnidad a ComboBox para que pueda ser editable
 		Map<String,Double> unidades = new HashMap<String,Double>();
@@ -366,10 +366,10 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 
 		this.cbMetrosPorUnidad.setItems(FXCollections.observableArrayList(unidades.keySet()));
 		this.cbMetrosPorUnidad.valueProperty().addListener((ov,old,nv)->{
-			labor.config.valorMetrosPorUnidadDistanciaProperty().set(unidades.get(nv));
+			labor.getConfigLabor().valorMetrosPorUnidadDistanciaProperty().set(unidades.get(nv));
 		});
 
-		double configured=labor.config.valorMetrosPorUnidadDistanciaProperty().get();
+		double configured=labor.getConfigLabor().valorMetrosPorUnidadDistanciaProperty().get();
 		unidades.forEach((key,value)->{
 			if(value.equals(configured)){
 				cbMetrosPorUnidad.getSelectionModel().select(key);//
@@ -378,10 +378,10 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 
 
 		//textAnchoFiltro
-		Bindings.bindBidirectional(this.textAnchoFiltro.textProperty(), labor.config.anchoFiltroOutlayersProperty(), converter);
+		Bindings.bindBidirectional(this.textAnchoFiltro.textProperty(), labor.getConfigLabor().anchoFiltroOutlayersProperty(), converter);
 
 		//textCorrimientoPesada
-		Bindings.bindBidirectional(this.textCorrimientoPesada.textProperty(), labor.config.valorCorreccionPesadaProperty(), converter);
+		Bindings.bindBidirectional(this.textCorrimientoPesada.textProperty(), labor.getConfigLabor().valorCorreccionPesadaProperty(), converter);
 
 
 		StringConverter<Number> nsConverter = new NumberStringConverter(Messages.getLocale()){
@@ -403,9 +403,9 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 			}
 		};
 		//textToleranciaCV
-		Bindings.bindBidirectional(this.textToleranciaCV.textProperty(), labor.config.toleranciaCVProperty(), nsConverter);
+		Bindings.bindBidirectional(this.textToleranciaCV.textProperty(), labor.getConfigLabor().toleranciaCVProperty(), nsConverter);
 
-		Bindings.bindBidirectional(this.textDistTolera.textProperty(), labor.config.cantDistanciasToleraProperty(), converter);
+		Bindings.bindBidirectional(this.textDistTolera.textProperty(), labor.getConfigLabor().cantDistanciasToleraProperty(), converter);
 
 		Bindings.bindBidirectional(this.textClasesClasificador.textProperty(), labor.clasificador.clasesClasificadorProperty, converter);
 
@@ -417,18 +417,18 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		textNombre.textProperty().set(labor.getNombre());
 		textNombre.textProperty().addListener((obj,old,nu)->labor.setNombre(nu));
 
-		CosechaConfig cosechaConfig = (CosechaConfig) labor.config;
-		chkOutlayers.selectedProperty().bindBidirectional(labor.config.correccionOutlayersProperty());
-		chkAncho.selectedProperty().bindBidirectional(labor.config.correccionAnchoProperty());
-		chkDemora.selectedProperty().bindBidirectional(labor.config.correccionDemoraPesadaProperty());
+		CosechaConfig cosechaConfig = labor.getConfiguracion();
+		chkOutlayers.selectedProperty().bindBidirectional(cosechaConfig.correccionOutlayersProperty());
+		chkAncho.selectedProperty().bindBidirectional(cosechaConfig.correccionAnchoProperty());
+		chkDemora.selectedProperty().bindBidirectional(cosechaConfig.correccionDemoraPesadaProperty());
 		chkDemora.setTooltip(new Tooltip(Messages.getString("HarvestConfigDialogController.16"))); //$NON-NLS-1$
 		chkRinde.selectedProperty().bindBidirectional(cosechaConfig.correccionRindeProperty());
-		chkSuperposicion.selectedProperty().bindBidirectional(labor.config.correccionSuperposicionProperty());
+		chkSuperposicion.selectedProperty().bindBidirectional(cosechaConfig.correccionSuperposicionProperty());
 		chkDistancia.selectedProperty().bindBidirectional(cosechaConfig.correccionDistanciaProperty());
 
 		chkFlow.selectedProperty().bindBidirectional(cosechaConfig.correccionFlowToRindeProperty());
 
-		chkResumirGeometrias.selectedProperty().bindBidirectional(labor.config.resumirGeometriasProperty());
+		chkResumirGeometrias.selectedProperty().bindBidirectional(cosechaConfig.resumirGeometriasProperty());
 
 		datePickerFecha.setValue(DateConverter.asLocalDate(l.fecha));
 		//datePickerFecha.setConverter(new DateConverter());
@@ -436,31 +436,6 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 			l.setFecha(DateConverter.asDate(n));
 		});
 	}
-
-//	private DecimalFormat getMaxDecimalConverter() {
-//		DecimalFormat converterMax = new DecimalFormat("0.00"){ //$NON-NLS-1$
-//			@Override
-//			public Object parseObject(String source)  {
-//				try {
-//					if("".equals(source)||source==null){ //$NON-NLS-1$
-//						return Double.MAX_VALUE;
-//					}
-//					Number val = super.parse(source);
-//					if(val.equals(new Double(0.0))) {
-//						val = Double.MAX_VALUE;
-//					}
-//					return val;
-//				} catch (ParseException e) {
-//					return Double.MAX_VALUE;
-//				}            	
-//			}
-//			
-//		};
-//		
-//		converterMax.setGroupingUsed(true);
-//		converterMax.setGroupingSize(3);
-//		return converterMax;
-//	}
 
 	public void init() {
 		this.getDialogPane().setContent(content);

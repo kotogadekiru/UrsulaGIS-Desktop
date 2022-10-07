@@ -279,7 +279,7 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 	}
 	
 	private double getAreaMinimaLongLat() {
-		return labor.config.supMinimaProperty().doubleValue()*ProyectionConstants.metersToLong()*ProyectionConstants.metersToLat();
+		return labor.getConfigLabor().supMinimaProperty().doubleValue()*ProyectionConstants.metersToLong()*ProyectionConstants.metersToLat();
 	}
 	@Override
 	protected int getAmountMin() {

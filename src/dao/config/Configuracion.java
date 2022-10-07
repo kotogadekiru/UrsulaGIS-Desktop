@@ -135,7 +135,7 @@ public class Configuracion{
 	}
 
 	public void setProperty(String key, String value) {
-		loadProperties();//load before set.
+		//loadProperties();//load before set.
 		configProp.setProperty(key, value);//FIXME null pointer exception si key no existe? lastFile en exportar chart
 
 	}

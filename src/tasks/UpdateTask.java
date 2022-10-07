@@ -294,6 +294,7 @@ public class UpdateTask  extends Task<File>{
 		
 		String userString = dc.format(Math.random()*1000000);
 		Configuracion conf = Configuracion.getInstance();
+		conf.loadProperties();
 		String usr = conf.getPropertyOrDefault("USER", userString);//si no existia la clave se crea una nueva
 		conf.save();
 		url.put("USER", usr);

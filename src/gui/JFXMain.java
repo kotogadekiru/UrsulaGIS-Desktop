@@ -50,6 +50,7 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.densify.Densifier;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Point;
 
 import dao.Labor;
 import dao.Ndvi;
@@ -206,7 +207,7 @@ public class JFXMain extends Application {
 
 	public static final String VERSION = "0.2.28"; //$NON-NLS-1$
 	public static final String TITLE_VERSION = "Ursula GIS-"+VERSION; //$NON-NLS-1$
-	public static final String buildDate = "19/09/2022";
+	public static final String buildDate = "06/10/2022";
 	///UrsulaGIS-Desktop/src/gui/ursula_logo_2020.png
 	public static  final String ICON ="gui/ursula_logo_2020.png";//"gui/32x32-icon-earth.png";// "gui/1-512.png";//UrsulaGIS-Desktop/src/gui/32x32-icon-earth.png //$NON-NLS-1$
 	private static final String SOUND_FILENAME = "gui/exito4.mp3";//"gui/Alarm08.wav";//"Alarm08.wav" funciona desde eclipse pero no desde el jar  //$NON-NLS-1$
@@ -254,13 +255,13 @@ public class JFXMain extends Application {
 
 			MenuBar menuBar = constructMenuBar();
 
-			setInitialPosition();
+			setInitialPosition();//pone init Lat y initLong en Configuracion
 			VBox vBox1 = new VBox();
 			vBox1.getChildren().add(menuBar);
 			createSwingNode(vBox1);
 			pane.getChildren().add(vBox1);
 
-
+			
 
 			primaryStage.setOnHiding((e)-> {
 				Platform.runLater(()->{
@@ -318,11 +319,11 @@ public class JFXMain extends Application {
 		double initLat = Double.parseDouble(config.getPropertyOrDefault(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LATITUDE, "-35")); //$NON-NLS-1$
 		double initLong = Double.parseDouble(config.getPropertyOrDefault(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LONGITUDE, "-62")); //$NON-NLS-1$
 		double initAltitude = Double.parseDouble(config.getPropertyOrDefault(GOV_NASA_WORLDWIND_AVKEY_INITIAL_ALTITUDE, "19.07e5")); //$NON-NLS-1$
-		//   <Property name="gov.nasa.worldwind.avkey.InitialLatitude" value="-35"/>
+		//<Property name="gov.nasa.worldwind.avkey.InitialLatitude" value="-35"/>
 		//<Property name="gov.nasa.worldwind.avkey.InitialLongitude" value="-62"/>
 		//<Property name="gov.nasa.worldwind.avkey.InitialAltitude" value="19.07e5"/>
 		initLat = (initLat>-90&&initLat<90)?initLat:-35.0;
-		initLong = (initLong>-180&&initLat<180)?initLat:-62.0;//Chequeo que este entre valores validos
+		initLong = (initLong>-180&&initLong<180)?initLong:-62.0;//Chequeo que este entre valores validos
 		Configuration.setValue(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LATITUDE, initLat);
 		Configuration.setValue(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LONGITUDE,initLong);
 		Configuration.setValue(GOV_NASA_WORLDWIND_AVKEY_INITIAL_ALTITUDE, initAltitude);
@@ -419,6 +420,7 @@ public class JFXMain extends Application {
 			//divider position changed to nu
 			//System.out.println("changing Width to "+nu);0.12 ~ 0.15 //hanging Width to 1245.0
 			double newPreferredSplitPaneWidth = stage.getWidth()*nu.doubleValue();
+			config.loadProperties();
 			JFXMain.config.setProperty(PREFERED_TREE_WIDTH_KEY, PropertyHelper.formatDouble(newPreferredSplitPaneWidth));
 			config.save();
 		});
@@ -903,9 +905,6 @@ public class JFXMain extends Application {
 				if(poli.getId()!=null){
 					DAH.save(poli);
 				}
-
-
-
 			}
 			if(layerObject instanceof Ndvi){
 				Ndvi ndvi = (Ndvi) layerObject;
@@ -1160,7 +1159,8 @@ public class JFXMain extends Application {
 			if (layerObject==null){
 			}else if(Poligono.class.isAssignableFrom(layerObject.getClass())){
 				Poligono poli = (Poligono)layerObject;
-				Position pos =poli.getPositions().get(0);
+				Point c = poli.toGeometry().getCentroid();
+				Position pos =Position.fromDegrees(c.getY(), c.getX());
 				viewGoTo(pos);
 			}
 			return "went to " + layer.getName(); //$NON-NLS-1$
@@ -2211,8 +2211,9 @@ public class JFXMain extends Application {
 	public void viewGoTo(Position position) {
 		if(position==null) return;
 		//Configuracion config =Configuracion.getInstance();
-		config.setProperty(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LATITUDE, String.valueOf(position.getLatitude().degrees));
-		config.setProperty(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LONGITUDE,String.valueOf(position.getLongitude().degrees));
+		config.loadProperties();//si viene de editar siembra se pisan los datos con los viejos
+		config.setProperty(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LATITUDE, String.valueOf(position.getLatitude().degrees));		
+		config.setProperty(GOV_NASA_WORLDWIND_AVKEY_INITIAL_LONGITUDE,String.valueOf(position.getLongitude().degrees));	
 		config.setProperty(GOV_NASA_WORLDWIND_AVKEY_INITIAL_ALTITUDE, "64000"); //$NON-NLS-1$
 		config.save();
 		View view =getWwd().getView();
@@ -3845,7 +3846,7 @@ public class JFXMain extends Application {
 		Optional<String> anchoOptional = anchoDialog.showAndWait();
 		if(anchoOptional.isPresent()){
 			//System.out.println("optional is present con valor "+anchoOptional.get());
-
+			config.loadProperties();
 			config.setProperty(CosechaConfig.ANCHO_GRILLA_KEY,anchoOptional.get());
 			config.save();
 
@@ -4870,7 +4871,7 @@ public class JFXMain extends Application {
 
 					if(shpFiles.size()>0){
 						File lastFile = shpFiles.get(shpFiles.size()-1);
-
+						config.loadProperties();
 						config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
 						config.save();
 						doOpenCosecha(shpFiles);//ok!

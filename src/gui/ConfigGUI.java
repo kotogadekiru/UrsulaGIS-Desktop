@@ -303,11 +303,13 @@ public class ConfigGUI {
 			table.setOnShowClick((poli)->{
 				poli.setActivo(true);
 				main.showPoligonos(Collections.singletonList(poli));
-				Position pos =poli.getPositions().get(0);
-				main.viewGoTo(pos);
-				Platform.runLater(()->{
-					DAH.save(poli);
-				});
+				if(poli.getPositions().size()>0) {
+					Position pos =poli.getPositions().get(0);
+					main.viewGoTo(pos);
+					Platform.runLater(()->{
+						DAH.save(poli);
+					});
+				}
 			});
 
 
@@ -368,7 +370,7 @@ public class ConfigGUI {
 
 		TableView<Map<String,Object>> tabla = new TableView<Map<String,Object>>( FXCollections.observableArrayList(data));
 		tabla.setEditable(true);
-		
+
 		TableColumn<Map<String,Object>,String> columnNombre = new TableColumn<Map<String,Object>,String>(column_Nombre);
 		columnNombre.setEditable(false);
 		columnNombre.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -396,24 +398,24 @@ public class ConfigGUI {
 		tabla.getColumns().add(columnNombre);
 
 		for(String column_Valor : column_Valores) {
-		DoubleTableColumn<Map<String,Object>> dColumn = new DoubleTableColumn<Map<String,Object>>(column_Valor,
-				(p)->{	try {
-					Number n =(Number) p.get(column_Valor);
-					if(n!=null) {
-						return n.doubleValue();
-					} else {
-						return 0.0;
-					}
-				} catch (Exception e) {	e.printStackTrace();}
-				return null;
-				},(p,d)->{ try {
+			DoubleTableColumn<Map<String,Object>> dColumn = new DoubleTableColumn<Map<String,Object>>(column_Valor,
+					(p)->{	try {
+						Number n =(Number) p.get(column_Valor);
+						if(n!=null) {
+							return n.doubleValue();
+						} else {
+							return 0.0;
+						}
+					} catch (Exception e) {	e.printStackTrace();}
+					return null;
+					},(p,d)->{ try {
 
-					p.put(column_Valor,d);
-					tabla.refresh();
-				} catch (Exception e) {	e.printStackTrace();}
-				});
-		dColumn.setEditable(true);
-		tabla.getColumns().add(dColumn);			
+						p.put(column_Valor,d);
+						tabla.refresh();
+					} catch (Exception e) {	e.printStackTrace();}
+					});
+			dColumn.setEditable(true);
+			tabla.getColumns().add(dColumn);			
 		}
 
 		BorderPane bp = new BorderPane();
@@ -425,7 +427,7 @@ public class ConfigGUI {
 		tablaStage.getIcons().add(new Image(JFXMain.ICON));
 		tablaStage.setTitle(Messages.getString("Recorrida.asignarValores")); //$NON-NLS-1$
 		tablaStage.setScene(scene);
-		
+
 		accept.setOnAction((e)->{tablaStage.close();});
 
 

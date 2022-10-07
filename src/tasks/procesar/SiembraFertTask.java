@@ -510,7 +510,7 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 	//	}
 
 	private double getAreaMinimaLongLat() {
-		return labor.config.supMinimaProperty().doubleValue()*ProyectionConstants.metersToLong()*ProyectionConstants.metersToLat();
+		return labor.getConfiguracion().supMinimaProperty().doubleValue()*ProyectionConstants.metersToLong()*ProyectionConstants.metersToLat();
 	}
 
 	/**

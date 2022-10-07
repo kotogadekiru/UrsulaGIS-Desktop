@@ -108,7 +108,7 @@ public class SueloConfigDialogController  extends Dialog<Suelo>{
 		this.setResultConverter(e -> {		
 			if(ButtonType.OK.equals(e)){					
 				if(chkMakeDefault.selectedProperty().get()){
-					labor.getConfigLabor().getConfigProperties().save();
+					labor.getConfigLabor().save();
 				}				
 				return labor;
 

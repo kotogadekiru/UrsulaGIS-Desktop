@@ -78,6 +78,7 @@ public class NDVIDatePickerDialog {
 		dateDialog.initOwner(owner);
 		Optional<ButtonType> res = dateDialog.showAndWait();
 		if(res.get().equals(ButtonType.OK)){
+			config.loadProperties();
 			config.setProperty("LAST_DATE", dc.toString(finLdp.get())); //$NON-NLS-1$
 			config.save();
 			

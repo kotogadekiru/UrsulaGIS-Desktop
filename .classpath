@@ -82,7 +82,5 @@
 	<classpathentry exported="true" kind="lib" path="libs/jogl-all-natives-windows-amd64.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/jogl-all-natives-windows-i586.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/jogl-all.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/worldwind.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/worldwindx.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -84,34 +84,36 @@ public class WWPanel extends JPanel {
 		}
 		double transicion =3*1000;
 
-		//		GoogleTiledImageLayer sat = new GoogleTiledImageLayer();
-		//		sat.setValue(AVKey.DATA_CACHE_NAME, "/Earth/Google/Satellite");
-		//		sat.setMinActiveAltitude(transicion);
-		//		sat.setMaxActiveAltitude(2*transicion);
-		//		m.getLayers().add(sat);
-
-		GoogleLayer sat = new GoogleLayer(GoogleLayer.Type.SATELLITE);
-		sat.setValue(AVKey.DATA_CACHE_NAME, "/Earth/Google/Satelite");
-		sat.setMinActiveAltitude(transicion+1);
-		sat.setMaxActiveAltitude(2*transicion);
-		m.getLayers().add(sat);
+//		GoogleTiledImageLayer sat = new GoogleTiledImageLayer();
+//		sat.setValue(AVKey.DATA_CACHE_NAME, "/Earth/Google/Satellite");
+//		sat.setMinActiveAltitude(transicion);
+//		sat.setMaxActiveAltitude(2*transicion);
+//		m.getLayers().add(sat);
 
 		try {
 			WMSTiledImageLayer bing = new WMSTiledImageLayer(
 					WWXML.openDocumentFile("gui/nww/replacementLayers/BingImageryEmxsys.xml", null),
 					null);
-			bing.setMaxActiveAltitude(transicion);
-			bing.setMinActiveAltitude(0);
+			//bing.setMaxActiveAltitude(transicion);
+		//	bing.setMinActiveAltitude(0);
 			m.getLayers().add(bing);
 		}catch(Exception e) {
 			System.out.println("fallo la carga del layer en gui/nww/replacementLayers/BingImageryEmxsys.xml");
 			e.printStackTrace();
 		}
+		
+//		GoogleLayer sat = new GoogleLayer(GoogleLayer.Type.SATELLITE);
+//		sat.setValue(AVKey.DATA_CACHE_NAME, "/Earth/Google/Satelite");
+//		sat.setMinActiveAltitude(0);
+//		sat.setMaxActiveAltitude(transicion);
+//		m.getLayers().add(sat);
+
+		
 
 		GoogleLayer roads = new GoogleLayer(GoogleLayer.Type.ROADS);
 		roads.setValue(AVKey.DATA_CACHE_NAME, "/Earth/Google/Roads");
 		roads.setMinActiveAltitude(0);
-		roads.setMaxActiveAltitude(2*transicion);
+		//roads.setMaxActiveAltitude(200*transicion);
 		m.getLayers().add(roads);
 
 

@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import dao.Clasificador;
 import dao.Labor;
+import dao.config.Configuracion;
 import dao.config.Semilla;
 import dao.siembra.SiembraConfig;
 import dao.siembra.SiembraLabor;
@@ -115,9 +116,10 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 		});
 
 		this.setResultConverter(e -> {		
-			if(ButtonType.OK.equals(e)){					
+			if(ButtonType.OK.equals(e)){		
+				//En verdad deberia editar la labor aca. no antes de que se confirmen los cambios
 				if(chkMakeDefault.selectedProperty().get()){
-					labor.getConfigLabor().getConfigProperties().save();
+					labor.getConfiguracion().save();
 				}				
 				return labor;
 
@@ -170,6 +172,9 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 		});
 
 		availableColums.add(Labor.NONE_SELECTED);
+		
+		SiembraConfig config = labor.getConfiguracion();
+		Configuracion props = config.getConfigProperties();
 
 		//comboElev
 		this.comboElev.setItems(FXCollections.observableArrayList(availableColums));
@@ -186,10 +191,10 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 		
 		this.comboInsumo.valueProperty().addListener((obj,old,n)->{		
 			labor.setSemilla(n);
-			labor.config.getConfigProperties().setProperty(SiembraLabor.SEMILLA_DEFAULT, n.getNombre());
+			props.setProperty(SiembraLabor.SEMILLA_DEFAULT, n.getNombre());
 		});
 		
-		String sDefautlName = labor.config.getConfigProperties().getPropertyOrDefault(SiembraLabor.SEMILLA_DEFAULT, "");
+		String sDefautlName = props.getPropertyOrDefault(SiembraLabor.SEMILLA_DEFAULT, "");
 		 
 		Optional<Semilla> sDefault = this.comboInsumo.getItems().stream().filter((s)->s.getNombre().equals(sDefautlName)).findFirst();
 		if(sDefault.isPresent()) {
@@ -201,31 +206,34 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 		//textPrecioGrano
 		//Bindings.bindBidirectional(this.textPrecioFert.textProperty(), labor.precioInsumoProperty, converter);
 		
-		this.textPrecioFert.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(SiembraLabor.COLUMNA_PRECIO_SEMILLA, labor.getPrecioInsumo().toString()));
+		this.textPrecioFert.textProperty().set(props.getPropertyOrDefault(SiembraLabor.COLUMNA_PRECIO_SEMILLA, labor.getPrecioInsumo().toString()));
 		labor.setPrecioInsumo(converter.fromString(textPrecioFert.textProperty().get()).doubleValue());
-		this.textPrecioFert.textProperty().addListener((obj,old,n)->{			
-			labor.setPrecioInsumo(converter.fromString(n).doubleValue());
-			labor.config.getConfigProperties().setProperty(SiembraLabor.COLUMNA_PRECIO_SEMILLA, n);
+		this.textPrecioFert.textProperty().addListener((obj,old,n)->{	
+			Number nuevoPrecio = converter.fromString(n);
+			labor.setPrecioInsumo(nuevoPrecio.doubleValue());
+			props.setProperty(SiembraLabor.COLUMNA_PRECIO_SEMILLA, converter.toString(nuevoPrecio));
 		});
 
 		//textCostoCosechaHa
 		//Bindings.bindBidirectional(this.textCostoLaborHa.textProperty(), labor.precioLaborProperty, converter);
 		//TODO tomar el valor de la labor y si es null levantar la configuracion. sino tomar el valor de la labor.
-		this.textCostoLaborHa.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(SiembraLabor.COLUMNA_PRECIO_PASADA, labor.getPrecioLabor().toString()));
+		this.textCostoLaborHa.textProperty().set(props.getPropertyOrDefault(SiembraLabor.COSTO_LABOR_SIEMBRA, labor.getPrecioLabor().toString()));
 		labor.setPrecioLabor(converter.fromString(this.textCostoLaborHa.textProperty().get()).doubleValue());
-		this.textCostoLaborHa.textProperty().addListener((obj,old,n)->{			
-			labor.setPrecioLabor(converter.fromString(n).doubleValue());
-			labor.config.getConfigProperties().setProperty(SiembraLabor.COLUMNA_PRECIO_PASADA, n);
+		this.textCostoLaborHa.textProperty().addListener((obj,old,n)->{	
+			Number nuevoPrecio = converter.fromString(n);
+			labor.setPrecioLabor(nuevoPrecio.doubleValue());
+			props.setProperty(SiembraLabor.COSTO_LABOR_SIEMBRA, converter.toString(nuevoPrecio));
 		});
 		
 		//System.out.println("valor entresurco Labor = "+converter.toString(labor.getEntreSurco()));
 		//System.out.println("valor entresurco default = "+labor.config.getConfigProperties().getPropertyOrDefault(SiembraLabor.ENTRE_SURCO_DEFAULT_KEY,null));
-		this.textEntresurco.textProperty().set(labor.config.getConfigProperties().getPropertyOrDefault(SiembraLabor.ENTRE_SURCO_DEFAULT_KEY, converter.toString(labor.getEntreSurco())));
+		this.textEntresurco.textProperty().set(props.getPropertyOrDefault(SiembraLabor.ENTRE_SURCO_DEFAULT_KEY, converter.toString(labor.getEntreSurco())));
 		labor.setEntreSurco(converter.fromString(this.textEntresurco.textProperty().get()).doubleValue());//inicializo el entresurco de la labor con lo del texProperty
 		//this.textEntresurco.textProperty().set(converter.toString(labor.getEntreSurco()));
-		this.textEntresurco.textProperty().addListener((obj,old,n)->{			
-			labor.setEntreSurco(converter.fromString(n).doubleValue());
-			labor.config.getConfigProperties().setProperty(SiembraLabor.ENTRE_SURCO_DEFAULT_KEY, n);
+		this.textEntresurco.textProperty().addListener((obj,old,n)->{
+			Number nuevoEntresurco = converter.fromString(n);
+			labor.setEntreSurco(nuevoEntresurco.doubleValue());
+			props.setProperty(SiembraLabor.ENTRE_SURCO_DEFAULT_KEY,converter.toString(nuevoEntresurco));
 		});
 		
 		//Bindings.bindBidirectional(this.textEntresurco.textProperty(), labor.entreSurco, converter);

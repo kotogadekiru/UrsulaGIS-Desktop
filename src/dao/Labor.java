@@ -137,7 +137,7 @@ public abstract class Labor<E extends LaborItem>  {
 	@Transient public Envelope treeCacheEnvelope = null;
 	@Transient public LocalTime cacheLastRead = null;
 
-	@Transient public LaborConfig config = null;
+	@Transient protected LaborConfig config = null;
 
 	public Double minElev=Double.MAX_VALUE;
 	public Double maxElev=-Double.MAX_VALUE;

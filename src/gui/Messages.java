@@ -57,7 +57,7 @@ public class Messages {
 	public static void setLocale(Locale loc) {
 		locale=loc;
 		RESOURCE_BUNDLE_CONTAINER.set(BUNDLE_NAME, locale);
-		
+		conf.loadProperties();
 		conf.setProperty(LOCALE_KEY, locale.getLanguage());
 		conf.save();
 		
