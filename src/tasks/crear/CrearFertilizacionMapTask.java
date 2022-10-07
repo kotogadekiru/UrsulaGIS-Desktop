@@ -2,44 +2,16 @@ package tasks.crear;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.text.NumberFormat;
 import java.util.List;
 
-import org.geotools.data.FeatureReader;
-import org.geotools.data.shapefile.shp.JTSUtilities;
-import org.geotools.data.simple.SimpleFeatureIterator;
-import org.geotools.feature.DefaultFeatureCollection;
-import org.geotools.feature.simple.SimpleFeatureBuilder;
-import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.geometry.BoundingBox;
-
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryCollection;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LinearRing;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 
-import dao.Labor;
-import dao.LaborItem;
 import dao.Poligono;
-import dao.cosecha.CosechaConfig;
-import dao.cosecha.CosechaItem;
-import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
-import dao.siembra.SiembraItem;
-import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
-import javafx.geometry.Point2D;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
 
@@ -84,13 +56,15 @@ public class CrearFertilizacionMapTask extends ProcessMapTask<FertilizacionItem,
 
 	}
 
-
 	@Override
 	protected ExtrudedPolygon getPathTooltip(Geometry poly, FertilizacionItem fertFeature,ExtrudedPolygon  renderablePolygon) {
-
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
-		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
+		String tooltipText = CrearFertilizacionMapTask.builTooltipText(fertFeature, area); 
+		return super.getExtrudedPolygonFromGeom(poly, fertFeature,tooltipText,renderablePolygon);
+	}
+
+	public static String builTooltipText(FertilizacionItem fertFeature, double area) {
+		NumberFormat df = Messages.getNumberFormat();//new DecimalFormat("0.00");//$NON-NLS-2$
 
 		String tooltipText = new String(// TODO ver si se puede instalar un
 				// boton
@@ -109,11 +83,7 @@ public class CrearFertilizacionMapTask extends ProcessMapTask<FertilizacionItem,
 		} else {
 			tooltipText=tooltipText.concat(Messages.getString("ProcessFertMapTask.8")+df.format(area ) + Messages.getString("ProcessFertMapTask.9")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-
-		//List  paths = 
-		return super.getExtrudedPolygonFromGeom(poly, fertFeature,tooltipText,renderablePolygon);
-
-		//return null;
+		return tooltipText;
 	}
 
 	protected int getAmountMin() {

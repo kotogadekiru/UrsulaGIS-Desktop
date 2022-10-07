@@ -2,6 +2,7 @@ package tasks.crear;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,9 +70,8 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 	
 	public static String buildTooltipText(Suelo s, SueloItem si,double area) {
 		//DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
-		DecimalFormat df = new DecimalFormat("#,###.##");//$NON-NLS-2$
-		df.setGroupingUsed(true);
-		df.setGroupingSize(3);
+		NumberFormat df = Messages.getNumberFormat();//new DecimalFormat("#,###.##");//$NON-NLS-2$
+
 		StringBuilder sb = new StringBuilder();
 		//Fosforo
 		//sb.append(Messages.getString("OpenSoilMapTask.1")+"\n ");//"Fosforo: "

@@ -2,6 +2,7 @@ package tasks.crear;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,41 +62,29 @@ public class CrearPulverizacionMapTask extends ProcessMapTask<PulverizacionItem,
 
 	@Override
 	protected ExtrudedPolygon getPathTooltip(Geometry poly, PulverizacionItem pulv,ExtrudedPolygon  renderablePolygon) {
-	//	Path path = getPathFromGeom(poly, pulv);
-
 		double area = poly.getArea() * ProyectionConstants.A_HAS();
+		String tooltipText = CrearPulverizacionMapTask.buildTooltipText(pulv, area);
+		return super.getExtrudedPolygonFromGeom(poly, pulv,tooltipText,renderablePolygon);
+	}
 
-//		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
-//		String tooltipText = new String("Costo Agroquimicos: "
-//				+ df.format(pulv.getDosis()) + " U$S/Ha\n"
-//				+ "Pulverizacion: " + df.format(pulv.getImporteHa())
-//				+ " U$S/Ha\n" 
-//		// +"feature: " + featureNumber
-//		);
-//		
-//		if(area<1){
-//			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
-//		} else {
-//			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
-//		}
-
+	public static String buildTooltipText(PulverizacionItem pulv, double area) {
+		NumberFormat nf = Messages.getNumberFormat();
 		
-		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
+		//DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
 		String tooltipText = new String(Messages.getString("ProcessPulvMapTask.1") //$NON-NLS-1$
-				+Messages.getString("PulvConfigDialog.dosisLabel")+": "+pulv.getDosis()+"\n"
-				+ df.format(pulv.getPrecioInsumo()*pulv.getDosis()) + Messages.getString("ProcessPulvMapTask.2") //$NON-NLS-1$
-				+ Messages.getString("ProcessPulvMapTask.3") + df.format(pulv.getImporteHa()) //$NON-NLS-1$
+				+Messages.getString("PulvConfigDialog.dosisLabel")+": "+nf.format(pulv.getDosis())+"\n"
+				+ nf.format(pulv.getPrecioInsumo()*pulv.getDosis()) + Messages.getString("ProcessPulvMapTask.2") //$NON-NLS-1$
+				+ Messages.getString("ProcessPulvMapTask.3") + nf.format(pulv.getImporteHa()) //$NON-NLS-1$
 				+ Messages.getString("ProcessPulvMapTask.4")  //$NON-NLS-1$
 		// +"feature: " + featureNumber
 		);
 		
 		if(area<1){
-			tooltipText=tooltipText.concat( Messages.getString("ProcessPulvMapTask.5")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("ProcessPulvMapTask.6")); //$NON-NLS-1$ //$NON-NLS-2$
+			tooltipText=tooltipText.concat( Messages.getString("ProcessPulvMapTask.5")+nf.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("ProcessPulvMapTask.6")); //$NON-NLS-1$ //$NON-NLS-2$
 		} else {
-			tooltipText=tooltipText.concat(Messages.getString("ProcessPulvMapTask.7")+df.format(area ) + Messages.getString("ProcessPulvMapTask.8")); //$NON-NLS-1$ //$NON-NLS-2$
+			tooltipText=tooltipText.concat(Messages.getString("ProcessPulvMapTask.7")+nf.format(area ) + Messages.getString("ProcessPulvMapTask.8")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-
-		return super.getExtrudedPolygonFromGeom(poly, pulv,tooltipText,renderablePolygon);
+		return tooltipText;
 	}
 
 	protected int getAmountMin() {

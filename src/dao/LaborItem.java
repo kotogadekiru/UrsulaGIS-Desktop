@@ -19,6 +19,8 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
+import gui.Messages;
+
 
 @Data
 //@EqualsAndHashCode(callSuper=true)//si no pones esto todos los hashmaps andan mal y grillar cosecha no anda
@@ -177,8 +179,8 @@ public abstract class LaborItem implements Comparable<Object>{
 		} else  if(o instanceof Long){
 			
 			d = new Double((Long) o);
-		} else if(o instanceof String){
-			StringConverter<Number> converter = new NumberStringConverter();
+		} else if(o instanceof String){			
+			StringConverter<Number> converter = new NumberStringConverter(Messages.getLocale());
 
 			try{
 				d=converter.fromString((String) o).doubleValue();

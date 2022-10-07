@@ -2,6 +2,7 @@ package tasks.procesar;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -251,7 +252,7 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
-		DecimalFormat df = new DecimalFormat(Messages.getString("GenerarMuestreoDirigidoTask.5")); //$NON-NLS-1$
+		NumberFormat df = Messages.getNumberFormat();//new DecimalFormat("0.00");//$NON-NLS-2$
 
 		String tooltipText = new String(Messages.getString("GenerarMuestreoDirigidoTask.6")+ df.format(sueloItem.getPpmP()) +Messages.getString("GenerarMuestreoDirigidoTask.7")); //$NON-NLS-1$ //$NON-NLS-2$
 		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.8")+ df.format(sueloItem.getPpmNO3()) + Messages.getString("GenerarMuestreoDirigidoTask.9")); //$NON-NLS-1$ //$NON-NLS-2$

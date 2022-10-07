@@ -8,6 +8,7 @@ import java.util.List;
 import javafx.scene.Group;
 import javafx.scene.shape.Path;
 import tasks.ProcessMapTask;
+import tasks.crear.CrearPulverizacionMapTask;
 
 import org.geotools.data.FeatureReader;
 import org.geotools.data.FileDataStore;
@@ -194,25 +195,8 @@ public class ProcessPulvMapTask extends ProcessMapTask<PulverizacionItem,Pulveri
 
 	@Override
 	protected ExtrudedPolygon getPathTooltip(Geometry poly, PulverizacionItem pulv,ExtrudedPolygon  renderablePolygon) {
-		//	Path path = getPathFromGeom(poly, pulv);
-
 		double area = poly.getArea() * ProyectionConstants.A_HAS();
-
-		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
-		String tooltipText = new String(Messages.getString("ProcessPulvMapTask.1") //$NON-NLS-1$
-				+Messages.getString("PulvConfigDialog.dosisLabel")+": "+pulv.getDosis()+"\n"
-				+ df.format(pulv.getPrecioInsumo()*pulv.getDosis()) + Messages.getString("ProcessPulvMapTask.2") //$NON-NLS-1$
-				+ Messages.getString("ProcessPulvMapTask.3") + df.format(pulv.getImporteHa()) //$NON-NLS-1$
-				+ Messages.getString("ProcessPulvMapTask.4")  //$NON-NLS-1$
-				// +"feature: " + featureNumber
-				);
-
-		if(area<1){
-			tooltipText=tooltipText.concat( Messages.getString("ProcessPulvMapTask.5")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("ProcessPulvMapTask.6")); //$NON-NLS-1$ //$NON-NLS-2$
-		} else {
-			tooltipText=tooltipText.concat(Messages.getString("ProcessPulvMapTask.7")+df.format(area ) + Messages.getString("ProcessPulvMapTask.8")); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-
+		String tooltipText = CrearPulverizacionMapTask.buildTooltipText(pulv, area);
 		return super.getExtrudedPolygonFromGeom(poly, pulv,tooltipText,renderablePolygon);
 	}
 

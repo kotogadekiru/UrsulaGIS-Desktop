@@ -2,6 +2,7 @@ package tasks;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -618,7 +619,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 		/*   Creo la leyenda   */
 		//	Format legendLabelFormat = new DecimalFormat() ;
-		DecimalFormat legendLabelFormat = new DecimalFormat("0.00");
+		NumberFormat legendLabelFormat=Messages.getNumberFormat();
 		Color colorMin = labor.getClasificador().getColorFor(labor.minAmount);// Clasificador.colors[0];
 		Color colorMax =labor.getClasificador().getColorFor(labor.maxAmount);// Clasificador.colors[Clasificador.colors.length-1];
 		double HUE_MIN = colorMin.getHue()/360d;//0d / 360d;
@@ -783,7 +784,8 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 		/*   Creo la leyenda   */
 		//	Format legendLabelFormat = new DecimalFormat() ;
-		DecimalFormat legendLabelFormat = new DecimalFormat("0.00");
+		NumberFormat legendLabelFormat=Messages.getNumberFormat();
+		
 		Color colorMin = labor.getClasificador().getColorFor(labor.minAmount);// Clasificador.colors[0];
 		Color colorMax =labor.getClasificador().getColorFor(labor.maxAmount);// Clasificador.colors[Clasificador.colors.length-1];
 		double HUE_MIN = colorMin.getHue()/360d;//0d / 360d;
@@ -1230,7 +1232,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		double HUE_MIN = colorMin.getHue()/ 360d; //0d / 360d;
 		double HUE_MAX = colorMax.getHue()/ 360d;//240d / 360d;
 
-		DecimalFormat legendLabelFormat = new DecimalFormat("0.00");
+		NumberFormat legendLabelFormat=Messages.getNumberFormat();
 		final AnalyticSurfaceLegend legend = AnalyticSurfaceLegend.fromColorGradient(min, max,
 				HUE_MIN, HUE_MAX,
 				AnalyticSurfaceLegend.createDefaultColorGradientLabels(min, max, legendLabelFormat),

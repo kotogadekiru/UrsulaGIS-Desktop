@@ -181,9 +181,7 @@ public class Camino implements Comparable<Camino>{
 	public void setNombre(String n){
 		this.nombre=n;
 		if(this.layer!=null){			
-			DecimalFormat dc = new DecimalFormat("0.00"); //$NON-NLS-1$
-			dc.setGroupingSize(3);
-			dc.setGroupingUsed(true);
+			NumberFormat dc = Messages.getNumberFormat();
 			String formated = dc.format(this.getLongitud())+" "+Messages.getString("JFXMain.metrosAbrevSufix"); //$NON-NLS-1$
 			
 			layer.setName(nombre+" "+formated);
@@ -192,9 +190,7 @@ public class Camino implements Comparable<Camino>{
 	@Transient
 	public void setLayer(Layer l){
 		this.layer=l;
-		DecimalFormat dc = new DecimalFormat("0.00");
-		dc.setGroupingSize(3);
-		dc.setGroupingUsed(true);
+		NumberFormat dc = Messages.getNumberFormat();
 		layer.setName(nombre+" "+dc.format(longitud)+" "+Messages.getString("JFXMain.metrosAbrevSufix"));
 	}
 	@Transient
@@ -210,9 +206,7 @@ public class Camino implements Comparable<Camino>{
 	public void setLongitud(double a){
 		this.longitud =a;
 		if(this.layer!=null){
-			DecimalFormat dc = new DecimalFormat("0.00");
-			dc.setGroupingSize(3);
-			dc.setGroupingUsed(true);
+			NumberFormat dc = Messages.getNumberFormat();
 			layer.setName(nombre+" "+dc.format(longitud)+" "+Messages.getString("JFXMain.metrosAbrevSufix"));
 		}
 	}

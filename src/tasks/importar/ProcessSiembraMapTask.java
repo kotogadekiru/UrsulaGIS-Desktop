@@ -19,6 +19,7 @@ import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
 import tasks.ProcessMapTask;
+import tasks.crear.ConvertirASiembraTask;
 import utils.ProyectionConstants;
 
 public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLabor> {	
@@ -247,50 +248,10 @@ public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLab
 		updateProgress(0, featureCount);
 	}
 
-	@Override
 	public ExtrudedPolygon  getPathTooltip( Geometry poly,SiembraItem siembraFeature,ExtrudedPolygon  renderablePolygon) {		
-		double area = ProyectionConstants.A_HAS(poly.getArea());
-		DecimalFormat df = new DecimalFormat("#,###.##");//$NON-NLS-2$
-		df.setGroupingUsed(true);
-		df.setGroupingSize(3);
-		
-		//densidad seeds/metro lineal
-		StringBuilder sb = new StringBuilder();
-		sb.append(Messages.getString("ProcessSiembraMapTask.1")
-				+ df.format(siembraFeature.getDosisML()) 
-				+ Messages.getString("ProcessSiembraMapTask.2")); //$NON-NLS-1$ //$NON-NLS-2$
-
-		Double seedsSup= siembraFeature.getDosisML()/labor.getEntreSurco();
-		if(seedsSup<100) {//plantas por ha
-			sb.append(df.format(seedsSup*ProyectionConstants.METROS2_POR_HA) 
-					+ " s/"+ Messages.getString("ProcessSiembraMapTask.12")); //$NON-NLS-1$ //$NON-NLS-2$
-		}else {
-			sb.append(df.format(seedsSup) 
-					+ " s/"+Messages.getString("ProcessSiembraMapTask.10")); //s/m2
-		}
-		//kg semillas por ha
-		sb.append(Messages.getString("ProcessSiembraMapTask.3") 
-				+ df.format(siembraFeature.getDosisHa()) 
-				+ Messages.getString("ProcessSiembraMapTask.4")); //$NON-NLS-1$ //$NON-NLS-2$
-		//fert l
-		sb.append( Messages.getString("ProcessSiembraMapTask.5") 
-				+ df.format(siembraFeature.getDosisFertLinea()) 
-				+ Messages.getString("ProcessSiembraMapTask.6")); //$NON-NLS-1$ //$NON-NLS-2$
-		//fert costo
-		sb.append( Messages.getString("ProcessSiembraMapTask.7") 
-				+ df.format(siembraFeature.getImporteHa()) 
-				+ Messages.getString("ProcessSiembraMapTask.8")); //$NON-NLS-1$ //$NON-NLS-2$
-
-		if(area<1){
-			sb.append( Messages.getString("ProcessSiembraMapTask.9")
-					+df.format(area * ProyectionConstants.METROS2_POR_HA) 
-					+ Messages.getString("ProcessSiembraMapTask.10")); //$NON-NLS-1$ //$NON-NLS-2$
-		} else {
-			sb.append(Messages.getString("ProcessSiembraMapTask.11")
-					+df.format(area ) 
-					+ Messages.getString("ProcessSiembraMapTask.12")); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-		return super.getExtrudedPolygonFromGeom(poly, siembraFeature,sb.toString(),renderablePolygon);	
+		double area = poly.getArea() *ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+		String tooltipText = ConvertirASiembraTask.buildTooltipText(siembraFeature, area,labor);
+		return super.getExtrudedPolygonFromGeom(poly, siembraFeature,tooltipText,renderablePolygon);	
 	}
 
 	protected  int getAmountMin(){return 0;} 

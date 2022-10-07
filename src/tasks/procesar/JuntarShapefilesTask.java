@@ -52,6 +52,7 @@ import com.vividsolutions.jts.geom.Polygon;
 
 import dao.config.Configuracion;
 import dao.cosecha.CosechaConfig;
+import gui.Messages;
 //import gov.nasa.worldwind.layers.RenderableLayer;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -509,8 +510,8 @@ public class JuntarShapefilesTask {
 			d = new Double((Integer) o);
 		} else  if(o instanceof Long){
 			d = new Double((Long) o);
-		} else if(o instanceof String){
-			StringConverter<Number> converter = new NumberStringConverter();
+		} else if(o instanceof String){			
+			StringConverter<Number> converter = new NumberStringConverter(Messages.getLocale());
 
 			try{
 				d=converter.fromString((String) o).doubleValue();

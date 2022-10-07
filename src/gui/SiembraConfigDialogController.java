@@ -196,7 +196,7 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 			this.comboInsumo.getSelectionModel().select(sDefault.get());
 		}
 		
-		StringConverter<Number> converter = new NumberStringConverter();
+		StringConverter<Number> converter = new NumberStringConverter(Messages.getLocale());
 
 		//textPrecioGrano
 		//Bindings.bindBidirectional(this.textPrecioFert.textProperty(), labor.precioInsumoProperty, converter);

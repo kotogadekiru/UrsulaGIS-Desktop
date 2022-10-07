@@ -384,7 +384,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		Bindings.bindBidirectional(this.textCorrimientoPesada.textProperty(), labor.config.valorCorreccionPesadaProperty(), converter);
 
 
-		StringConverter<Number> nsConverter = new NumberStringConverter(){
+		StringConverter<Number> nsConverter = new NumberStringConverter(Messages.getLocale()){
 			@Override
 			public Number fromString(String s){
 				Number d=new Double(0);

@@ -26,6 +26,7 @@ import dao.fertilizacion.FertilizacionLabor;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.nww.LaborLayer;
 import tasks.ProcessMapTask;
+import tasks.crear.CrearFertilizacionMapTask;
 import utils.ProyectionConstants;
 
 public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem,FertilizacionLabor> {
@@ -190,29 +191,9 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 
 	@Override
 	protected ExtrudedPolygon getPathTooltip(Geometry poly, FertilizacionItem fertFeature,ExtrudedPolygon  renderablePolygon) {
-
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
-		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
-
-		String tooltipText = new String(// TODO ver si se puede instalar un
-				// boton
-				// que permita editar el dato
-				"Densidad: " + df.format(fertFeature.getDosistHa())
-				+ " Kg/Ha\n" + "Costo: "
-				+ df.format(fertFeature.getImporteHa()) + " U$S/Ha\n"
-				);
-		if(area<1){
-			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
-			//	tooltipText=tooltipText.concat( "SupOrig: "+df.format(area2 ) + "m2\n");
-		} else {
-			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
-		}
-
-		//List  paths = 
+		String tooltipText = CrearFertilizacionMapTask.builTooltipText(fertFeature, area); 
 		return super.getExtrudedPolygonFromGeom(poly, fertFeature,tooltipText,renderablePolygon);
-
-		//return null;
 	}
 
 	/**

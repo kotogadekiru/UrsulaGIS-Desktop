@@ -16,6 +16,7 @@ package gui.candlestickchart;
  */
 
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -24,6 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import gui.CosechaHistoChart;
+import gui.Messages;
 import javafx.animation.FadeTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -515,7 +517,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
         }
 
         public void update(Number elev, Number sup,Number average, Number max, Number min) {
-        	DecimalFormat df = new DecimalFormat("#.00");
+    		NumberFormat df=Messages.getNumberFormat();    
             elevValue.setText(df.format(elev));//.toString());
             supValue.setText(df.format(sup.doubleValue()/ProyectionConstants.METROS2_POR_HA));//close.toString());
             maxValue.setText(df.format(max));//high.toString());

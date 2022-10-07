@@ -11,6 +11,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -1438,7 +1439,8 @@ public class JFXMain extends Application {
 				Optional<String> nombreOptional = nombreDialog.showAndWait();
 				if(nombreOptional.isPresent()){
 					ndvi.setNombre(nombreOptional.get());
-					DecimalFormat df = new DecimalFormat(Messages.getString("GenerarMuestreoDirigidoTask.5")); //$NON-NLS-1$
+					NumberFormat df = Messages.getNumberFormat();
+					//DecimalFormat df = new DecimalFormat(Messages.getString("GenerarMuestreoDirigidoTask.5")); //$NON-NLS-1$
 					layer.setName(ndvi.getNombre()+" "+df.format(ndvi.getPorcNubes()*100)+"% Nublado");
 					this.getLayerPanel().update(this.getWwd());
 				}
@@ -1755,12 +1757,14 @@ public class JFXMain extends Application {
 	 * cotizar precios online. Permite exporta a excel y cotizar precios online y guardar
 	 */
 	private void doGenerarOrdenDeCompra() {
-		Alert message = new Alert(Alert.AlertType.INFORMATION);
-		message.setHeaderText(Messages.getString("JFXMain.generarOrdenCompraAction")); //$NON-NLS-1$
-		message.setContentText(Messages.getString("JFXMain.gOC1") //$NON-NLS-1$
-				+ Messages.getString("JFXMain.gOC2") //$NON-NLS-1$
-				+ Messages.getString("JFXMain.gOC3")); //$NON-NLS-1$
-		message.show();
+//		Alert message = new Alert(Alert.AlertType.INFORMATION);
+//		message.setHeaderText(Messages.getString("JFXMain.generarOrdenCompraAction")); //$NON-NLS-1$
+//		message.setContentText(Messages.getString("JFXMain.gOC1") //$NON-NLS-1$
+//				+ Messages.getString("JFXMain.gOC2") //$NON-NLS-1$
+//				+ Messages.getString("JFXMain.gOC3")); //$NON-NLS-1$
+//		message.show();
+		
+		this.enDesarrollo();
 
 		GenerarOCTask gOCTask = new GenerarOCTask(getSiembrasSeleccionadas(),getFertilizacionesSeleccionadas(), getPulverizacionesSeleccionadas());
 
@@ -3246,7 +3250,7 @@ public class JFXMain extends Application {
 			//XXX para la fecha y el cultivo tendria que haber coeficientes promedio alfa y beta que mejor ajusten.
 		}catch(java.lang.NumberFormatException e) {
 
-			DecimalFormat format=(DecimalFormat) DecimalFormat.getInstance();
+			DecimalFormat format=(DecimalFormat) Messages.getNumberFormat();
 			DecimalFormatSymbols symbols=format.getDecimalFormatSymbols();
 			char sep=symbols.getDecimalSeparator();
 
@@ -3309,10 +3313,10 @@ public class JFXMain extends Application {
 
 		//JFXMain.294=Fert Min
 		//JFXMain.295=Fert Max
-		DecimalFormat format=(DecimalFormat) DecimalFormat.getInstance();
+		DecimalFormat format=(DecimalFormat) Messages.getNumberFormat();
 		Double dosisMax = null;
 		try {
-			TextInputDialog dMaxDialog = new TextInputDialog(Messages.getString("JFXMain.295")); //$NON-NLS-1$
+			TextInputDialog dMaxDialog = new TextInputDialog(Messages.getString("JFXMain.295")); //fertMax //$NON-NLS-1$
 			dMaxDialog.setTitle(Messages.getString("JFXMain.295")); //$NON-NLS-1$
 			dMaxDialog.setContentText(Messages.getString("JFXMain.295")); //$NON-NLS-1$
 			dMaxDialog.initOwner(JFXMain.stage);
@@ -3463,7 +3467,10 @@ public class JFXMain extends Application {
 
 		//Dialogo preguntar min y max a aplicar y dosis
 		Alert minMaxDialog = new Alert(AlertType.CONFIRMATION);
-		DecimalFormat df = new DecimalFormat();
+//		DecimalFormat df = new DecimalFormat();
+		
+		
+		NumberFormat df=Messages.getNumberFormat();
 		TextField dc = new TextField(df.format(0));
 		TextField min = new TextField(df.format(0));
 		TextField max = new TextField(df.format(0));
@@ -3921,11 +3928,11 @@ public class JFXMain extends Application {
 		if(!cosechaConfigured.isPresent()){//
 			System.out.println(Messages.getString("JFXMain.293")); //$NON-NLS-1$
 			return;
-		}							
+		}					
 
 		//Dialogo preguntar min y max a aplicar
 		Alert minMaxDialog = new Alert(AlertType.CONFIRMATION);
-		DecimalFormat df = new DecimalFormat();
+		NumberFormat df=Messages.getNumberFormat();
 		TextField min = new TextField(df.format(0));
 		TextField max = new TextField(df.format(0));
 
@@ -4120,7 +4127,7 @@ public class JFXMain extends Application {
 
 		//Dialogo preguntar min y max a aplicar
 		Alert minMaxDialog = new Alert(AlertType.CONFIRMATION);
-		DecimalFormat df = new DecimalFormat();
+		NumberFormat df=Messages.getNumberFormat();
 		TextField min = new TextField(df.format(0));
 		TextField max = new TextField(df.format(0));
 

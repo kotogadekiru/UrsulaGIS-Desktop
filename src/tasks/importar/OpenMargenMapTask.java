@@ -28,6 +28,7 @@ import utils.ProyectionConstants;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -94,10 +95,7 @@ public class OpenMargenMapTask extends ProcessMapTask<MargenItem,Margen> {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 
 
-		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
-		df.setGroupingSize(3);
-		
-		df.setGroupingUsed(true);
+		NumberFormat df = Messages.getNumberFormat();
 
 		String tooltipText = new String(
 				Messages.getString("OpenMargenMapTask.1")+ df.format(renta.getRentabilidadHa())+ Messages.getString("OpenMargenMapTask.2")  //$NON-NLS-1$ //$NON-NLS-2$

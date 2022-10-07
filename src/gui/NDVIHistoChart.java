@@ -2,6 +2,7 @@ package gui;
 
 import java.awt.Color;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Iterator;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
@@ -52,12 +53,10 @@ public class NDVIHistoChart extends VBox {
 //	private Double produccionTotal= new Double(0);
 //	private Double entropia= new Double(0);
 	private int numClasses;
-	private DecimalFormat df = new DecimalFormat("0.00"); //$NON-NLS-1$
+	private NumberFormat df=Messages.getNumberFormat();
 	
 	public NDVIHistoChart(Ndvi ndvi) {
 		super();
-		df.setGroupingSize(3);
-		df.setGroupingUsed(true);
 		
 		Handler consoleHandler = new ConsoleHandler();
 		consoleHandler.setLevel(Level.ALL);

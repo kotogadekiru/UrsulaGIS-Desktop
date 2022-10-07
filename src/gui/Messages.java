@@ -1,5 +1,6 @@
 package gui;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListResourceBundle;
@@ -15,6 +16,7 @@ public class Messages {
 	
 	private static Configuracion conf = JFXMain.config;
 	
+	private static NumberFormat nf =null;
 	private static Locale locale = new Locale("ES");
 	//private static final ResourceBundle RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME,new Locale("EN"));
 	private static final ResourceBoundleContainer RESOURCE_BUNDLE_CONTAINER = new ResourceBoundleContainer();
@@ -38,6 +40,9 @@ public class Messages {
 			locale =  new Locale("ES");
 		}
 		setLocale(locale);
+		nf=NumberFormat.getInstance(locale);
+		nf.setGroupingUsed(true);
+		nf.setMaximumFractionDigits(2);
 	}
 
 
@@ -84,6 +89,10 @@ public class Messages {
 		 locales.add(new Locale("EN"));
 		 locales.add(new Locale("PT"));
 		return locales;
+	}
+	
+	public static NumberFormat getNumberFormat() {
+		return nf;
 	}
 }
 

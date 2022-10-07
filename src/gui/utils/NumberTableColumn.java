@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import gui.Messages;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -20,7 +21,7 @@ public class NumberTableColumn<T> extends TableColumn<T,String> {
 		super(title);	
 
 		setEditable(setMethod != null);
-		DecimalFormat df = new DecimalFormat("###,###.###");
+		NumberFormat df=Messages.getNumberFormat();
 
 		setCellValueFactory(cellData ->{
 			Number numberValue = getMethod.apply(cellData.getValue());

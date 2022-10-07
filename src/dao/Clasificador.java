@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -90,10 +91,11 @@ public class Clasificador {
 
 	public String getCategoryNameFor(int index) {		
 		String rangoIni = "";
-		DecimalFormat df = new DecimalFormat("0.00");
-		df.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(new Locale("EN")));
-		df.setGroupingSize(3);
-		df.setGroupingUsed(true);
+		NumberFormat df = Messages.getNumberFormat();
+//		DecimalFormat df = new DecimalFormat("0.00");
+//		df.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(new Locale("EN")));
+//		df.setGroupingSize(3);
+//		df.setGroupingUsed(true);
 		if(histograma != null){
 			//	Double delta = histograma[1]-histograma[0];
 

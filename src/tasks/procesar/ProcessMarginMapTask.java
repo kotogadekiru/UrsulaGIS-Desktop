@@ -2,6 +2,7 @@ package tasks.procesar;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -430,10 +431,7 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 //		ret.add(path);
 //		ret.add(tooltipText);
 		//return ret;
-		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
-		df.setGroupingSize(3);
-		
-		df.setGroupingUsed(true);
+		NumberFormat df = Messages.getNumberFormat();
 
 		String tooltipText = new String(
 				Messages.getString("OpenMargenMapTask.1")+ df.format(renta.getRentabilidadHa())+ Messages.getString("OpenMargenMapTask.2")  //$NON-NLS-1$ //$NON-NLS-2$

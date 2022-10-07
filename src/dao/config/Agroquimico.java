@@ -67,4 +67,15 @@ public class Agroquimico extends Producto implements Comparable<Agroquimico>{
 	public int compareTo(Agroquimico o) {
 		return (int) (this.getId()-o.getId());
 	}
+
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return nombre;
+	}
+	
+	
 }

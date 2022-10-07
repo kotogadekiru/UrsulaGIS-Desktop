@@ -190,7 +190,7 @@ public class SueloConfigDialogController  extends Dialog<Suelo>{
 		this.comboElev.setItems(FXCollections.observableArrayList(availableColums));
 		this.comboElev.valueProperty().bindBidirectional(labor.colElevacion);
 		
-		StringConverter<Number> converter = new NumberStringConverter();
+		StringConverter<Number> converter = new NumberStringConverter(Messages.getLocale());
 
 		Bindings.bindBidirectional(this.textClasesClasificador.textProperty(), labor.clasificador.clasesClasificadorProperty, converter);
 

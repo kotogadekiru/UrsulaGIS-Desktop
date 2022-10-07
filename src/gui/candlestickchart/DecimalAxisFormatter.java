@@ -7,8 +7,7 @@ package gui.candlestickchart;
 
 import java.text.DecimalFormat;
 import java.text.ParseException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import javafx.util.StringConverter;
 
 /**

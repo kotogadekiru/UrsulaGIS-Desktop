@@ -38,6 +38,7 @@ import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
 import javafx.geometry.Point2D;
 import tasks.ProcessMapTask;
+import tasks.crear.CrearCosechaMapTask;
 import utils.ProyectionConstants;
 
 public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLabor> {
@@ -987,33 +988,8 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 
 	@Override
 	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem,ExtrudedPolygon  renderablePolygon) {
-		//	System.out.println("getPathTooltip(); "+System.currentTimeMillis());
-		//List<SurfacePolygon>  paths = getSurfacePolygons(poly, cosechaFeature);//
-		//	List<gov.nasa.worldwind.render.Polygon>  paths = super.getPathFromGeom2D(poly, cosechaFeature);
-		//ExtrudedPolygon  path = super.getPathFromGeom2D(poly, cosechaFeature);
-
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
-		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
-
-		String tooltipText = new String(Messages.getString("ProcessHarvestMapTask.23") //$NON-NLS-1$
-				+ df.format(cosechaItem.getAmount()) + Messages.getString("ProcessHarvestMapTask.24") //$NON-NLS-1$
-				//	+ "Area: "+ df.format(area * ProyectionConstants.METROS2_POR_HA)+ " m2\n" + 
-
-				);
-
-		tooltipText=tooltipText.concat(Messages.getString("ProcessHarvestMapTask.25")+df.format(cosechaItem.getElevacion() ) + Messages.getString("ProcessHarvestMapTask.26")); //$NON-NLS-1$ //$NON-NLS-2$
-
-		tooltipText=tooltipText.concat(Messages.getString("ProcessHarvestMapTask.27")+df.format(cosechaItem.getAncho() ) + Messages.getString("ProcessHarvestMapTask.28")); //$NON-NLS-1$ //$NON-NLS-2$
-		tooltipText=tooltipText.concat(Messages.getString("ProcessHarvestMapTask.29")+df.format(cosechaItem.getRumbo() ) + Messages.getString("ProcessHarvestMapTask.30")); //$NON-NLS-1$ //$NON-NLS-2$
-		tooltipText=tooltipText.concat(Messages.getString("ProcessHarvestMapTask.31")+cosechaItem.getId() + Messages.getString("ProcessHarvestMapTask.32")); //$NON-NLS-1$ //$NON-NLS-2$
-		if(area<1){
-			tooltipText=tooltipText.concat( Messages.getString("ProcessHarvestMapTask.33")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("ProcessHarvestMapTask.34")); //$NON-NLS-1$ //$NON-NLS-2$
-			//	tooltipText=tooltipText.concat( "SupOrig: "+df.format(area2 ) + "m2\n");
-		} else {
-			tooltipText=tooltipText.concat(Messages.getString("ProcessHarvestMapTask.35")+df.format(area ) + Messages.getString("ProcessHarvestMapTask.36")); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-		//super.getRenderPolygonFromGeom(poly, cosechaItem,tooltipText);
+		String tooltipText = CrearCosechaMapTask.buildTooltipText(cosechaItem, area);
 		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText,renderablePolygon);
 
 	}

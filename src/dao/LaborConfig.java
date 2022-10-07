@@ -2,11 +2,13 @@ package dao;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
 import java.util.Locale;
 
 import dao.config.Configuracion;
 import dao.siembra.SiembraConfig;
 import dao.utils.PropertyHelper;
+import gui.Messages;
 import dao.LaborConfig;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -82,8 +84,9 @@ public class LaborConfig {
 		 config =  _config;//levanto el archivo de propiedades default pero puedo guardarlo en otro archivo seteando el fileURL
 		
 		
-		DecimalFormat df = new DecimalFormat("#.0000");
-		df.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(new Locale("EN")));
+//		DecimalFormat df = new DecimalFormat("#.0000");
+//		df.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(new Locale("EN")));
+		NumberFormat df = Messages.getNumberFormat();
 		try{
 		
 		//XXX ver si me conviene actualizar el archivo de propiedades on the fly o on demand

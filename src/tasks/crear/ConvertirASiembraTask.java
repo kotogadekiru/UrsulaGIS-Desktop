@@ -2,6 +2,7 @@ package tasks.crear;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -113,9 +114,13 @@ public class ConvertirASiembraTask extends ProcessMapTask<SiembraItem,SiembraLab
 
 	public ExtrudedPolygon  getPathTooltip( Geometry poly,SiembraItem siembraFeature,ExtrudedPolygon  renderablePolygon) {		
 		double area = poly.getArea() *ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		DecimalFormat df = new DecimalFormat("#,###.##");//$NON-NLS-2$
-		df.setGroupingUsed(true);
-		df.setGroupingSize(3);
+		String tooltipText = ConvertirASiembraTask.buildTooltipText(siembraFeature, area,labor);
+		return super.getExtrudedPolygonFromGeom(poly, siembraFeature,tooltipText,renderablePolygon);	
+	}
+
+	public static String buildTooltipText(SiembraItem siembraFeature, double area, SiembraLabor labor) {
+		NumberFormat df = Messages.getNumberFormat();
+
 		//densidad seeds/metro lineal
 		String tooltipText = new String(Messages.getString("ProcessSiembraMapTask.1")+ df.format(siembraFeature.getDosisML()) + Messages.getString("ProcessSiembraMapTask.2")); //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -128,7 +133,7 @@ public class ConvertirASiembraTask extends ProcessMapTask<SiembraItem,SiembraLab
 		}
 		//kg semillas por ha
 		tooltipText=tooltipText.concat(Messages.getString("ProcessSiembraMapTask.3") + df.format(siembraFeature.getDosisHa()) + Messages.getString("ProcessSiembraMapTask.4")); //$NON-NLS-1$ //$NON-NLS-2$
-		//fert l		
+		//fert l y c		
 		tooltipText=tooltipText.concat( Messages.getString("JFXMain.FertL") +": "+ df.format(siembraFeature.getDosisFertLinea()) + Messages.getString("ProcessSiembraMapTask.6")		); //$NON-NLS-1$ //$NON-NLS-2$
 		tooltipText=tooltipText.concat( Messages.getString("JFXMain.FertC") +": "+ df.format(siembraFeature.getDosisFertCostado()) + Messages.getString("ProcessSiembraMapTask.6")		); //$NON-NLS-1$ //$NON-NLS-2$
 		//fert costo
@@ -139,7 +144,7 @@ public class ConvertirASiembraTask extends ProcessMapTask<SiembraItem,SiembraLab
 		} else {
 			tooltipText=tooltipText.concat(Messages.getString("ProcessSiembraMapTask.11")+df.format(area ) + Messages.getString("ProcessSiembraMapTask.12")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		return super.getExtrudedPolygonFromGeom(poly, siembraFeature,tooltipText,renderablePolygon);	
+		return tooltipText;
 	}
 
 	protected int getAmountMin() {

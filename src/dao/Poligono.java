@@ -65,7 +65,7 @@ public class Poligono implements Comparable<Poligono>{
 
 
 	private static DecimalFormat lonLatFormat = null;
-	static {
+	static {//tiene que estar en ingles porque de lo contrario no anda bien descargar ndvi
 		NumberFormat nf = NumberFormat.getNumberInstance(Locale.ENGLISH);
 		lonLatFormat = (DecimalFormat)nf;
 		//lonLatFormat = new DecimalFormat("#0.00000000;-#0.00000000");
@@ -179,9 +179,7 @@ public class Poligono implements Comparable<Poligono>{
 	public void setNombre(String n){
 		this.nombre=n;
 		if(this.layer!=null){
-			DecimalFormat dc = new DecimalFormat("0.00"); //$NON-NLS-1$
-			dc.setGroupingSize(3);
-			dc.setGroupingUsed(true);
+			NumberFormat dc = Messages.getNumberFormat();
 			String formated = dc.format(this.area)+Messages.getString("PoligonLayerFactory.4"); //$NON-NLS-1$
 
 			layer.setName(nombre+" "+formated);
@@ -189,11 +187,8 @@ public class Poligono implements Comparable<Poligono>{
 	}
 	@Transient
 	public void setLayer(Layer l){
-
 		this.layer=l;
-		DecimalFormat dc = new DecimalFormat("0.00");
-		dc.setGroupingSize(3);
-		dc.setGroupingUsed(true);
+		NumberFormat dc = Messages.getNumberFormat();
 		layer.setName(nombre+" "+dc.format(area)+Messages.getString("PoligonLayerFactory.4"));
 	}
 
@@ -210,9 +205,7 @@ public class Poligono implements Comparable<Poligono>{
 	public void setArea(double a){
 		this.area =a;
 		if(this.layer!=null){
-			DecimalFormat dc = new DecimalFormat("0.00");
-			dc.setGroupingSize(3);
-			dc.setGroupingUsed(true);
+			NumberFormat dc = Messages.getNumberFormat();
 			layer.setName(nombre+" "+dc.format(area)+Messages.getString("PoligonLayerFactory.4"));
 		}
 	}

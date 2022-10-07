@@ -135,7 +135,8 @@ public class MargenConfigDialogController  extends Dialog<Margen>{
 			//l.fechaProperty.setValue(bool2);
 		});
 
-		StringConverter<Number> converter = new NumberStringConverter();
+		
+		StringConverter<Number> converter = new NumberStringConverter(Messages.getLocale());
 
 		//textPrecioGrano
 		Bindings.bindBidirectional(this.textCostoHa.textProperty(), labor.costoFijoHaProperty, converter);

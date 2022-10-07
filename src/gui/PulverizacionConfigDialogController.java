@@ -173,7 +173,7 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 		this.comboInsumo.valueProperty().bindBidirectional(labor.agroquimico);
 
 
-		StringConverter<Number> converter = new NumberStringConverter();
+		StringConverter<Number> converter = new NumberStringConverter(Messages.getLocale());
 		this.textPrecioInsumo.textProperty().addListener((obj,old,n)->{
 			labor.setPrecioInsumo(converter.fromString(n).doubleValue());
 			labor.config.getConfigProperties().setProperty(PulverizacionLabor.COLUMNA_PRECIO_PASADA, n);

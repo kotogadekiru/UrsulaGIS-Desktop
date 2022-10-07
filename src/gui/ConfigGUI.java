@@ -598,7 +598,8 @@ public class ConfigGUI {
 			Button cotizarOblineB = new Button(Messages.getString("ShowConfigGUI.cotizarOnline"));//"Cotizar OnLine");//TODO traducir
 			cotizarOblineB.setOnAction(actionEvent->{
 				//TODO preguntar mail para enviar presupuestos
-				TextInputDialog tDialog = new TextInputDialog("tomas@ursulagis.com");
+				TextInputDialog tDialog = new TextInputDialog();//"tomas@ursulagis.com"
+				tDialog.setContentText("tomas@ursulagis.com");
 				tDialog.initOwner(JFXMain.stage);
 				tDialog.setTitle(Messages.getString("ShowConfigGUI.cotizarOnlineMailTitle"));
 				tDialog.showAndWait();

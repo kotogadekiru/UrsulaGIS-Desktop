@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
 import java.text.Format;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -566,7 +567,8 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 			attr.setInteriorOpacity(1);
 			surface.setSurfaceAttributes(attr);
 
-			Format legendLabelFormat = new DecimalFormat() ;
+			
+			NumberFormat legendLabelFormat=Messages.getNumberFormat();
 			final AnalyticSurfaceLegend legend = AnalyticSurfaceLegend.fromColorGradient(MIN_VALUE,MAX_VALUE,
 					HUE_MIN, HUE_MAX,
 					AnalyticSurfaceLegend.createDefaultColorGradientLabels(MIN_VALUE, MAX_VALUE, legendLabelFormat),
@@ -616,7 +618,7 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 
 			};
 
-			DecimalFormat df = new DecimalFormat(Messages.getString("GenerarMuestreoDirigidoTask.5")); //$NON-NLS-1$
+			NumberFormat df=Messages.getNumberFormat();
 			if(porcNubes>0) {
 				layer.setName(fileName+" "+df.format(porcNubes*100)+"% "+Messages.getString("ShowNDVITifFileTask.nublado"));
 			}else {

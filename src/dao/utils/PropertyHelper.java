@@ -41,7 +41,7 @@ public class PropertyHelper {
 	
 	public static DecimalFormat getDoubleConverter() {
 		if(converter==null) {
-			NumberFormat nf = NumberFormat.getNumberInstance(Messages.getLocale());
+			NumberFormat nf = Messages.getNumberFormat();
 			converter = (DecimalFormat)nf;
 //			converter = new DecimalFormat("0.00"){ //$NON-NLS-1$
 //				@Override

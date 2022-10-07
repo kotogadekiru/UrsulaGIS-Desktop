@@ -294,27 +294,8 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 	@Override
 	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem,ExtrudedPolygon  renderablePolygon) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
-		DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
-		String tooltipText = new String("Rinde: "
-				+ df.format(cosechaItem.getAmount()) + " Tn/Ha\n"
-				//	+ "Area: "+ df.format(area * ProyectionConstants.METROS2_POR_HA)+ " m2\n" + 
-
-				);
-
-		tooltipText=tooltipText.concat("Elevacion: "+df.format(cosechaItem.getElevacion() ) + "\n");
-
-		tooltipText=tooltipText.concat("Ancho: "+df.format(cosechaItem.getAncho() ) + "\n");
-		tooltipText=tooltipText.concat("Rumbo: "+df.format(cosechaItem.getRumbo() ) + "\n");
-		tooltipText=tooltipText.concat("feature: "+cosechaItem.getId() + "\n");
-		if(area<1){
-			tooltipText=tooltipText.concat( "Sup: "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
-			//	tooltipText=tooltipText.concat( "SupOrig: "+df.format(area2 ) + "m2\n");
-		} else {
-			tooltipText=tooltipText.concat("Sup: "+df.format(area ) + "Has\n");
-		}
-		//super.getRenderPolygonFromGeom(poly, cosechaItem,tooltipText);
-	return 	super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText,renderablePolygon);
+		String tooltipText = CrearCosechaMapTask.buildTooltipText(cosechaItem, area);
+		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText,renderablePolygon);
 
 	}
 

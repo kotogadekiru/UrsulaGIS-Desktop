@@ -177,7 +177,7 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 		//this.comboFertilizante.setItems(FXCollections.observableArrayList(DAH.getAllFertilizantes()));
 		//this.comboFertilizante.valueProperty().bindBidirectional(labor.fertilizanteProperty);
 
-		StringConverter<Number> converter = new NumberStringConverter();
+		StringConverter<Number> converter = new NumberStringConverter(Messages.getLocale());
 
 		//textPrecioGrano
 		//Bindings.bindBidirectional(this.textPrecioFert.textProperty(), labor.precioInsumoProperty, converter);

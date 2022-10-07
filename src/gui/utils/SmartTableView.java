@@ -103,7 +103,7 @@ public class SmartTableView<T> extends TableView<T> {
 	
 	public void toExcel() {
 		Platform.runLater(()->{
-			//TODO implementar exportar a excell 
+			//implementar exportar a excell 
 			ExcelHelper xHelper = new ExcelHelper();
 			Map<String, Object[]> data=new TreeMap<String,Object[]>();//HashMap no mantiene el orden
 			List<Object> itemData = new ArrayList<Object>();

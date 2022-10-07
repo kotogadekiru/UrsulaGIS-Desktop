@@ -1,6 +1,7 @@
 package gui.utils;
 
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Comparator;
 import java.util.function.BiConsumer;
@@ -18,7 +19,10 @@ public class DoubleTableColumn<T> extends TableColumn<T,String> {
 	public DoubleTableColumn(String title,Function<T,Double>  getMethod, BiConsumer<T,Double> setMethod){
 		super(title);	
 		setEditable(setMethod != null);
-		DecimalFormat df = new DecimalFormat("###,###.###");
+		NumberFormat nf = NumberFormat.getNumberInstance();
+		nf.setGroupingUsed(true);
+		nf.setMaximumFractionDigits(2);
+		//DecimalFormat df = new DecimalFormat("###,###.##");
 
 		//	 this.setCellValueFactory(new PropertyValueFactory<T, Date>("date"));
 		setCellValueFactory(cellData ->{
@@ -26,7 +30,7 @@ public class DoubleTableColumn<T> extends TableColumn<T,String> {
 			try{
 				String stringValue = "0.0";
 				if(doubleValue!=null) {
-					stringValue=df.format(doubleValue);
+					stringValue=nf.format(doubleValue);
 				}
 				return new SimpleStringProperty(stringValue);	
 			}catch(Exception e){
@@ -56,7 +60,7 @@ public class DoubleTableColumn<T> extends TableColumn<T,String> {
 			T p = cellEditingEvent.getRowValue();
 			try {
 				Double newVal;
-				newVal = df.parse(cellEditingEvent.getNewValue()).doubleValue();
+				newVal = nf.parse(cellEditingEvent.getNewValue()).doubleValue();
 				setMethod.accept(p,newVal);//Double.valueOf( cellEditingEvent.getNewValue()));		
 				//DAH.save(p);
 			} catch (Exception e) {
@@ -70,8 +74,8 @@ public class DoubleTableColumn<T> extends TableColumn<T,String> {
 			public int compare(String arg0, String arg1) {
 
 				try {
-					Double d0 = df.parse(arg0).doubleValue();
-					Double d1 = df.parse(arg1).doubleValue();
+					Double d0 = nf.parse(arg0).doubleValue();
+					Double d1 = nf.parse(arg1).doubleValue();
 
 					return d0.compareTo(d1);
 				} catch (ParseException e) {

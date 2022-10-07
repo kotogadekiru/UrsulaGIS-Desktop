@@ -1,6 +1,7 @@
 package gui;
 
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.opengis.feature.simple.SimpleFeature;
@@ -124,9 +125,7 @@ public class CosechaHistoChart extends VBox {
 		chart.getData().add(series);
 		VBox.getVgrow(chart);
 		this.getChildren().add(chart);
-		DecimalFormat df = new DecimalFormat("#.##"); //$NON-NLS-1$
-		df.setGroupingSize(3);
-		df.setGroupingUsed(true);
+		NumberFormat df = Messages.getNumberFormat();
 		BorderPane bottom = new BorderPane();
 		VBox left = new VBox();
 		left.getChildren().addAll(
@@ -228,9 +227,7 @@ public class CosechaHistoChart extends VBox {
 				public void changed(ObservableValue<? extends Node> ov,	Node oldNode, Node newNode) {
 					if (newNode != null) {
 						newNode.setStyle("-fx-bar-fill: " + color + ";"); //$NON-NLS-1$ //$NON-NLS-2$
-						DecimalFormat df = new DecimalFormat("0.00"); //$NON-NLS-1$
-						df.setGroupingSize(3);
-						df.setGroupingUsed(true);
+						NumberFormat df = Messages.getNumberFormat();
 						
 						double sup = cData.getYValue().doubleValue();//superficie
 						double prod = (Double)cData.getExtraValue();
