@@ -39,7 +39,15 @@ public class LayerAction implements Function<Layer, String>, Comparable<LayerAct
 		return this.name.compareTo(o.name);
 	}
 
-	
+	public static LayerAction constructPredicate(String name,Function<Layer, String> action) {
+		LayerAction lAction=new LayerAction(action);
+		lAction.name=name;
+		return lAction;
+		//		return (layer)->{
+		//			if(layer==null)return name;
+		//			return action.apply(layer);
+		//		};
+	}
 
 
 }

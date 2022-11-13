@@ -66,18 +66,25 @@ public class PolygonValidator {
 	public static Geometry validate(Geometry geom){
 		try {
 			if(geom instanceof Polygon){
+				try {
 				if(geom.isValid()){//exception por cannot compute quadrant for point (0.0, 0.0)
 					geom.normalize(); // validate does not pick up rings in the wrong order - this will fix that
 					return geom; // If the polygon is valid just return it
+				}
+				}catch(Exception e) {
+					System.out.println("no puedo ver si geom.isValid "+geom);
+					e.printStackTrace();
 				}
 				Polygonizer polygonizer = new Polygonizer();
 			
 				addPolygon((Polygon)geom, polygonizer);
 				return toPolygonGeometry(polygonizer.getPolygons(), geom.getFactory());
 			}else if(geom instanceof MultiPolygon){
-				if(geom.isValid()){
+				try {if(geom.isValid()){
 					geom.normalize(); // validate does not pick up rings in the wrong order - this will fix that
 					return geom; // If the multipolygon is valid just return it
+				}}catch(Exception ex){
+					ex.printStackTrace();
 				}
 				Polygonizer polygonizer = new Polygonizer();
 				for(int n = geom.getNumGeometries(); n-- > 0;){

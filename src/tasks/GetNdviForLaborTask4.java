@@ -89,7 +89,7 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 
 	private static final String COPERNICUS_S2 = "COPERNICUSS2";// <a href= COPERNICUSS2_HARMONIZED
 
-	private Poligono placementObject = null;
+	private Poligono contorno = null;
 	private LocalDate end=null;
 	private LocalDate begin=null;
 
@@ -100,16 +100,16 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 	private static DecimalFormat bdf = new DecimalFormat("#,###.00");
 	private List<Ndvi> ndviToIgnore;
 
-	public GetNdviForLaborTask4(Poligono labor, List<Ndvi> _observableList ) {
-		this.placementObject=labor;
+	public GetNdviForLaborTask4(Poligono contorno, List<Ndvi> _observableList ) {
+		this.contorno=contorno;
 	//	downloadDir=downloadDirectory;
 		observableList=_observableList;
 	}
 	public List<Ndvi> call() {	
 		try {
-			return	getNdviTiffFiles(placementObject);
+			return	getNdviTiffFiles(contorno);
 		}catch(Exception e) {
-			System.err.println("error al descargar el ndvi de "+placementObject);
+			System.err.println("error al descargar el ndvi de "+contorno);
 			e.printStackTrace();
 			return null;
 		}

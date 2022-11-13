@@ -100,11 +100,14 @@ public class ConvertirASueloTask extends ProcessMapTask<SueloItem,Suelo > {
 				Number ppmP = props.get(SueloItem.PPM_FOSFORO);
 				Number ppmN = props.get(SueloItem.PPM_N);
 				Number ppmMO = props.get(SueloItem.PPM_MO);
+				
+				Number densidad = props.get(SueloItem.DENSIDAD);
 
 				SueloItem si = new SueloItem();
 				synchronized(labor){
 					si.setId(labor.getNextID());
 				}
+				si.setDensAp(densidad.doubleValue());
 				si.setPpmP(ppmP.doubleValue());
 				si.setPpmNO3(ppmN.doubleValue());
 				si.setPorcMO(ppmMO.doubleValue());

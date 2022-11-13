@@ -34,8 +34,10 @@ import dao.config.Fertilizante;
 import dao.config.Lote;
 import dao.config.Semilla;
 import dao.cosecha.CosechaLabor;
+import dao.pulverizacion.Caldo;
 import dao.recorrida.Recorrida;
 import gui.JFXMain;
+import javafx.util.Callback;
 
 public class DAH {
 	private static final String APPDATA = "APPDATA";
@@ -137,13 +139,13 @@ public class DAH {
 			EntityManagerFactory factory =  Persistence.createEntityManagerFactory("UrsulaGIS", properties);
 			//step 2
 			emLite = factory.createEntityManager();
-			
-//			String hUUID = JFXMain.config.getPropertyOrDefault("DAH.HAS_UUIDS", "False");
-//			if(!"True".equals(hUUID)) {
-//				//	runUpdates();
-//				JFXMain.config.setProperty("DAH.HAS_UUIDS", "True");
-//				JFXMain.config.save();
-//			}
+
+			//			String hUUID = JFXMain.config.getPropertyOrDefault("DAH.HAS_UUIDS", "False");
+			//			if(!"True".equals(hUUID)) {
+			//				//	runUpdates();
+			//				JFXMain.config.setProperty("DAH.HAS_UUIDS", "True");
+			//				JFXMain.config.save();
+			//			}
 
 		}
 		return emLite;
@@ -160,30 +162,30 @@ public class DAH {
 		results.stream().forEach((tableName)->{
 			System.out.println("cheking "+tableName);
 			Query q2 = emLite.createNativeQuery("SELECT TABLE_NAME FROM information_schema.columns as c where c.TABLE_NAME='"+tableName+"' AND c.COLUMN_NAME='"+col+"'");
-			 if(!(q2.getResultList().size()>0)) {
-				 System.out.println("no hay uuids, creando");
-				 									//ALTER TABLE TABLE_NAME ADD COLUMN IF NOT EXISTS COLUMN_NAME VARCHAR(50);
-				 Query q3 = emLite.createNativeQuery("ALTER TABLE "+table+" ADD COLUMN IF NOT EXISTS "+col+" VARCHAR(36)");
-				 q3.executeUpdate();
-				 Query q4 = emLite.createNativeQuery("UPDATE "+table+" SET "+col+"=RANDOM_UUID() ");
-				 q4.executeUpdate();			 
-			 }
+			if(!(q2.getResultList().size()>0)) {
+				System.out.println("no hay uuids, creando");
+				//ALTER TABLE TABLE_NAME ADD COLUMN IF NOT EXISTS COLUMN_NAME VARCHAR(50);
+				Query q3 = emLite.createNativeQuery("ALTER TABLE "+table+" ADD COLUMN IF NOT EXISTS "+col+" VARCHAR(36)");
+				q3.executeUpdate();
+				Query q4 = emLite.createNativeQuery("UPDATE "+table+" SET "+col+"=RANDOM_UUID() ");
+				q4.executeUpdate();			 
+			}
 		}
-		);
-			
-	
-//				"          AND Object_ID = Object_ID(N'schemaName."+table+"')");
-//		"ALTER TABLE TABLE_NAME ADD COLUMN IF NOT EXISTS COLUMN_NAME VARCHAR(50);"
-		
-//		\r\n" + 
-//		"BEGIN\r\n" + 
-//				" alter table "+table+" INSERT UUID varchar(255)\\r\\n"+
-//		//"UPDATE "+table+" set UUID=random_uuid();" + 
-//		"END");//
-//		UPDATE table_name
-//		SET column1 = value1, column2 = value2, ...
-//		WHERE condition;
-		
+				);
+
+
+		//				"          AND Object_ID = Object_ID(N'schemaName."+table+"')");
+		//		"ALTER TABLE TABLE_NAME ADD COLUMN IF NOT EXISTS COLUMN_NAME VARCHAR(50);"
+
+		//		\r\n" + 
+		//		"BEGIN\r\n" + 
+		//				" alter table "+table+" INSERT UUID varchar(255)\\r\\n"+
+		//		//"UPDATE "+table+" set UUID=random_uuid();" + 
+		//		"END");//
+		//		UPDATE table_name
+		//		SET column1 = value1, column2 = value2, ...
+		//		WHERE condition;
+
 		//q.executeUpdate();
 		DAH.commitTransaction();
 	}
@@ -317,6 +319,7 @@ public class DAH {
 
 	public static Establecimiento getEstablecimiento(String establecimientoName) throws Exception {
 		//	EntityManager em = em();
+		//em().getReference(arg0, arg1) //usarlo cuando solo se quiere guardar un objeto que apunta a este.
 		TypedQuery<Establecimiento> query = em().createNamedQuery(
 				Establecimiento.FIND_NAME, Establecimiento.class);
 		query.setParameter("name", establecimientoName);
@@ -382,7 +385,7 @@ public class DAH {
 		//				em.createQuery("SELECT p FROM Producto p where p.nombre like '"+cultivoName+"'", Producto.class);
 		Number count = (Number)em().createNamedQuery(Cultivo.COUNT_ALL).getSingleResult();
 		//System.out.println("hay "+count+" cultivos en la base de datos");
-		
+
 		if(count.intValue() == 0) {
 			List<Cultivo> results = getAllCultivos();//getAll crea los cultivos default
 		}
@@ -433,7 +436,7 @@ public class DAH {
 		//  closeEm();
 		return results;
 	}
-	
+
 	public static List<Ndvi> getNdvi(Poligono contorno, LocalDate assetDate) {
 		TypedQuery<Ndvi> query =
 				em().createNamedQuery(Ndvi.FIND_BY_CONTORNO_DATE, Ndvi.class);
@@ -571,6 +574,13 @@ public class DAH {
 				OrdenCompra.FIND_ALL, OrdenCompra.class);
 		@SuppressWarnings("unchecked")
 		List<OrdenCompra> results = (List<OrdenCompra> ) query.getResultList();
+		return results;
+	}
+
+	public static  List<Caldo> getAllCaldos() {
+		TypedQuery<Caldo> query = em().createNamedQuery(
+				Caldo.FIND_ALL, Caldo.class);
+		List<Caldo> results = (List<Caldo> ) query.getResultList();
 		return results;
 	}
 

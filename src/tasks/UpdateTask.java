@@ -132,13 +132,6 @@ public class UpdateTask  extends Task<File>{
 		}
 		return fout;
 	}
-//	
-//	public static void main(String[] args){
-//		UpdateTask ut = new UpdateTask();
-//		String msiPath ="C:\\Users\\quero\\AppData\\Roaming\\UrsulaGIS\\UrsulaGIS-0.2.18.msi";
-//
-//		ut.instalarNuevaVersion(new File(msiPath));
-//	}
 
 	private void instalarNuevaVersion(File fout) {
 		File bat = new File(fout.getParentFile().getPath()+File.separator+"install.bat");
@@ -164,44 +157,8 @@ public class UpdateTask  extends Task<File>{
 		 Runtime.getRuntime().exec(bat.getAbsolutePath());
 	
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
-		
-//		try {
-//			String install = "msiexec.exe /i ";// UrsulaGIS-0.2.18.msi
-//				String executar = install+fout.getPath();
-//				System.out.println("ejecutando: "+executar);
-//				Runtime.getRuntime().exec(executar);
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//opcion 2 fout es un jar entonces cambio UrsulaGIS.cfg para que ejecute el nuevo jar y modifico el nombre de la carpeta con las dependencias
-//requere permisos elevados y posiblemente que la aplicacion este cerrada!
-//			try {
-//				CustomProperties configProp = new CustomProperties();
-//
-//				FileReader reader = new FileReader("UrsulaGIS.cfg");
-//				configProp.load(reader);
-//
-//				reader.close();
-//
-//				configProp.setProperty("app.mainjar", fout.getName());
-//				configProp.setProperty("app.version",UpdateTask.lastVersionNumber );
-//
-//
-//				FileWriter writer = new FileWriter("UrsulaGIS.cfg");
-//				configProp.store(writer,"");//Calendar.getInstance().getTime().toString());
-//				writer.close();
-//			} catch (IOException e) {
-//
-//				e.printStackTrace();
-//			}
-
-//TODO editar UrsulaGIS.cfg 
-//TODO reemplazar app.mainjar=.\UrsulaGIS0.2.18.jar
-//TODO reemplazar app.version=0.2.18
 	}
 
 
@@ -219,7 +176,6 @@ public class UpdateTask  extends Task<File>{
 									@Override
 									public boolean handleIOException(HttpRequest arg0, boolean arg1)
 											throws IOException {
-										// TODO Auto-generated method stub
 										return true;
 									}
 
@@ -288,15 +244,7 @@ public class UpdateTask  extends Task<File>{
 		GenericUrl url = new GenericUrl(UPDATE_URL);//"http://www.ursulagis.com/update");// "http://www.lanacion.com.ar");
 		url.put("VERSION", JFXMain.VERSION);
 		
-		DecimalFormat dc = new DecimalFormat("0,000");
-		dc.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(new Locale("EN")));
-		dc.setGroupingUsed(true);
-		
-		String userString = dc.format(Math.random()*1000000);
-		Configuracion conf = Configuracion.getInstance();
-		conf.loadProperties();
-		String usr = conf.getPropertyOrDefault("USER", userString);//si no existia la clave se crea una nueva
-		conf.save();
+		String usr = getUserNumber();
 		url.put("USER", usr);
 		
 		System.out.println("calling url=> "+url);
@@ -339,6 +287,19 @@ public class UpdateTask  extends Task<File>{
 			return false;
 		}	
 		return false;
+	}
+
+	public static String getUserNumber() {
+		DecimalFormat userNumberFormat = new DecimalFormat("0,000");
+		userNumberFormat.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(new Locale("EN")));
+		userNumberFormat.setGroupingUsed(true);
+		
+		String userString = userNumberFormat.format(Math.random()*1000*1000);
+		Configuracion conf = Configuracion.getInstance();
+		conf.loadProperties();
+		String usr = conf.getPropertyOrDefault("USER", userString);//si no existia la clave se crea una nueva
+		conf.save();
+		return usr;
 	}
 
 	/**

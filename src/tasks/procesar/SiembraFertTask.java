@@ -422,7 +422,12 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 		int n=0;
 		double areaTotal=0;
 		for(LaborItem li : siembrasPoly){
-			double intersection = li.getGeometry().intersection(poly).getArea();
+			Geometry inter = GeometryHelper.getIntersection(li.getGeometry(), poly);
+			double intersection = 0;
+			if(inter != null) {
+				intersection = inter.getArea();
+			}
+			//double intersection = li.getGeometry().intersection(poly).getArea();
 			areaTotal+=intersection;
 			amountProm+=li.getAmount()*intersection;
 			if(li instanceof SiembraItem) {
@@ -432,9 +437,16 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 			}
 
 		}
+		if(areaTotal>0) {
 		amountProm=amountProm/areaTotal;
 		fertLProm=fertLProm/areaTotal;
 		fertCProm=fertCProm/areaTotal;
+		} else {
+			amountProm=-1;
+			fertLProm=-1;
+			fertCProm=-1;
+			System.err.println("error al calcular las superposiciones de la siembra fertilizada");
+		}
 
 		ret[1]=amountProm;
 		ret[2]=fertLProm;

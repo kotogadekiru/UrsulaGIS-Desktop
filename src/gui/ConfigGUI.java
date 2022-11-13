@@ -40,6 +40,8 @@ import dao.config.Fertilizante;
 import dao.config.Lote;
 import dao.config.Semilla;
 import dao.cosecha.CosechaLabor;
+import dao.pulverizacion.Caldo;
+import dao.pulverizacion.CaldoItem;
 import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
 import gov.nasa.worldwind.geom.Position;
@@ -300,9 +302,11 @@ public class ConfigGUI {
 					SelectionMode.MULTIPLE
 					);
 			table.setOnDoubleClick(()->new Poligono());
+			PoligonoGUIController controller =  new PoligonoGUIController(main);
 			table.setOnShowClick((poli)->{
 				poli.setActivo(true);
-				main.showPoligonos(Collections.singletonList(poli));
+				
+				controller.showPoligonos(Collections.singletonList(poli));
 				if(poli.getPositions().size()>0) {
 					Position pos =poli.getPositions().get(0);
 					main.viewGoTo(pos);
@@ -562,6 +566,68 @@ public class ConfigGUI {
 		}
 	}
 
+	public static Caldo doConfigCaldo(Caldo ret) {
+
+		final ObservableList<CaldoItem> data =
+				FXCollections.observableArrayList(
+						ret.getItems()
+						);
+
+		SmartTableView<CaldoItem> table = new SmartTableView<CaldoItem>(data,
+				Arrays.asList("Id"),//rejected
+				Arrays.asList("Producto","DosisHa")//order
+				);
+		table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
+		table.setEliminarAction(
+				list->{											
+					list.stream().forEach(i->{
+						i.getCaldo().getItems().remove(i);	
+					});
+				}
+				);
+		table.setEditable(true);
+		table.setOnDoubleClick(()->{
+			CaldoItem i = new CaldoItem();
+			ret.getItems().add(i);
+			i.setCaldo(ret);
+			return i;
+		}); //$NON-NLS-1$
+
+		VBox v=new VBox();
+		TextField nombreTF = new TextField();
+		nombreTF.setText(ret.getNombre());
+		nombreTF.textProperty().addListener((obj,old,n)->{
+			ret.setNombre(n);
+		});
+		TextField descripcionTF = new TextField();
+		descripcionTF.setText(ret.getDescripcion());
+		descripcionTF.textProperty().addListener((obj,old,n)->{
+			ret.setDescripcion(n);
+		});
+		v.getChildren().add(nombreTF);
+		v.getChildren().add(descripcionTF);
+		v.getChildren().add(table);
+	
+		Button guardarB = new Button(Messages.getString("JFXMain.saveAction"));//TODO traducir
+		HBox h = new HBox();
+		h.getChildren().addAll(guardarB);
+
+		v.getChildren().add(h);
+		Scene scene = new Scene(v, 800, 600);
+		Stage tablaStage = new Stage();
+		tablaStage.getIcons().add(new Image(JFXMain.ICON));
+		tablaStage.setTitle(Messages.getString("JFXMain.Caldo")); //$NON-NLS-1$
+		tablaStage.setScene(scene);	
+		
+		guardarB.setOnAction(actionEvent->{
+			//System.out.println("implementar GuardarOrden de compra action");
+			//DAH.save(ret);
+			tablaStage.close();
+		});
+		tablaStage.show();	 
+		return ret;		
+	}
+
 	public void doShowOrdenCompraItems(OrdenCompra ret) {
 		Platform.runLater(()->{
 			final ObservableList<OrdenCompraItem> data =
@@ -771,20 +837,18 @@ public class ConfigGUI {
 			table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
 			table.setEliminarAction(
 					list->{
-
 						try {
 							DAH.beginTransaction();						
 							list.stream().forEach(m->{
 								m.getRecorrida().getMuestras().remove(m);	
 							});
 							DAH.save(list.get(0).getRecorrida());
-							List<Object> objs = new ArrayList(list);
+							List<Object> objs = new ArrayList<Object>(list);
 							DAH.removeAll(objs);
 							DAH.commitTransaction();
 						}catch(Exception e) {
 							DAH.rollbackTransaction();
 						}
-
 					}
 					);
 			table.setEditable(true);
@@ -1032,4 +1096,6 @@ public class ConfigGUI {
 
 
 	}
+
+
 }

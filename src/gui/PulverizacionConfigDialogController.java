@@ -1,12 +1,15 @@
 package gui;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import dao.Clasificador;
 import dao.Labor;
 import dao.config.Agroquimico;
+import dao.pulverizacion.Caldo;
+import dao.pulverizacion.CaldoItem;
 import dao.pulverizacion.PulverizacionLabor;
 import gui.utils.DateConverter;
 import javafx.beans.binding.Bindings;
@@ -59,7 +62,7 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 	private TextField textPrecioInsumo;//ok
 
 	@FXML
-	private ComboBox<Agroquimico> comboInsumo;
+	private ComboBox<Caldo> comboInsumo;
 	
 	@FXML
 	private TextField textCostoLaborHa;//ok
@@ -169,8 +172,34 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 //		this.comboPasadas.valueProperty().bindBidirectional(labor.colCantPasadasProperty);
 
 		//insumo
-		this.comboInsumo.setItems(FXCollections.observableArrayList(DAH.getAllAgroquimicos()));//Agroquimico.agroquimicos.values()));
-		this.comboInsumo.valueProperty().bindBidirectional(labor.agroquimico);
+		List<Caldo> caldos = DAH.getAllCaldos();
+		caldos.add(null);
+		Caldo nCaldo = new Caldo();
+		List<CaldoItem> items = new ArrayList<CaldoItem>();
+		CaldoItem item = new CaldoItem();
+		item.setCaldo(nCaldo);
+		items.add(item);
+		nCaldo.setItems(items);
+		nCaldo.setNombre(labor.getNombre());	
+		if(labor.getCaldo()== null) {
+					
+			caldos.add(nCaldo);
+			labor.setCaldo(nCaldo);
+		}
+		
+		this.comboInsumo.setItems(FXCollections.observableArrayList(caldos));//Agroquimico.agroquimicos.values()));
+		this.comboInsumo.getSelectionModel().select(labor.getCaldo());
+		this.comboInsumo.getSelectionModel().selectedItemProperty().addListener((obj,old,n)->{
+			System.out.println("nuevo caldo selected "+n);
+			if(nCaldo.equals(n)) {
+				n = ConfigGUI.doConfigCaldo(nCaldo);
+				//comboInsumo.getItems().add(n);
+				comboInsumo.getSelectionModel().select(n);
+			} 
+			labor.setCaldo(n);
+			
+		});//select(labor.getCaldo());
+		//this.comboInsumo.valueProperty().bindBidirectional(labor.agroquimico);
 
 
 		StringConverter<Number> converter = new NumberStringConverter(Messages.getLocale());

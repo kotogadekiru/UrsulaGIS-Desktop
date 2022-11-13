@@ -254,7 +254,7 @@ public class CosechaHistoChart extends VBox {
 	private String getColorString(int absCat) {
 		int length =colors.length-1;
 		int clases = numClasses-1;//las clases van de cero a numclases -1 para un total de numclases
-		int colorIndex = absCat*(length/clases);
+		int colorIndex = clases ==0?length:absCat*(length/clases);
 		//System.out.println(absCat+"*"+length+"/"+clases+" = "+colorIndex+" colorIndex");
 		return colors[colorIndex];
 	}

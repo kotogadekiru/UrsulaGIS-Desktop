@@ -47,7 +47,9 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 	//public StringProperty colCantPasadasProperty;
 @Transient
 	public Property<Agroquimico> agroquimico=null;
-
+	
+	public Caldo caldo=null;
+	
 	public PulverizacionLabor() {
 		initConfig();
 	}

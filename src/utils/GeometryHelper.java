@@ -88,6 +88,20 @@ public class GeometryHelper {
 		return poly;
 	}
 	
+	public static Poligono constructPoligono(Geometry g) {
+		Poligono p = new Poligono();
+		List<Position> positions = new ArrayList<Position>();
+		Coordinate[] coords = g.getBoundary().getCoordinates();
+		for(int i=0;i<coords.length;i++) {
+			Coordinate c = coords[i];
+			positions.add(Position.fromDegrees(c.y, c.x));
+			
+		}
+		p.setPositions(positions);
+		
+		return p;
+	}
+	
 	public static Polygon constructPolygon(Envelope e) {
 		Coordinate D = new Coordinate(e.getMaxX(), e.getMaxY()); // x-l-d
 		Coordinate C = new Coordinate(e.getMinX(), e.getMaxY());// X+l-d

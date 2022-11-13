@@ -25,38 +25,43 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 	Double ppmP = new Double(0);
 	Double ppmN = new Double(0);
 	Double pMO = new Double(0);
+	Double densidad = new Double(0);
 	Poligono poli=null;
 
-	public CrearSueloMapTask(Suelo labor,Poligono _poli,Double _amount, Double _ppmN, Double _pMO){
+	public CrearSueloMapTask(Suelo labor,Poligono _poli,Double _amount, Double _ppmN, Double _pMO,Double _densidad){
 		super(labor);
 		ppmP=_amount;
 		ppmN=_ppmN;
 		pMO=_pMO;
 		poli=_poli;
+		densidad=_densidad;
 		labor.setNombre(poli.getNombre());
 
 	}
 
 	public void doProcess() throws IOException {
 		SueloItem si = new SueloItem();
+		si.setDensAp(densidad);
 		si.setPpmP(ppmP);
 		si.setPpmNO3(ppmN);
 		si.setPorcMO(pMO);
+		
 
 		labor.setPropiedadesLabor(si);
-		GeometryFactory fact = new GeometryFactory();
-		List<? extends Position> positions = poli.getPositions();
-		Coordinate[] coordinates = new Coordinate[positions.size()];
-		for(int i=0;i<positions.size();i++){
-			Position p = positions.get(i);	
-			Coordinate c = new Coordinate(p.getLongitude().getDegrees(),p.getLatitude().getDegrees(),p.getElevation());
-			
-			coordinates[i]=c;
-		}
-		coordinates[coordinates.length-1]=coordinates[0];//en caso de que la geometria no este cerrada
-		Polygon poly = fact.createPolygon(coordinates);	
+//		GeometryFactory fact = new GeometryFactory();
+//		
+//		List<? extends Position> positions = poli.getPositions();
+//		Coordinate[] coordinates = new Coordinate[positions.size()];
+//		for(int i=0;i<positions.size();i++){
+//			Position p = positions.get(i);	
+//			Coordinate c = new Coordinate(p.getLongitude().getDegrees(),p.getLatitude().getDegrees(),p.getElevation());
+//			
+//			coordinates[i]=c;
+//		}
+//		coordinates[coordinates.length-1]=coordinates[0];//en caso de que la geometria no este cerrada
+//		Polygon poly = fact.createPolygon(coordinates);	
 
-		si.setGeometry(poly);
+		si.setGeometry(poli.toGeometry());
 		
 		labor.insertFeature(si);
 				
@@ -82,12 +87,14 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		sb.append(df.format(si.getPpmNO3()));
 		sb.append(" " + Messages.getString("OpenSoilMapTask.4") + " 0-60cm \n");//Ppm NO3
 		
-		sb.append(df.format(s.ppmToKg(si.getPpmNO3(),0.6)*Fertilizante.porcN_NO3));
+		sb.append(df.format(s.ppmToKg(si.getDensAp(),si.getPpmNO3(),0.6)*Fertilizante.porcN_NO3));
 		sb.append(" kgN/Ha 0-60cm \n");
 		
 		sb.append(df.format(si.getPorcMO()));
 		sb.append("% " + Messages.getString("JFXMain.236") + " 0-20cm \n ");//JFXMain.236=%M0
 		
+		sb.append(df.format(si.getDensAp()));
+		sb.append(" " + "dens" + " kg/m3 \n "); //kg/m3
 		if(area<1){
 			sb.append( Messages.getString("CrearSueloMapTask.sup")+": "+df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n");
 		} else {

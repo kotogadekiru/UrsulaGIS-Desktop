@@ -26,7 +26,7 @@ import utils.ProyectionConstants;
 @Setter(value = AccessLevel.PUBLIC)
 //@Entity
 public class Suelo extends Labor<SueloItem>{
-	private static final double DENSIDAD_SUELO_KG = 1.2*1000;//+-0.4 Arenoso 1650, franco 1400, arcilloso 1250
+	
 	//utilizando una densidad aparente promedio para todos los sitios de 1,3. 
 	//los nombres de las columnas estandar
 	public static final String COLUMNA_N = "PPM_N";
@@ -35,6 +35,7 @@ public class Suelo extends Labor<SueloItem>{
 	public static final String COLUMNA_S = "PPM_S";
 	public static final String COLUMNA_MO = "PORC_MO";
 	
+	public static final String COLUMNA_DENSIDAD = "Densidad";
 	public static final String COLUMNA_PROF_NAPA= "Prof_Nap";
 	public static final String COLUMNA_AGUA_PERFIL= "Agua_Pe";
 
@@ -51,6 +52,8 @@ public class Suelo extends Labor<SueloItem>{
 	public StringProperty colMOProperty;
 	@Transient
 	public StringProperty colProfNapaProperty;
+	@Transient
+	public StringProperty colDensidadProperty;
 	@Transient
 	public StringProperty colAguaPerfProperty;
 	
@@ -82,7 +85,8 @@ public class Suelo extends Labor<SueloItem>{
 				+ Suelo.COLUMNA_S + ":Double,"
 				+ Suelo.COLUMNA_MO + ":Double,"
 				+ Suelo.COLUMNA_PROF_NAPA + ":Double,"
-				+ Suelo.COLUMNA_AGUA_PERFIL + ":Double";
+				+ Suelo.COLUMNA_AGUA_PERFIL + ":Double,"
+				+ Suelo.COLUMNA_DENSIDAD + ":Double";
 
 		return type;
 	}
@@ -98,6 +102,7 @@ public class Suelo extends Labor<SueloItem>{
 		si.setPorcMO(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_MO)));
 		si.setAguaPerfil(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_AGUA_PERFIL)));
 		si.setProfNapa(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_PROF_NAPA)));
+		si.setDensAp(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DENSIDAD)));
 		return si;
 	}
 
@@ -112,6 +117,9 @@ public class Suelo extends Labor<SueloItem>{
 		si.setPorcMO(LaborItem.getDoubleFromObj(next.getAttribute(this.colMOProperty.get())));
 		si.setAguaPerfil(LaborItem.getDoubleFromObj(next.getAttribute(this.colAguaPerfProperty.get())));
 		si.setProfNapa(LaborItem.getDoubleFromObj(next.getAttribute(this.colProfNapaProperty.get())));
+		//if(next.getAttribute(this.colDensidadProperty.get()) != null) {
+		si.setDensAp(LaborItem.getDoubleFromObj(next.getAttribute(this.colDensidadProperty.get())));
+		//}
 		return si;
 	}
 
@@ -136,16 +144,16 @@ public class Suelo extends Labor<SueloItem>{
 		
 		colAguaPerfProperty = PropertyHelper.initStringProperty(COLUMNA_AGUA_PERFIL, properties, availableColums);
 		colProfNapaProperty = PropertyHelper.initStringProperty(COLUMNA_PROF_NAPA, properties, availableColums);
-
+		colDensidadProperty = PropertyHelper.initStringProperty(COLUMNA_DENSIDAD, properties, availableColums);
 		//colAmount= colPProperty;
 		colAmount= new SimpleStringProperty(COLUMNA_P);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
 
 		
 	}
 
-	private Double getDensidad() {
-		return DENSIDAD_SUELO_KG;
-	}
+//	private Double getDensidad() {
+//		return DENSIDAD_SUELO_KG;
+//	}
 
 	public void setPropiedadesLabor(SueloItem ci) {
 //		ci.precioTnGrano =this.precioGranoProperty.get();
@@ -160,31 +168,31 @@ public class Suelo extends Labor<SueloItem>{
 	 * @param prof la profundidad de suelo a considerar la densidad
 	 * @return la cantidad de kg que representa la densidad en la profundidad de suelo determinada
 	 */
-	public double ppmToKg(double ppm,double prof) {
-		double kgSueloHa = ProyectionConstants.METROS2_POR_HA*prof*this.getDensidad();
+	public double ppmToKg(double densidad, double ppm,double prof) {
+		double kgSueloHa = ProyectionConstants.METROS2_POR_HA*prof*densidad;
 		Double kgNHa= (Double)ppm*kgSueloHa/1000000;//divido por un millon
 		return kgNHa;
 	}
 	
-	public double kgToPpm(double kg,double prof) {
-		double kgSueloHa = ProyectionConstants.METROS2_POR_HA*prof*this.getDensidad();
+	public double kgToPpm(double densidad,double kg,double prof) {
+		double kgSueloHa = ProyectionConstants.METROS2_POR_HA*prof*densidad;
 		Double ppm= (Double) kg*1000000/(kgSueloHa);//por un millon
 		return ppm;
 	}
 	/**
 	 * metodo para convertir de porcentaje a kg en 0 a determinada profundidad
-	 * @param ppm la densidad a convertir
+	 * @param porc la densidad a convertir
 	 * @param prof la profundidad de suelo a considerar la densidad
 	 * @return la cantidad de kg que representa la densidad en la profundidad de suelo determinada
 	 */
-	public double porcToKg(double ppm,double prof) {
-		double kgSueloHa = ProyectionConstants.METROS2_POR_HA*prof*this.getDensidad();
-		Double kgNHa= (Double)ppm*kgSueloHa/100;//divido por cien
+	public double porcToKg(double densidad, double porc,double prof) {
+		double kgSueloHa = ProyectionConstants.METROS2_POR_HA*prof*densidad;
+		Double kgNHa= (Double)porc*kgSueloHa/100;//divido por cien
 		return kgNHa;
 	}
 	
-	public double kgToPorc(double kg,double prof) {
-		double kgSueloHa = ProyectionConstants.METROS2_POR_HA*prof*this.getDensidad();
+	public double kgToPorc(double densidad, double kg,double prof) {
+		double kgSueloHa = ProyectionConstants.METROS2_POR_HA*prof*densidad;
 		Double ppm= (Double) kg*100/(kgSueloHa);//por un millon
 		return ppm;
 	}
@@ -206,7 +214,7 @@ public class Suelo extends Labor<SueloItem>{
 		//double kgSueloHa = ProyectionConstants.METROS2_POR_HA*0.6*this.getDensidad();
 		//Double kgNHa= (Double) item.getPpmN()*kgSueloHa*Fertilizante.porcN_NO3/1000000;
 		
-		Double kgNHa= ppmToKg(item.getPpmNO3(),0.6)*Fertilizante.porcN_NO3;
+		Double kgNHa= ppmToKg(item.getDensAp(),item.getPpmNO3(),0.6)*Fertilizante.porcN_NO3;
 		return kgNHa;		
 	}
 	
@@ -215,10 +223,10 @@ public class Suelo extends Labor<SueloItem>{
 	 * @param kgNHa
 	 * @return la densidad en ppm para 0-60cm en el suelo 
 	 */
-	public double calcPpmNHaKg(Double kgNHa) {
+	public double calcPpmNHaKg(Double densidad, Double kgNHa) {
 		//double kgSueloHa = ProyectionConstants.METROS2_POR_HA*0.6*this.getDensidad();
 		//Double ppmN= (Double) kgNHa*1000000/(kgSueloHa*Fertilizante.porcN_NO3);
-		return kgToPpm(kgNHa,0.6)/Fertilizante.porcN_NO3;//convierto de n elemento a N03 para poder comparar con los analisis de laboratorio		
+		return kgToPpm(densidad,kgNHa,0.6)/Fertilizante.porcN_NO3;//convierto de n elemento a N03 para poder comparar con los analisis de laboratorio		
 	}
 	
 	//MATERIA ORGANICA
@@ -226,13 +234,13 @@ public class Suelo extends Labor<SueloItem>{
 		//double kgSueloHa0_20 = ProyectionConstants.METROS2_POR_HA*0.2*this.getDensidad();
 		//Double kgNHa= (Double) item.getPpmMO()*kgSueloHa0_20/1000000;//no es un por millon
 		//Double kgNHa= (Double) item.getPpmMO()*kgSueloHa0_20/100;//es un porcentaje
-		return porcToKg(item.getPorcMO(), 0.2);		
+		return porcToKg(item.getDensAp(),item.getPorcMO(), 0.2);		
 	}
 	
-	public double calcPorcMoHaKg(Double kgMoHa) {
+	public double calcPorcMoHaKg(Double densidad,Double kgMoHa) {
 		//double kgSueloHa = ProyectionConstants.METROS2_POR_HA*0.2*this.getDensidad();
 		//Double ppmN= (Double) kgMoHa*100/(kgSueloHa);
-		return kgToPorc(kgMoHa, 0.2);
+		return kgToPorc(densidad,kgMoHa, 0.2);
 	}
 	
 	public double getKgNOrganicoHa(SueloItem item) {
@@ -240,17 +248,18 @@ public class Suelo extends Labor<SueloItem>{
 		return kgNorganicoHa;
 	}
 	
-	//FIXME no dividir por el peso del pentoxido. todos los pesos son de kg de P
+	// no dividir por el peso del pentoxido. todos los pesos son de kg de P
 	// FOSFORO
 	public double getKgPHa(SueloItem item) {
 		//double kgSueloHa = ProyectionConstants.METROS2_POR_HA*0.2*this.getDensidad();
 		//Double kgNHa= (Double) item.getPpmP()*kgSueloHa*Fertilizante.porcP_PO4/1000000;
-		return ppmToKg(item.getPpmP(),0.2);//*Fertilizante.porcP_PO4;		
+		//la densidad se corrije al crear el elemento en el task
+		return ppmToKg(item.getDensAp(),item.getPpmP(),0.2);//*Fertilizante.porcP_PO4;		
 	}
 	
-	public double calcPpmPHaKg(Double kgPHa) {
+	public double calcPpmPHaKg(Double densidad,Double kgPHa) {
 		//double kgSueloHa = ProyectionConstants.METROS2_POR_HA*0.2*this.getDensidad();
 		//Double ppmP= (Double) kgPHa*1000000/(kgSueloHa*Fertilizante.porcP_PO4);
-		return  kgToPpm(kgPHa,0.2);// /Fertilizante.porcP_PO4;	
+		return  kgToPpm(densidad, kgPHa,0.2);// /Fertilizante.porcP_PO4;	
 	}
 }

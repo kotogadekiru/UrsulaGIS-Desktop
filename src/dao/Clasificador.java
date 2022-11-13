@@ -96,10 +96,11 @@ public class Clasificador {
 //		df.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(new Locale("EN")));
 //		df.setGroupingSize(3);
 //		df.setGroupingUsed(true);
-		if(histograma != null){
+		if(histograma != null ){
 			//	Double delta = histograma[1]-histograma[0];
-
-			if(index == 0){
+			if(histograma.length==0) {// se creo el histograma pero no hay nigun limite porque hay una sola clase
+				rangoIni = "-inf ~ +inf";//java.lang.ArrayIndexOutOfBoundsException: 0
+			}else if(index == 0){
 				rangoIni = "-inf ~ "+ df.format(histograma[0]);//java.lang.ArrayIndexOutOfBoundsException: 0
 			}else if(index < histograma.length ){
 				rangoIni = df.format(histograma[index-1])+" ~ "+ df.format(histograma[index]);
@@ -347,6 +348,8 @@ public class Clasificador {
 
 		//	System.out.println("termine de ordenar los elementos en constructHistogram");
 		int numLimites = getNumClasses()-1;//esto es porque el histograma se extiende hacia el infinito por lo que gana una clase
+		
+		//si tiene una sola clase, tiene cero limites
 		histograma=new Double[numLimites];//2 clases 1 limite, 3 clases 2 limites...
 
 

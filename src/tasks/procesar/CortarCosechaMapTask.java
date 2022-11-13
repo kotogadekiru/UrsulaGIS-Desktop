@@ -131,12 +131,12 @@ public class CortarCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabo
 
 	//	List<CosechaItem> itemsToShow = new ArrayList<CosechaItem>();
 
-		SimpleFeatureIterator it = labor.outCollection.features();
-		while(it.hasNext()){
-			SimpleFeature f=it.next();
-		//	itemsToShow.add(labor.constructFeatureContainerStandar(f,false));
-		}
-		it.close();
+//		SimpleFeatureIterator it = labor.outCollection.features();
+//		while(it.hasNext()){
+//			SimpleFeature f=it.next();
+//		//	itemsToShow.add(labor.constructFeatureContainerStandar(f,false));
+//		}
+//		it.close();
 
 		//runLater(itemsToShow);
 		runLater(this.getItemsList());

@@ -22,6 +22,7 @@ import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
@@ -33,7 +34,9 @@ import dao.siembra.SiembraLabor;
 import gui.Messages;
 import tasks.ProgresibleTask;
 import utils.FileHelper;
+import utils.GeometryHelper;
 import utils.PolygonValidator;
+import utils.ProyectionConstants;
 
 
 /**
@@ -98,6 +101,7 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 
 		List<LaborItem> items = new ArrayList<LaborItem>();
 
+		
 		SimpleFeatureIterator it = laborToExport.outCollection.features();
 		while(it.hasNext()){
 			SiembraItem fi = laborToExport.constructFeatureContainerStandar(it.next(),false);
@@ -105,12 +109,38 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 		}
 		it.close();
 
+		
+		
 		int zonas = items.size();
 
 		if(zonas>=100) {
 			reabsorverZonasChicas(items);
 		}
 
+		//TODO si una geometria tiene mas de 50 sub zonas descartar las chicas
+		//TODO simplificar las geometrias con presicion de 0.0001grados
+		for(LaborItem item:items) {
+			System.out.println("procesando geometry con "+item.getGeometry().getNumGeometries()+" geometrias");
+			if(item.getGeometry().getNumGeometries()>50){
+				
+				Geometry g50 = item.getGeometry();
+				System.out.println("reduciendo item "+item+ "porque tiene mas de 50 partes "+g50.toString());
+				//TODO reducir geometry
+				List<Geometry> simples = new ArrayList<Geometry>();
+				for(int i=0;i<g50.getNumGeometries();i++) {
+					Geometry g = g50.getGeometryN(i);
+					simples.add(g);//GeometryHelper.simplify(g));
+				}
+				simples.sort((g1,g2)->{					
+					return Double.compare(g1.getArea(),g2.getArea());
+				});
+				List<Geometry> simplesGrandes =simples.subList(0,50-1);
+				GeometryCollection col = new GeometryCollection(simplesGrandes.toArray(new Geometry[simplesGrandes.size()]),g50.getFactory());
+				Geometry buf =  col.buffer(ProyectionConstants.metersToLongLat(0.25));
+				item.setGeometry(buf);
+			}
+		}
+		
 		DefaultFeatureCollection exportFeatureCollection =  new DefaultFeatureCollection("PrescType",type); //$NON-NLS-1$
 		SimpleFeatureBuilder fb = new SimpleFeatureBuilder(type);//ok
 
@@ -201,11 +231,9 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 
 
 	public static void reabsorverZonasChicas( List<LaborItem> items) {
-		//TODO reabsorver zonas mas chicas a las mas grandes vecinas
+		// reabsorver zonas mas chicas a las mas grandes vecinas
 		System.out.println("tiene mas de 100 zonas, reabsorviendo..."); //$NON-NLS-1$
-		//TODO tomar las 100 zonas mas grandes y reabsorver las otras en estas
-
-
+		// tomar las 100 zonas mas grandes y reabsorver las otras en estas
 
 		items.sort((i1,i2)->-1*Double.compare(i1.getGeometry().getArea(), i2.getGeometry().getArea()));					
 		List<LaborItem> itemsAgrandar =items.subList(0,100-1);

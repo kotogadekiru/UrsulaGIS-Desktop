@@ -14,14 +14,13 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Transient;
 
 import com.google.gson.Gson;
-import com.vividsolutions.jts.geom.Point;
 
 import dao.suelo.SueloItem;
 import gov.nasa.worldwind.geom.Position;
+import gui.Messages;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 /**
  * clase que representa una observacion
@@ -83,6 +82,8 @@ public class Muestra {
 		map.put(SueloItem.PPM_MO, "");
 		map.put(SueloItem.PROF_NAPA, "");
 		map.put(SueloItem.AGUA_PERFIL, "");
+		String densidadDefault =  Messages.getNumberFormat().format(SueloItem.DENSIDAD_SUELO_KG);
+		map.put(SueloItem.DENSIDAD,densidadDefault);
 
 		String observacion = new Gson().toJson(map);
 		this.setObservacion(observacion);		

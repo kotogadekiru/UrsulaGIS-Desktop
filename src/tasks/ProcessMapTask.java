@@ -81,6 +81,7 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
+import utils.GeometryHelper;
 import utils.PolygonValidator;
 import utils.ProyectionConstants;
 //import org.opengis.filter.FilterFactory2;
@@ -1048,7 +1049,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 			Double rinde = fc.getAmount();//labor.colAmount.get()
 
-			Double a = g.getArea() * ProyectionConstants.A_HAS();
+			Double a = GeometryHelper.getHas(g);//.getArea() * ProyectionConstants.A_HAS();
 
 			labor.setCantidadLabor(labor.getCantidadLabor()+a);
 			labor.setCantidadInsumo(labor.getCantidadInsumo()+rinde*a);

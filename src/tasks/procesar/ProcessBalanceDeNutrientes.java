@@ -30,6 +30,8 @@ import dao.suelo.SueloItem;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
 import gui.nww.LaborLayer;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import tasks.ProcessMapTask;
 import tasks.crear.CrearSueloMapTask;
 import utils.GeometryHelper;
@@ -60,6 +62,7 @@ public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> 
 		this.cosechas =cosechas;
 
 		Suelo suelo = new Suelo();
+		suelo.colDensidadProperty=new SimpleStringProperty("Densidad");
 		suelo.setLayer(new LaborLayer());
 		StringBuilder sb = new StringBuilder();
 		sb.append("Balance de Nutrientes ");
@@ -152,8 +155,11 @@ public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> 
 
 	}
 private SueloItem createSueloForPoly(Geometry geomQuery) {	
-		Double areaQuery =ProyectionConstants.A_HAS( geomQuery.getArea());
+	
+		Double areaQuery =GeometryHelper.getHas(geomQuery);//ProyectionConstants.A_HAS( geomQuery.getArea());
+		if(!(areaQuery>0))return null;//si el area no es mayor a cero paso a la siguiente
 		//	* ProyectionConstants.A_HAS();
+		Double pesoSueloQuery = getKgSuelo(geomQuery);
 		Double kgPSuelo = getKgPSuelo(geomQuery);	
 		Double kgPFert = getKgPFertilizacion(geomQuery);
 		Double 	kgPCosecha = getPpmPCosecha(geomQuery);
@@ -179,6 +185,9 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 				&& kgMoSuelo == 0
 				&& kgMoCosecha == 0
 				&& elev == 10)return null;//descarto los que no tienen valores
+		
+		Double newDensSuelo = pesoSueloQuery/areaQuery;// y si hay superposicion entre los suelo item? no deberia
+		
 		//P
 		Double newKgHaPSuelo = (kgPFert + kgPSuelo - kgPCosecha) / areaQuery;
 		//no tomo el n organico porque lo calculo al momento de hacer la recomendacion y no quiero duplicaciones
@@ -192,17 +201,17 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 //		System.out.println("cantFertilizante agregada= " + kgPFert);
 //		System.out.println("cantFertilizante absorvida= " + kgPCosecha);
 //		System.out.println("newKgHaPSuelo = "+newKgHaPSuelo);
-		Double newPpmPsuelo=labor.calcPpmPHaKg(newKgHaPSuelo);///(labor.getDensidad()/2);
+		Double newPpmPsuelo=labor.calcPpmPHaKg(newDensSuelo,newKgHaPSuelo);///(labor.getDensidad()/2);
 	//	System.out.println("newPpmPsuelo = "+newPpmPsuelo);
-		Double newPpmNsuelo=labor.calcPpmNHaKg(newKgHaNSuelo);//labor.getDensidad();
+		Double newPpmNsuelo=labor.calcPpmNHaKg(newDensSuelo,newKgHaNSuelo);//labor.getDensidad();
 		
-		Double newPMoSuelo = labor.calcPorcMoHaKg(newKgHaMOSuelo);
+		Double newPMoSuelo = labor.calcPorcMoHaKg(newDensSuelo,newKgHaMOSuelo);
 		SueloItem sueloItem = new SueloItem();
 		synchronized(labor){
 			//fi= new FertilizacionItem();					
 			sueloItem.setId(labor.getNextID());
 		}
-		
+		sueloItem.setDensAp(newDensSuelo);
 		sueloItem.setGeometry(geomQuery);
 		sueloItem.setPpmP(newPpmPsuelo);
 		sueloItem.setPpmNO3(newPpmNsuelo);
@@ -418,7 +427,34 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 		return kgNSuelo;
 	}
 	
+	//busco todos los items de los mapas de suelo
+	//calculo cuantas ppm aporta al cultivo,
+	//las sumo
+	//y devuelve la suma de las ppm existentes en el suelo para esa geometria
+	//XXX tener en cuenta que ppm es una unidad de concentracion y no creo que se puedad sumar directamente. 
+	//habria que pasar a gramos o promediar por la superficie total
+	private Double getKgSuelo(Geometry geomQuery) {
+		Double kgPSuelo = new Double(0);
+		kgPSuelo=	suelos.parallelStream().flatMapToDouble(suelo->{
+			List<SueloItem> items = suelo.cachedOutStoreQuery(geomQuery.getEnvelopeInternal());
+			return items.parallelStream().flatMapToDouble(item->{
+				Double dens= item.getDensAp();// (Double) item.getPpmP()*suelo.getDensidad()/2;//TODO multiplicar por la densidad del suelo
+				Geometry geomItem = item.getGeometry();				
 
+				Double hasInterseccion = 0.0;
+				try {
+					//XXX posible punto de error/ exceso de demora/ inneficicencia
+					Geometry inteseccionGeom = GeometryHelper.getIntersection(geomQuery, geomItem);//geometry.intersection(geom);// Computes a
+					hasInterseccion=GeometryHelper.getHas(inteseccionGeom);
+					// Geometry
+				} catch (Exception e) {
+					e.printStackTrace();
+				}				
+				return DoubleStream.of( dens * hasInterseccion);				
+			});
+		}).sum();
+		return kgPSuelo;
+	} 
 	//busco todos los items de los mapas de suelo
 	//calculo cuantas ppm aporta al cultivo,
 	//las sumo
