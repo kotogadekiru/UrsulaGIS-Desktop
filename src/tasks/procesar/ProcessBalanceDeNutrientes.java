@@ -145,9 +145,9 @@ public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> 
 			updateProgress(featureNumber, featureCount);
 		}
 
-		for(Labor<?> c:labores){
-			c.clearCache();
-		}
+//		for(Labor<?> c:labores){
+//			c.clearCache();
+//		}
 		labor.constructClasificador();
 		runLater(this.getItemsList());
 		updateProgress(0, featureCount);

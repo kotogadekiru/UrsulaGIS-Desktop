@@ -14,6 +14,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
 import com.vividsolutions.jts.geom.Coordinate;
@@ -24,6 +25,7 @@ import com.vividsolutions.jts.geom.Polygon;
 import dao.config.Lote;
 
 import javax.persistence.AccessType;
+import javax.persistence.CascadeType;
 
 import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
@@ -62,6 +64,8 @@ public class Poligono implements Comparable<Poligono>{
 	private List<Position> positions = new ArrayList<Position>();
 	@Transient
 	private Layer layer =null;
+	
+	private List<Ndvi> imagenesPoligono =null;
 
 
 	private static DecimalFormat lonLatFormat = null;
@@ -84,6 +88,10 @@ public class Poligono implements Comparable<Poligono>{
 		return this.id;
 	}
 
+	@OneToMany(cascade=CascadeType.ALL, mappedBy="contorno",orphanRemoval=true)
+	private List<Ndvi> getImagenesPoligono(){
+		return this.imagenesPoligono;
+	}
 	public String getPositionsString(){
 		StringBuilder sb = new StringBuilder();
 		sb.append(COORDINATE_OPEN);
@@ -125,6 +133,7 @@ public class Poligono implements Comparable<Poligono>{
 					String lat = latlon[0];
 					String lon = latlon[1];
 					try{
+						//FIXME ava.lang.NumberFormatException: For input string: ".336706456E2336706456E2"
 						Double dLat = lonLatFormat.parse(lat).doubleValue();// new Double(lon);
 						Double dLon = lonLatFormat.parse(lon).doubleValue();// new Double(lon);
 

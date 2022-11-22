@@ -176,6 +176,7 @@ import tasks.importar.ProcessFertMapTask;
 import tasks.importar.ProcessHarvestMapTask;
 import tasks.importar.ProcessPulvMapTask;
 import tasks.importar.ProcessSiembraMapTask;
+import tasks.procesar.CalcularTasaDeCrecimientoTask;
 import tasks.procesar.CortarCosechaMapTask;
 import tasks.procesar.CrearSiembraDesdeFertilizacionTask;
 import tasks.procesar.ExportarCosechaDePuntosTask;
@@ -518,6 +519,7 @@ public class JFXMain extends Application {
 		addMenuItem(Messages.getString("JFXMain.generarOrdenCompra"),(a)->doGenerarOrdenDeCompra(),menuHerramientas); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.goTo"),(a)->showGoToDialog(),menuHerramientas);
 		addMenuItem(Messages.getString("JFXMain.bulk_ndvi_download"),(a)->{	doBulkNDVIDownload();},menuHerramientas);//$NON-NLS-1$
+		addMenuItem(Messages.getString("JFXMain.bulk_tasa_crecimiento_download"),(a)->{	doBulkTCDownload();},menuHerramientas);//$NON-NLS-1$
 
 
 		/*Menu Exportar*/
@@ -1201,6 +1203,23 @@ public class JFXMain extends Application {
 			return "rinde estimado desde ndvi" + layer.getName(); //$NON-NLS-1$
 		}));
 
+		ndviP.add(constructPredicate(Messages.getString("JFXMain.convertirNDVIaTazaPP"),(layer)->{
+			Object o =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			if(o instanceof Ndvi){
+				doConvertirNdviATazaPP((Ndvi) o);
+			}
+
+			return "taza pp estimado desde ndvi" + layer.getName(); //$NON-NLS-1$
+		}));
+		
+		ndviP.add(constructPredicate(Messages.getString("JFXMain.convertirNDVIaTazaCN"),(layer)->{
+			Object o =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			if(o instanceof Ndvi){
+				doConvertirNdviATazaCN((Ndvi) o);
+			}
+
+			return "taza CN estimado desde ndvi" + layer.getName(); //$NON-NLS-1$
+		}));
 
 		ndviP.add(constructPredicate(Messages.getString("JFXMain.convertirNDVIaFertInversaAction"),(layer)->{
 			Object o =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
@@ -1750,6 +1769,14 @@ public class JFXMain extends Application {
 		gui.show();
 	}
 
+	/**
+	 * metodo que muestra una tabla con poligonos que se pueden seleccionar para descargar el valor de los ndvi
+	 * de cada uno dentro de un periodo determinado
+	 */
+	private void doBulkTCDownload() {
+		TasaDeCrecimientoDownloadGUI gui = new TasaDeCrecimientoDownloadGUI();
+		gui.show();
+	}
 
 	private void showHistoNDVI(Ndvi  ndvi) {	
 
@@ -2215,6 +2242,101 @@ public class JFXMain extends Application {
 	}
 
 
+	private void doConvertirNdviATazaPP(Ndvi ndvi) {
+		CosechaLabor labor = new CosechaLabor();
+		labor.setNombre(ndvi.getNombre());
+
+		Date date = java.util.Date.from(ndvi.getFecha().atStartOfDay()
+				.atZone(ZoneId.systemDefault())
+				.toInstant());
+
+		labor.setFecha(date);
+		labor.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
+		LaborLayer layer = new LaborLayer();
+		labor.setLayer(layer);
+		Optional<CosechaLabor> cosechaConfigured= HarvestConfigDialogController.config(labor);
+		if(!cosechaConfigured.isPresent()){//
+			//System.out.println("el dialogo termino con cancel asi que no continuo con la cosecha"); //$NON-NLS-1$
+			labor.dispose();//libero los recursos reservados
+			return;
+		}	
+
+		CalcularTasaDeCrecimientoTask umTask = new CalcularTasaDeCrecimientoTask(labor,ndvi);
+		umTask.isPP(true);
+		umTask.installProgressBar(progressBox);
+
+		umTask.setOnSucceeded(handler -> {
+			CosechaLabor ret = (CosechaLabor)handler.getSource().getValue();
+			insertBeforeCompass(getWwd(), ret.getLayer());
+			umTask.uninstallProgressBar();
+			ndvi.getLayer().setEnabled(false);
+
+			ProcessHarvestMapTask pmtask = new ProcessHarvestMapTask(ret);
+			pmtask.installProgressBar(progressBox);
+			pmtask.setOnSucceeded(handler2 -> {
+				this.getLayerPanel().update(this.getWwd());
+				pmtask.uninstallProgressBar();
+
+				this.wwjPanel.repaint();
+				System.out.println(Messages.getString("JFXMain.279")); //$NON-NLS-1$
+				playSound();
+
+				viewGoTo(ret);
+				//ndvi.getLayer().setEnabled(false);
+			});
+			pmtask.run();
+		});//fin del OnSucceeded
+		JFXMain.executorPool.execute(umTask);		
+	}
+	
+	private void doConvertirNdviATazaCN(Ndvi ndvi) {
+		CosechaLabor labor = new CosechaLabor();
+		labor.setNombre(ndvi.getNombre());
+
+		Date date = java.util.Date.from(ndvi.getFecha().atStartOfDay()
+				.atZone(ZoneId.systemDefault())
+				.toInstant());
+
+		labor.setFecha(date);
+		labor.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
+		LaborLayer layer = new LaborLayer();
+		labor.setLayer(layer);
+		Optional<CosechaLabor> cosechaConfigured= HarvestConfigDialogController.config(labor);
+		if(!cosechaConfigured.isPresent()){//
+			//System.out.println("el dialogo termino con cancel asi que no continuo con la cosecha"); //$NON-NLS-1$
+			labor.dispose();//libero los recursos reservados
+			return;
+		}							
+
+	
+
+		CalcularTasaDeCrecimientoTask umTask = new CalcularTasaDeCrecimientoTask(labor,ndvi);
+		umTask.isCN(true);
+		umTask.installProgressBar(progressBox);
+
+		umTask.setOnSucceeded(handler -> {
+			CosechaLabor ret = (CosechaLabor)handler.getSource().getValue();
+			insertBeforeCompass(getWwd(), ret.getLayer());
+			umTask.uninstallProgressBar();
+			ndvi.getLayer().setEnabled(false);
+
+			ProcessHarvestMapTask pmtask = new ProcessHarvestMapTask(ret);
+			pmtask.installProgressBar(progressBox);
+			pmtask.setOnSucceeded(handler2 -> {
+				this.getLayerPanel().update(this.getWwd());
+				pmtask.uninstallProgressBar();
+
+				this.wwjPanel.repaint();
+				System.out.println(Messages.getString("JFXMain.279")); //$NON-NLS-1$
+				playSound();
+
+				viewGoTo(ret);
+				//ndvi.getLayer().setEnabled(false);
+			});
+			pmtask.run();
+		});//fin del OnSucceeded
+		JFXMain.executorPool.execute(umTask);		
+	}
 	private void doConvertirNdviACosecha(Ndvi ndvi) {
 		CosechaLabor labor = new CosechaLabor();
 		labor.setNombre(ndvi.getNombre());

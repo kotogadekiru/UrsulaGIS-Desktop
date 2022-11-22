@@ -32,6 +32,7 @@ import dao.Poligono;
 import dao.OrdenDeCompra.OrdenCompra;
 import dao.OrdenDeCompra.OrdenCompraItem;
 import dao.config.Agroquimico;
+import dao.config.Asignacion;
 import dao.config.Campania;
 import dao.config.Cultivo;
 import dao.config.Empresa;
@@ -121,6 +122,7 @@ public class ConfigGUI {
 		addMenuItem(Messages.getString("JFXMain.configEstablecimientoMI"),(a)->doConfigEstablecimiento(),menuConfiguracion); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.configLoteMi"),(a)->doConfigLote(),menuConfiguracion); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.configCampaniaMI"),(a)->doConfigCampania(),menuConfiguracion); //$NON-NLS-1$
+		addMenuItem(Messages.getString("JFXMain.configAsignacionMI"),(a)->doConfigAsignacion(),menuConfiguracion); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.configPoligonosMI"),(a)->doConfigPoligonos(),menuConfiguracion); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.configNDVIMI"),(a)->doShowNdviTable(),menuConfiguracion); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.configRecorridaMI"),(a)->doShowRecorridaTable(),menuConfiguracion); //$NON-NLS-1$
@@ -168,7 +170,13 @@ public class ConfigGUI {
 			//	SmartTableView<Cultivo> table = new SmartTableView<Cultivo>(dataLotes);//,dataLotes);
 			SmartTableView<Cultivo> table = new SmartTableView<Cultivo>(dataLotes,
 					Arrays.asList("Id"),
-					Arrays.asList("AbsN","AbsK","AbsP")
+					Arrays.asList("Nombre","Estival",
+							"AbsN","ExtN",
+							"AbsP","ExtP",
+							"AbsK","ExtK",
+							"AbsS","ExtS",
+							"AporteMO","RindeEsperado",
+							"TasaCrecimientoPendiente","TasaCrecimientoOrigen")
 					);
 			table.setEditable(true);
 			table.setOnDoubleClick(()->new Cultivo(Messages.getString("JFXMain.372"))); //$NON-NLS-1$
@@ -268,12 +276,15 @@ public class ConfigGUI {
 		Platform.runLater(()->{
 			final ObservableList<Campania> data =
 					FXCollections.observableArrayList(
-							DAH.getAllCampanias()
+							DAH.getAllCampanias()							
 							);
 			if(data.size()==0){
 				data.add(new Campania(Messages.getString("JFXMain.378")));//TODO obtener el anio actual y armar 16/17 //$NON-NLS-1$
 			}
-			SmartTableView<Campania> table = new SmartTableView<Campania>(data);//,data);
+			SmartTableView<Campania> table = new SmartTableView<Campania>(data,
+					Arrays.asList("Id"),
+					Arrays.asList("Nombre","Inicio","Fin")
+					);//,data);
 			table.setEditable(true);
 			table.setOnDoubleClick(()->new Campania(Messages.getString("JFXMain.379"))); //$NON-NLS-1$
 			Scene scene = new Scene(table, 800, 600);
@@ -298,6 +309,32 @@ public class ConfigGUI {
 					Arrays.asList("Activo","Nombre","Lote","Area","PositionsString")
 					);
 			table.setEditable(true);
+			table.setEliminarAction(list->
+				JFXMain.executorPool.execute(()->{
+				try {
+				//decidir que hacer con los ndvi. borralos o dejarlos huerfanos
+				DAH.beginTransaction();
+				list.stream().forEach(p->{
+					p.setLote(null);
+					List<Ndvi> ndviPoli = DAH.getNdvi(p);
+					ndviPoli.stream().forEach(n->{
+						n.setContorno(null);
+						DAH.save(n);
+						System.out.println("quitando poligono de "+n);
+					});
+					System.out.println("eliminando "+p);
+					
+				});
+				List<Object> toRemove = new ArrayList<Object>();
+				toRemove.addAll(list);
+				DAH.removeAll(toRemove);
+				DAH.commitTransaction();
+				}catch(Exception e) {
+					System.out.println("no se pudo borrar");
+					
+				}
+			})
+			);
 			table.getSelectionModel().setSelectionMode(
 					SelectionMode.MULTIPLE
 					);
@@ -315,6 +352,7 @@ public class ConfigGUI {
 					});
 				}
 			});
+			
 
 
 			Scene scene = new Scene(table, 800, 600);
@@ -996,6 +1034,30 @@ public class ConfigGUI {
 		});	
 	}
 
+	public static void doConfigAsignacion() {
+		Platform.runLater(()->{
+			final ObservableList<Asignacion> data =
+					FXCollections.observableArrayList(
+							DAH.getAllAsignaciones()
+							);
+			if(data.size()<1){
+				data.add(new Asignacion());
+			}
+			SmartTableView<Asignacion> table = new SmartTableView<Asignacion>(data,
+					Arrays.asList("Id"),                 //rejected
+					Arrays.asList("Lote","Campania","Cultivo","Contorno"));//order
+			table.setEditable(true);
+			table.setOnDoubleClick(()->new Asignacion()); //$NON-NLS-1$
+
+			Scene scene = new Scene(table, 800, 600);
+			Stage tablaStage = new Stage();
+			tablaStage.getIcons().add(new Image(JFXMain.ICON));
+			tablaStage.setTitle(Messages.getString("JFXMain.configAsignacionMI")); //$NON-NLS-1$
+			tablaStage.setScene(scene);
+			tablaStage.show();	 
+
+		});	
+	}
 
 	public static void doConfigEmpresa() {
 		Platform.runLater(()->{

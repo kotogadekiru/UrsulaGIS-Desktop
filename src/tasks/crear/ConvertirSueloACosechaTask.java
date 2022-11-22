@@ -29,18 +29,23 @@ public class ConvertirSueloACosechaTask extends ProcessMapTask<CosechaItem,Cosec
 	}
 
 	public void doProcess() throws IOException {		
+		featureNumber = 0;
+		featureCount = this.suelo.outCollection.getCount();
 		FeatureReader<SimpleFeatureType, SimpleFeature> reader = this.suelo.outCollection.reader();
 		while(reader.hasNext()){
 			SimpleFeature f = reader.next();
 			SueloItem si = suelo.constructFeatureContainerStandar(f,true);
 			CosechaItem ci = estimarCosecha(si);
 			ci.setId(si.getId());
+			ci.setGeometry(si.getGeometry());
 
 
 			SimpleFeature nf=ci.getFeature(labor.featureBuilder);
 
+			System.out.println("insertando "+nf);
 			boolean ret = labor.outCollection.add(nf);
-			//featuresInsertadas++;
+			featureNumber++;
+			updateProgress(featureNumber, featureCount);
 			if(!ret){
 				System.out.println("no se pudo agregar la feature "+f);
 			}
@@ -58,17 +63,19 @@ public class ConvertirSueloACosechaTask extends ProcessMapTask<CosechaItem,Cosec
 		Cultivo cultivo = labor.getCultivo();
 		Double mmDispo = si.getAguaPerfil()+this.mmLluviaEstimados;
 		Double mmTn = cultivo.getAbsAgua();
+		Double kgAgua = mmTn!=0?mmDispo/mmTn:0;
 		//TODO si hay demaciada agua bajar el rinde; mas de 1800mm/2000mm
-		Double encharcamiento = mmDispo/2000;
+		Double encharcamiento = Math.min(2000, mmDispo)/2000;
 		
-		Double rindeAgua=(encharcamiento>0.5?(1-encharcamiento):1)*mmDispo/mmTn;
-				
+		Double rindeAgua=(encharcamiento>0.5?(1-encharcamiento):1)*kgAgua;
+		System.out.println("mmDispo="+mmDispo+" => rindeAgua= "+rindeAgua);
 		Double kgP=this.suelo.getKgPHa(si);
-		Double rindeP = cultivo.getAbsP()/kgP;
-		
-		Double kgN=this.suelo.getKgNHa(si)+(cultivo.isEstival()?2/3:1/3)*suelo.getKgNOrganicoHa(si);
-		Double rindeN = cultivo.getAbsP()/kgN;
-		
+		Double rindeP = cultivo.getAbsP()!=0?kgP/cultivo.getAbsP():0;
+		System.out.println("kgP="+kgP+" => rindeP= "+rindeP);
+		Double kgN= this.suelo.getKgNHa(si) 
+				+(cultivo.isEstival()?2/3:1/3) * suelo.getKgNOrganicoHa(si);
+		Double rindeN = cultivo.getAbsN()!=0?kgN/cultivo.getAbsN():0;
+		System.out.println("kgN="+kgN+" => rindeN: "+rindeN);
 		ci.setRindeTnHa(
 				Math.min(
 						Math.min(rindeAgua,rindeP),

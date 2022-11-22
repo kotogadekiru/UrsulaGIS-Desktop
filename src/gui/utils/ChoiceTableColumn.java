@@ -13,6 +13,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.Pos;
@@ -35,8 +36,9 @@ import com.sun.javafx.collections.ObservableListWrapper;
  * @param <T> el tipo de dato que tiene la tabla
  * @param <S> el tipo de dato que se permite seleccionar
  */
-public class ChoiceTableColumn<T,S extends Comparable<S>> extends TableColumn<T,String>{
-	private Map<String,S> ops=null; 
+public class ChoiceTableColumn<T,S extends Comparable<S>> extends TableColumn<T,S>{
+	//private Map<String,S> ops=null; 
+	private List<S> ops=null;
 	
 	public ChoiceTableColumn(String title,List<S> choices,Function<T,S>  getMethod, BiConsumer<T,S> setMethod){
 		super(title);		
@@ -45,15 +47,15 @@ public class ChoiceTableColumn<T,S extends Comparable<S>> extends TableColumn<T,
 		setCellValueFactory(cellData ->{
 			T value = cellData.getValue();
 			S cellContent = getMethod.apply(value);
-			return 	new SimpleStringProperty(String.valueOf(cellContent));			
+			return 	new SimpleObjectProperty<S>(cellContent);//new SimpleStringProperty(String.valueOf(cellContent));			
 			});
 
-		ops = new HashMap<String,S>();
-		if(choices != null){
-			for(S choice: choices){
-				ops.put(choice.toString(),choice);		
-			}
-		}
+		ops = choices;//new HashMap<String,S>();
+//		if(choices != null){
+//			for(S choice: choices){
+//				ops.put(choice.toString(),choice);		
+//			}
+//		}
 		
 //		setCellFactory((param)->{
 //			List<String> stringChoices = new LinkedList<String>(ops.keySet());
@@ -62,11 +64,11 @@ public class ChoiceTableColumn<T,S extends Comparable<S>> extends TableColumn<T,
 //		});
 //		
 		setCellFactory((col)->{
-			 TableCell<Object, String> cell = ChoiceBoxTableCell.forTableColumn(FXCollections.observableArrayList(ops.keySet())).call((TableColumn<Object, String>) col);
+			 TableCell<Object, S> cell = ChoiceBoxTableCell.forTableColumn(FXCollections.observableArrayList(ops)).call((TableColumn<Object, S>) col);
 //		cell.contentDisplayProperty().bind(Bindings.when(cell.editingProperty())
 //				.then(ContentDisplay.GRAPHIC_ONLY)
 //				.otherwise(ContentDisplay.TEXT_ONLY));
-			 return  (TableCell<T, String>)cell;
+			 return  (TableCell<T, S>)cell;
 			}
 		);
 //	
@@ -80,19 +82,19 @@ public class ChoiceTableColumn<T,S extends Comparable<S>> extends TableColumn<T,
 		
 		this.setOnEditCommit( cellEditingEvent -> {													
 			T p = cellEditingEvent.getRowValue();
-			setMethod.accept(p,ops.get(cellEditingEvent.getNewValue()));		
+			setMethod.accept(p,cellEditingEvent.getNewValue());		
 		//	System.out.println("comiteando el valor "+cellEditingEvent.getNewValue());
 			//DAH.save(p);
 		});
 
-		this.setComparator(new Comparator<String>(){
+		this.setComparator(new Comparator<S>(){
 
 			@Override
-			public int compare(String arg0, String arg1) {
-				S s0 = ops.get(arg0);
-				S s1 = ops.get(arg1);
-				if(s0==null)return -1;
-				return s0.compareTo(s1);
+			public int compare(S arg0, S arg1) {
+//				S s0 = ops.get(arg0);
+//				S s1 = ops.get(arg1);
+//				if(s0==null)return -1;
+				return arg0.compareTo(arg1);
 
 			}
 

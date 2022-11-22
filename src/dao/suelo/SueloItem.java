@@ -47,6 +47,10 @@ public class SueloItem extends LaborItem { //suelo item no es labor item. le sob
 	/*La profundidad en cm hasta la napa*/
 	private Double profNapa=new Double(0);	
 	private Double aguaPerfil=new Double(0);	
+	
+	private String textura ="";
+	private Double porosidad = new Double(0);
+	private Double porcCC = new Double(0);//Capacidad de campo
 
 	
 	public SueloItem(SimpleFeature fertFeature) {

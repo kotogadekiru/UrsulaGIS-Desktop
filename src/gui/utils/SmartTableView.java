@@ -26,6 +26,7 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import dao.Labor;
 import dao.LaborItem;
+import dao.Ndvi;
 import dao.Poligono;
 import dao.OrdenDeCompra.Producto;
 import dao.config.Agroquimico;
@@ -35,6 +36,7 @@ import dao.config.Empresa;
 import dao.config.Establecimiento;
 import dao.config.Fertilizante;
 import dao.config.Lote;
+import dao.config.Semilla;
 import dao.utils.JPAStringProperty;
 import gui.JFXMain;
 import gui.Messages;
@@ -73,7 +75,7 @@ public class SmartTableView<T> extends TableView<T> {
 	private Supplier<T> onDoubleClick=null;
 	private Consumer<T> onShowClick=null;
 	
-	private Consumer<List<T>> eliminarAction = list->DAH.removeAll((List<Object>) list);;
+	private Consumer<List<T>> eliminarAction = list->DAH.removeAll((List<Object>) list);
 	private Map<MenuItem,Consumer<T>> consumerMap=new HashMap<>();
 	private List<String> rejectedColumns=new ArrayList<>();
 	private List<String> orderColumns=new ArrayList<>();
@@ -338,8 +340,10 @@ public class SmartTableView<T> extends TableView<T> {
 					getCampaniaColumn(clazz, method, name, fieldType, setMethodName);
 				} else if(Cultivo.class.isAssignableFrom(fieldType)){
 					getCultivoColumn(clazz, method, name, fieldType, setMethodName);
-				} else if(Cultivo.class.isAssignableFrom(fieldType)){
-					getCultivoColumn(clazz, method, name, fieldType, setMethodName);
+				} else if(Semilla.class.isAssignableFrom(fieldType)){
+					getSemillaColumn(clazz, method, name, fieldType, setMethodName);
+				} else if(Ndvi.class.isAssignableFrom(fieldType)){
+					getNdviColumn(clazz, method, name, fieldType, setMethodName);
 				}else if(Agroquimico.class.isAssignableFrom(fieldType)){
 					getAgroquimicoColumn(clazz, method, name, fieldType, setMethodName);
 				}else if(Fertilizante.class.isAssignableFrom(fieldType)){
@@ -454,7 +458,49 @@ public class SmartTableView<T> extends TableView<T> {
 				);
 		this.getColumns().add(dColumn);
 	}
+	private void getSemillaColumn(Class<?> clazz, Method method, String name, Class<?> fieldType,String setMethodName) {
+		String propName = name.replace("Property", "");
+		ChoiceTableColumn<T, Semilla> dColumn = new ChoiceTableColumn<T,Semilla>(propName,DAH.getAllSemillas(),
+				(p)->{try {
+					return ((Semilla) method.invoke(p, (Object[])null));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				return null;},
+				(p,d)->{
+					try {
+						Method setMethod = clazz.getMethod(setMethodName, fieldType);
+						setMethod.invoke(p,d);
+						DAH.save(p);
+						refresh();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				);
+		this.getColumns().add(dColumn);
+	}
 
+	private void getNdviColumn(Class<?> clazz, Method method, String name, Class<?> fieldType,String setMethodName) {
+		
+		String propName = name.replace("Property", "");
+		DoubleTableColumn<T> dColumn = new DoubleTableColumn<T>(propName,
+				(p)->{	try {
+					return ((Ndvi) method.invoke(p, (Object[])null)).getMeanNDVI();
+				} catch (Exception e) {	e.printStackTrace();}
+				return null;
+				},(p,d)->{ 
+					//try {
+					//Method setMethod = clazz.getMethod(setMethodName, fieldType);
+					//setMethod.invoke(p,d);
+					//DAH.save(p);
+					//refresh();
+				//} catch (Exception e) {	e.printStackTrace();}
+				});
+		dColumn.setEditable(false);
+		this.getColumns().add(dColumn);
+	}
+	
 	private void getFertilizanteColumn(Class<?> clazz, Method method, String name, Class<?> fieldType,String setMethodName) {
 		String propName = name.replace("Property", "");
 		ChoiceTableColumn<T, Fertilizante> dColumn = new ChoiceTableColumn<T,Fertilizante>(propName,DAH.getAllFertilizantes(),

@@ -107,7 +107,7 @@ public class NDVIHistoChart extends VBox {
 
 	private void doExportarExcell() {
 		ExcelHelper xHelper = new ExcelHelper();
-		xHelper.exportSeries(series);
+		xHelper.exportSeriesNdvi(series);
 	}
 
 

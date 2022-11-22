@@ -35,4 +35,8 @@ public class Asignacion {
 	private Campania campania;
 	@ManyToOne(fetch = FetchType.LAZY)
 	private Poligono contorno;
+	
+	public Asignacion() {
+		
+	}
 }

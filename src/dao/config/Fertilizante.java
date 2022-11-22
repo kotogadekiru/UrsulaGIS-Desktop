@@ -11,7 +11,9 @@ import javax.persistence.NamedQuery;
 
 import dao.OrdenDeCompra.Producto;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 @Data
+@EqualsAndHashCode(callSuper=false)
 @Entity
 @NamedQueries({
 	@NamedQuery(name=Fertilizante.FIND_ALL, query="SELECT o FROM Fertilizante o ORDER BY lower(o.nombre)") ,

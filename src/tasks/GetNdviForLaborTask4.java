@@ -71,10 +71,11 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 	private static final String MMG_GUI_EVENT_CLOSE_PNG = "/gui/event-close.png";
 	
 
-	private static final String URSULA_GIS_TOKEN = "ursulaGIS.cosechaService";//"ursulaGISv23";
+	private static final String URSULA_GIS_TOKEN = "ursulaGISv28";//"ursulaGISv23";
 	private static final String TOKEN = "token";
 
 	private static final String BASE_URL = "https://gee-api-helper.herokuapp.com";
+	//private static final String BASE_URL = "http://0.0.0.0:5001";
 
 	private static final String HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3 = BASE_URL+"/ndvi_v4";//"/ndvi_v4";//+"/gndvi_v4_SR";//"/ndvi_v3";//ndvi_v5
 	private static final String HTTPS_GEE_API_HELPER_HEROKUAPP_COM_S2_PRODUCT_FINDER = BASE_URL+"/s2_product_finder_v4";
@@ -202,9 +203,20 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 			for(ArrayMap<String,String> feature:(List<ArrayMap<String,String>>)features){			
 				BigDecimal porcNubes=new BigDecimal(0);
 				BigDecimal meanNDVI=new BigDecimal(0);
+			//	BigDecimal rFAA=new BigDecimal(0);
 				try {
 					Map<?,?> metadata = (Map<?,?>)((Map<?,?>)feature).get("metadata");
-					porcNubes = (BigDecimal)metadata.get("porcNubes");					
+					porcNubes = (BigDecimal)metadata.get("porcNubes");		
+					
+					Object rfaaObject = metadata.get("RFAA");
+//					String rfaa = "0.0";
+//					if(rfaaObject instanceof BigDecimal) {
+//						rFAA = (BigDecimal)rfaaObject;
+//						rfaa = bdf.format(rFAA);
+//					} else {
+//						System.out.println("no se de que clase es RFAA "+rfaaObject+ (rfaaObject!=null?" class " +rfaaObject.getClass().getCanonicalName():""));
+//					}
+					
 					Object meanObject = metadata.get("meanNDVI");
 					String mean = "0.0";
 					if(meanObject instanceof BigDecimal) {
@@ -242,6 +254,7 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 						ndvi.setFecha(date);
 						ndvi.setMeanNDVI(meanNDVI.doubleValue());
 						ndvi.setPorcNubes(porcNubes.doubleValue());
+				//		ndvi.setRFAA(rFAA.doubleValue());
 						ndviList.add(ndvi);
 					}
 				}else {//path2 es ""

@@ -137,7 +137,7 @@ public class NDVIChart extends VBox {
 		VBox.setVgrow(vbox, Priority.ALWAYS);
 		VBox right = new VBox();
 		Button exportButton = new Button(Messages.getString("CosechaHistoChart.16")); //$NON-NLS-1$
-		exportButton.setOnAction(a->{doExportarExcell();});
+		exportButton.setOnAction(a->{doExportarExcel();});
 		right.getChildren().add(exportButton);
 		BorderPane bottom = new BorderPane();
 		//bottom.setCenter(left);
@@ -186,10 +186,11 @@ public class NDVIChart extends VBox {
 		}				
 	}
 
-	private void doExportarExcell() {
+	private void doExportarExcel() {
 		ExcelHelper xHelper = new ExcelHelper();
 		xHelper.exportSeriesList(this.lineChart.getData());
 	}
+	
 	public List<SurfaceImageLayer> extractLayers() {
 		List<SurfaceImageLayer> ndviLayers = new ArrayList<SurfaceImageLayer>();
 		LayerList layers = wwd.getModel().getLayers();

@@ -29,8 +29,8 @@ public class Campania implements Comparable<Campania>{
 
 	public String nombre=new String();
 	
-	@Embedded
-	public JPAStringProperty jpaSP= new JPAStringProperty();
+	//@Embedded
+	//public JPAStringProperty jpaSP= new JPAStringProperty();
 	
 	@Temporal(TemporalType.DATE)
 	private Calendar inicio = Calendar.getInstance();
@@ -42,70 +42,70 @@ public class Campania implements Comparable<Campania>{
 	
 	public Campania(String periodoName) {
 		this.nombre=(periodoName);
-		jpaSP.setString("defautl");
+		//jpaSP.setString("defautl");
 	}
 
-	/**
-	 * @return the id
-	 */
-	public long getId() {
-		return id;
-	}
-
-	/**
-	 * @param id the id to set
-	 */
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	/**
-	 * @return the nombre
-	 */
-	public String getNombre() {
-		return nombre;
-	}
-
-	/**
-	 * @param nombre the nombre to set
-	 */
-	public void setNombre(String nombre) {
-		this.nombre=(nombre);
-	}
-
-	/**
-	 * @return the inicio
-	 */
-	public Calendar getInicio() {
-		return inicio;
-	}
-
-	/**
-	 * @param inicio the inicio to set
-	 */
-	public void setInicio(Calendar inicio) {
-		this.inicio = inicio;
-	}
-
-	/**
-	 * @return the fin
-	 */
-	public Calendar getFin() {
-		return fin;
-	}
-
-	/**
-	 * @param fin the fin to set
-	 */
-	public void setFin(Calendar fin) {
-		this.fin = fin;
-	}
-	
-	
-
+//	/**
+//	 * @return the id
+//	 */
+//	public long getId() {
+//		return id;
+//	}
+//
+//	/**
+//	 * @param id the id to set
+//	 */
+//	public void setId(long id) {
+//		this.id = id;
+//	}
+//
+//	/**
+//	 * @return the nombre
+//	 */
+//	public String getNombre() {
+//		return nombre;
+//	}
+//
+//	/**
+//	 * @param nombre the nombre to set
+//	 */
+//	public void setNombre(String nombre) {
+//		this.nombre=(nombre);
+//	}
+//
+//	/**
+//	 * @return the inicio
+//	 */
+//	public Calendar getInicio() {
+//		return inicio;
+//	}
+//
+//	/**
+//	 * @param inicio the inicio to set
+//	 */
+//	public void setInicio(Calendar inicio) {
+//		this.inicio = inicio;
+//	}
+//
+//	/**
+//	 * @return the fin
+//	 */
+//	public Calendar getFin() {
+//		return fin;
+//	}
+//
+//	/**
+//	 * @param fin the fin to set
+//	 */
+//	public void setFin(Calendar fin) {
+//		this.fin = fin;
+//	}
+//	
+//	
+//
 	@Override
 	public int compareTo(Campania arg0) {
-		return this.nombre.compareTo(arg0.nombre);
+		return this.inicio.compareTo(arg0.inicio);
 	}
 
 	/* (non-Javadoc)

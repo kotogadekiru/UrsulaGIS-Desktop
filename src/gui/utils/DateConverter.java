@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
 import java.util.Date;
 
 import javafx.util.StringConverter;
@@ -68,6 +69,12 @@ public class DateConverter extends StringConverter<LocalDate>
 
 	public static LocalDate asLocalDate(Date date) {
 		return Instant.ofEpochMilli(date.getTime()).atZone(ZoneId.systemDefault()).toLocalDate();
+	}
+	
+	public static LocalDate asLocalDate(Calendar cal ) {
+		Date date = cal.getTime();
+		return asLocalDate(date);
+		//return Instant.ofEpochMilli(date.getTime()).atZone(ZoneId.systemDefault()).toLocalDate();
 	}
 
 	public static LocalDateTime asLocalDateTime(Date date) {

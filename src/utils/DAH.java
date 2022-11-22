@@ -25,6 +25,7 @@ import dao.Poligono;
 import dao.OrdenDeCompra.OrdenCompra;
 import dao.OrdenDeCompra.ProductoLabor;
 import dao.config.Agroquimico;
+import dao.config.Asignacion;
 import dao.config.Campania;
 import dao.config.Configuracion;
 import dao.config.Cultivo;
@@ -447,6 +448,16 @@ public class DAH {
 		return results;
 	}
 
+	public static List<Ndvi> getNdvi(Poligono contorno) {
+		TypedQuery<Ndvi> query =
+				em().createNamedQuery(Ndvi.FIND_BY_CONTORNO, Ndvi.class);
+		query.setParameter("contorno", contorno);
+	//	query.setParameter("date", assetDate);
+		List<Ndvi> results = query.getResultList();
+		//  closeEm();
+		return results;
+	}
+	
 	public static List<Recorrida> getAllRecorridas() {
 		TypedQuery<Recorrida> query =
 				em().createNamedQuery(Recorrida.FIND_ALL, Recorrida.class);
@@ -581,6 +592,13 @@ public class DAH {
 		TypedQuery<Caldo> query = em().createNamedQuery(
 				Caldo.FIND_ALL, Caldo.class);
 		List<Caldo> results = (List<Caldo> ) query.getResultList();
+		return results;
+	}
+
+	public static List<Asignacion> getAllAsignaciones() {
+		TypedQuery<Asignacion> query = em().createNamedQuery(
+				Asignacion.FIND_ALL, Asignacion.class);
+		List<Asignacion> results = (List<Asignacion> ) query.getResultList();
 		return results;
 	}
 

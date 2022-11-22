@@ -43,6 +43,7 @@ import dao.OrdenDeCompra.OrdenCompra;
 import dao.OrdenDeCompra.OrdenCompraItem;
 import dao.config.Configuracion;
 import gui.JFXMain;
+import gui.utils.DateConverter;
 
 
 
@@ -98,7 +99,7 @@ public class ExcelHelper {
 
 		try {
 			FileInputStream file = new FileInputStream(new File(
-					"howtodoinjava_demo.xlsx"));
+					"myFile.xlsx"));
 
 			// Create Workbook instance holding reference to .xlsx file
 			XSSFWorkbook workbook = new XSSFWorkbook(file);
@@ -245,21 +246,27 @@ public class ExcelHelper {
 				int cellnum = 0;
 				for (Object obj : objArr) {
 					Cell cell = row.createCell(cellnum++);
-					if (obj instanceof String)
+					if (obj instanceof String) {
 						cell.setCellValue((String) obj);
-					else if (obj instanceof Double)
-						cell.setCellValue((Double) obj);
-					else if (obj instanceof Calendar){
+					} else if (obj instanceof Double) {
+						cell.setCellValue((Double) obj);					
+					} else if (obj instanceof Calendar){
 						Date date = ((Calendar)obj).getTime();
-
 
 						CellStyle dateCellStyle = workbook.createCellStyle();
 						CreationHelper createHelper = workbook.getCreationHelper();
 						dateCellStyle.setDataFormat(
-								createHelper.createDataFormat().getFormat("dd-mm-yy"));
+								createHelper.createDataFormat().getFormat("dd/mm/yy"));
 						cell.setCellStyle(dateCellStyle);
 						cell.setCellValue(date);
-
+					} else if(obj instanceof LocalDate) {
+						Date date = DateConverter.asDate((LocalDate)obj);
+						CellStyle dateCellStyle = workbook.createCellStyle();
+						CreationHelper createHelper = workbook.getCreationHelper();
+						dateCellStyle.setDataFormat(
+								createHelper.createDataFormat().getFormat("dd/MM/yy"));
+						cell.setCellStyle(dateCellStyle);
+						cell.setCellValue(date);
 					}
 				}
 			}
@@ -279,7 +286,7 @@ public class ExcelHelper {
 			//				String periodoName = String.valueOf(anio)+"-"+String.valueOf(mes)+"-"+String.valueOf(day)+"-"+String.valueOf(hour)+String.valueOf(min)+String.valueOf(sec);
 			//				// Create a blank sheet
 
-			Series s1= observableList.get(0);
+			Series<Number, Number> s1= observableList.get(0);
 			String sheetName = s1.getName();
 			if(sheetName ==null){
 				sheetName="Data";
@@ -298,7 +305,7 @@ public class ExcelHelper {
 			data.put("1",labels.toArray());		
 			
 			for(int j=0;j<observableList.size();j++) {
-				Series s=observableList.get(j);
+				Series<Number, Number> s=observableList.get(j);
 				List<Data<Number,Number>> datos =s.getData();			
 
 				for(int i =1;i<datos.size();i++){
@@ -337,7 +344,7 @@ public class ExcelHelper {
 
 
 		}
-
+		
 		public void exportSeries(Series<String, Number> series) {//OK!
 			File outFile = getNewExcelFile();
 
@@ -368,7 +375,6 @@ public class ExcelHelper {
 					"Rango",
 					"Superficie",
 					"Rinde"
-
 			});
 
 
@@ -404,8 +410,73 @@ public class ExcelHelper {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+		}
+
+		public void exportSeriesNdvi(Series<String, Number> series) {//OK!
+			File outFile = getNewExcelFile();
 
 
+			XSSFWorkbook workbook = new XSSFWorkbook();				
+			//				Calendar periodoCalendar = Calendar.getInstance();
+			//				int sec = periodoCalendar.get(Calendar.SECOND);
+			//				int min = periodoCalendar.get(Calendar.MINUTE);
+			//				int hour = periodoCalendar.get(Calendar.HOUR_OF_DAY);
+			//				int day = periodoCalendar.get(Calendar.DAY_OF_MONTH);
+			//				int mes = periodoCalendar.get(Calendar.MONTH);//, Calendar.SHORT_FORMAT, Locale.getDefault());
+			//				int anio = periodoCalendar.get(Calendar.YEAR);//, Calendar.SHORT_FORMAT, Locale.getDefault());
+			//
+			//				String periodoName = String.valueOf(anio)+"-"+String.valueOf(mes)+"-"+String.valueOf(day)+"-"+String.valueOf(hour)+String.valueOf(min)+String.valueOf(sec);
+			//				// Create a blank sheet
+
+			String sheetName = series.getName();
+			if(sheetName ==null){
+				sheetName="Histograma";
+			}
+			XSSFSheet sheet = workbook.createSheet(sheetName);
+
+			// This data needs to be written (Object[])
+			Map<String, Object[]> data = new TreeMap<String, Object[]>();
+
+			List<Data<String,Number>> datos =series.getData();
+			data.put("0", new Object[] {
+					"Rango",
+					"Superficie",
+					"Ndvi"
+			});
+
+
+			for(int i =0;i<datos.size();i++){
+				Number rinde = new Double(0);
+				Number superficie = datos.get(i).getYValue();
+				Number produccion = (Number) datos.get(i).getExtraValue();
+				if(superficie!=null
+						&&produccion!=null 
+						&& superficie.doubleValue() > 0 
+						&& produccion.doubleValue() > 0){				
+					rinde = produccion.doubleValue()/superficie.doubleValue();
+				}
+				data.put(String.valueOf(i+1),
+						new Object[] {
+					datos.get(i).getXValue(),
+					superficie,
+					rinde
+				});
+			}
+
+			// Iterate over data and write to sheet
+			writeDataToSheet( sheet, data);
+
+			try {
+				// Write the workbook in file system
+				FileOutputStream out = new FileOutputStream(outFile);
+				workbook.write(out);
+				out.close();
+				workbook.close();
+				System.out
+				.println("el backup del fue guardado con exito.");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 		public void exportData(String sheetName ,Map<String, Object[]> data) {//OK!

@@ -9,6 +9,7 @@ import java.util.Calendar;
 
 import javax.persistence.Access;
 import javax.persistence.AccessType;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -37,12 +38,14 @@ import lombok.Setter;
 	@NamedQuery(name=Ndvi.FIND_NAME, query="SELECT o FROM Ndvi o where o.nombre = :name") ,
 	@NamedQuery(name=Ndvi.FIND_ACTIVOS, query="SELECT o FROM Ndvi o where o.activo = true") ,
 	@NamedQuery(name=Ndvi.FIND_BY_CONTORNO_DATE, query="SELECT o FROM Ndvi o where o.contorno = :contorno and o.fecha = :date") ,
+	@NamedQuery(name=Ndvi.FIND_BY_CONTORNO, query="SELECT o FROM Ndvi o where o.contorno = :contorno") ,
 }) 
 public class Ndvi implements Comparable<Object>{//extends AbstractBaseEntity {
 	public static final String FIND_ALL="Ndvi.findAll";
 	public static final String FIND_NAME = "Ndvi.findName";
 	public static final String FIND_ACTIVOS = "Ndvi.findActivos";
 	public static final String FIND_BY_CONTORNO_DATE = "Ndvi.findByContornoDate";
+	public static final String FIND_BY_CONTORNO = "Ndvi.findByContorno";
 
 	@javax.persistence.Id @GeneratedValue
 	private Long id=null;
@@ -54,11 +57,14 @@ public class Ndvi implements Comparable<Object>{//extends AbstractBaseEntity {
 
 	private Double meanNDVI=null;
 	private Double porcNubes=null;
+	private Double rFAA=null;
 
 	@Transient
 	private File f=null;
 
-	//@ManyToOne
+	@ManyToOne 
+	//@ManyToOne(cascade= {CascadeType.DETACH})
+	//FIXME no puedo borrar poligonos que apunten a un ndvi
 	private Poligono contorno = null;
 
 	@Lob

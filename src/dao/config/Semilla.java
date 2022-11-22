@@ -25,7 +25,7 @@ import lombok.AccessLevel;
 	@NamedQuery(name=Semilla.FIND_ALL, query="SELECT o FROM Semilla o ORDER BY lower(o.nombre)") ,
 	@NamedQuery(name=Semilla.FIND_NAME, query="SELECT o FROM Semilla o where o.nombre = :name") ,
 }) 
-public class Semilla extends Producto{
+public class Semilla  extends Producto implements Comparable<Semilla>{
 	public static final String FIND_ALL="Semilla.findAll";
 	public static final String FIND_NAME="Semilla.findName";
 	
@@ -126,4 +126,9 @@ public class Semilla extends Producto{
 	public String toString() {
 		return nombre;
 	}
+
+@Override
+public int compareTo(Semilla o) {	
+	return this.nombre.compareTo(o.nombre);
+}
 }

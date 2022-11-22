@@ -63,6 +63,9 @@ public class Cultivo implements Comparable<Cultivo>{
 	
 	private Boolean estival = true;
 	
+	private Double tasaCrecimientoPendiente=new Double(0);
+	private Double tasaCrecimientoOrigen=new Double(0);
+	
 	public static Map<String,Cultivo> cultivos = new HashMap<String,Cultivo>();
 	static{				//String _nombre, Double _absP, Double _extP,Double rinde
 		cultivos.put(MAIZ, getMaiz());
