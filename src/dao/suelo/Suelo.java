@@ -103,6 +103,9 @@ public class Suelo extends Labor<SueloItem>{
 		si.setAguaPerfil(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_AGUA_PERFIL)));
 		si.setProfNapa(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_PROF_NAPA)));
 		si.setDensAp(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DENSIDAD)));
+		if(!(si.getDensAp()>0)) {
+			si.setDensAp(new Double(SueloItem.DENSIDAD_SUELO_KG));//Densidad aparente 0-60);
+		}
 		return si;
 	}
 

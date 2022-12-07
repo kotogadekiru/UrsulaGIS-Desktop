@@ -106,9 +106,11 @@ public class PoligonoGUIController {
 		main.playSound();		
 	}
 	
-	private List<?> getObjectFromEnabledLayersOfClass(Class<Poligono> class1) {
-		// TODO Auto-generated method stub
-		return main.getObjectFromLayersOfClass(class1);
+	@SuppressWarnings("unchecked")
+	private List<Poligono> getEnabledPoligonos() {
+		return ((List<Poligono>)main.getObjectFromLayersOfClass(Poligono.class)).stream()
+				.filter((p)-> p.getLayer().isEnabled())
+				.collect(Collectors.toList());
 	}
 	
 	public void addPoligonosRootNodeActions() {
@@ -671,7 +673,7 @@ public class PoligonoGUIController {
 	 */
 	private void doUnirPoligonos(){		
 		@SuppressWarnings("unchecked")
-		List<Poligono> pActivos = (List<Poligono>) this.getObjectFromEnabledLayersOfClass(Poligono.class);
+		List<Poligono> pActivos = (List<Poligono>) this.getEnabledPoligonos();
 		StringJoiner joiner = new StringJoiner("-");
 		//joiner.add(Messages.getString("JFXMain.poligonUnionNamePrefixText"));
 

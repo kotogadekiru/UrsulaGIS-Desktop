@@ -32,9 +32,11 @@ import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.layers.Layer;
 import gui.Messages;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import utils.ProyectionConstants;
 
 @Data
+@EqualsAndHashCode(exclude="lote")
 @Entity @Access(AccessType.PROPERTY)
 @NamedQueries({
 	@NamedQuery(name=Poligono.FIND_ALL, query="SELECT c FROM Poligono c ORDER BY lower(c.nombre)") ,

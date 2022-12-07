@@ -9,9 +9,11 @@ import javax.persistence.NamedQuery;
 
 import dao.Poligono;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 
 @Data
+@EqualsAndHashCode(exclude="establecimiento")
 @Entity
 @NamedQueries({
 	@NamedQuery(name=Lote.FIND_ALL, query="SELECT o FROM Lote o ORDER BY lower(o.nombre)"),
