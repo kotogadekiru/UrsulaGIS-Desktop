@@ -1,7 +1,9 @@
 package gui;
 
+import java.awt.Dimension;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,8 +14,10 @@ import dao.pulverizacion.Caldo;
 import dao.pulverizacion.CaldoItem;
 import dao.pulverizacion.PulverizacionLabor;
 import gui.utils.DateConverter;
+import gui.utils.SmartTableView;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -25,8 +29,12 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
@@ -61,8 +69,14 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 	@FXML
 	private TextField textPrecioInsumo;//ok
 
-	@FXML
-	private ComboBox<Caldo> comboInsumo;
+//	@FXML
+//	private ComboBox<Caldo> comboInsumo;
+	
+    @FXML
+    private GridPane gridPane;
+
+    @FXML
+    private BorderPane bpCaldo;//ok
 	
 	@FXML
 	private TextField textCostoLaborHa;//ok
@@ -120,10 +134,6 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 		StringBuilder message = new StringBuilder();
 		boolean isValid =true;
 		
-//		return 	(cols.indexOf(comboElev.getValue())>-1)&&
-//				//	(cols.indexOf(comboPasa.getValue())>-1)&&
-//				(cols.indexOf(comboDosis.getValue())>-1);
-		
 		if(cols.indexOf(comboDosis.getValue())==-1){
 			message.append(Messages.getString("PulverizacionConfigDialogController.select")); //$NON-NLS-1$
 			isValid=false;
@@ -172,6 +182,7 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 //		this.comboPasadas.valueProperty().bindBidirectional(labor.colCantPasadasProperty);
 
 		//insumo
+		/*
 		List<Caldo> caldos = DAH.getAllCaldos();
 		caldos.add(null);
 		Caldo nCaldo = new Caldo();
@@ -198,7 +209,10 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 			} 
 			labor.setCaldo(n);
 			
-		});//select(labor.getCaldo());
+		});
+		*/
+		this.contructCaldoTable();
+		//select(labor.getCaldo());
 		//this.comboInsumo.valueProperty().bindBidirectional(labor.agroquimico);
 
 
@@ -228,10 +242,61 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 
 	public void init() {
 		this.getDialogPane().setContent(content);
+		
+//		this.getDialogPane().heightProperty().addListener((o,old,nu)->{
+//			System.out.println("cambiando el alto del dialog");//si se ejecuta pero no se modifica el tamanio
+//			//content.setPrefSize(this.getWidth(), nu.doubleValue());	
+//		});
+//		this.getDialogPane().widthProperty().addListener((o,old,nu)->{			
+//			//content.setPrefSize(nu.doubleValue(), this.getHeight());			
+//		});
 
 	}
 
-
+	private void contructCaldoTable() {
+		Caldo caldo = labor.getCaldo();
+		if(caldo ==null) {
+			caldo = new Caldo();
+			CaldoItem item = new CaldoItem();
+			item.setCaldo(caldo);
+			caldo.getItems().add(item);
+			labor.setCaldo(caldo);
+		} else if(caldo.getItems().size()<1) {
+			System.out.println("existe caldo pero sin items");
+			CaldoItem item = new CaldoItem();
+			item.setCaldo(caldo);
+			caldo.getItems().add(item);
+		}
+		final ObservableList<CaldoItem> data =
+				FXCollections.observableArrayList(
+						labor.getCaldo().getItems()
+						);
+		SmartTableView<CaldoItem> table = new SmartTableView<CaldoItem>(data,
+				Arrays.asList("Id"),//rejected
+				Arrays.asList("Producto","DosisHa")//order
+				);
+		table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
+		table.setEliminarAction(
+				list->{											
+					list.stream().forEach(i->{
+						i.getCaldo().getItems().remove(i);	
+					});
+				}
+				);
+		table.setEditable(true);
+		table.setOnDoubleClick(()->{
+			System.out.println("haciendo dobleClick");
+			CaldoItem i = new CaldoItem();
+			labor.getCaldo().getItems().add(i);
+			i.setCaldo(labor.getCaldo());
+			return i;
+		}); //$NON-NLS-1$
+		if(bpCaldo ==null) {
+			System.out.println("no puedo cargar la tabla porque caldoPane es null");
+		} else {
+			bpCaldo.setCenter(table);
+		}
+	}
 
 	public static Optional<PulverizacionLabor> config(PulverizacionLabor labor2) {
 		Optional<PulverizacionLabor> ret = Optional.empty();
@@ -242,9 +307,9 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 			myLoader.load();//aca se crea el constructor
 			
 			PulverizacionConfigDialogController controller = ((PulverizacionConfigDialogController) myLoader.getController());
-		
-			controller.setLabor(labor2);
 			controller.init();
+			controller.setLabor(labor2);
+		
 			ret = controller.showAndWait();
 		} catch (IOException e1) {
 			System.err.println("no se pudo levantar el fxml "+CONFIG_DIALOG_FXML); //$NON-NLS-1$

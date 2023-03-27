@@ -1,6 +1,7 @@
 package gui;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -9,8 +10,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
+
 
 import dao.Labor;
 import dao.Ndvi;
@@ -43,7 +43,7 @@ public class ExportNDVIToKMZ {
 	
 
 	
-	public void exportToKMZ(Ndvi ndvi) throws XMLStreamException, IOException {
+	public void exportToKMZ(Ndvi ndvi){
 		//TODO agregar grafico con la evolucion del ndvi promedio, la superficie de nubes agua y cultivo
 		//	executorPool.execute(()->{
 		
@@ -59,7 +59,10 @@ public class ExportNDVIToKMZ {
 				
 				
 				
-				OutputStream outStream = new FileOutputStream(selected);				
+				OutputStream outStream;
+				try {
+					outStream = new FileOutputStream(selected);
+						
 				
 				
 				  /**
@@ -88,12 +91,19 @@ public class ExportNDVIToKMZ {
 			    surface.export("application/vnd.google-earth.kml+xml", outStream);
 			    outStream.flush();
 			    outStream.close();
-			    
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}	 catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				//KMZDocumentBuilder kmzB = new KMZDocumentBuilder(outStream);
 				//kmzB.writeObject(surface);
 				//kmzB.close();
 			//	Object writer = XMLOutputFactory.newInstance().createXMLStreamWriter(this.zipStream);
 			//	surface.export(KMLConstants.KML_MIME_TYPE, writer);//mimeType, output);
+
 				
 				
 				

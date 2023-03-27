@@ -1,4 +1,5 @@
 package gui;
+
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.image.BufferedImage;
@@ -26,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -36,22 +36,63 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.beans.property.Property;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
+import javafx.embed.swing.SwingFXUtils;
+import javafx.embed.swing.SwingNode;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.SnapshotParameters;
+
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.TextInputDialog;
+
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.TextField;
+
+import javafx.scene.image.Image;
+import javafx.scene.image.WritableImage;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.media.AudioClip;
+import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
+import javafx.stage.Screen;
+import javafx.stage.Stage;
+
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.xml.stream.XMLStreamException;
 
 import org.geotools.data.FileDataStore;
-import org.geotools.data.simple.SimpleFeatureIterator;
-import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.opengis.feature.simple.SimpleFeature;
 
-import com.vividsolutions.jts.densify.Densifier;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 
 import dao.Labor;
@@ -64,13 +105,65 @@ import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.margen.Margen;
 import dao.pulverizacion.PulverizacionLabor;
-import dao.recorrida.Camino;
 import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
 import dao.siembra.SiembraLabor;
 import dao.suelo.Suelo;
-import dao.suelo.SueloItem;
 import dao.utils.PropertyHelper;
+
+import utils.DAH;
+import utils.FileHelper;
+import utils.GeometryHelper;
+
+import gui.nww.LaborLayer;
+import gui.nww.LayerAction;
+import gui.nww.LayerPanel;
+import gui.nww.WWPanel;
+import gui.utils.DateConverter;
+import gui.utils.SmartTableView;
+
+import tasks.CompartirRecorridaTask;
+import tasks.ExportLaborMapTask;
+import tasks.GetNdviForLaborTask4;
+import tasks.GoogleGeocodingHelper;
+import tasks.ProcessMapTask;
+import tasks.ReadJDHarvestLog;
+import tasks.ShowNDVITifFileTask;
+import tasks.ShowRecorridaDirigidaTask;
+import tasks.UpdateTask;
+import tasks.crear.ConvertirAFertilizacionTask;
+import tasks.crear.ConvertirASiembraTask;
+import tasks.crear.ConvertirASueloTask;
+import tasks.crear.ConvertirNdviACosechaTask;
+import tasks.crear.ConvertirNdviAFertilizacionTask;
+import tasks.crear.ConvertirSueloACosechaTask;
+import tasks.crear.GenerarOCTask;
+import tasks.importar.OpenMargenMapTask;
+import tasks.importar.OpenSoilMapTask;
+import tasks.importar.ProcessFertMapTask;
+import tasks.importar.ProcessHarvestMapTask;
+import tasks.importar.ProcessPulvMapTask;
+import tasks.importar.ProcessSiembraMapTask;
+import tasks.procesar.CortarCosechaMapTask;
+import tasks.procesar.CrearSiembraDesdeFertilizacionTask;
+import tasks.procesar.ExportarCosechaDePuntosTask;
+import tasks.procesar.ExportarPrescripcionFertilizacionTask;
+import tasks.procesar.ExportarPrescripcionPulverizacionTask;
+import tasks.procesar.ExportarPrescripcionSiembraTask;
+import tasks.procesar.ExportarRecorridaTask;
+import tasks.procesar.ExtraerPoligonosDeLaborTask;
+import tasks.procesar.GenerarRecorridaDirigidaTask;
+import tasks.procesar.GrillarCosechasMapTask;
+import tasks.procesar.JuntarShapefilesTask;
+import tasks.procesar.ProcessBalanceDeNutrientes;
+import tasks.procesar.ProcessMarginMapTask;
+import tasks.procesar.RecomendFertNFromHarvestMapTask;
+import tasks.procesar.RecomendFertPFromHarvestMapTask;
+import tasks.procesar.SiembraFertTask;
+import tasks.procesar.UnirCosechasMapTask;
+import tasks.procesar.UnirFertilizacionesMapTask;
+import tasks.procesar.UnirSiembrasMapTask;
+
 import gov.nasa.worldwind.Configuration;
 import gov.nasa.worldwind.View;
 import gov.nasa.worldwind.WorldWind;
@@ -98,109 +191,6 @@ import gov.nasa.worldwind.terrain.ZeroElevationModel;
 import gov.nasa.worldwind.util.StatusBar;
 import gov.nasa.worldwind.util.measure.MeasureTool;
 import gov.nasa.worldwindx.examples.util.ExampleUtil;
-import gui.nww.LaborLayer;
-import gui.nww.LayerAction;
-import gui.nww.LayerPanel;
-import gui.nww.WWPanel;
-import gui.utils.DateConverter;
-import gui.utils.SmartTableView;
-import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
-import javafx.embed.swing.SwingFXUtils;
-import javafx.embed.swing.SwingNode;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.geometry.Rectangle2D;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.SnapshotParameters;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextInputDialog;
-import javafx.scene.image.Image;
-import javafx.scene.image.WritableImage;
-import javafx.scene.input.DragEvent;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.TransferMode;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.media.AudioClip;
-import javafx.scene.paint.Color;
-import javafx.stage.FileChooser;
-import javafx.stage.Modality;
-import javafx.stage.Screen;
-import javafx.stage.Stage;
-import tasks.CompartirRecorridaTask;
-import tasks.ExportLaborMapTask;
-import tasks.GetNdviForLaborTask4;
-import tasks.GoogleGeocodingHelper;
-import tasks.ProcessMapTask;
-import tasks.ReadJDHarvestLog;
-import tasks.ShowNDVITifFileTask;
-import tasks.ShowRecorridaDirigidaTask;
-import tasks.UpdateTask;
-import tasks.crear.ConvertirAFertilizacionTask;
-import tasks.crear.ConvertirASiembraTask;
-import tasks.crear.ConvertirASueloTask;
-import tasks.crear.ConvertirNdviACosechaTask;
-import tasks.crear.ConvertirNdviAFertilizacionTask;
-import tasks.crear.ConvertirSueloACosechaTask;
-import tasks.crear.CrearCosechaMapTask;
-import tasks.crear.CrearFertilizacionMapTask;
-import tasks.crear.CrearPulverizacionMapTask;
-import tasks.crear.CrearSiembraMapTask;
-import tasks.crear.CrearSueloMapTask;
-import tasks.crear.GenerarOCTask;
-import tasks.importar.OpenMargenMapTask;
-import tasks.importar.OpenSoilMapTask;
-import tasks.importar.ProcessFertMapTask;
-import tasks.importar.ProcessHarvestMapTask;
-import tasks.importar.ProcessPulvMapTask;
-import tasks.importar.ProcessSiembraMapTask;
-import tasks.procesar.CalcularTasaDeCrecimientoTask;
-import tasks.procesar.CortarCosechaMapTask;
-import tasks.procesar.CrearSiembraDesdeFertilizacionTask;
-import tasks.procesar.ExportarCosechaDePuntosTask;
-import tasks.procesar.ExportarPrescripcionFertilizacionTask;
-import tasks.procesar.ExportarPrescripcionPulverizacionTask;
-import tasks.procesar.ExportarPrescripcionSiembraTask;
-import tasks.procesar.ExportarRecorridaTask;
-import tasks.procesar.ExtraerPoligonosDeLaborTask;
-import tasks.procesar.GenerarRecorridaDirigidaTask;
-import tasks.procesar.GrillarCosechasMapTask;
-import tasks.procesar.JuntarShapefilesTask;
-import tasks.procesar.ProcessBalanceDeNutrientes;
-import tasks.procesar.ProcessMarginMapTask;
-import tasks.procesar.RecomendFertNFromHarvestMapTask;
-import tasks.procesar.RecomendFertPFromHarvestMapTask;
-import tasks.procesar.SiembraFertTask;
-import tasks.procesar.SimplificarCaminoTask;
-import tasks.procesar.UnirCosechasMapTask;
-import tasks.procesar.UnirFertilizacionesMapTask;
-import tasks.procesar.UnirSiembrasMapTask;
-import utils.DAH;
-import utils.FileHelper;
-import utils.GeometryHelper;
-import utils.ProyectionConstants;
 
 public class JFXMain extends Application {
 	private static final String PREFERED_TREE_WIDTH_KEY = "PREFERED_TREE_WIDTH";
@@ -263,6 +253,8 @@ public class JFXMain extends Application {
 			pane.getChildren().add(vBox1);			
 
 			primaryStage.setOnHiding((e)-> {
+				
+				//TODO close swing node
 				Platform.runLater(()->{
 					JFXMain.config.save();
 					DAH.closeEm();
@@ -359,6 +351,8 @@ public class JFXMain extends Application {
 
 		});
 		executorPool.execute(pfMapTask);
+		
+		
 	}
 
 	protected Node initializeWorldWind() {
@@ -385,6 +379,7 @@ public class JFXMain extends Application {
 		//this.wwjPanel.setPreferredSize(canvasSize);
 		final SwingNode wwSwingNode = new SwingNode();
 		wwSwingNode.setContent(wwjPanel);
+		
 		// Put the pieces together.
 		//wwSwingNode.autosize();
 		this.layerPanel = new LayerPanel(this.wwjPanel.getWwd(),stage.widthProperty(),stage.heightProperty());
@@ -1203,24 +1198,6 @@ public class JFXMain extends Application {
 			return "rinde estimado desde ndvi" + layer.getName(); //$NON-NLS-1$
 		}));
 
-		ndviP.add(constructPredicate(Messages.getString("JFXMain.convertirNDVIaTazaPP"),(layer)->{
-			Object o =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-			if(o instanceof Ndvi){
-				doConvertirNdviATazaPP((Ndvi) o);
-			}
-
-			return "taza pp estimado desde ndvi" + layer.getName(); //$NON-NLS-1$
-		}));
-		
-		ndviP.add(constructPredicate(Messages.getString("JFXMain.convertirNDVIaTazaCN"),(layer)->{
-			Object o =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-			if(o instanceof Ndvi){
-				doConvertirNdviATazaCN((Ndvi) o);
-			}
-
-			return "taza CN estimado desde ndvi" + layer.getName(); //$NON-NLS-1$
-		}));
-
 		ndviP.add(constructPredicate(Messages.getString("JFXMain.convertirNDVIaFertInversaAction"),(layer)->{
 			Object o =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 			if(o instanceof Ndvi){
@@ -1285,13 +1262,9 @@ public class JFXMain extends Application {
 			if(o instanceof Ndvi){
 				Ndvi ndvi = (Ndvi)o;
 				ExportNDVIToKMZ toKMZ= new ExportNDVIToKMZ(this.getWwd(),this.layerPanel);
-				try {
+				
 					toKMZ.exportToKMZ(ndvi);
-				} catch (XMLStreamException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+			
 
 			}
 
@@ -1989,6 +1962,7 @@ public class JFXMain extends Application {
 				Labor<?> l =(Labor<?>)placementObject;
 				
 				ReferencedEnvelope bounds = l.getOutCollection().getBounds();
+				
 				Polygon pol = GeometryHelper.constructPolygon(bounds);
 				placementObject =GeometryHelper.constructPoligono(pol);
 				
@@ -2242,101 +2216,7 @@ public class JFXMain extends Application {
 	}
 
 
-	private void doConvertirNdviATazaPP(Ndvi ndvi) {
-		CosechaLabor labor = new CosechaLabor();
-		labor.setNombre(ndvi.getNombre());
 
-		Date date = java.util.Date.from(ndvi.getFecha().atStartOfDay()
-				.atZone(ZoneId.systemDefault())
-				.toInstant());
-
-		labor.setFecha(date);
-		labor.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
-		LaborLayer layer = new LaborLayer();
-		labor.setLayer(layer);
-		Optional<CosechaLabor> cosechaConfigured= HarvestConfigDialogController.config(labor);
-		if(!cosechaConfigured.isPresent()){//
-			//System.out.println("el dialogo termino con cancel asi que no continuo con la cosecha"); //$NON-NLS-1$
-			labor.dispose();//libero los recursos reservados
-			return;
-		}	
-
-		CalcularTasaDeCrecimientoTask umTask = new CalcularTasaDeCrecimientoTask(labor,ndvi);
-		umTask.isPP(true);
-		umTask.installProgressBar(progressBox);
-
-		umTask.setOnSucceeded(handler -> {
-			CosechaLabor ret = (CosechaLabor)handler.getSource().getValue();
-			insertBeforeCompass(getWwd(), ret.getLayer());
-			umTask.uninstallProgressBar();
-			ndvi.getLayer().setEnabled(false);
-
-			ProcessHarvestMapTask pmtask = new ProcessHarvestMapTask(ret);
-			pmtask.installProgressBar(progressBox);
-			pmtask.setOnSucceeded(handler2 -> {
-				this.getLayerPanel().update(this.getWwd());
-				pmtask.uninstallProgressBar();
-
-				this.wwjPanel.repaint();
-				System.out.println(Messages.getString("JFXMain.279")); //$NON-NLS-1$
-				playSound();
-
-				viewGoTo(ret);
-				//ndvi.getLayer().setEnabled(false);
-			});
-			pmtask.run();
-		});//fin del OnSucceeded
-		JFXMain.executorPool.execute(umTask);		
-	}
-	
-	private void doConvertirNdviATazaCN(Ndvi ndvi) {
-		CosechaLabor labor = new CosechaLabor();
-		labor.setNombre(ndvi.getNombre());
-
-		Date date = java.util.Date.from(ndvi.getFecha().atStartOfDay()
-				.atZone(ZoneId.systemDefault())
-				.toInstant());
-
-		labor.setFecha(date);
-		labor.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
-		LaborLayer layer = new LaborLayer();
-		labor.setLayer(layer);
-		Optional<CosechaLabor> cosechaConfigured= HarvestConfigDialogController.config(labor);
-		if(!cosechaConfigured.isPresent()){//
-			//System.out.println("el dialogo termino con cancel asi que no continuo con la cosecha"); //$NON-NLS-1$
-			labor.dispose();//libero los recursos reservados
-			return;
-		}							
-
-	
-
-		CalcularTasaDeCrecimientoTask umTask = new CalcularTasaDeCrecimientoTask(labor,ndvi);
-		umTask.isCN(true);
-		umTask.installProgressBar(progressBox);
-
-		umTask.setOnSucceeded(handler -> {
-			CosechaLabor ret = (CosechaLabor)handler.getSource().getValue();
-			insertBeforeCompass(getWwd(), ret.getLayer());
-			umTask.uninstallProgressBar();
-			ndvi.getLayer().setEnabled(false);
-
-			ProcessHarvestMapTask pmtask = new ProcessHarvestMapTask(ret);
-			pmtask.installProgressBar(progressBox);
-			pmtask.setOnSucceeded(handler2 -> {
-				this.getLayerPanel().update(this.getWwd());
-				pmtask.uninstallProgressBar();
-
-				this.wwjPanel.repaint();
-				System.out.println(Messages.getString("JFXMain.279")); //$NON-NLS-1$
-				playSound();
-
-				viewGoTo(ret);
-				//ndvi.getLayer().setEnabled(false);
-			});
-			pmtask.run();
-		});//fin del OnSucceeded
-		JFXMain.executorPool.execute(umTask);		
-	}
 	private void doConvertirNdviACosecha(Ndvi ndvi) {
 		CosechaLabor labor = new CosechaLabor();
 		labor.setNombre(ndvi.getNombre());
@@ -4042,13 +3922,10 @@ public class JFXMain extends Application {
 	}
 
 	public static void main(String[] args) {
-		try
-		{
+		try	{
 			System.setProperty("prism.order", "es2");
 			Application.launch(JFXMain.class, args);
-		}
-		catch (Exception e)
-		{
+		}catch (Exception e){
 			JOptionPane.showMessageDialog(null,"hola: " + e.getMessage());
 			try
 			{

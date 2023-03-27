@@ -37,6 +37,7 @@ import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
 import dao.utils.PropertyHelper;
 import gov.nasa.worldwind.WorldWindow;
+import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.LayerList;
@@ -248,9 +249,18 @@ public class PoligonoGUIController {
 		poligonosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.clonar"),(layer)->{
 			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 			if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){
-				doClonarPoligono(layerObject);
+				doClonarPoligono((Poligono)layerObject);
 			}
-			return "edite poligono"; //$NON-NLS-1$
+			return "clone poligono"; //$NON-NLS-1$
+		}));
+		
+		//XXX simplificar poligono action. sirve para probar alinear los puntos que estan en un margen 
+		poligonosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.simplificar"),(layer)->{
+			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){
+				doSimplificarPoligono((Poligono)layerObject);
+			}
+			return "simplifique poligono"; //$NON-NLS-1$
 		}));
 
 		poligonosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.poligonToSiembraAction"),(layer)->{
@@ -631,19 +641,74 @@ public class PoligonoGUIController {
 	/**
 	 * metodo que toma un poligono lo clona y lo agrega a los layers de main
 	 */
-	private void doClonarPoligono(Object layerObject) {
-		//TODO Implementar esta funcionalidad
+	private void doClonarPoligono(Poligono p) {
+		Poligono clon = new Poligono();
+		clon.setNombre(p.getNombre()+" clon");
+		clon.setArea(p.getArea());
+		clon.getPositions().addAll(p.getPositions());
+		MeasureTool measureTool = PoligonLayerFactory.createPoligonMeasureTool(clon, this.getWwd(), this.getLayerPanel());		
+		insertBeforeCompass(this.getWwd(), measureTool.getApplicationLayer());
+		this.getLayerPanel().update(this.getWwd());	
+	}
+	
+	
+	/**
+	 * metodo que reemplaza los puntos por una version interpolada
+	 */
+	private void doSimplificarPoligono(Poligono p) {
+		//TODO en vez de mover los puntos agregar los puntos que hagan que las lineas sean suaves
+		//que significa que una linea sea suave? 
+		//h1: que su radio del circulo tangente sea mayor a R
+		//h2: que los puntos alineados se reemplacen por sus extremos
+		//-> reemplazar cada grupo de puntos por un segmento de recta siempre que el error sea menor a e=E/L
+		Geometry g = p.toGeometry();
+		
+		g=GeometryHelper.removeClosePoints(g, ProyectionConstants.metersToLongLat(2));
+		g=GeometryHelper.removeSinglePoints(g, ProyectionConstants.metersToLongLat(2));
+		g=GeometryHelper.reduceAlignedPoints(g, 0.2);
+		Poligono pol =GeometryHelper.constructPoligono(g);
+
+		MeasureTool measureTool = (MeasureTool) p.getLayer().getValue(PoligonLayerFactory.MEASURE_TOOL);
+//		List<? extends Position> positions = measureTool.getPositions();//p.getPositions();
+//		List<Position> interpolated = new ArrayList<Position>();
+//		System.out.println("poligon size "+positions.size());
+//		positions.remove(0);
+//		positions.remove(positions.size()-1);
+//		System.out.println("poligon size "+positions.size());
+//		Position last = positions.get(positions.size()-1);
+//		for(int i=0;i<positions.size();i++) {
+//			Position este = positions.get(i);
+//			double dist = Position.linearDistance(este, last).degrees;
+//			//int nextIndex = i+1 < positions.size() ? i+1 : 0;
+//			System.out.println("este "+i);
+//			//Position next = positions.get(nextIndex);
+//			
+//			//Position interp = last.subtract(este);//Position.interpolate(1.3, last, este);
+//			//double deltaLat = este.latitude.degrees-last.latitude.degrees;
+//			//double deltaLon = este.longitude.degrees-last.longitude.degrees;
+//			//Position interp=Position.fromDegrees(deltaLat*1/3, deltaLon*1/3);
+//			//interp=este.subtract(interp);
+//			Position interp = Position.interpolate(2/3, last, este);
+//			interpolated.add(interp);
+//			interpolated.add(este);
+//			
+//			last=este;
+//		}
+//		interpolated.add(interpolated.get(0));
+		
+		//measureTool.setPositions((ArrayList<? extends Position>) interpolated);
+		measureTool.setPositions((ArrayList<? extends Position>) pol.getPositions());
+		//p.setPositions(interpolated);
 	}
 	
 	
 	public void doCrearPoligono(){
 		Poligono poli = new Poligono();
-		MeasureTool measureTool = PoligonLayerFactory.createPoligonLayer(poli, this.getWwd(), this.getLayerPanel());
+		MeasureTool measureTool = PoligonLayerFactory.createPoligonMeasureTool(poli, this.getWwd(), this.getLayerPanel());
 		measureTool.setArmed(true);
 
 		insertBeforeCompass(this.getWwd(), measureTool.getApplicationLayer());
 		this.getLayerPanel().update(this.getWwd());
-
 
 		PoligonoDialog pd = new PoligonoDialog(poli,false);
 
@@ -654,7 +719,7 @@ public class PoligonoGUIController {
 			Poligono op = pd.getResult();
 			if(op!=null) {
 				//p = op.get();
-				System.out.println("p created");
+				//System.out.println("p created");
 				//measureTool.setArmed(false);
 
 			} else {
@@ -664,10 +729,9 @@ public class PoligonoGUIController {
 			}
 			this.getLayerPanel().update(this.getWwd());
 		});
-
-
 	}
 	
+
 	/**
 	 * metodo que toma los poligonos seleccionados y los une si se intersectan
 	 */
@@ -692,7 +756,7 @@ public class PoligonoGUIController {
 		poli.setArea(has);
 		poli.setNombre(joiner.toString()); //$NON-NLS-1$
 
-		MeasureTool measureTool = PoligonLayerFactory.createPoligonLayer(poli, this.getWwd(), this.getLayerPanel());		
+		MeasureTool measureTool = PoligonLayerFactory.createPoligonMeasureTool(poli, this.getWwd(), this.getLayerPanel());		
 		insertBeforeCompass(this.getWwd(), measureTool.getApplicationLayer());
 		this.getLayerPanel().update(this.getWwd());		
 	}
@@ -770,7 +834,7 @@ public class PoligonoGUIController {
 				for(Geometry g : geometriasOutput){
 					Poligono poli = ExtraerPoligonosDeLaborTask.geometryToPoligono(g);
 					if(poli ==null)continue;
-					MeasureTool measureTool = PoligonLayerFactory.createPoligonLayer(poli, this.getWwd(), this.getLayerPanel());
+					MeasureTool measureTool = PoligonLayerFactory.createPoligonMeasureTool(poli, this.getWwd(), this.getLayerPanel());
 					double has = ProyectionConstants.A_HAS(g.getArea());
 					poli.setArea(has);
 					poli.setNombre(nombre+" ["+num+"]");num++; 
@@ -976,13 +1040,16 @@ public class PoligonoGUIController {
 	}
 	
 	public void showPoligonos(List<Poligono> poligonos) {
-		for(Poligono poli : poligonos){
-			MeasureTool measureTool = PoligonLayerFactory.createPoligonLayer(poli, this.getWwd(), this.getLayerPanel());
-			Platform.runLater(()->{
+		
+		Platform.runLater(()->{
+			for(Poligono poli : poligonos){
+			MeasureTool measureTool = PoligonLayerFactory.createPoligonMeasureTool(poli, this.getWwd(), this.getLayerPanel());
+		
 				insertBeforeCompass(this.getWwd(), measureTool.getApplicationLayer());
 				this.getLayerPanel().update(this.getWwd());//ponerlo fuera del for?
-			});
+			
 		}
+		});
 	}
 	
 	/**
@@ -1024,7 +1091,7 @@ public class PoligonoGUIController {
 
 						}
 
-						MeasureTool measureTool = PoligonLayerFactory.createPoligonLayer(poli, this.getWwd(), this.getLayerPanel());
+						MeasureTool measureTool = PoligonLayerFactory.createPoligonMeasureTool(poli, this.getWwd(), this.getLayerPanel());
 						poli.setArea(has);
 						insertBeforeCompass(this.getWwd(), measureTool.getApplicationLayer());
 					}//fin del while sobre las features

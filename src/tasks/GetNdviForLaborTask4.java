@@ -71,6 +71,7 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 	private static final String MMG_GUI_EVENT_CLOSE_PNG = "/gui/event-close.png";
 	
 
+	//"ursulaGIS.cosechaService";//"ursulaGISv23";	//Nov 13, 2022 
 	private static final String URSULA_GIS_TOKEN = "ursulaGISv28";//"ursulaGISv23";
 	private static final String TOKEN = "token";
 

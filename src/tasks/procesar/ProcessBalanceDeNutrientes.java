@@ -45,8 +45,8 @@ public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> 
 	double distanciaAvanceMax = 0;
 	double anchoMax = 0;
 
-	private int featureCount;
-	private int featureNumber;
+	private int featureCount=0;
+	private int featureNumber=0;
 
 
 
@@ -64,6 +64,7 @@ public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> 
 		Suelo suelo = new Suelo();
 		suelo.colDensidadProperty=new SimpleStringProperty("Densidad");
 		suelo.setLayer(new LaborLayer());
+		
 		StringBuilder sb = new StringBuilder();
 		sb.append("Balance de Nutrientes ");
 		cosechas.forEach((c)->sb.append(c.getNombre()+" "));
@@ -81,7 +82,7 @@ public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> 
 		// crear los paths
 		// devolver el nuevo suelo
 		featureNumber = 0;
-
+		updateProgress(featureNumber, featureCount);
 		double ancho = labor.getConfigLabor().getAnchoGrilla();
 
 		List<Labor<?>> labores = new LinkedList<Labor<?>>();
@@ -101,6 +102,7 @@ public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> 
 		List<Geometry> geometriasActivas = labores.parallelStream().collect(
 				()->new ArrayList<Geometry>(),
 				(activas, labor) ->{		
+					@SuppressWarnings("unchecked")
 					List<LaborItem> features = (List<LaborItem>) labor.outStoreQuery(unionEnvelope);
 					activas.addAll(
 							features.parallelStream().collect(
@@ -437,6 +439,7 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 		Double kgPSuelo = new Double(0);
 		kgPSuelo=	suelos.parallelStream().flatMapToDouble(suelo->{
 			List<SueloItem> items = suelo.cachedOutStoreQuery(geomQuery.getEnvelopeInternal());
+			//System.out.println("obteniendo el peso del suelo de "+items.size()+" items");
 			return items.parallelStream().flatMapToDouble(item->{
 				Double dens= item.getDensAp();// (Double) item.getPpmP()*suelo.getDensidad()/2;//TODO multiplicar por la densidad del suelo
 				Geometry geomItem = item.getGeometry();				
@@ -453,6 +456,9 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 				return DoubleStream.of( dens * hasInterseccion);				
 			});
 		}).sum();
+		if(kgPSuelo==0) {
+			kgPSuelo=SueloItem.DENSIDAD_SUELO_KG*ProyectionConstants.A_HAS(geomQuery.getArea());
+		}
 		return kgPSuelo;
 	} 
 	//busco todos los items de los mapas de suelo

@@ -30,6 +30,8 @@ public class Fertilizante extends Producto implements Comparable<Fertilizante>{
 	
 	public static final Double porcN_MO=0.04;
 	public static final Double porcMO_DISP_Campania=0.02;
+	public static final Double porcMO_DISP_Estival=2d/3d;
+	public static final Double porcMO_DISP_Invernal=1d/3d;
 	
 	public static final String FIND_ALL="Fertilizante.findAll";
 	public static final String FIND_NAME="Fertilizante.findName";

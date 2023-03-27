@@ -45,7 +45,7 @@ public class PoligonLayerFactory {
 	}
 	
 	@SuppressWarnings("unchecked")
-	static public MeasureTool createPoligonLayer(Poligono poli, WorldWindow wwd,LayerPanel layerPanel){
+	static public MeasureTool createPoligonMeasureTool(Poligono poli, WorldWindow wwd,LayerPanel layerPanel){
 		RenderableLayer surfaceLayer = new RenderableLayer();
 //		{
 //		    public void dispose() {

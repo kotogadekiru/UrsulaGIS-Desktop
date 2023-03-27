@@ -1,0 +1,4 @@
+digraph "summary" {
+  "gluegen-rt.jar"                                   -> "java.base (java.base)";
+  "gluegen-rt.jar"                                   -> "java.desktop (java.desktop)";
+}

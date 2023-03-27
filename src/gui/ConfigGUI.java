@@ -117,6 +117,8 @@ public class ConfigGUI {
 		addMenuItem(Messages.getString("JFXMain.fertilizantesMenuItem"),(a)->doConfigFertilizantes(),menuConfiguracion); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.agroquimicosMenuItem"),(a)->doConfigAgroquimicos(),menuConfiguracion); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.configSemillasMenuItem"),(a)->doConfigSemillas(),menuConfiguracion); //$NON-NLS-1$
+	//	addMenuItem(Messages.getString("JFXMain.Caldo"),(a)->doConfigCaldos(),menuConfiguracion); //$NON-NLS-1$
+
 
 		addMenuItem(Messages.getString("JFXMain.configEmpresaMI"),(a)->doConfigEmpresa(),menuConfiguracion); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.configEstablecimientoMI"),(a)->doConfigEstablecimiento(),menuConfiguracion); //$NON-NLS-1$
@@ -604,67 +606,7 @@ public class ConfigGUI {
 		}
 	}
 
-	public static Caldo doConfigCaldo(Caldo ret) {
 
-		final ObservableList<CaldoItem> data =
-				FXCollections.observableArrayList(
-						ret.getItems()
-						);
-
-		SmartTableView<CaldoItem> table = new SmartTableView<CaldoItem>(data,
-				Arrays.asList("Id"),//rejected
-				Arrays.asList("Producto","DosisHa")//order
-				);
-		table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
-		table.setEliminarAction(
-				list->{											
-					list.stream().forEach(i->{
-						i.getCaldo().getItems().remove(i);	
-					});
-				}
-				);
-		table.setEditable(true);
-		table.setOnDoubleClick(()->{
-			CaldoItem i = new CaldoItem();
-			ret.getItems().add(i);
-			i.setCaldo(ret);
-			return i;
-		}); //$NON-NLS-1$
-
-		VBox v=new VBox();
-		TextField nombreTF = new TextField();
-		nombreTF.setText(ret.getNombre());
-		nombreTF.textProperty().addListener((obj,old,n)->{
-			ret.setNombre(n);
-		});
-		TextField descripcionTF = new TextField();
-		descripcionTF.setText(ret.getDescripcion());
-		descripcionTF.textProperty().addListener((obj,old,n)->{
-			ret.setDescripcion(n);
-		});
-		v.getChildren().add(nombreTF);
-		v.getChildren().add(descripcionTF);
-		v.getChildren().add(table);
-	
-		Button guardarB = new Button(Messages.getString("JFXMain.saveAction"));//TODO traducir
-		HBox h = new HBox();
-		h.getChildren().addAll(guardarB);
-
-		v.getChildren().add(h);
-		Scene scene = new Scene(v, 800, 600);
-		Stage tablaStage = new Stage();
-		tablaStage.getIcons().add(new Image(JFXMain.ICON));
-		tablaStage.setTitle(Messages.getString("JFXMain.Caldo")); //$NON-NLS-1$
-		tablaStage.setScene(scene);	
-		
-		guardarB.setOnAction(actionEvent->{
-			//System.out.println("implementar GuardarOrden de compra action");
-			//DAH.save(ret);
-			tablaStage.close();
-		});
-		tablaStage.show();	 
-		return ret;		
-	}
 
 	public void doShowOrdenCompraItems(OrdenCompra ret) {
 		Platform.runLater(()->{
@@ -764,7 +706,7 @@ public class ConfigGUI {
 								//								DAH.removeAll(oc.getItems());	
 								//							});
 								//							DAH.save(list.get(0).getRecorrida());
-								List<Object> objs = new ArrayList(list);
+								List<Object> objs = new ArrayList<Object>(list);
 								DAH.removeAll(objs);
 								DAH.commitTransaction();
 							}catch(Exception e) {
@@ -1104,6 +1046,95 @@ public class ConfigGUI {
 		});
 
 	}
+	
+	public static void doConfigCaldos() {
+		Platform.runLater(()->{
+
+			//ArrayList<Semilla> ciLista = new ArrayList<Semilla>();
+			//System.out.println("Comenzando a cargar la los datos de la tabla");
+
+			//ciLista.addAll(Semilla.semillas.values());
+			final ObservableList<Caldo> dataLotes =
+					FXCollections.observableArrayList(	DAH.getAllCaldos());
+			//System.out.println("mostrando la tabla de las semillas con "+dataLotes);
+			SmartTableView<Caldo> table = new SmartTableView<Caldo>(dataLotes,Arrays.asList("Id"),                 //rejected
+					Arrays.asList("Nombre","Descripcion"));//order
+			table.setEditable(true);
+			table.setOnDoubleClick(()->doConfigCaldo(new Caldo())); //$NON-NLS-1$
+			table.setOnShowClick(caldo->doConfigCaldo(caldo));
+			Scene scene = new Scene(table, 800, 600);
+			Stage tablaStage = new Stage();
+			
+			tablaStage.getIcons().add(new Image(JFXMain.ICON));
+			tablaStage.setTitle(Messages.getString("JFXMain.Caldo")); //$NON-NLS-1$
+			tablaStage.setScene(scene);
+			tablaStage.show();	 
+		});
+
+	}
+	
+	public static Caldo doConfigCaldo(Caldo ret) {
+
+		final ObservableList<CaldoItem> data =
+				FXCollections.observableArrayList(
+						ret.getItems()
+						);
+
+		SmartTableView<CaldoItem> table = new SmartTableView<CaldoItem>(data,
+				Arrays.asList("Id"),//rejected
+				Arrays.asList("Producto","DosisHa")//order
+				);
+		table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
+		table.setEliminarAction(
+				list->{											
+					list.stream().forEach(i->{
+						i.getCaldo().getItems().remove(i);	
+					});
+				}
+				);
+		table.setEditable(true);
+		table.setOnDoubleClick(()->{
+			CaldoItem i = new CaldoItem();
+			ret.getItems().add(i);
+			i.setCaldo(ret);
+			return i;
+		}); //$NON-NLS-1$
+
+		VBox v=new VBox();
+		TextField nombreTF = new TextField();
+		nombreTF.setText(ret.getNombre());
+		nombreTF.textProperty().addListener((obj,old,n)->{
+			ret.setNombre(n);
+		});
+		TextField descripcionTF = new TextField();
+		descripcionTF.setText(ret.getDescripcion());
+		descripcionTF.textProperty().addListener((obj,old,n)->{
+			ret.setDescripcion(n);
+		});
+		v.getChildren().add(nombreTF);
+		v.getChildren().add(descripcionTF);
+		v.getChildren().add(table);
+	
+		Button guardarB = new Button(Messages.getString("JFXMain.saveAction"));//TODO traducir
+		HBox h = new HBox();
+		h.getChildren().addAll(guardarB);
+
+		v.getChildren().add(h);
+		Scene scene = new Scene(v, 800, 600);
+		Stage tablaStage = new Stage();
+		tablaStage.getIcons().add(new Image(JFXMain.ICON));
+		tablaStage.setTitle(Messages.getString("JFXMain.Caldo")); //$NON-NLS-1$
+		tablaStage.setScene(scene);	
+		
+		guardarB.setOnAction(actionEvent->{
+			//System.out.println("implementar GuardarOrden de compra action");
+			//DAH.save(ret);
+			tablaStage.close();
+		});
+		tablaStage.show();	 
+		return ret;		
+	}
+	
 
 	/**
 	 * Funcion util para vincular un metodo con un item en un menu
