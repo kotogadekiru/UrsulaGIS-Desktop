@@ -19,6 +19,8 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityTransaction;
 
+import org.controlsfx.control.textfield.CustomTextField;
+
 import com.google.gson.Gson;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
@@ -56,10 +58,12 @@ import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
@@ -73,6 +77,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
@@ -608,11 +613,11 @@ public class ConfigGUI {
 
 
 
-	public void doShowOrdenCompraItems(OrdenCompra ret) {
+	public void doShowOrdenCompraItems(OrdenCompra oc) {
 		Platform.runLater(()->{
 			final ObservableList<OrdenCompraItem> data =
 					FXCollections.observableArrayList(
-							ret.getItems()
+							oc.getItems()
 							);
 
 			SmartTableView<OrdenCompraItem> table = new SmartTableView<OrdenCompraItem>(data,
@@ -628,19 +633,32 @@ public class ConfigGUI {
 			//			});
 
 			VBox v=new VBox();
+			VBox.setVgrow(table, Priority.ALWAYS);
 			v.getChildren().add(table);
+			HBox hBoxTotal = new HBox();
+			
+			/*You use a container if you need add many nodes in CustomTextField*/
+			//HBox box=new HBox();
+			//box.getChildren().add(myLabel);
+//			TextField total=new TextField();
+//			total.setEditable(false);
+			Label importeTotalLabel = new Label("Importe total: "+Messages.getNumberFormat().format(oc.getImporteTotal()));
+			importeTotalLabel.setPadding(new Insets(5,5,5,5));//ar,d,ab,izq
+			hBoxTotal.getChildren().add(importeTotalLabel);		
+			v.getChildren().add(hBoxTotal);
+			
 			HBox h = new HBox();
 
 			Button guardarB = new Button(Messages.getString("JFXMain.saveAction"));//TODO traducir
 			guardarB.setOnAction(actionEvent->{
 				//System.out.println("implementar GuardarOrden de compra action");
-				DAH.save(ret);
+				DAH.save(oc);
 			});
 
 			Button exportarB = new Button(Messages.getString("JFXMain.exportar"));//TODO traducir
 			exportarB.setOnAction(actionEvent->{
 				ExcelHelper helper = new ExcelHelper();
-				helper.exportOrdenCompra(ret);
+				helper.exportOrdenCompra(oc);
 			});
 
 			Button cotizarOblineB = new Button(Messages.getString("ShowConfigGUI.cotizarOnline"));//"Cotizar OnLine");//TODO traducir
@@ -654,8 +672,8 @@ public class ConfigGUI {
 
 				String mail = tDialog.getResult();
 
-				ret.setMail(mail);
-				CotizarOdenDeCompraOnlineTask cotTask= new CotizarOdenDeCompraOnlineTask(ret); 
+				oc.setMail(mail);
+				CotizarOdenDeCompraOnlineTask cotTask= new CotizarOdenDeCompraOnlineTask(oc); 
 
 				JFXMain.executorPool.execute(cotTask);
 				// enviar orden de compra a la nube. preguntar mail de contacto y subir la orden de compra a la nube
@@ -665,12 +683,17 @@ public class ConfigGUI {
 			h.getChildren().addAll(guardarB,exportarB,cotizarOblineB);
 
 			v.getChildren().add(h);
-			Scene scene = new Scene(v, 800, 600);
+			Scene scene = new Scene(v, 400, 300);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
 			tablaStage.setTitle(Messages.getString("JFXMain.OrdenCompra")); //$NON-NLS-1$
 			tablaStage.setScene(scene);
-
+			tablaStage.heightProperty().addListener((obj,old,nu)->{
+				v.setPrefHeight(nu.doubleValue());
+			});
+			tablaStage.widthProperty().addListener((obj,old,nu)->{
+				v.setPrefWidth(nu.doubleValue());
+			});
 			tablaStage.onHiddenProperty().addListener((o,old,n)->{
 				main.getLayerPanel().update(main.getWwd());
 				//getWwd().redraw();
