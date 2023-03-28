@@ -514,7 +514,7 @@ public class JFXMain extends Application {
 		addMenuItem(Messages.getString("JFXMain.generarOrdenCompra"),(a)->doGenerarOrdenDeCompra(),menuHerramientas); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.goTo"),(a)->showGoToDialog(),menuHerramientas);
 		addMenuItem(Messages.getString("JFXMain.bulk_ndvi_download"),(a)->{	doBulkNDVIDownload();},menuHerramientas);//$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.bulk_tasa_crecimiento_download"),(a)->{	doBulkTCDownload();},menuHerramientas);//$NON-NLS-1$
+	//	addMenuItem(Messages.getString("JFXMain.bulk_tasa_crecimiento_download"),(a)->{	doBulkTCDownload();},menuHerramientas);//$NON-NLS-1$
 
 
 		/*Menu Exportar*/
@@ -1742,14 +1742,14 @@ public class JFXMain extends Application {
 		gui.show();
 	}
 
-	/**
-	 * metodo que muestra una tabla con poligonos que se pueden seleccionar para descargar el valor de los ndvi
-	 * de cada uno dentro de un periodo determinado
-	 */
-	private void doBulkTCDownload() {
-		TasaDeCrecimientoDownloadGUI gui = new TasaDeCrecimientoDownloadGUI();
-		gui.show();
-	}
+//	/**
+//	 * metodo que muestra una tabla con poligonos que se pueden seleccionar para descargar el valor de los ndvi
+//	 * de cada uno dentro de un periodo determinado
+//	 */
+//	private void doBulkTCDownload() {
+//		TasaDeCrecimientoDownloadGUI gui = new TasaDeCrecimientoDownloadGUI();
+//		gui.show();
+//	}
 
 	private void showHistoNDVI(Ndvi  ndvi) {	
 

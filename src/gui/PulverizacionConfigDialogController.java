@@ -27,15 +27,22 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Control;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
+import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.BorderStroke;
+import javafx.scene.layout.BorderStrokeStyle;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
@@ -77,6 +84,9 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 
     @FXML
     private BorderPane bpCaldo;//ok
+    
+    @FXML
+    private TabPane tabPane;
 	
 	@FXML
 	private TextField textCostoLaborHa;//ok
@@ -236,21 +246,32 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 
 		this.comboClasificador.setItems(FXCollections.observableArrayList(Clasificador.clasficicadores));
 		this.comboClasificador.valueProperty().bindBidirectional(labor.clasificador.tipoClasificadorProperty);
+		this.comboClasificador.setConverter(Clasificador.clasificadorStringConverter());
 
 
 	}
 
 	public void init() {
 		this.getDialogPane().setContent(content);
-		
-//		this.getDialogPane().heightProperty().addListener((o,old,nu)->{
-//			System.out.println("cambiando el alto del dialog");//si se ejecuta pero no se modifica el tamanio
-//			//content.setPrefSize(this.getWidth(), nu.doubleValue());	
-//		});
-//		this.getDialogPane().widthProperty().addListener((o,old,nu)->{			
-//			//content.setPrefSize(nu.doubleValue(), this.getHeight());			
-//		});
-
+//		content.setBorder(new Border(new BorderStroke(
+//				Paint.valueOf("black"),
+//				BorderStrokeStyle.SOLID,		
+//				CornerRadii.EMPTY,
+//				BorderStroke.THIN)));
+//		tabPane.setBorder(new Border(new BorderStroke(
+//				Paint.valueOf("black"),
+//				BorderStrokeStyle.SOLID,		
+//				CornerRadii.EMPTY,
+//				BorderStroke.THIN)));
+		this.getDialogPane().heightProperty().addListener((o,old,nu)->{
+		//	System.out.println("cambiando el alto del dialog a "+nu);//si se ejecuta pero no se modifica el tamanio
+		//	System.out.println("content height "+content.getHeight());//si se ejecuta pero no se modifica el tamanio
+			content.setPrefSize(this.getWidth(), nu.doubleValue());	
+		});
+		this.getDialogPane().widthProperty().addListener((o,old,nu)->{			
+			content.setPrefSize(nu.doubleValue(), this.getHeight());			
+		});
+		this.getDialogPane().setPrefSize(711,390);
 	}
 
 	private void contructCaldoTable() {
@@ -307,6 +328,7 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 			myLoader.load();//aca se crea el constructor
 			
 			PulverizacionConfigDialogController controller = ((PulverizacionConfigDialogController) myLoader.getController());
+			
 			controller.init();
 			controller.setLabor(labor2);
 		

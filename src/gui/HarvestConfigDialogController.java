@@ -411,6 +411,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 
 		this.comboClasificador.setItems(FXCollections.observableArrayList(Clasificador.clasficicadores));
 		this.comboClasificador.valueProperty().bindBidirectional(labor.clasificador.tipoClasificadorProperty);
+		this.comboClasificador.setConverter(Clasificador.clasificadorStringConverter());
 		//choiceClasificador.textProperty().bindBidirectional(labor.clasificador.tipoClasificadorProperty);
 
 		//textNombre.textProperty().bindBidirectional(labor.nombreProperty);

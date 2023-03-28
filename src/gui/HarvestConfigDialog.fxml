@@ -17,11 +17,11 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="content" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.HarvestConfigDialogController">
+<VBox fx:id="content" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.HarvestConfigDialogController">
    <children>
       <TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="358.0" prefWidth="711.0" tabClosingPolicy="UNAVAILABLE">
         <tabs>
-          <Tab text="Columnas">
+          <Tab text="%HarvestConfigDialogController.columnasLabel">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
@@ -41,7 +41,6 @@
                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
                               <ComboBox id="comboAnch" fx:id="comboAnch" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
@@ -49,69 +48,69 @@
                               <ComboBox id="comboCurs" fx:id="comboCurs" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                               <ComboBox id="comboElev" fx:id="comboElev" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                               <ComboBox id="comboRend" fx:id="comboRend" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                              <Label text="Curso" GridPane.rowIndex="4">
+                              <Label text="%HarvestConfigDialogController.cursoLabel" GridPane.rowIndex="4">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
                               <ComboBox id="comboDist" fx:id="comboDist" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                              <Label text="Precio Grano" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                              <Label text="%HarvestConfigDialogController.precioGranoLabel" GridPane.columnIndex="2" GridPane.rowIndex="1">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
-                              <Label text="Ancho" GridPane.rowIndex="2">
+                              <Label text="%HarvestConfigDialogController.anchoLabel" GridPane.rowIndex="2">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
-                              <Label text="Distancia" GridPane.rowIndex="3">
+                              <Label text="%HarvestConfigDialogController.distanciaLabel" GridPane.rowIndex="3">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
-                              <Label text="Elevacion *" GridPane.rowIndex="5">
+                              <Label text="%HarvestConfigDialogController.elevacionLabel" GridPane.rowIndex="5">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
-                              <Label text="Rendimiento" GridPane.rowIndex="1">
+                              <Label text="%HarvestConfigDialogController.rindeLabel" GridPane.rowIndex="1">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
                               <TextField id="textPrecioGrano" fx:id="textPrecioGrano" GridPane.columnIndex="3" GridPane.rowIndex="1" />
                               <TextField id="textPorcCorreccion" fx:id="textPorcCorreccion" GridPane.columnIndex="3" GridPane.rowIndex="2" />
-                              <Label text="Rinde Promedio Ajust." GridPane.columnIndex="2" GridPane.rowIndex="2" />
-                              <Label text="Costo Lab. Cosecha por Ha" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-                              <Label text="Porc. Costo Cosecha por Tn" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+                              <Label text="%HarvestConfigDialogController.rindeAjusteLabel" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                              <Label text="%HarvestConfigDialogController.costoLabHaLabel" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                              <Label text="%HarvestConfigDialogController.costoLabTnLabel" GridPane.columnIndex="2" GridPane.rowIndex="4" />
                               <TextField id="textCostoCosechaHa" fx:id="textCostoCosechaHa" GridPane.columnIndex="3" GridPane.rowIndex="3" />
                               <TextField id="textCostoCosechaTn" fx:id="textCostoCosechaTn" GridPane.columnIndex="3" GridPane.rowIndex="4" />
-                              <Label text="Cultivo" GridPane.columnIndex="2" GridPane.rowIndex="5" />
-                              <ComboBox id="comboCultivo" fx:id="comboCultivo" prefWidth="150.0" promptText="Cultivo" GridPane.columnIndex="3" GridPane.rowIndex="5" />
-                              <Label text="Nombre">
+                              <Label text="%HarvestConfigDialogController.cultivoLabel" GridPane.columnIndex="2" GridPane.rowIndex="5" />
+                              <ComboBox id="comboCultivo" fx:id="comboCultivo" prefWidth="150.0" promptText="%HarvestConfigDialogController.cultivoLabel" GridPane.columnIndex="3" GridPane.rowIndex="5" />
+                              <Label text="%HarvestConfigDialogController.nombreLabel">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
                               <TextField id="textPrecioGrano" fx:id="textNombre" GridPane.columnIndex="1" />
-                              <Label text="Rinde Max." GridPane.columnIndex="2" GridPane.rowIndex="7" />
+                              <Label text="%HarvestConfigDialogController.rindeMaxLabel" GridPane.columnIndex="2" GridPane.rowIndex="7" />
                               <TextField id="textPorcCorreccion" fx:id="textMaxRinde" promptText="Maximo rinde posible del cultivo. Sobre este valor se reemplaza por el promedio local" GridPane.columnIndex="3" GridPane.rowIndex="7" />
-                              <Label text="Rinde Min." GridPane.columnIndex="2" GridPane.rowIndex="6" />
+                              <Label text="%HarvestConfigDialogController.rindeMinLabel" GridPane.columnIndex="2" GridPane.rowIndex="6" />
                               <TextField id="textPorcCorreccion" fx:id="textMinRinde" promptText="Minimo rinde posible del cultivo. Sobre este valor se reemplaza por el promedio local" GridPane.columnIndex="3" GridPane.rowIndex="6" />
                               <DatePicker fx:id="datePickerFecha" GridPane.columnIndex="3" />
-                              <Label text="Fecha" GridPane.columnIndex="2" />
+                              <Label text="%HarvestConfigDialogController.fechaLabel" GridPane.columnIndex="2" />
                            </children>
                         </GridPane>
                      </children>
                   </AnchorPane>
             </content>
           </Tab>
-          <Tab text="Opciones">
+          <Tab text="%HarvestConfigDialogController.opcionesLabel">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <GridPane layoutX="14.0" layoutY="19.0" prefHeight="345.0" prefWidth="577.0">
+                        <GridPane layoutX="14.0" layoutY="19.0" prefHeight="306.0" prefWidth="692.0">
                           <columnConstraints>
                             <ColumnConstraints hgrow="SOMETIMES" maxWidth="204.0" minWidth="10.0" prefWidth="162.0" />
                             <ColumnConstraints hgrow="SOMETIMES" maxWidth="180.0" minWidth="10.0" prefWidth="105.0" />
@@ -127,28 +126,27 @@
                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                               <RowConstraints maxHeight="56.0" minHeight="10.0" prefHeight="56.0" vgrow="SOMETIMES" />
-                              <RowConstraints maxHeight="38.0" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
-                              <CheckBox id="chkSuperposicion" fx:id="chkSuperposicion" mnemonicParsing="false" text="Superposiciones" wrapText="true" GridPane.rowIndex="1" />
-                              <CheckBox id="chkDistancia" fx:id="chkDistancia" mnemonicParsing="false" text="Distancia" wrapText="true" GridPane.rowIndex="2" />
-                              <CheckBox id="chkAncho" fx:id="chkAncho" mnemonicParsing="false" text="Ancho" wrapText="true" GridPane.rowIndex="3" />
-                              <CheckBox id="chkOutlayers" fx:id="chkOutlayers" mnemonicParsing="false" text="Outliers" wrapText="true" GridPane.rowIndex="4" />
-                              <CheckBox id="chkRinde" fx:id="chkRinde" mnemonicParsing="false" text="Rinde sin superposiciones" wrapText="true" GridPane.rowIndex="5" />
-                              <CheckBox id="chkDemora" fx:id="chkDemora" mnemonicParsing="false" text="Demora pesada" wrapText="true" GridPane.rowIndex="6" />
-                              <Label text="Cant. distancias tolera" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                              <CheckBox id="chkSuperposicion" fx:id="chkSuperposicion" mnemonicParsing="false" text="%HarvestConfigDialogController.superposicionesChk" wrapText="true" GridPane.rowIndex="1" />
+                              <CheckBox id="chkDistancia" fx:id="chkDistancia" mnemonicParsing="false" text="%HarvestConfigDialogController.distanciaChk" wrapText="true" GridPane.rowIndex="2" />
+                              <CheckBox id="chkAncho" fx:id="chkAncho" mnemonicParsing="false" text="%HarvestConfigDialogController.anchoChk" wrapText="true" GridPane.rowIndex="3" />
+                              <CheckBox id="chkOutlayers" fx:id="chkOutlayers" mnemonicParsing="false" text="%HarvestConfigDialogController.outliersChk" wrapText="true" GridPane.rowIndex="4" />
+                              <CheckBox id="chkRinde" fx:id="chkRinde" mnemonicParsing="false" text="%HarvestConfigDialogController.rindeSinSupChk" wrapText="true" GridPane.rowIndex="5" />
+                              <CheckBox id="chkDemora" fx:id="chkDemora" mnemonicParsing="false" text="%HarvestConfigDialogController.demoraChk" wrapText="true" GridPane.rowIndex="6" />
+                              <Label text="%HarvestConfigDialogController.distToleraLabel" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                               <TextField id="textDistTolera" fx:id="textDistTolera" GridPane.columnIndex="2" GridPane.rowIndex="2">
                                  <GridPane.margin>
                                     <Insets left="5.0" right="5.0" />
                                  </GridPane.margin>
                               </TextField>
-                              <Label text="Porc. tolerancia CV" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                              <Label text="%HarvestConfigDialogController.tolOutliersLabel" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                               <TextField id="textToleranciaCV" fx:id="textToleranciaCV" GridPane.columnIndex="2" GridPane.rowIndex="4">
                                  <GridPane.margin>
                                     <Insets left="5.0" right="5.0" />
                                  </GridPane.margin>
                               </TextField>
-                              <Label text="Ancho filtro (m)" wrapText="true" GridPane.columnIndex="3" GridPane.rowIndex="4" />
+                              <Label text="%HarvestConfigDialogController.anchoFiltroLabel" wrapText="true" GridPane.columnIndex="3" GridPane.rowIndex="4" />
                               <TextField id="textAnchoFiltro" fx:id="textAnchoFiltro" GridPane.columnIndex="4" GridPane.rowIndex="4">
                                  <GridPane.margin>
                                     <Insets left="5.0" />
@@ -157,7 +155,7 @@
                                     <Tooltip autoHide="true" text="El coeficiente de variacion se calcula entre los datos que esten dentro de un rectangulo centrado sobre el dato del ancho ingresado" wrapText="true" />
                                  </tooltip>
                               </TextField>
-                              <Label text="Sup. minima relevante (m2)" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                              <Label text="%HarvestConfigDialogController.supMinLabel" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                               <TextField id="textSupMin" fx:id="textSupMin" GridPane.columnIndex="2" GridPane.rowIndex="1">
                                  <tooltip>
                                     <Tooltip text="Si un dato corresponde a una superficie menor a la ingresada es descartado" />
@@ -166,7 +164,7 @@
                                     <Insets left="5.0" right="5.0" />
                                  </GridPane.margin>
                               </TextField>
-                              <Label text="Corrimiento pesada (s)" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                              <Label text="%HarvestConfigDialogController.corrimientoLabel" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="6" />
                               <TextField id="textCorrimientoPesada" fx:id="textCorrimientoPesada" GridPane.columnIndex="2" GridPane.rowIndex="6">
                                  <GridPane.margin>
                                     <Insets right="5.0" />
@@ -177,18 +175,18 @@
                                     <Insets left="5.0" />
                                  </GridPane.margin>
                               </TextField>
-                              <Label text="Cant. distancias entrada En Regimen" wrapText="true" GridPane.columnIndex="3" GridPane.rowIndex="6" />
-                              <Label text="Unidad de distancia" wrapText="true" GridPane.columnIndex="3" GridPane.rowIndex="2" />
-                              <Label text="Ancho default" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                              <Label text="%HarvestConfigDialogController.entradaRegimenLabel" wrapText="true" GridPane.columnIndex="3" GridPane.rowIndex="6" />
+                              <Label text="%HarvestConfigDialogController.unidadDistLabel" wrapText="true" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+                              <Label text="%HarvestConfigDialogController.anchoDefaultLabel" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                               <TextField id="textAnchoDef" fx:id="textAnchoDef" GridPane.columnIndex="2" GridPane.rowIndex="3">
                                  <GridPane.margin>
                                     <Insets left="5.0" right="5.0" />
                                  </GridPane.margin>
                               </TextField>
-                              <Label text="Corregir:" wrapText="true" />
-                              <CheckBox id="chkRinde" fx:id="chkResumirGeometrias" mnemonicParsing="false" text="Resumir Ambientes" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                              <Label text="Clasificador" wrapText="true" GridPane.columnIndex="2" GridPane.rowIndex="5" />
-                              <CheckBox id="chkFlow" fx:id="chkFlow" mnemonicParsing="false" text="Rinde es Flow" wrapText="true" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+                              <Label text="%HarvestConfigDialogController.corregirLabel" wrapText="true" />
+                              <CheckBox id="chkRinde" fx:id="chkResumirGeometrias" mnemonicParsing="false" text="%HarvestConfigDialogController.resumirAmbientesChk" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                              <Label text="%HarvestConfigDialogController.clasificadorLabel" wrapText="true" GridPane.columnIndex="2" GridPane.rowIndex="5" />
+                              <CheckBox id="chkFlow" fx:id="chkFlow" mnemonicParsing="false" text="%HarvestConfigDialogController.rindeFlowChk" wrapText="true" GridPane.columnIndex="3" GridPane.rowIndex="3" GridPane.rowSpan="2" />
                               <ComboBox fx:id="comboClasificador" prefWidth="150.0" GridPane.columnIndex="3" GridPane.rowIndex="5" />
                               <TextField fx:id="textClasesClasificador" GridPane.columnIndex="4" GridPane.rowIndex="5" />
                               <ChoiceBox fx:id="cbMetrosPorUnidad" prefWidth="150.0" GridPane.columnIndex="4" GridPane.rowIndex="2" />
@@ -202,7 +200,7 @@
       </TabPane>
       <FlowPane alignment="CENTER_LEFT" prefHeight="32.0" prefWidth="711.0" rowValignment="TOP">
          <children>
-            <CheckBox id="chkMakeDefault" fx:id="chkMakeDefault" alignment="CENTER" mnemonicParsing="false" prefHeight="22.0" prefWidth="161.0" text="Guardar como default">
+            <CheckBox id="chkMakeDefault" fx:id="chkMakeDefault" alignment="CENTER" mnemonicParsing="false" prefHeight="22.0" prefWidth="161.0" text="%HarvestSelectDialogController.guardarComoLabel">
                <opaqueInsets>
                   <Insets />
                </opaqueInsets>

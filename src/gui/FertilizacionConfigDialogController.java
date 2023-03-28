@@ -204,7 +204,7 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 
 		this.comboClasificador.setItems(FXCollections.observableArrayList(Clasificador.clasficicadores));
 		this.comboClasificador.valueProperty().bindBidirectional(labor.clasificador.tipoClasificadorProperty);
-
+		this.comboClasificador.setConverter(Clasificador.clasificadorStringConverter());
 		textNombre.textProperty().set(labor.getNombre());
 		textNombre.textProperty().addListener((obj,old,nu)->labor.setNombre(nu));
 		

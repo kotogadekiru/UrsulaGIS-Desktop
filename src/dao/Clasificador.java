@@ -33,6 +33,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.paint.Color;
+import javafx.util.StringConverter;
 import lombok.Data;
 import utils.NaturalBreaks;
 import utils.ProyectionConstants;
@@ -216,6 +217,30 @@ public class Clasificador {
 		}
 		//  int clase =   clasifier.classify(arg0)
 		return clasifier;
+	}
+	
+	public static StringConverter clasificadorStringConverter() {
+		return	new StringConverter() {
+			@Override
+			public Object fromString(String arg0) {				
+				return null;
+			}
+
+			@Override
+			public String toString(Object arg0) {
+				String s =(String)arg0;
+				String key="Clasificador";
+				switch (s) {
+				case Clasificador.CLASIFICADOR_DESVIOSTANDAR:
+					key="Clasificador.CLASIFICADOR_DESVIOSTANDAR";
+					break;
+				case Clasificador.CLASIFICADOR_JENKINS:
+					key="Clasificador.CLASIFICADOR_JENKINS";
+					break;
+				}
+				return Messages.getString(key);				
+			}			
+		};
 	}
 
 	public  Classifier constructJenksClasifier(SimpleFeatureCollection collection,String amountColumn){

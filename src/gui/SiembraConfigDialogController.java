@@ -245,7 +245,7 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 
 		this.comboClasificador.setItems(FXCollections.observableArrayList(Clasificador.clasficicadores));
 		this.comboClasificador.valueProperty().bindBidirectional(labor.clasificador.tipoClasificadorProperty);
-		
+		this.comboClasificador.setConverter(Clasificador.clasificadorStringConverter());
 		
 		//TODO cambiar cbMetrosPorUnidad a ComboBox para que pueda ser editable
 		Map<String,SiembraConfig.Unidad> unidades = new HashMap<String,SiembraConfig.Unidad>();
