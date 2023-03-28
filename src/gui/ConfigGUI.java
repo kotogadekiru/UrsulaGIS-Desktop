@@ -616,8 +616,8 @@ public class ConfigGUI {
 							);
 
 			SmartTableView<OrdenCompraItem> table = new SmartTableView<OrdenCompraItem>(data,
-					Arrays.asList("Id"),//rejected
-					Arrays.asList("Producto","Cantidad")//order
+					Arrays.asList("Id","Importe2"),//rejected
+					Arrays.asList("Producto","Cantidad","Precio","Importe")//order
 					);
 			table.setEditable(true);
 			//			table.setOnDoubleClick(()->new Poligono());

@@ -77,8 +77,11 @@ public class GenerarOCTask  extends Task<OrdenCompra>{
 			description.append(l.getNombre());
 			Producto producto =l.getAgroquimico().getValue();
 			
-			Double cantidadItem = l.getCantidadInsumo();
-			putItem(prodCantidadMap, producto, cantidadItem,l.getPrecioInsumo());
+			l.getCaldo().getItems().forEach((caldoItem)->{
+				putItem(prodCantidadMap, caldoItem.getProducto(), l.getCantidadLabor()*caldoItem.getDosisHa(),l.getPrecioInsumo());
+			});
+			//Double cantidadItem = l.getCantidadInsumo();
+			//putItem(prodCantidadMap, producto, cantidadItem,l.getPrecioInsumo());
 			putItem(prodCantidadMap, l.getProductoLabor(), l.getCantidadLabor(),l.getPrecioLabor());
 		});
 		
@@ -92,7 +95,7 @@ public class GenerarOCTask  extends Task<OrdenCompra>{
 		OrdenCompra oc=new OrdenCompra();		
 		oc.setDescription(description.toString());
 		oc.setItems(new ArrayList<OrdenCompraItem>(prodCantidadMap.values()));
-		//oc.getItems().stream().forEach((item)->item.setOrdenCompra(oc));
+		oc.getItems().stream().forEach((item)->item.setOrdenCompra(oc));
 		
 		return oc;
 	}
