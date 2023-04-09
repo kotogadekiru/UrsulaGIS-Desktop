@@ -1,4 +1,4 @@
-package dao.OrdenDeCompra;
+package dao.ordenCompra;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,7 +39,7 @@ public class ProductoLabor extends Producto {
 		laboresDefault.put(LABOR_DE_COSECHA,new ProductoLabor(LABOR_DE_COSECHA));//ok
 	}
 		
-	String nombre = new String();
+	//String nombre = new String();
 	
 	public ProductoLabor() {
 		

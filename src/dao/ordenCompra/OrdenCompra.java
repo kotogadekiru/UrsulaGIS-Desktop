@@ -1,4 +1,4 @@
-package dao.OrdenDeCompra;
+package dao.ordenCompra;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,19 +50,19 @@ public class OrdenCompra extends AbstractBaseEntity {
 	private List<OrdenCompraItem> items=new ArrayList<OrdenCompraItem>();
 	
 	//@Column(precision=30, scale=6)
-	private BigDecimal importeTotal2=new BigDecimal(0.0);
+	private BigDecimal importeTotal=new BigDecimal(0.0);
 	
-//	public void setItems(List<OrdenCompraItem> _items) {
-//		this.items=_items;
-//	}
+	public void setItems(List<OrdenCompraItem> _items) {
+		this.items=_items;
+	}
 //	
-	public BigDecimal getImporteTotal() {
+	public BigDecimal calcImporteTotal() {
 		if(items!=null && items.size()>0) {
-			this.importeTotal2=BigDecimal.valueOf(items.stream().mapToDouble(i->i.getImporte().doubleValue()).sum()); 
+			this.importeTotal=BigDecimal.valueOf(items.stream().mapToDouble(i->i.calcImporte().doubleValue()).sum()); 
 		} else {
-			this.importeTotal2 = new BigDecimal(0.0);
+			this.importeTotal = new BigDecimal(0.0);
 		}
 		//System.out.println("devolviendo importe total "+this.importeTotal2);
-		return importeTotal2;
+		return importeTotal;
 	}
 }

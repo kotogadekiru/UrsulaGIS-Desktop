@@ -31,8 +31,6 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import dao.Labor;
 import dao.Ndvi;
 import dao.Poligono;
-import dao.OrdenDeCompra.OrdenCompra;
-import dao.OrdenDeCompra.OrdenCompraItem;
 import dao.config.Agroquimico;
 import dao.config.Asignacion;
 import dao.config.Campania;
@@ -43,6 +41,8 @@ import dao.config.Fertilizante;
 import dao.config.Lote;
 import dao.config.Semilla;
 import dao.cosecha.CosechaLabor;
+import dao.ordenCompra.OrdenCompra;
+import dao.ordenCompra.OrdenCompraItem;
 import dao.pulverizacion.Caldo;
 import dao.pulverizacion.CaldoItem;
 import dao.recorrida.Muestra;
@@ -642,7 +642,7 @@ public class ConfigGUI {
 			//box.getChildren().add(myLabel);
 //			TextField total=new TextField();
 //			total.setEditable(false);
-			Label importeTotalLabel = new Label("Importe total: "+Messages.getNumberFormat().format(oc.getImporteTotal()));
+			Label importeTotalLabel = new Label("Importe total: "+Messages.getNumberFormat().format(oc.calcImporteTotal()));
 			importeTotalLabel.setPadding(new Insets(5,5,5,5));//ar,d,ab,izq
 			hBoxTotal.getChildren().add(importeTotalLabel);		
 			v.getChildren().add(hBoxTotal);
@@ -710,7 +710,7 @@ public class ConfigGUI {
 					FXCollections.observableArrayList(DAH.getAllOrdenesCompra());
 
 			SmartTableView<OrdenCompra> table = new SmartTableView<OrdenCompra>(data,
-					Arrays.asList("Id","Url","Uuid","ImporteTotal2"),
+					Arrays.asList("Id","Url","Uuid"),
 					Arrays.asList("Description","ImporteTotal","Mail")
 					);
 			table.setEditable(true);

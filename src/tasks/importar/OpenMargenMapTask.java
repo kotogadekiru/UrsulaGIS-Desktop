@@ -94,20 +94,17 @@ public class OpenMargenMapTask extends ProcessMapTask<MargenItem,Margen> {
 	protected ExtrudedPolygon getPathTooltip( Geometry poly,MargenItem renta,ExtrudedPolygon  renderablePolygon) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 
-
 		NumberFormat df = Messages.getNumberFormat();
 
 		String tooltipText = new String(
-				Messages.getString("OpenMargenMapTask.1")+ df.format(renta.getRentabilidadHa())+ Messages.getString("OpenMargenMapTask.2")  //$NON-NLS-1$ //$NON-NLS-2$
-						+Messages.getString("OpenMargenMapTask.3")+ df.format(renta.getMargenPorHa())	+ Messages.getString("OpenMargenMapTask.4")  //$NON-NLS-1$ //$NON-NLS-2$
-						+ Messages.getString("OpenMargenMapTask.5")	+ df.format(renta.getCostoPorHa())		+ Messages.getString("OpenMargenMapTask.6") //$NON-NLS-1$ //$NON-NLS-2$
-						+ Messages.getString("OpenMargenMapTask.7")	+ df.format(renta.getImporteFertHa())+ Messages.getString("OpenMargenMapTask.8")  //$NON-NLS-1$ //$NON-NLS-2$
-						+ Messages.getString("OpenMargenMapTask.9")	+ df.format(renta.getImportePulvHa())	+ Messages.getString("OpenMargenMapTask.10") //$NON-NLS-1$ //$NON-NLS-2$
-						+ Messages.getString("OpenMargenMapTask.11")	+ df.format(renta.getImporteSiembraHa())+ Messages.getString("OpenMargenMapTask.12") //$NON-NLS-1$ //$NON-NLS-2$
-						+ Messages.getString("OpenMargenMapTask.13")	+ df.format(renta.getCostoFijoPorHa())+ Messages.getString("OpenMargenMapTask.14") //$NON-NLS-1$ //$NON-NLS-2$
-						+ Messages.getString("OpenMargenMapTask.15")	+ df.format(renta.getImporteCosechaHa()) + Messages.getString("OpenMargenMapTask.16")  //$NON-NLS-1$ //$NON-NLS-2$
-						//		+ df.format(area * ProyectionConstants.METROS2_POR_HA) + "m2\n"
-						// +"feature: " + featureNumber
+						  Messages.getString("OpenMargenMapTask.1") + df.format(renta.getRentabilidadHa()) + Messages.getString("OpenMargenMapTask.2")  //$NON-NLS-1$ //$NON-NLS-2$
+						+ Messages.getString("OpenMargenMapTask.3") + df.format(renta.getMargenPorHa()) + Messages.getString("OpenMargenMapTask.4")  //$NON-NLS-1$ //$NON-NLS-2$
+						+ Messages.getString("OpenMargenMapTask.5")	+ df.format(renta.getCostoPorHa()) + Messages.getString("OpenMargenMapTask.6") //$NON-NLS-1$ //$NON-NLS-2$
+						+ Messages.getString("OpenMargenMapTask.7")	+ df.format(renta.getImporteFertHa()) + Messages.getString("OpenMargenMapTask.8")  //$NON-NLS-1$ //$NON-NLS-2$
+						+ Messages.getString("OpenMargenMapTask.9")	+ df.format(renta.getImportePulvHa()) + Messages.getString("OpenMargenMapTask.10") //$NON-NLS-1$ //$NON-NLS-2$
+						+ Messages.getString("OpenMargenMapTask.11")+ df.format(renta.getImporteSiembraHa()) + Messages.getString("OpenMargenMapTask.12") //$NON-NLS-1$ //$NON-NLS-2$
+						+ Messages.getString("OpenMargenMapTask.13")+ df.format(renta.getCostoFijoPorHa()) + Messages.getString("OpenMargenMapTask.14") //$NON-NLS-1$ //$NON-NLS-2$
+						+ Messages.getString("OpenMargenMapTask.15")+ df.format(renta.getImporteCosechaHa()) + Messages.getString("OpenMargenMapTask.16")  //$NON-NLS-1$ //$NON-NLS-2$
 				);
 
 		if(area<1){

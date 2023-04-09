@@ -13,13 +13,13 @@ import com.vividsolutions.jts.geom.Geometry;
 
 import dao.Labor;
 import dao.LaborItem;
-import dao.OrdenDeCompra.OrdenCompra;
-import dao.OrdenDeCompra.OrdenCompraItem;
-import dao.OrdenDeCompra.Producto;
 import dao.config.Cultivo;
 import dao.config.Semilla;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
+import dao.ordenCompra.OrdenCompra;
+import dao.ordenCompra.OrdenCompraItem;
+import dao.ordenCompra.Producto;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.siembra.SiembraConfig;
 import dao.siembra.SiembraLabor;
@@ -34,7 +34,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import utils.ProyectionConstants;
 
-public class GenerarOCTask  extends Task<OrdenCompra>{
+public class GenerarOrdenCompraTask  extends Task<OrdenCompra>{
 	private static final String TASK_CLOSE_ICON = "/gui/event-close.png";
 	private ProgressBar progressBarTask;
 	private Pane progressPane;
@@ -45,7 +45,7 @@ public class GenerarOCTask  extends Task<OrdenCompra>{
 	private List<FertilizacionLabor> fertilizaciones=null;
 	private List<PulverizacionLabor> pulverizaciones=null;
 	
-	public GenerarOCTask(List<SiembraLabor> _siembras,List<FertilizacionLabor> _fertilizaciones, List<PulverizacionLabor> _pulverizaciones){
+	public GenerarOrdenCompraTask(List<SiembraLabor> _siembras,List<FertilizacionLabor> _fertilizaciones, List<PulverizacionLabor> _pulverizaciones){
 		this.siembras=_siembras;
 		this.fertilizaciones=_fertilizaciones;
 		this.pulverizaciones=_pulverizaciones;
@@ -75,10 +75,12 @@ public class GenerarOCTask  extends Task<OrdenCompra>{
 		});
 		this.pulverizaciones.forEach(l->{
 			description.append(l.getNombre());
-			Producto producto =l.getAgroquimico().getValue();
-			
+			//Producto producto =l.getAgroquimico().getValue();
+			Double cantidadItem = l.getCantidadInsumo();
 			l.getCaldo().getItems().forEach((caldoItem)->{
-				putItem(prodCantidadMap, caldoItem.getProducto(), l.getCantidadLabor()*caldoItem.getDosisHa(),l.getPrecioInsumo());
+				putItem(prodCantidadMap, caldoItem.getProducto(),
+						cantidadItem*caldoItem.getDosisHa(),
+						l.getPrecioInsumo());
 			});
 			//Double cantidadItem = l.getCantidadInsumo();
 			//putItem(prodCantidadMap, producto, cantidadItem,l.getPrecioInsumo());
@@ -103,7 +105,7 @@ public class GenerarOCTask  extends Task<OrdenCompra>{
 	private void putItem(Map<Producto, OrdenCompraItem> items, Producto producto, Double cantidad,Double precio) {
 		if(items.containsKey(producto)) {
 			OrdenCompraItem existente = items.get(producto);
-			existente.setPrecio((existente.getImporte().doubleValue()+precio*cantidad)/(existente.getCantidad()+cantidad));
+			existente.setPrecio((existente.calcImporte().doubleValue()+precio*cantidad)/(existente.getCantidad()+cantidad));
 			existente.setCantidad(existente.getCantidad()+cantidad);
 			items.put(producto, existente);
 		} else {

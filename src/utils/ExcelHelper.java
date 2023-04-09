@@ -39,9 +39,9 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import dao.Ndvi;
 import dao.Poligono;
-import dao.OrdenDeCompra.OrdenCompra;
-import dao.OrdenDeCompra.OrdenCompraItem;
 import dao.config.Configuracion;
+import dao.ordenCompra.OrdenCompra;
+import dao.ordenCompra.OrdenCompraItem;
 import gui.JFXMain;
 import gui.utils.DateConverter;
 
@@ -549,7 +549,7 @@ public class ExcelHelper {
 				String productoNombre = item.getProducto().getNombre();
 				Number cantidad = item.getCantidad();
 				Number precio = item.getPrecio();
-				Number importe = item.getImporte();
+				Number importe = item.calcImporte();
 				
 				data.put(String.valueOf(i+1),
 						new Object[] {
@@ -564,7 +564,7 @@ public class ExcelHelper {
 					"Total",
 					"",
 					"",
-					oc.getImporteTotal()
+					oc.calcImporteTotal()
 			});
 			
 			// Iterate over data and write to sheet

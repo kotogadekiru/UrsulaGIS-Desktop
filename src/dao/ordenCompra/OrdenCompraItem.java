@@ -1,4 +1,4 @@
-package dao.OrdenDeCompra;
+package dao.ordenCompra;
 
 import java.math.BigDecimal;
 
@@ -15,6 +15,7 @@ import javax.persistence.OneToMany;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import utils.JsonUtil.Exclude;
 
 @Getter
 @Setter(value = AccessLevel.PUBLIC)
@@ -33,6 +34,7 @@ public class OrdenCompraItem {
 	private Long id=null;
 	
 	@ManyToOne
+	@Exclude
 	private OrdenCompra ordenCompra =null;
 	
 	@ManyToOne(cascade= {CascadeType.DETACH})
@@ -40,7 +42,7 @@ public class OrdenCompraItem {
 	
 	private Double cantidad = 0.0;
 	private Double precio = 0.0;
-	private BigDecimal importe2 = BigDecimal.valueOf(0.0);
+	private BigDecimal importe = BigDecimal.valueOf(0.0);
 	
 	public OrdenCompraItem() {
 		
@@ -51,8 +53,8 @@ public class OrdenCompraItem {
 		this.cantidad=cantidad2;
 	}
 	
-	public BigDecimal getImporte() {
-		this.importe2 = BigDecimal.valueOf(cantidad*precio);
-		return this.importe2;
+	public BigDecimal calcImporte() {
+		this.importe = BigDecimal.valueOf(cantidad*precio);
+		return this.importe;
 	}
 }

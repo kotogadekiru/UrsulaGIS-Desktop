@@ -1,6 +1,7 @@
 package utils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.MalformedURLException;
@@ -21,10 +22,12 @@ import org.geotools.data.shapefile.ShapefileDataStore;
 import org.geotools.data.shapefile.ShapefileDataStoreFactory;
 import org.opengis.feature.simple.SimpleFeatureType;
 
+import dao.Labor;
 import dao.config.Configuracion;
 import gui.JFXMain;
 import gui.Messages;
 import javafx.stage.FileChooser;
+import tasks.ExportLaborMapTask;
 
 
 public class FileHelper {
@@ -51,6 +54,16 @@ public class FileHelper {
 		});
 		if(shpFiles.isEmpty())return null;
 		return shpFiles.get(0);
+	}
+	public static Path createTempDir(String prefix) {
+		Path tempDirWithPrefix=null;
+		try {
+			tempDirWithPrefix = Files.createTempDirectory(prefix);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return tempDirWithPrefix;
 	}
 	
 	public static  List<File> selectAllFiles(Path uploadedShpFilePath) {
@@ -313,5 +326,38 @@ public class FileHelper {
 		System.out.println(Messages.getString("JFXMain.420")+file); //$NON-NLS-1$
 
 		return file;
+	}
+
+	public static File getNewShapeFileAt(Path dir,String fileName) {
+		String filePath = dir.toString() + File.separator + fileName;
+		return new File(filePath);
+	}
+	
+	public static File zipLaborToTmpDir(Labor<?> labor) {
+		//1 crear un directorio temporal
+		Path dir = FileHelper.createTempDir("toUpload");
+		//2 crear un archivo shape dentro del directorio para subir
+		File shpFile = FileHelper.getNewShapeFileAt(dir,"labor.shp");
+		//2 exportar la labor al directorio
+		ExportLaborMapTask export = new ExportLaborMapTask(labor,shpFile);
+		export.call();
+		File zipFile = UnzipUtility.zipFiles(FileHelper.selectAllFiles(dir),dir.toFile());
+		return zipFile;
+	}
+
+	public static byte[]  fileToByteArray(File f) {		
+		byte[] byteArray = new byte[(int) f.length()];
+
+		try {
+			FileInputStream fileInputStream = new FileInputStream(f);
+			//convert file into array of bytes
+			fileInputStream.read(byteArray);
+			fileInputStream.close();
+			//f.delete();//clean up temp file dont delete other peoples files >S
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return byteArray;
+		
 	}
 }

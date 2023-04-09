@@ -9,7 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
-import dao.OrdenDeCompra.Producto;
+import dao.ordenCompra.Producto;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 @Data
@@ -84,7 +84,7 @@ fertilizantes.put("Yeso Agricola",new Fertilizante("Yeso Agricola",0.0,0.0,0,17)
 //	@Id @GeneratedValue
 //	private Long id=null;
 	
-	String nombre = new String();
+	//String nombre = new String();
 	
 	double porcN= 0.0;
 	double porcP= 0.0;
@@ -95,12 +95,12 @@ fertilizantes.put("Yeso Agricola",new Fertilizante("Yeso Agricola",0.0,0.0,0,17)
 	public Fertilizante() {}
 	
 	public Fertilizante(String nom) {
-		super();
-		this.nombre=nom;
+		super(nom);
+		
 	}
 	
 	public Fertilizante(String nom, double n,double p,double k, double s) {
-		this.nombre=nom;
+		super(nom);
 		 porcN= n;
 		 porcP= p;
 		 porcK= k;
@@ -109,7 +109,7 @@ fertilizantes.put("Yeso Agricola",new Fertilizante("Yeso Agricola",0.0,0.0,0,17)
 
 	@Override
 	public String toString() {
-		return nombre;
+		return this.nombre;
 	}
 
 	@Override

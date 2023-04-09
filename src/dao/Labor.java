@@ -36,8 +36,8 @@ import org.opengis.feature.type.AttributeDescriptor;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
-import dao.OrdenDeCompra.ProductoLabor;
 import dao.config.Configuracion;
+import dao.ordenCompra.ProductoLabor;
 import dao.utils.LaborDataStore;
 import dao.utils.PropertyHelper;
 import gov.nasa.worldwind.geom.Position;

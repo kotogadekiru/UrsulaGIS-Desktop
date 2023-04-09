@@ -472,7 +472,7 @@ public class PoligonoGUIController {
 
 	private void doCrearPulverizacion(Poligono poli) {
 		PulverizacionLabor labor = new PulverizacionLabor();
-		labor.setNombre(poli.getNombre());
+		//labor.setNombre(poli.getNombre());
 		labor.setNombre(poli.getNombre()+" "+Messages.getString("JFXMain.pulverizacion")); //$NON-NLS-1$ //$NON-NLS-2$
 		LaborLayer layer = new LaborLayer();
 		labor.setLayer(layer);

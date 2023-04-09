@@ -29,7 +29,6 @@ import dao.Labor;
 import dao.LaborItem;
 import dao.Ndvi;
 import dao.Poligono;
-import dao.OrdenDeCompra.Producto;
 import dao.config.Agroquimico;
 import dao.config.Campania;
 import dao.config.Cultivo;
@@ -38,6 +37,7 @@ import dao.config.Establecimiento;
 import dao.config.Fertilizante;
 import dao.config.Lote;
 import dao.config.Semilla;
+import dao.ordenCompra.Producto;
 import dao.utils.JPAStringProperty;
 import gui.JFXMain;
 import gui.Messages;
@@ -287,11 +287,13 @@ public class SmartTableView<T> extends TableView<T> {
 	
     static void doSetWidth(TableColumnBase column, double width) {
     	double nWidth =	Math.min(
-				column.getMaxWidth(), 
-				Math.max(width, column.getMinWidth())
-				);
-    	column.widthProperty().subtract(column.getWidth()).add(nWidth);
-    		
+								column.getMaxWidth(), 
+								Math.max(width, column.getMinWidth())
+								);
+    	//column.setMinWidth(500);//funciona
+    	//column.setPrefWidth(500);//funciona
+    	column.setPrefWidth(nWidth);
+    	//column.widthProperty().subtract(column.getWidth()).add(nWidth);    		
     }
     
 	private static double resizeColumns(List<? extends TableColumnBase<?,?>> columns, double delta) {
@@ -590,8 +592,7 @@ public class SmartTableView<T> extends TableView<T> {
 							 * add 10px because of paddings/margins for the button
 							 */
 							//((TableColumn)tableColumn.get()).setMinWidth(width + 10);
-							doSetWidth((TableColumn)tableColumn.get(), width+10);
-							System.out.println("agregando minWidth "+(width+10)+" a "+label.getText());
+							doSetWidth((TableColumn)tableColumn.get(), width+30);						
 						}
 					}
 				}

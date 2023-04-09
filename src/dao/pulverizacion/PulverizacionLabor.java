@@ -12,10 +12,10 @@ import dao.Clasificador;
 import dao.Labor;
 import dao.LaborConfig;
 import dao.LaborItem;
-import dao.OrdenDeCompra.ProductoLabor;
 import dao.config.Agroquimico;
 import dao.config.Configuracion;
 import dao.config.Cultivo;
+import dao.ordenCompra.ProductoLabor;
 import dao.utils.PropertyHelper;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
@@ -91,10 +91,10 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 	@Override
 	public String getTypeDescriptors() {
 		/*
-		 *getCostoPaquete(),
-				getCantPasadasHa(),
-				getCostoLaborHa(),
-				getImporteHa()
+		getCostoPaquete(),
+		getCantPasadasHa(),
+		getCostoLaborHa(),
+		getImporteHa()
 		 */
 		String type = PulverizacionLabor.COLUMNA_DOSIS + ":Double,"
 				+ PulverizacionLabor.COLUMNA_PRECIO_INSUMO + ":Double,"

@@ -17,13 +17,11 @@ import com.vividsolutions.jts.geom.Polygon;
 
 import dao.Clasificador;
 import dao.Poligono;
-import dao.config.Semilla;
+
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
-import dao.fertilizacion.FertilizacionItem;
-import dao.fertilizacion.FertilizacionLabor;
-import dao.siembra.SiembraItem;
-import dao.siembra.SiembraLabor;
+import dao.pulverizacion.*;
+
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
@@ -36,11 +34,11 @@ import utils.ProyectionConstants;
  * @author quero
  *
  */
-public class ConvertirAFertilizacionTask extends ProcessMapTask<FertilizacionItem,FertilizacionLabor> {
+public class ConvertirAPulverizacionTask extends ProcessMapTask<PulverizacionItem,PulverizacionLabor> {
 	Map<String,Double[]> dosisMap = null;//new Double(0);
 	CosechaLabor cosecha=null;
 
-	public ConvertirAFertilizacionTask(CosechaLabor _cosecha,FertilizacionLabor labor,Map<String,Double[]> valores){
+	public ConvertirAPulverizacionTask(CosechaLabor _cosecha,PulverizacionLabor labor,Map<String,Double[]> valores){
 		super(labor);
 		dosisMap=valores;
 		cosecha=_cosecha;
@@ -70,9 +68,9 @@ public class ConvertirAFertilizacionTask extends ProcessMapTask<FertilizacionIte
 			//double semillasHa = ProyectionConstants.METROS2_POR_HA*plantasM2Objetivo/pg;// si pg ==1 semillas= plantas. si pg es <1 => semillas>plantas
 			//double semillasMetroLineal = semillasHa/metrosLinealesHa;//si es trigo va en plantas /m2 si es maiz o soja va en miles de plantas por ha
 			
-			FertilizacionItem si = new FertilizacionItem();
+			PulverizacionItem si = new PulverizacionItem();
 			
-			si.setDosistHa(dosis);//1000semillas*1000gramos para pasar a kg/ha
+			si.setDosis(dosis);//1000semillas*1000gramos para pasar a kg/ha
 
 		//	si.setDosisML(semillasMetroLineal);
 			//dosis sembradora va en semillas cada 10mts
@@ -111,9 +109,9 @@ public class ConvertirAFertilizacionTask extends ProcessMapTask<FertilizacionIte
 
 
 	@Override
-	protected ExtrudedPolygon getPathTooltip(Geometry poly, FertilizacionItem fertFeature,ExtrudedPolygon  renderablePolygon) {
+	protected ExtrudedPolygon getPathTooltip(Geometry poly, PulverizacionItem fertFeature,ExtrudedPolygon  renderablePolygon) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		String tooltipText = CrearFertilizacionMapTask.buildTooltipText(fertFeature, area); 
+		String tooltipText = CrearPulverizacionMapTask.buildTooltipText(fertFeature, area); 
 		return super.getExtrudedPolygonFromGeom(poly, fertFeature,tooltipText,renderablePolygon);
 	}
 

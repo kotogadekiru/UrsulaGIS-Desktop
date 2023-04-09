@@ -126,7 +126,7 @@ public class Poligono implements Comparable<Poligono>{
 		positions.clear();
 		try{
 			if(s.length()<=2)return;
-			positionsString=s.substring(1, s.length()-2);//descarto el primer "{" y el ultimo "}"
+			s=s.substring(1, s.length()-2);//descarto el primer "{" y el ultimo "}"
 			String[] parts = s.split("\\{");
 			for (int i = 0; i < parts.length; i++) {
 				String p = parts[i];

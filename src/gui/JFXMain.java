@@ -98,12 +98,12 @@ import com.vividsolutions.jts.geom.Polygon;
 import dao.Labor;
 import dao.Ndvi;
 import dao.Poligono;
-import dao.OrdenDeCompra.OrdenCompra;
 import dao.config.Configuracion;
 import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.margen.Margen;
+import dao.ordenCompra.OrdenCompra;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
@@ -114,7 +114,7 @@ import dao.utils.PropertyHelper;
 import utils.DAH;
 import utils.FileHelper;
 import utils.GeometryHelper;
-
+import utils.TarjetaHelper;
 import gui.nww.LaborLayer;
 import gui.nww.LayerAction;
 import gui.nww.LayerPanel;
@@ -132,12 +132,13 @@ import tasks.ShowNDVITifFileTask;
 import tasks.ShowRecorridaDirigidaTask;
 import tasks.UpdateTask;
 import tasks.crear.ConvertirAFertilizacionTask;
+import tasks.crear.ConvertirAPulverizacionTask;
 import tasks.crear.ConvertirASiembraTask;
 import tasks.crear.ConvertirASueloTask;
 import tasks.crear.ConvertirNdviACosechaTask;
 import tasks.crear.ConvertirNdviAFertilizacionTask;
 import tasks.crear.ConvertirSueloACosechaTask;
-import tasks.crear.GenerarOCTask;
+import tasks.crear.GenerarOrdenCompraTask;
 import tasks.importar.OpenMargenMapTask;
 import tasks.importar.OpenSoilMapTask;
 import tasks.importar.ProcessFertMapTask;
@@ -216,7 +217,7 @@ public class JFXMain extends Application {
 
 	protected WWPanel wwjPanel=null;
 	protected LayerPanel layerPanel=null;
-	private VBox progressBox = new VBox();
+	VBox progressBox = new VBox();
 
 	public static ExecutorService executorPool = Executors.newCachedThreadPool();
 	private Node wwNode=null;//contiene el arbol con los layers y el swingnode con el world wind
@@ -849,6 +850,7 @@ public class JFXMain extends Application {
 	private List<LayerAction> addAccionesPulverizaciones(Map<Class<?>, List<LayerAction>> predicates) {
 		List<LayerAction> pulverizacionesP = new ArrayList<LayerAction>();
 		predicates.put(PulverizacionLabor.class, pulverizacionesP);
+		PulverizacionController controller = new PulverizacionController(this);
 		/**
 		 *Accion que permite editar una pulverizacion
 		 */
@@ -865,6 +867,13 @@ public class JFXMain extends Application {
 			return "pulverizacion prescripcion exportada" + layer.getName(); //$NON-NLS-1$
 		}));
 
+		/**
+		 *Accion que permite compartir prescripcion de una pulverizacion
+		 */
+		pulverizacionesP.add(constructPredicate(Messages.getString("JFXMain.compartirPulverizacionAction"),(layer)->{		
+			controller.doCompartirPulverizacion((PulverizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+			return "pulverizacion compartida" + layer.getName(); //$NON-NLS-1$
+		}));
 
 
 		return pulverizacionesP;
@@ -1149,8 +1158,16 @@ public class JFXMain extends Application {
 			doCrearFertilizacion((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 			return "Fertilizacion Creada" + layer.getName(); //$NON-NLS-1$
 		}));
+		
+		/**
+		 * Accion permite crear un mapa de suelo desde un mapa de potencial de rendimiento
+		 */
+		cosechasP.add(constructPredicate(Messages.getString("JFXMain.doCrearPulverizacion"),(layer)->{
+			doCrearPulverizacion((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+			return "Pulverizacion Creada" + layer.getName(); //$NON-NLS-1$
+		}));
 
-
+		
 		/**
 		 * Accion permite exportar la cosecha como shp de puntos
 		 */
@@ -1427,7 +1444,7 @@ public class JFXMain extends Application {
 	 * cotizar precios online. Permite exporta a excel y cotizar precios online y guardar
 	 */
 	private void doGenerarOrdenDeCompra() {
-		GenerarOCTask gOCTask = new GenerarOCTask(getSiembrasSeleccionadas(),getFertilizacionesSeleccionadas(), getPulverizacionesSeleccionadas());
+		GenerarOrdenCompraTask gOCTask = new GenerarOrdenCompraTask(getSiembrasSeleccionadas(),getFertilizacionesSeleccionadas(), getPulverizacionesSeleccionadas());
 
 		gOCTask.installProgressBar(progressBox);
 
@@ -1589,6 +1606,7 @@ public class JFXMain extends Application {
 
 
 	private void loadActiveLayers(){
+		TarjetaHelper.initTarjeta();
 		List<Poligono> poligonos = DAH.getPoligonosActivos();
 		this.poligonoGUIController.showPoligonos(poligonos);
 
@@ -3142,21 +3160,21 @@ public class JFXMain extends Application {
 	 */
 	private void doCrearFertilizacion(CosechaLabor cosecha) {
 
-		FertilizacionLabor siembra = new FertilizacionLabor();
+		FertilizacionLabor labor = new FertilizacionLabor();
 		LaborLayer layer = new LaborLayer();
-		siembra.setLayer(layer);
-		siembra.setNombre(cosecha.getNombre()+" "+Messages.getString("JFXMain.255")); //$NON-NLS-1$ //$NON-NLS-2$
-		Optional<FertilizacionLabor> siembraConfigured= FertilizacionConfigDialogController.config(siembra);
+		labor.setLayer(layer);
+		labor.setNombre(cosecha.getNombre()+" "+Messages.getString("JFXMain.255")); //$NON-NLS-1$ //$NON-NLS-2$
+		Optional<FertilizacionLabor> siembraConfigured= FertilizacionConfigDialogController.config(labor);
 		if(!siembraConfigured.isPresent()){//
 			System.out.println(Messages.getString("JFXMain.256")); //$NON-NLS-1$
-			siembra.dispose();//libero los recursos reservados
+			labor.dispose();//libero los recursos reservados
 			return;
 		}		
 
 		Map<String,Double[]> mapClaseValor = new ConfigGUI(this).doAsignarValoresCosecha(cosecha,new String[] {Messages.getString("JFXMain.Dosis")});//"Densidad pl/m2"
 
 		
-		ConvertirAFertilizacionTask csTask = new ConvertirAFertilizacionTask(cosecha,siembra,mapClaseValor);
+		ConvertirAFertilizacionTask csTask = new ConvertirAFertilizacionTask(cosecha,labor,mapClaseValor);
 
 		csTask.installProgressBar(progressBox);
 
@@ -3171,6 +3189,46 @@ public class JFXMain extends Application {
 		});//fin del OnSucceeded
 		JFXMain.executorPool.execute(csTask);
 	}
+	
+	/**
+	 * toma una cosecha, pregunta las densidades deseadas para cada ambiente
+	 * y crea una siembra teniendo la informacion ingresada y la categoria a la que pertenece cada poligono
+	 * @param cosecha
+	 */
+	private void doCrearPulverizacion(CosechaLabor cosecha) {
+
+		PulverizacionLabor labor = new PulverizacionLabor();
+	//	labor.setNombre(cosecha.getNombre());
+		labor.setNombre(cosecha.getNombre()+" "+Messages.getString("JFXMain.pulverizacion")); //$NON-NLS-1$ //$NON-NLS-2$
+		LaborLayer layer = new LaborLayer();
+		labor.setLayer(layer);
+		
+		Optional<PulverizacionLabor> siembraConfigured= PulverizacionConfigDialogController.config(labor);
+		if(!siembraConfigured.isPresent()){//
+			System.out.println(Messages.getString("JFXMain.256")); //$NON-NLS-1$
+			labor.dispose();//libero los recursos reservados
+			return;
+		}		
+
+		Map<String,Double[]> mapClaseValor = new ConfigGUI(this).doAsignarValoresCosecha(cosecha,new String[] {Messages.getString("JFXMain.Dosis")});//"Densidad pl/m2"
+
+		
+		ConvertirAPulverizacionTask csTask = new ConvertirAPulverizacionTask(cosecha,labor,mapClaseValor);
+
+		csTask.installProgressBar(progressBox);
+
+		csTask.setOnSucceeded(handler -> {
+			cosecha.getLayer().setEnabled(false);
+			PulverizacionLabor ret = (PulverizacionLabor)handler.getSource().getValue();
+			insertBeforeCompass(getWwd(), ret.getLayer());
+			this.getLayerPanel().update(this.getWwd());
+			csTask.uninstallProgressBar();
+			viewGoTo(ret);
+			playSound();
+		});//fin del OnSucceeded
+		JFXMain.executorPool.execute(csTask);
+	}
+
 
 	/**
 	 * genera un layer de fertilizacion a partir de una cosecha

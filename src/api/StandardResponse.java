@@ -34,12 +34,11 @@ public class StandardResponse {
 	public enum StatusResponse {
 	    SUCCESS ("Success"),
 	    ERROR ("Error");
-	  
+	    private String status=null; 
+	    
 		private StatusResponse(String status) {
 			this.status=status;
-		}
-		
-	    private String status;       
+		}      
 	    // constructors, getters
 	}
 	

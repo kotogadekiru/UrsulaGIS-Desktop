@@ -22,8 +22,6 @@ import static org.eclipse.persistence.config.PersistenceUnitProperties.*;
 import dao.Labor;
 import dao.Ndvi;
 import dao.Poligono;
-import dao.OrdenDeCompra.OrdenCompra;
-import dao.OrdenDeCompra.ProductoLabor;
 import dao.config.Agroquimico;
 import dao.config.Asignacion;
 import dao.config.Campania;
@@ -35,6 +33,9 @@ import dao.config.Fertilizante;
 import dao.config.Lote;
 import dao.config.Semilla;
 import dao.cosecha.CosechaLabor;
+import dao.ordenCompra.OrdenCompra;
+import dao.ordenCompra.Producto;
+import dao.ordenCompra.ProductoLabor;
 import dao.pulverizacion.Caldo;
 import dao.recorrida.Recorrida;
 import gui.JFXMain;
@@ -534,8 +535,6 @@ public class DAH {
 		return results;
 	}
 
-
-
 	public static List<Agroquimico> getAllAgroquimicos() {
 		TypedQuery<Agroquimico> query = em().createNamedQuery(
 				Agroquimico.FIND_ALL, Agroquimico.class);
@@ -545,7 +544,6 @@ public class DAH {
 				DAH.save(d);	
 			});
 			results = query.getResultList();
-			//results.addAll(Fertilizante.fertilizantes.values());
 		}
 
 		return results;
@@ -602,10 +600,13 @@ public class DAH {
 		return results;
 	}
 
-
-
-
-
+	public static Producto findProducto(String productoNombre) {
+		TypedQuery<Producto> query = em().createNamedQuery(
+				Producto.FIND_NAME, Producto.class);
+		query.setParameter("name", productoNombre);
+		Producto results = query.getSingleResult();
+		return results;		
+	}
 
 	//	public static void main(String[] args) throws Exception {
 	//	       // Open a database connection

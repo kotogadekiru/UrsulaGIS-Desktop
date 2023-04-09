@@ -59,11 +59,11 @@ public class CrearFertilizacionMapTask extends ProcessMapTask<FertilizacionItem,
 	@Override
 	protected ExtrudedPolygon getPathTooltip(Geometry poly, FertilizacionItem fertFeature,ExtrudedPolygon  renderablePolygon) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		String tooltipText = CrearFertilizacionMapTask.builTooltipText(fertFeature, area); 
+		String tooltipText = CrearFertilizacionMapTask.buildTooltipText(fertFeature, area); 
 		return super.getExtrudedPolygonFromGeom(poly, fertFeature,tooltipText,renderablePolygon);
 	}
 
-	public static String builTooltipText(FertilizacionItem fertFeature, double area) {
+	public static String buildTooltipText(FertilizacionItem fertFeature, double area) {
 		NumberFormat df = Messages.getNumberFormat();//new DecimalFormat("0.00");//$NON-NLS-2$
 
 		String tooltipText = new String(// TODO ver si se puede instalar un

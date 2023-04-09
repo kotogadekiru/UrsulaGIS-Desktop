@@ -1,4 +1,4 @@
-package gui.utils;
+package utils;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,7 +17,8 @@ import java.util.zip.ZipOutputStream;
  * @author www.codejava.net
  *
  */
-public class UnzipUtility {
+@Deprecated
+public class UnzipUtilityOld {
 	/**
 	 * Size of the buffer to read/write data
 	 */

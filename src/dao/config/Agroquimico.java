@@ -12,7 +12,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Transient;
 
-import dao.OrdenDeCompra.Producto;
+import dao.ordenCompra.Producto;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Data;
@@ -33,17 +33,17 @@ public class Agroquimico extends Producto implements Comparable<Agroquimico>{
 //	@Id @GeneratedValue
 //	private Long id=null;
 	
-	private String nombre = new String();
+	//private String nombre = new String();
 	//private Property<Cultivo> productoProperty=new SimpleObjectProperty<Cultivo>();//values().iterator().next());;
 
 	public static Map<String,Agroquimico> agroquimicos = new HashMap<String,Agroquimico>();
 	static{																		
-		agroquimicos.put("RoundUp",new Agroquimico("RoundUp"));	
-		agroquimicos.put("Superwet",new Agroquimico("Superwet"));
-		agroquimicos.put("Atrazina",new Agroquimico("Atrazina"));
+		agroquimicos.put("RoundUp(lts)",new Agroquimico("RoundUp(lts)"));	
+		agroquimicos.put("Superwet(lts)",new Agroquimico("Superwet(lts)"));
+		agroquimicos.put("Atrazina(lts)",new Agroquimico("Atrazina(lts)"));
+		agroquimicos.put("Cletodim(lts)",new Agroquimico("Cletodim(lts)"));
+		agroquimicos.put("Rizospray extremo(lts)",new Agroquimico("Rizospray extremo(lts)"));
 	}
-
-
 	
 	public Agroquimico() {
 	}
@@ -65,7 +65,7 @@ public class Agroquimico extends Producto implements Comparable<Agroquimico>{
 
 	@Override
 	public int compareTo(Agroquimico o) {
-		return (int) (this.getId()-o.getId());
+		return (int) (this.getId().compareTo(o.getId()));
 	}
 
 
