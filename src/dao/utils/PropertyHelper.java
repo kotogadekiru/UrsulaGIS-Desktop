@@ -1,10 +1,14 @@
 package dao.utils;
 
+import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
@@ -13,11 +17,15 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import dao.Labor;
 import dao.config.Configuracion;
 import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaLabor;
 import gui.Messages;
+import gui.utils.DateConverter;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
@@ -43,21 +51,6 @@ public class PropertyHelper {
 		if(converter==null) {
 			NumberFormat nf = Messages.getNumberFormat();
 			converter = (DecimalFormat)nf;
-//			converter = new DecimalFormat("0.00"){ //$NON-NLS-1$
-//				@Override
-//				public Object parseObject(String source)  {
-//					//				if("".equals(source)||source==null){ //$NON-NLS-1$
-//					//					source="0.00"; //$NON-NLS-1$
-//					//				}
-//					try {
-//						return super.parseObject(source);//Format.parseObject(String) failed
-//					} catch (ParseException e) {
-//						e.printStackTrace();
-//						return new Double(0.0);
-//					}
-//				}
-//			};
-			
 			converter.setMinimumFractionDigits(2);
 			converter.setGroupingUsed(true);
 			converter.setGroupingSize(3);
@@ -89,15 +82,14 @@ public class PropertyHelper {
 				setDouble.accept(parseDouble(n).doubleValue());
 				configuracion.setProperty(key, n);		
 		});
-	}
-	
+	}	
 	
 	public static Double initDouble(String key,String def,Configuracion properties){	
 		Double ret = new Double(0);
 		try {
 			ret = converter.parse(properties.getPropertyOrDefault(key, def)).doubleValue();
 		}catch(Exception e) {
-			
+			e.printStackTrace();
 		}
 		return ret;// converter.parse(properties.getPropertyOrDefault(	key, def)).doubleValue();
 		//return Double.parseDouble(properties.getPropertyOrDefault(	key, def));
@@ -167,5 +159,33 @@ public class PropertyHelper {
 		});
 		return sProperty;
 	}
+
+	public static void bindDateToObjectProperty(
+			Supplier<Date> getDate,	Consumer<Date> setDate,
+			ObjectProperty<LocalDate> valueProperty,
+			Configuracion config, String fechaKey) {
+		valueProperty.setValue(DateConverter.asLocalDate(getDate.get()));
+		DateConverter dc = new DateConverter(); 
+		valueProperty.addListener((obs, bool1, n) -> {
+			setDate.accept(DateConverter.asDate(n));			
+			config.setProperty(fechaKey,dc.toString(n));			
+		});		
+	}
+	
+//	public static void initDateProperty(String key,String def,Configuracion properties) {
+//		DateConverter dc = new DateConverter(); 		
+//		String defaultDate = properties.getPropertyOrDefault(key,	def);	
+//		//LocalDate ld = dc.fromString(dc.toString(LocalDate.now()));		
+//		DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
+//
+//		ObjectProperty dateProperty = new SimpleObjectProperty();
+//		try {
+//			this.fecha = df.parse(defaultDate);// Unparseable date: "30/04/2018"
+//		} catch (ParseException e) {
+//			this.fecha=new Date();
+//			System.out.println("fallo el parse de la fecha default");
+//			e.printStackTrace();
+//		}
+//	}
 
 }

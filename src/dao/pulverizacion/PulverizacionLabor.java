@@ -12,9 +12,11 @@ import dao.Clasificador;
 import dao.Labor;
 import dao.LaborConfig;
 import dao.LaborItem;
+import dao.Poligono;
 import dao.config.Agroquimico;
 import dao.config.Configuracion;
 import dao.config.Cultivo;
+import dao.cosecha.CosechaLabor;
 import dao.ordenCompra.ProductoLabor;
 import dao.utils.PropertyHelper;
 import javafx.beans.property.DoubleProperty;
@@ -33,22 +35,22 @@ import utils.DAH;
 //@Entity
 public class PulverizacionLabor extends Labor<PulverizacionItem> {
 	public static final String COLUMNA_DOSIS = "Dosis";
-	private static final String COLUMNA_PASADAS = "CantPasada";
+
 	public static final String COLUMNA_PRECIO_PASADA = "CostoLab";	
 	public static final String COLUMNA_IMPORTE_HA = "Importe_ha";
-	private static final String COLUMNA_PRECIO_INSUMO = "CostoIns";
+	public static final String COLUMNA_PRECIO_INSUMO = "CostoIns";
 
-	private static final String COSTO_LABOR_PULVERIZACION = "costoLaborPulverizacion";
-	private static final String AGROQUIMICO_DEFAULT = "AGROQUIMICO_DEFAULT_KEY";
-	private static final String PRECIO_INSUMO_KEY = "PRECIO_INSUMO";
+	public static final String COSTO_LABOR_PULVERIZACION = "costoLaborPulverizacion";
+	public static final String AGROQUIMICO_DEFAULT = "AGROQUIMICO_DEFAULT_KEY";
+	public static final String PRECIO_INSUMO_KEY = "PRECIO_INSUMO";
 
 @Transient
 	public StringProperty colDosisProperty;
 	//public StringProperty colCantPasadasProperty;
-@Transient
-	public Property<Agroquimico> agroquimico=null;
+//	@Transient
+//	public Property<Agroquimico> agroquimico=null;
 	
-	public Caldo caldo=null;
+	public List<CaldoItem> items=null;
 	
 	public PulverizacionLabor() {
 		initConfig();
@@ -63,27 +65,14 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 	//el controller de la configuracion. creo que setea las variables pero nunca las graba a menos 
 	//que las grabe el controller
 	private void initConfig() {
+		
 		this.productoLabor=DAH.getProductoLabor(ProductoLabor.LABOR_DE_PULVERIZACION);
 		List<String> availableColums = this.getAvailableColumns();		
 
-		//config = new PulverizacionConfig();
 		Configuracion properties = getConfigLabor().getConfigProperties();
 
 		colDosisProperty = PropertyHelper.initStringProperty(PulverizacionLabor.COLUMNA_DOSIS, properties, availableColums);
 		colAmount= new SimpleStringProperty(PulverizacionLabor.COLUMNA_DOSIS);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
-		
-//		colCantPasadasProperty =initStringProperty(PulverizacionLabor.COLUMNA_PASADAS, properties, availableColums);
-
-		
-	
-
-		String fertKEY = properties.getPropertyOrDefault(
-				PulverizacionLabor.AGROQUIMICO_DEFAULT, Agroquimico.agroquimicos.values().iterator().next().getNombre());
-		agroquimico = new SimpleObjectProperty<Agroquimico>(Agroquimico.agroquimicos.get(fertKEY));//values().iterator().next());
-		agroquimico.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(PulverizacionLabor.AGROQUIMICO_DEFAULT,
-					bool2.getNombre());
-		});
 	}
 
 
@@ -98,7 +87,6 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 		 */
 		String type = PulverizacionLabor.COLUMNA_DOSIS + ":Double,"
 				+ PulverizacionLabor.COLUMNA_PRECIO_INSUMO + ":Double,"
-		//		+ PulverizacionLabor.COLUMNA_PASADAS + ":Double,"
 				+ PulverizacionLabor.COLUMNA_PRECIO_PASADA + ":Double,"
 				+ PulverizacionLabor.COLUMNA_IMPORTE_HA + ":Double";
 		return type;
@@ -109,24 +97,10 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 			SimpleFeature next, boolean newIDS) {
 		PulverizacionItem pItem = new PulverizacionItem(next);
 		super.constructFeatureContainerStandar(pItem,next,newIDS);
-
-//		pItem.setPrecioInsumo(LaborItem.getDoubleFromObj(next
-//				.getAttribute(PulverizacionLabor.COLUMNA_PRECIO_INSUMO)));
 		
 		pItem.setDosis( LaborItem.getDoubleFromObj(next
-				.getAttribute(PulverizacionLabor.COLUMNA_DOSIS)));
-
-//		pItem.setCantPasadasHa(LaborItem.getDoubleFromObj(next
-//				.getAttribute(PulverizacionLabor.COLUMNA_PASADAS)));
-
-//		pItem.setCostoLaborHa(LaborItem.getDoubleFromObj(next
-//				.getAttribute(PulverizacionLabor.COLUMNA_PRECIO_PASADA)));	
-//		
-//		pItem.setImporteHa(LaborItem.getDoubleFromObj(next
-//				.getAttribute(PulverizacionLabor.COLUMNA_IMPORTE_HA)));	
-		
+				.getAttribute(PulverizacionLabor.COLUMNA_DOSIS)));		
 		setPropiedadesLabor(pItem);
-
 		return pItem;
 	}
 
@@ -142,8 +116,6 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 		super.constructFeatureContainer(fi,next);
 
 		fi.setDosis( LaborItem.getDoubleFromObj(next.getAttribute(colDosisProperty.get())));
-	//	fi.setCantPasadasHa(LaborItem.getDoubleFromObj(next.getAttribute(colCantPasadasProperty.get())));
-
 		setPropiedadesLabor(fi);
 
 		return fi;
@@ -158,7 +130,7 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 	public PulverizacionConfig getConfiguracion() {
 		return (PulverizacionConfig) config;
 	}
-
+	
 	@Override
 	protected Double initPrecioLaborHa() {
 		return PropertyHelper.initDouble(PulverizacionLabor.COSTO_LABOR_PULVERIZACION,"0",config.getConfigProperties());
@@ -178,4 +150,6 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 		}
 		return config;
 	}
+
+
 }

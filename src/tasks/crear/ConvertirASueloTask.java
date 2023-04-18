@@ -46,6 +46,7 @@ public class ConvertirASueloTask extends ProcessMapTask<SueloItem,Suelo > {
 
 	@Override
 	protected void doProcess() throws IOException {
+		labor.setContorno(cosecha.getContorno());
 		//crear Suelo
 	
 		
@@ -58,12 +59,17 @@ public class ConvertirASueloTask extends ProcessMapTask<SueloItem,Suelo > {
 		//TODO recorrer los cosechaitem de la cosecha
 		List<CosechaItem> cItems = new ArrayList<CosechaItem>();
 		FeatureReader<SimpleFeatureType, SimpleFeature> reader =cosecha.outCollection.reader();
+		featureCount=cosecha.outCollection.size();
+		updateProgress(1, featureCount);
+		this.featureNumber=0;
 		while (reader.hasNext()) {
 			SimpleFeature simpleFeature = reader.next();
 			CosechaItem ci = cosecha.constructFeatureContainerStandar(simpleFeature,false);
 			cItems.add(ci);
+			updateProgress(featureNumber++, featureCount);
 		}
 		reader.close();
+		this.featureNumber=0;
 		cItems.parallelStream().forEach(ci->{
 			Integer categoria = cosecha.getClasificador().getCategoryFor(ci.getAmount());
 			//String catName = cosecha.getClasificador().getCategoryNameFor(catIndex);
@@ -119,10 +125,11 @@ public class ConvertirASueloTask extends ProcessMapTask<SueloItem,Suelo > {
 
 				labor.insertFeature(si);
 			}
+			updateProgress(featureNumber++, featureCount);
 		});
 		//TODO si el nombre de la categoria del cosechaitem coincide con el nombre de la muestra
 		// crear un suelo item con la geometria de la cosecha y el dato de la muestra
-
+		cosecha.getLayer().setEnabled(false);
 		labor.constructClasificador();
 		runLater(this.getItemsList());
 		updateProgress(0, featureCount);

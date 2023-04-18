@@ -1,7 +1,7 @@
 package gui;
 
-import java.awt.Dimension;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -9,11 +9,10 @@ import java.util.Optional;
 
 import dao.Clasificador;
 import dao.Labor;
-import dao.config.Agroquimico;
-import dao.pulverizacion.Caldo;
+import dao.config.Configuracion;
 import dao.pulverizacion.CaldoItem;
 import dao.pulverizacion.PulverizacionLabor;
-import gui.utils.DateConverter;
+import dao.utils.PropertyHelper;
 import gui.utils.SmartTableView;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
@@ -27,26 +26,16 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.Control;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
-import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.BorderStroke;
-import javafx.scene.layout.BorderStrokeStyle;
-import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
-import javafx.util.StringConverter;
-import javafx.util.converter.NumberStringConverter;
-import utils.DAH;
 
 
 /**
@@ -128,16 +117,14 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 			if(ButtonType.OK.equals(e)){					
 				if(chkMakeDefault.selectedProperty().get()){
 					labor.getConfigLabor().save();
-				}				
+					System.out.println("guardando configuracion de pulverizacion");
+				}
 				return labor;
-
 			}else{
 				return null;
 			}
 		});
 	}
-
-
 
 	private boolean validarDialog() {
 		List<String> cols = labor.getAvailableColumns();
@@ -155,7 +142,6 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 			alert.initOwner(this.getDialogPane().getScene().getWindow());
 			alert.setTitle(Messages.getString("PulverizacionConfigDialogController.title2")); //$NON-NLS-1$
 			alert.showAndWait();
-
 		}
 		
 		return isValid;
@@ -176,79 +162,41 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 		textNombre.textProperty().set(labor.getNombre());
 		textNombre.textProperty().addListener((obj,old,nu)->labor.setNombre(nu));
 		
-		//datePickerFecha.valueProperty().bindBidirectional(l.fechaProperty,);
-		datePickerFecha.setValue(DateConverter.asLocalDate(l.fecha));
-		datePickerFecha.setConverter(new DateConverter());
-		datePickerFecha.valueProperty().addListener((obs, bool1, n) -> {
-			l.setFecha(DateConverter.asDate(n));
-			//l.fechaProperty.setValue(bool2);
-		});
-
+		Configuracion config = labor.getConfig().getConfigProperties();
+		
+		PropertyHelper.bindDateToObjectProperty(
+				labor::getFecha,
+				labor::setFecha,
+				datePickerFecha.valueProperty(),
+				config,
+				Labor.FECHA_KEY);	
+		
 		// colDosis
 		this.comboDosis.setItems(FXCollections.observableArrayList(availableColums));
 		this.comboDosis.valueProperty().bindBidirectional(labor.colDosisProperty);
-		//pasadas
-//		this.comboPasadas.setItems(FXCollections.observableArrayList(availableColums));
-//		this.comboPasadas.valueProperty().bindBidirectional(labor.colCantPasadasProperty);
 
-		//insumo
-		/*
-		List<Caldo> caldos = DAH.getAllCaldos();
-		caldos.add(null);
-		Caldo nCaldo = new Caldo();
-		List<CaldoItem> items = new ArrayList<CaldoItem>();
-		CaldoItem item = new CaldoItem();
-		item.setCaldo(nCaldo);
-		items.add(item);
-		nCaldo.setItems(items);
-		nCaldo.setNombre(labor.getNombre());	
-		if(labor.getCaldo()== null) {
-					
-			caldos.add(nCaldo);
-			labor.setCaldo(nCaldo);
-		}
-		
-		this.comboInsumo.setItems(FXCollections.observableArrayList(caldos));//Agroquimico.agroquimicos.values()));
-		this.comboInsumo.getSelectionModel().select(labor.getCaldo());
-		this.comboInsumo.getSelectionModel().selectedItemProperty().addListener((obj,old,n)->{
-			System.out.println("nuevo caldo selected "+n);
-			if(nCaldo.equals(n)) {
-				n = ConfigGUI.doConfigCaldo(nCaldo);
-				//comboInsumo.getItems().add(n);
-				comboInsumo.getSelectionModel().select(n);
-			} 
-			labor.setCaldo(n);
-			
-		});
-		*/
 		this.contructCaldoTable();
-		//select(labor.getCaldo());
-		//this.comboInsumo.valueProperty().bindBidirectional(labor.agroquimico);
-
-
-		StringConverter<Number> converter = new NumberStringConverter(Messages.getLocale());
-		this.textPrecioInsumo.textProperty().addListener((obj,old,n)->{
-			labor.setPrecioInsumo(converter.fromString(n).doubleValue());
-			labor.getConfigLabor().getConfigProperties().setProperty(PulverizacionLabor.COLUMNA_PRECIO_PASADA, n);
-		});
-		//textPrecioGrano
-		//Bindings.bindBidirectional(this.textPrecioInsumo.textProperty(), labor.precioInsumoProperty, converter);
-
-		//textCostoLaborHa
-		//Bindings.bindBidirectional(this.textCostoLaborHa.textProperty(), labor.precioLaborProperty, converter);
-		this.textCostoLaborHa.textProperty().addListener((obj,old,n)->{
-			labor.setPrecioLabor(converter.fromString(n).doubleValue());
-			labor.getConfigLabor().getConfigProperties().setProperty(PulverizacionLabor.COLUMNA_IMPORTE_HA, n);
-		});
-
-
+		
+		PropertyHelper.bindDoubleToTextProperty(
+				labor::getPrecioInsumo,
+				labor::setPrecioInsumo,
+				this.textPrecioInsumo.textProperty(),
+				config,
+				PulverizacionLabor.COSTO_LABOR_PULVERIZACION);
+		
+		PropertyHelper.bindDoubleToTextProperty(
+				labor::getPrecioLabor,
+				labor::setPrecioLabor,
+				this.textCostoLaborHa.textProperty(),
+				config,
+				PulverizacionLabor.PRECIO_INSUMO_KEY);
+		
+		DecimalFormat converter = PropertyHelper.getDoubleConverter();
 		Bindings.bindBidirectional(this.textClasesClasificador.textProperty(), labor.clasificador.clasesClasificadorProperty, converter);
 
 		this.comboClasificador.setItems(FXCollections.observableArrayList(Clasificador.clasficicadores));
 		this.comboClasificador.valueProperty().bindBidirectional(labor.clasificador.tipoClasificadorProperty);
 		this.comboClasificador.setConverter(Clasificador.clasificadorStringConverter());
-
-
 	}
 
 	public void init() {
@@ -275,32 +223,32 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 	}
 
 	private void contructCaldoTable() {
-		Caldo caldo = labor.getCaldo();
-		if(caldo ==null) {
-			caldo = new Caldo();
+		List<CaldoItem> items = labor.getItems();
+		if(items ==null) {
+			items = new ArrayList<CaldoItem>();
 			CaldoItem item = new CaldoItem();
-			item.setCaldo(caldo);
-			caldo.getItems().add(item);
-			labor.setCaldo(caldo);
-		} else if(caldo.getItems().size()<1) {
+			item.setLabor(labor);
+			items.add(item);
+			labor.setItems(items);
+		} else if(items.size()<1) {
 			System.out.println("existe caldo pero sin items");
 			CaldoItem item = new CaldoItem();
-			item.setCaldo(caldo);
-			caldo.getItems().add(item);
+			item.setLabor(labor);
+			labor.getItems().add(item);
 		}
 		final ObservableList<CaldoItem> data =
 				FXCollections.observableArrayList(
-						labor.getCaldo().getItems()
+						labor.getItems()
 						);
 		SmartTableView<CaldoItem> table = new SmartTableView<CaldoItem>(data,
 				Arrays.asList("Id"),//rejected
-				Arrays.asList("Producto","DosisHa")//order
+				Arrays.asList("Producto","DosisHa","Observaciones")//order
 				);
 		table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
 		table.setEliminarAction(
 				list->{											
 					list.stream().forEach(i->{
-						i.getCaldo().getItems().remove(i);	
+						i.getLabor().getItems().remove(i);	
 					});
 				}
 				);
@@ -308,10 +256,10 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 		table.setOnDoubleClick(()->{
 			System.out.println("haciendo dobleClick");
 			CaldoItem i = new CaldoItem();
-			labor.getCaldo().getItems().add(i);
-			i.setCaldo(labor.getCaldo());
+			labor.getItems().add(i);
+			i.setLabor(labor);
 			return i;
-		}); //$NON-NLS-1$
+		});
 		if(bpCaldo ==null) {
 			System.out.println("no puedo cargar la tabla porque caldoPane es null");
 		} else {

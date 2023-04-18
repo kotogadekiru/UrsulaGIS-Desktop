@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import org.geotools.geometry.jts.ReferencedEnvelope;
@@ -31,6 +32,28 @@ import gui.PoligonLayerFactory;
 import tasks.procesar.ExtraerPoligonosDeLaborTask;
 
 public class GeometryHelper {
+	public static Poligono unirPoligonos(List<Poligono> pActivos) {
+		
+		StringJoiner joiner = new StringJoiner("-");
+		//joiner.add(Messages.getString("JFXMain.poligonUnionNamePrefixText"));
+
+		List<Geometry> gActivas = pActivos.stream().map(p->{
+			//p.getLayer().setEnabled(false);
+			joiner.add(p.getNombre());
+			return p.toGeometry();
+		}).collect(Collectors.toList());
+
+
+		Geometry union = GeometryHelper.unirGeometrias(gActivas);
+
+		double has = ProyectionConstants.A_HAS(union.getArea());
+
+		Poligono poli = ExtraerPoligonosDeLaborTask.geometryToPoligono(union);
+		poli.setArea(has);
+		poli.setNombre(joiner.toString()); //$NON-NLS-1$
+		return poli;
+	}
+	
 	public static Geometry splineInterpolation(Geometry g) {
 		List<Float> X = new ArrayList<Float>();
 		List<Float> Y = new ArrayList<Float>();
@@ -251,6 +274,13 @@ public class GeometryHelper {
 		return ret;
 	}
 
+	public static Geometry simplificarContorno(Geometry g) {
+		g=g.buffer(ProyectionConstants.metersToLongLat(10));
+//		g=GeometryHelper.removeClosePoints(g, ProyectionConstants.metersToLongLat(2));
+//		g=GeometryHelper.removeSinglePoints(g, ProyectionConstants.metersToLongLat(2));
+//		g=GeometryHelper.reduceAlignedPoints(g, 0.2);
+		return g;
+	}
 	public static Geometry smooth(Geometry g) {
 		Geometry ret=null;
 		//TODO remove duplicate vertices
@@ -539,7 +569,7 @@ public class GeometryHelper {
 	 * @param complex
 	 * @return la geometria reemplazando 2 vertices por su promedio 
 	 */
-	public static Geometry simplify(Geometry complex) {
+	public static Geometry simplify(Geometry complex) {		
 		complex = ExtraerPoligonosDeLaborTask.geometryToPoligono(complex).toGeometry();
 		if(complex instanceof Polygon) {
 			Densifier densifier = new Densifier(complex);

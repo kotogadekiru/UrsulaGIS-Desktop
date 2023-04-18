@@ -16,7 +16,7 @@ import lombok.Setter;
 
 @Getter
 @Setter(value = AccessLevel.PUBLIC)
-@Entity @Access(AccessType.FIELD)
+//@Entity @Access(AccessType.FIELD)
 public class CaldoItem {
 	public static final String FIND_ALL="CaldoItem.findAll";
 	public static final String FIND_NAME = "CaldoItem.findName";
@@ -24,12 +24,16 @@ public class CaldoItem {
 	@javax.persistence.Id @GeneratedValue
 	private Long id=null;
 	
-	@ManyToOne
-	private Caldo caldo =null;
+	//@ManyToOne
+	private PulverizacionLabor labor =null;
 	
-	@ManyToOne(cascade= {CascadeType.DETACH})
+	//@ManyToOne//(cascade= {CascadeType.DETACH})
 	private Agroquimico producto =null;
 	
 	private Double dosisHa = 0.0;
-
+	private String observaciones =  null;
+	@Override
+	public String toString() {
+		return "CaldoItem:{"+producto+", "+dosisHa+", "+observaciones+"}";
+	}
 }

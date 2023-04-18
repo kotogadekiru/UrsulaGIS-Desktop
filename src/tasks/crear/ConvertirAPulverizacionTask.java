@@ -30,7 +30,7 @@ import utils.ProyectionConstants;
 
 
 /**
- * task que convierte una cosecha a una fertilizacion
+ * task que convierte una cosecha a una pulverizacion
  * @author quero
  *
  */
@@ -46,18 +46,9 @@ public class ConvertirAPulverizacionTask extends ProcessMapTask<PulverizacionIte
 	}
 
 	public void doProcess() throws IOException {
-		//Semilla semilla = labor.getSemilla();
-		//System.out.println("semilla es "+semilla);
-		//double entresurco = labor.getEntreSurco();
-		//double pmil = semilla.getPesoDeMil();
-		//double pg = semilla.getPG();
-		//double metrosLinealesHa = ProyectionConstants.METROS2_POR_HA/entresurco;//23809 a 0.42
-		//System.out.println("metrosLinealesHa "+metrosLinealesHa);//metrosLinealesHa 52631.57894736842 ok!
-		//double semillasHa = ProyectionConstants.METROS2_POR_HA*plantasM2Objetivo/pg;// si pg ==1 semillas= plantas. si pg es <1 => semillas>plantas
-
-		
-		//System.out.println("semillasMetroLineal "+semillasMetroLineal);//semillasMetroLineal 38.0 ok!
-		//List<CosechaItem> cItems = new ArrayList<CosechaItem>();
+		labor.setContorno(cosecha.getContorno());
+		this.featureCount=cosecha.outCollection.size();
+		this.featureNumber=0;
 		FeatureReader<SimpleFeatureType, SimpleFeature> reader =cosecha.outCollection.reader();
 		Clasificador cl = cosecha.getClasificador();
 		while (reader.hasNext()) {
@@ -65,44 +56,19 @@ public class ConvertirAPulverizacionTask extends ProcessMapTask<PulverizacionIte
 			CosechaItem ci = cosecha.constructFeatureContainerStandar(simpleFeature,false);			
 			String nombre = cl.getLetraCat(cl.getCategoryFor(ci.getRindeTnHa()));
 			double dosis = dosisMap.get(nombre)[0];
-			//double semillasHa = ProyectionConstants.METROS2_POR_HA*plantasM2Objetivo/pg;// si pg ==1 semillas= plantas. si pg es <1 => semillas>plantas
-			//double semillasMetroLineal = semillasHa/metrosLinealesHa;//si es trigo va en plantas /m2 si es maiz o soja va en miles de plantas por ha
-			
-			PulverizacionItem si = new PulverizacionItem();
-			
-			si.setDosis(dosis);//1000semillas*1000gramos para pasar a kg/ha
-
-		//	si.setDosisML(semillasMetroLineal);
-			//dosis sembradora va en semillas cada 10mts
-			//dosis valorizacion va en unidad de compra; kg o bolsas de 80000 semillas o 50kg
-			
+		
+			PulverizacionItem si = new PulverizacionItem();			
+			si.setDosis(dosis);	
 			labor.setPropiedadesLabor(si);
-
 			si.setGeometry(ci.getGeometry());
 			si.setId(labor.getNextID());
-
 			labor.insertFeature(si);
+			this.updateProgress(featureNumber++, featureCount);
 		}
-		reader.close();
-		
-//		for(Poligono pol : this.polis) {
-//			SiembraItem si = new SiembraItem();
-//					
-//			si.setDosisHa(semillasHa*pmil/(1000*1000));//1000semillas*1000gramos para pasar a kg/ha
-//
-//			si.setDosisML(semillasMetroLineal);
-//			//dosis sembradora va en semillas cada 10mts
-//			//dosis valorizacion va en unidad de compra; kg o bolsas de 80000 semillas o 50kg
-//			
-//			labor.setPropiedadesLabor(si);
-//
-//			si.setGeometry(pol.toGeometry());
-//			si.setId(labor.getNextID());
-//
-//			labor.insertFeature(si);
-//		}
-		labor.constructClasificador();
+		reader.close();		
 
+		labor.constructClasificador();
+		cosecha.getLayer().setEnabled(false);
 		runLater(this.getItemsList());
 		updateProgress(0, featureCount);
 	}

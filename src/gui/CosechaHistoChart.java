@@ -24,6 +24,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import utils.ExcelHelper;
 import utils.ProyectionConstants;
@@ -54,8 +55,6 @@ public class CosechaHistoChart extends VBox {
 
 	public CosechaHistoChart(Labor<?> labor) {
 		super();
-
-
 		final CategoryAxis xAxis = new CategoryAxis();
 		xAxis.setLabel(Messages.getString("CosechaHistoChart.10")); //$NON-NLS-1$
 		final NumberAxis yAxis = new NumberAxis();
@@ -123,7 +122,7 @@ public class CosechaHistoChart extends VBox {
 
 		chart.legendVisibleProperty().setValue(false);
 		chart.getData().add(series);
-		VBox.getVgrow(chart);
+		VBox.setVgrow(chart,Priority.ALWAYS);
 		this.getChildren().add(chart);
 		NumberFormat df = Messages.getNumberFormat();
 		BorderPane bottom = new BorderPane();
@@ -140,16 +139,14 @@ public class CosechaHistoChart extends VBox {
 		right.getChildren().add(exportButton);
 		bottom.setCenter(left);
 		bottom.setRight(right);//getChildren().addAll(left,right);
-		bottom.setPadding(new Insets(5,5,5,5));
+		bottom.setPadding(new Insets(2,30,30,30));
 		this.getChildren().add(bottom);
 	}
-
 
 	private void doExportarExcell() {
 		ExcelHelper xHelper = new ExcelHelper();
 		xHelper.exportSeries(series);
 	}
-
 
 	private XYChart.Series<String, Number> createSeries(Labor<?> labor) {	
 		numClasses = labor.clasificador.getNumClasses();

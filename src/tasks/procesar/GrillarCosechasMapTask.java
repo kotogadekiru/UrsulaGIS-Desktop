@@ -41,6 +41,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 	 */
 	private List<CosechaLabor> cosechas;
 	private boolean rellenarHuecos = false;
+	private double ancho=10;
 
 			
 	public GrillarCosechasMapTask(List<CosechaLabor> cosechas){//RenderableLayer layer, FileDataStore store, double d, Double correccionRinde) {
@@ -71,11 +72,13 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 	
 		cConfig.resumirGeometriasProperty().setValue(false);
 		
-		cConfig.correccionOutlayersProperty().set(false);
-		
-		
+		cConfig.correccionOutlayersProperty().set(false);	
 		
 		labor.setNombre(Messages.getString("GrillarCosechasMapTask.0"));//este es el nombre que se muestra en el progressbar //$NON-NLS-1$
+	}
+	
+	public void setAncho(double _ancho) {
+		this.ancho=_ancho;
 	}
 
 	/**

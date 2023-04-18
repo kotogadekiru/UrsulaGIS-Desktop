@@ -389,6 +389,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 			public Number fromString(String s){
 				Number d=new Double(0);
 				try {
+					//s.substring(0, s.length()-1);
 					d = converter.parse(s);
 					return d.doubleValue()/100;
 				} catch (ParseException e) {
@@ -399,7 +400,7 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 
 			@Override 
 			public String toString(Number n){
-				return converter.format(n.doubleValue()*100);
+				return converter.format(n.doubleValue()*100);//+"%";
 			}
 		};
 		//textToleranciaCV
@@ -431,11 +432,12 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 
 		chkResumirGeometrias.selectedProperty().bindBidirectional(cosechaConfig.resumirGeometriasProperty());
 
-		datePickerFecha.setValue(DateConverter.asLocalDate(l.fecha));
-		//datePickerFecha.setConverter(new DateConverter());
-		datePickerFecha.valueProperty().addListener((obs, bool1, n) -> {
-			l.setFecha(DateConverter.asDate(n));
-		});
+		PropertyHelper.bindDateToObjectProperty(
+				labor::getFecha,
+				labor::setFecha,
+				datePickerFecha.valueProperty(),
+				labor.getConfigLabor().getConfigProperties(),
+				Labor.FECHA_KEY);
 	}
 
 	public void init() {

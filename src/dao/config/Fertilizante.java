@@ -36,27 +36,8 @@ public class Fertilizante extends Producto implements Comparable<Fertilizante>{
 	public static final String FIND_ALL="Fertilizante.findAll";
 	public static final String FIND_NAME="Fertilizante.findName";
 	
-	public static Map<String,Fertilizante> fertilizantes = new HashMap<String,Fertilizante>();
-	//http://semillastodoterreno.com/2013/03/concentracion-de-n-p-y-k-en-los-fertilizantes/
-	static{																		//N-P-K-S kg cada 100kg de producto 
-//		fertilizantes.put(FOSFATO_DIAMONICO_DAP,new Fertilizante(FOSFATO_DIAMONICO_DAP,0.1472,0.0));	//18-46-0-2
-//		fertilizantes.put(FOSFATO_MONOAMONICO_MAP,new Fertilizante(FOSFATO_MONOAMONICO_MAP,0.1664,0.0));//11-52-0-2
-//		fertilizantes.put(SUPERFOSFATO_SIMPLE,new Fertilizante(SUPERFOSFATO_SIMPLE,0.576,0.0));		//0-(18~21)-0-0
-//		fertilizantes.put(SUPERFOSFATO_TRIPLE_SPT,new Fertilizante(SUPERFOSFATO_TRIPLE_SPT,0.1472,0.0));//0-(44~53)-0-0
-		
-//								%N			%P
-//Amoníaco anhidro 							82	
-//Nitrato de amonio							33.5	
-//Sulfato de amonio							21	
-//Fosfato diamónico			 18 a 21		21		20
-//Fosfato monoamónico			11			23
-//Nitrato de Calcio				15	
-//Cianamida cálcica			 20 a 22		22	
-//Nitrato de Potasio			13	
-//Nitrato de Sodio				16	
-//Urea							46	
-//Urea - Amonio Nitrato (UAN)	32				
-		
+	public static Map<String,Fertilizante> getFertilizantesDefault(){
+		Map<String,Fertilizante> fertilizantes = new HashMap<String,Fertilizante>();
 		//Nitrogenados
 fertilizantes.put("Amoníaco anhidro",new Fertilizante("Amoníaco anhidro",82,0.0,0.0,0.0));//ok
 fertilizantes.put("Nitrato de amonio",new Fertilizante("Nitrato de amonio",35,0.0,0.0,0.0));//ok
@@ -79,12 +60,9 @@ fertilizantes.put("Yeso Agricola",new Fertilizante("Yeso Agricola",0.0,0.0,0,17)
 		//Calcicos
 //fertilizantes.put("Nitrato de calcio",new Fertilizante("Nitrato de calcio",15,0.0,0.0,0.0));19Ca 15N
 //fertilizantes.put("Superfosfato de calcio",new Fertilizante("Superfosfato de calcio",0.0,17,0.0,0.0));
+
+		return fertilizantes;
 	}
-	
-//	@Id @GeneratedValue
-//	private Long id=null;
-	
-	//String nombre = new String();
 	
 	double porcN= 0.0;
 	double porcP= 0.0;
@@ -111,10 +89,9 @@ fertilizantes.put("Yeso Agricola",new Fertilizante("Yeso Agricola",0.0,0.0,0,17)
 	public String toString() {
 		return this.nombre;
 	}
-
 	@Override
-	public int compareTo(Fertilizante o) {
-		return (int) (this.getId()-o.getId());
+	public int compareTo(Fertilizante p) {
+		return super.compareTo(p);	
 	}
 }
 

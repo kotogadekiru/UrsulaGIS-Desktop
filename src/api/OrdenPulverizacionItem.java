@@ -2,13 +2,9 @@ package api;
 
 import javax.persistence.Access;
 import javax.persistence.AccessType;
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.ManyToOne;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
 
 import dao.ordenCompra.Producto;
 import lombok.AccessLevel;
@@ -40,6 +36,8 @@ public class OrdenPulverizacionItem {
 	private Producto producto =null;
 	
 	private Double dosisHa = 0.0;
+	private String observaciones=null;
+	private Double cantidad=null;
 	
 	public OrdenPulverizacionItem() {
 		

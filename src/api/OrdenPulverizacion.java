@@ -33,14 +33,25 @@ public class OrdenPulverizacion extends AbstractBaseEntity {
 	@javax.persistence.Id @GeneratedValue
 	private Long id=null;
 	private String owner=new String();
-	private String description=null;
-	private String fecha=null;
 	private String poligonoString=null;
-	private String superficie=null;
-	public String url=new String();
 	
-	//@ManyToOne//(cascade=CascadeType.DETACH)
+	public String url=new String();
 	private String ordenShpZipUrl =null;
+	
+	private String nombreIngeniero="default";
+	private String numeroOrden="default";
+	private String nombre="nombre default";
+	private String fecha="default";
+	private String description="default";
+	private String superficie="default";	
+	
+	private String estado=new String("Pendiente");	
+	
+	private String cultivo = "default";
+
+	private String productor="default";
+	private String establecimiento="default";
+	private String contratista="default";	
 	
 	@OneToMany(cascade=CascadeType.ALL, mappedBy="ordenPulverizacion")
 	private List<OrdenPulverizacionItem> items=new ArrayList<OrdenPulverizacionItem>();

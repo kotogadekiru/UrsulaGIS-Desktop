@@ -1,29 +1,17 @@
 package dao;
 
-import java.awt.Component;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.time.LocalDate;
-import java.util.Calendar;
 
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
-import dao.config.Configuracion;
-import dao.utils.LocalDateAttributeConverter;
 import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwindx.examples.analytics.ExportableAnalyticSurface;
 import lombok.AccessLevel;
@@ -57,7 +45,7 @@ public class Ndvi implements Comparable<Object>{//extends AbstractBaseEntity {
 
 	private Double meanNDVI=null;
 	private Double porcNubes=null;
-	private Double rFAA=null;
+	//private Double rFAA=null;
 
 	@Transient
 	private File f=null;
@@ -72,14 +60,15 @@ public class Ndvi implements Comparable<Object>{//extends AbstractBaseEntity {
 
 	private boolean activo =true;
 
-
 	@Transient
 	ExportableAnalyticSurface surfaceLayer=null;
+	
 	@Transient
 	Layer layer=null;
 
 	double pixelArea=100/10000;//100m2
 
+	//getActivo es para que aparezca con el nombre activo en la tabla en vez de isActivo
 	public boolean getActivo(){
 		return activo;
 	}
@@ -92,11 +81,7 @@ public class Ndvi implements Comparable<Object>{//extends AbstractBaseEntity {
 	 * lee del archivo f y escribe a content
 	 */
 	public void updateContent(File f){
-		//File file = new File("C:\\mavan-hibernate-image-mysql.gif");
 		if(content == null) {
-//			if(f==null) {
-//				loadFileFromContent();
-//			}
 			content = new byte[(int) f.length()];
 
 			try {
@@ -104,7 +89,6 @@ public class Ndvi implements Comparable<Object>{//extends AbstractBaseEntity {
 				//convert file into array of bytes
 				fileInputStream.read(content);
 				fileInputStream.close();
-				//f.delete();//clean up temp file dont delete other peoples files >S
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -115,32 +99,6 @@ public class Ndvi implements Comparable<Object>{//extends AbstractBaseEntity {
 		String parent =nombre.replaceAll("[\\\\/:*?\"<>|]", "-");//URLEncoder.encode(nombre, "UTF-8");// nombre.replaceAll("\\", "-");
 		return parent;
 	}
-//	public File getF(){
-//		try {
-//
-//			//String parent =nombre.replaceAll("[\\\\/:*?\"<>|]", "-");//URLEncoder.encode(nombre, "UTF-8");// nombre.replaceAll("\\", "-");
-//			//System.out.println("parentFile "+parent);
-//
-//			//f = File.createTempFile(parent, "");   //esto crea el archivo con un nombre random
-//
-//			File ursulaGISFolder = new File(Configuracion.ursulaGISFolder);
-//			File f = File.createTempFile(getFileName(), ".tif", ursulaGISFolder);
-//			//f=new File(f.getParentFile(),parent);
-//			f.deleteOnExit();
-//
-//			FileOutputStream fos = new FileOutputStream(f.getPath());
-//			fos.write(content);
-//			fos.close();
-//			//FIXME por alguna razon esto no funciona en el ejecutable parece que devuelve null.
-//			return f;
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		} 
-//		if(this.pixelArea==0) {
-//			this.pixelArea=0.001;//0.008084403745300213;
-//		}
-//		return null;
-//	}
 
 	@Override
 	public int compareTo(Object o) {

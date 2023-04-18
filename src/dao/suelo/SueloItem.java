@@ -31,8 +31,15 @@ public class SueloItem extends LaborItem { //suelo item no es labor item. le sob
 	public static final String PROF_NAPA= "Prof Napa";
 	public static final String AGUA_PERFIL= "Agua Perf";
 	public static final String DENSIDAD = "kg/m3";
-	
-	public static final double DENSIDAD_SUELO_KG = 1.2*1000;//+-0.4 Arenoso 1650, franco 1400, arcilloso 1250
+	/**
+	 *  Arenosos de 1,65 g cm-3;
+	 *  Franco arenoso, 1,5 g cm-3;
+	 *  Franco, 1,4 g cm-3;
+	 *  Franco Arcilloso, 1,33 g cm-3; 
+	 *  Arcillo Arenoso, 1,3 g cm-3 y 
+	 *  Arcillosos, 1,25 g cm-3.
+	 */
+	public static final double DENSIDAD_SUELO_KG = 1.4*1000;//+-0.4 Arenoso 1650, franco 1400, arcilloso 1250
 
 	//los ingenieros usan 2.6 para pasar de ppm a kg/ha. deben tomar la densidad en 1.3 en vez de 2
 	//para pasar de Ppm a kg/ha hay que multiplicar por 2.6. 

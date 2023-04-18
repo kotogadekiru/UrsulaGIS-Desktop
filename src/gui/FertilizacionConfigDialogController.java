@@ -11,6 +11,7 @@ import dao.config.Configuracion;
 import dao.config.Fertilizante;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
+import dao.utils.PropertyHelper;
 import gui.utils.DateConverter;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
@@ -149,7 +150,7 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 
 	public void setLabor(FertilizacionLabor l) {
 		this.labor = l;
-		LaborConfig config = labor.getConfigLabor();//labor.getConfigLabor().getConfigProperties();
+		//LaborConfig config = labor.getConfigLabor();//labor.getConfigLabor().getConfigProperties();
 		List<String> availableColums = labor.getAvailableColumns();
 		availableColums.sort((a,b)->{
 			return a.compareTo(b);
@@ -208,12 +209,12 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 		textNombre.textProperty().set(labor.getNombre());
 		textNombre.textProperty().addListener((obj,old,nu)->labor.setNombre(nu));
 		
-		datePickerFecha.setValue(DateConverter.asLocalDate(l.fecha));
-		datePickerFecha.setConverter(new DateConverter());
-		datePickerFecha.valueProperty().addListener((obs, bool1, n) -> {
-			l.setFecha(DateConverter.asDate(n));
-			//l.fechaProperty.setValue(bool2);
-		});
+		PropertyHelper.bindDateToObjectProperty(
+				labor::getFecha,
+				labor::setFecha,
+				datePickerFecha.valueProperty(),
+				labor.getConfigLabor().getConfigProperties(),
+				Labor.FECHA_KEY);	
 	}
 
 

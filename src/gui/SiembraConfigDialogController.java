@@ -12,6 +12,7 @@ import dao.config.Configuracion;
 import dao.config.Semilla;
 import dao.siembra.SiembraConfig;
 import dao.siembra.SiembraLabor;
+import dao.utils.PropertyHelper;
 import gui.utils.DateConverter;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
@@ -175,7 +176,12 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 		
 		SiembraConfig config = labor.getConfiguracion();
 		Configuracion props = config.getConfigProperties();
-
+		PropertyHelper.bindDateToObjectProperty(
+				labor::getFecha,
+				labor::setFecha,
+				datePickerFecha.valueProperty(),
+				props,
+				Labor.FECHA_KEY);	
 		//comboElev
 		this.comboElev.setItems(FXCollections.observableArrayList(availableColums));
 		this.comboElev.valueProperty().bindBidirectional(labor.colElevacion);

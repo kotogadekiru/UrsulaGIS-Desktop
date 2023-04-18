@@ -1,27 +1,16 @@
 package tasks.crear;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.geotools.data.simple.SimpleFeatureIterator;
-import org.opengis.feature.simple.SimpleFeature;
-
-import com.vividsolutions.jts.geom.Geometry;
-
-import dao.Labor;
-import dao.LaborItem;
 import dao.config.Cultivo;
-import dao.config.Semilla;
-import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.ordenCompra.OrdenCompra;
 import dao.ordenCompra.OrdenCompraItem;
 import dao.ordenCompra.Producto;
 import dao.pulverizacion.PulverizacionLabor;
-import dao.siembra.SiembraConfig;
 import dao.siembra.SiembraLabor;
 import javafx.concurrent.Task;
 import javafx.scene.control.Button;
@@ -32,7 +21,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import utils.ProyectionConstants;
 
 public class GenerarOrdenCompraTask  extends Task<OrdenCompra>{
 	private static final String TASK_CLOSE_ICON = "/gui/event-close.png";
@@ -51,6 +39,7 @@ public class GenerarOrdenCompraTask  extends Task<OrdenCompra>{
 		this.pulverizaciones=_pulverizaciones;
 	}
 	public OrdenCompra call()  {
+		//TODO agregar contorno a ordenCompra
 		Map<Producto,OrdenCompraItem> prodCantidadMap = new HashMap<Producto,OrdenCompraItem>();
 		StringBuilder description = new StringBuilder();
 		this.siembras.forEach(l->{
@@ -77,7 +66,7 @@ public class GenerarOrdenCompraTask  extends Task<OrdenCompra>{
 			description.append(l.getNombre());
 			//Producto producto =l.getAgroquimico().getValue();
 			Double cantidadItem = l.getCantidadInsumo();
-			l.getCaldo().getItems().forEach((caldoItem)->{
+			l.getItems().forEach((caldoItem)->{
 				putItem(prodCantidadMap, caldoItem.getProducto(),
 						cantidadItem*caldoItem.getDosisHa(),
 						l.getPrecioInsumo());

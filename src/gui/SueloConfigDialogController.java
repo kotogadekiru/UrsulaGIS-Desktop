@@ -6,7 +6,9 @@ import java.util.Optional;
 
 import dao.Clasificador;
 import dao.Labor;
+import dao.config.Configuracion;
 import dao.suelo.Suelo;
+import dao.utils.PropertyHelper;
 import gui.utils.DateConverter;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
@@ -118,8 +120,6 @@ public class SueloConfigDialogController  extends Dialog<Suelo>{
 		});
 	}
 
-
-
 	private boolean validarDialog() {
 		List<String> cols = labor.getAvailableColumns();
 		StringBuilder message = new StringBuilder();
@@ -200,13 +200,13 @@ public class SueloConfigDialogController  extends Dialog<Suelo>{
 		//textNombre.textProperty().bindBidirectional(labor.nombreProperty);
 		textNombre.textProperty().set(labor.getNombre());
 		textNombre.textProperty().addListener((obj,old,nu)->labor.setNombre(nu));
-
-		datePickerFecha.setValue(DateConverter.asLocalDate(l.fecha));
-		datePickerFecha.setConverter(new DateConverter());
-		datePickerFecha.valueProperty().addListener((obs, bool1, n) -> {
-			l.setFecha(DateConverter.asDate(n));
-			//l.fechaProperty.setValue(bool2);
-		});
+		Configuracion config = l.getConfig().getConfigProperties();
+		PropertyHelper.bindDateToObjectProperty(
+				labor::getFecha,
+				labor::setFecha,
+				datePickerFecha.valueProperty(),
+				config,
+				Labor.FECHA_KEY);	
 	}
 
 

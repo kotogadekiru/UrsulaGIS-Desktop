@@ -33,11 +33,14 @@ import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.operation.buffer.BufferParameters;
+import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
 import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 
 import dao.Clasificador;
 import dao.Labor;
 import dao.LaborItem;
+import dao.Poligono;
 import dao.config.Configuracion;
 import dao.cosecha.CosechaItem;
 import gov.nasa.worldwind.WorldWind;
@@ -1208,6 +1211,9 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 //				return CompletableFuture.runAsync(()->{});
 //			}).thenRun(
 //					()->{
+				if(labor.getContorno()==null) {
+					extractContorno();
+				}
 				System.out.println("corriendo analyticSurfaceLayerHD");
 				RenderableLayer analyticSurfaceLayerHD = createAnalyticSurfaceFromQuery(highRes);//30
 				analyticSurfaceLayerHD.setPickEnabled(false);//ya es false de fabrica
@@ -1220,6 +1226,31 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 //		} else {
 //			System.out.println("no corro analyticSurfaceLayerHD");
 //		}
+	}
+	
+	public void extractContorno() {
+		//TODO compute contorno
+		List<Geometry> geometriesCat = new ArrayList<Geometry>();
+			SimpleFeatureIterator it = labor.outCollection.features();
+			while(it.hasNext()){
+				SimpleFeature f=it.next();
+				geometriesCat.add((Geometry)f.getDefaultGeometry());
+			}
+			it.close();		
+			
+			try{						
+				Geometry buffered = CascadedPolygonUnion.union(geometriesCat);
+				//sino le pongo buffer al resumir geometrias me quedan rectangulos medianos
+//				buffered = buffered.buffer(
+//						ProyectionConstants.metersToLongLat(0.25),
+//						1,BufferParameters.CAP_SQUARE);
+				//buffered =GeometryHelper.simplificarContorno(buffered);
+				Poligono contorno =GeometryHelper.constructPoligono(buffered);
+				
+				labor.setContorno(contorno);
+			}catch(Exception e){
+				e.printStackTrace();
+			}
 	}
 
 	private RenderableLayer createExtrudedPolygonsLayer(Collection<FC> itemsToShow) {	

@@ -93,36 +93,10 @@ public class SiembraLabor extends Labor<SiembraItem> {
 
 		colDosisSemilla = PropertyHelper.initStringProperty(SiembraLabor.COLUMNA_KG_SEMILLA, properties, availableColums);
 		colAmount= new SimpleStringProperty(SiembraLabor.COLUMNA_KG_SEMILLA);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
-		
-//		entreSurco = new SimpleDoubleProperty(
-//				Double.parseDouble(properties.getPropertyOrDefault(
-//						SiembraLabor.ENTRE_SURCO_KEY, ENTRE_SURCO_DEFAULT))
-//				);		
-//		entreSurco.addListener((obs, bool1, bool2) -> {
-//			properties.setProperty(SiembraLabor.ENTRE_SURCO_KEY,
-//					bool2.toString());
-//		});
-//		
-//		semillasPorBolsa = new SimpleDoubleProperty(
-//				Double.parseDouble(properties.getPropertyOrDefault(
-//						SiembraLabor.SEMILLAS_POR_BOLSA_KEY, SEMILLAS_POR_BOLSA_DEFAULT))
-//				);		
-//		semillasPorBolsa.addListener((obs, bool1, bool2) -> {
-//			properties.setProperty(SiembraLabor.SEMILLAS_POR_BOLSA_KEY,
-//					bool2.toString());
-//		});
 
-
-	//	precioInsumoProperty = initDoubleProperty(SiembraLabor.COLUMNA_PRECIO_SEMILLA, "0", properties);
-
-		Semilla sDefault = Semilla.semillas.get(Semilla.SEMILLA_DE_MAIZ);
-		String semillaKEY = properties.getPropertyOrDefault(SiembraLabor.SEMILLA_DEFAULT, sDefault.getNombre());
-		this.setSemilla(Semilla.semillas.get(semillaKEY));
-	//	semillaProperty = new SimpleObjectProperty<Semilla>(Semilla.semillas.get(semillaKEY));//values().iterator().next());
-	//	semillaProperty.addListener((obs, bool1, bool2) -> {
-	//		properties.setProperty(SiembraLabor.SEMILLA_DEFAULT,
-	//				bool2.getNombre());
-	//	});
+		String semillaKEY = properties.getPropertyOrDefault(SiembraLabor.SEMILLA_DEFAULT,Semilla.SEMILLA_DE_MAIZ);
+		Semilla sDefault =DAH.getSemilla(semillaKEY);
+		this.setSemilla(sDefault);
 	}
 
 	@Override
@@ -181,9 +155,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 	public SiembraItem constructFeatureContainer(SimpleFeature next) {
 		SiembraItem si = new SiembraItem(next);
 		super.constructFeatureContainer(si,next);
-		
-		//si.setDosisML(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_SEM_10METROS)));
-		
+
 		si.setDosisHa(LaborItem.getDoubleFromObj(next.getAttribute(colDosisSemilla.get())));	
 			
 		Double kgM2 = si.getDosisHa()/ProyectionConstants.METROS2_POR_HA;//kg/m2

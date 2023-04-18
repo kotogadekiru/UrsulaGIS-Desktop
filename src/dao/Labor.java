@@ -16,6 +16,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -94,14 +95,16 @@ public abstract class Labor<E extends LaborItem>  {
 	public Double precioInsumo=new Double(0);
 	public Double cantidadInsumo=new Double(0);
 	public Double cantidadLabor=new Double(0);
-
+	
+	private Poligono contorno=null;
+	
+	@Lob
+	private byte[] content=null;//el contenido zip shpfile
+	
 	@ManyToOne(cascade=CascadeType.PERSIST)
 	public ProductoLabor productoLabor= null;
 
-	public Property<LocalDate> fechaProperty=new SimpleObjectProperty<LocalDate>();	
-	//public DoubleProperty precioLaborProperty=new SimpleDoubleProperty();	//precio es el costo por hectarea de la labor
-	//public DoubleProperty precioInsumoProperty=new SimpleDoubleProperty();
-
+//	public Property<LocalDate> fechaProperty=new SimpleObjectProperty<LocalDate>();	
 
 	public DoubleProperty anchoDefaultProperty= new SimpleDoubleProperty();
 
@@ -118,7 +121,8 @@ public abstract class Labor<E extends LaborItem>  {
 	@Transient public static final String COLUMNA_ELEVACION = "Elevacion";
 
 	@Transient private static final String ANCHO_DEFAULT = "ANCHO_DEFAULT";
-	@Transient private static final String FECHA_KEY = "FECHA_KEY";
+	@Transient
+	public static final String FECHA_KEY = "FECHA_KEY";
 
 	@Transient public Clasificador clasificador=null;	
 	@Transient public SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(getType());
@@ -174,50 +178,12 @@ public abstract class Labor<E extends LaborItem>  {
 		colAncho = PropertyHelper.initStringProperty(COLUMNA_ANCHO, properties, availableColums);
 		colCurso = PropertyHelper.initStringProperty(COLUMNA_CURSO, properties, availableColums);
 		colDistancia = PropertyHelper.initStringProperty(COLUMNA_DISTANCIA, properties, availableColums);
-		//		colElevacion = new SimpleStringProperty(properties.getPropertyOrDefault(COLUMNA_ELEVACION,COLUMNA_ELEVACION));
-		//		if(!availableColums.contains(colElevacion.get()) && availableColums.contains(COLUMNA_ELEVACION)){
-		//			colElevacion.setValue(COLUMNA_ELEVACION);
-		//		}
-		//		colElevacion.addListener((obs, bool1, bool2) -> {
-		//			properties.setProperty(COLUMNA_ELEVACION, bool2.toString());
-		//		});
-		//
-		//		colAncho = new SimpleStringProperty(properties.getPropertyOrDefault(
-		//				CosechaLabor.COLUMNA_ANCHO, CosechaLabor.COLUMNA_ANCHO));
-		//		if(!availableColums.contains(colAncho.get()) 
-		//				&& availableColums.contains(CosechaLabor.COLUMNA_ANCHO)){
-		//			colAncho.setValue(CosechaLabor.COLUMNA_ANCHO);
-		//		} 
-		//		colAncho.addListener((obs, bool1, bool2) -> {
-		//			properties.setProperty(CosechaLabor.COLUMNA_ANCHO, bool2);
-		//		});// bool2 es un string asi que no necesito convertirlo
-		//
-		//		
-		//		colCurso = new SimpleStringProperty(properties.getPropertyOrDefault(
-		//				CosechaLabor.COLUMNA_CURSO, CosechaLabor.COLUMNA_CURSO));
-		//		if(!availableColums.contains(colCurso.get())&&availableColums.contains(CosechaLabor.COLUMNA_CURSO)){
-		//			colCurso.setValue(CosechaLabor.COLUMNA_CURSO);
-		//		}
-		//		colCurso.addListener((obs, bool1, bool2) -> {
-		//			properties.setProperty(CosechaLabor.COLUMNA_CURSO, bool2.toString());
-		//		});
-		//
-		//		colDistancia = new SimpleStringProperty(
-		//				properties.getPropertyOrDefault(CosechaLabor.COLUMNA_DISTANCIA,
-		//						CosechaLabor.COLUMNA_DISTANCIA));
-		//		if(!availableColums.contains(colDistancia.get())&&availableColums.contains(CosechaLabor.COLUMNA_DISTANCIA)){
-		//			colDistancia.setValue(CosechaLabor.COLUMNA_DISTANCIA);
-		//		}
-		//		colDistancia.addListener((obs, bool1, bool2) -> {
-		//			properties.setProperty(CosechaLabor.COLUMNA_DISTANCIA,
-		//					bool2.toString());
-		//		});
+		
 
 		/********************** inicializo las propiedades de la labor propiamente dichas********************************/
 		//fechaProperty = new SimpleObjectProperty<LocalDate>();
 		DateConverter dc = new DateConverter(); 		
 		String defaultDate = properties.getPropertyOrDefault(Labor.FECHA_KEY,	dc.toString(LocalDate.now()));	
-		//LocalDate ld = dc.fromString(dc.toString(LocalDate.now()));		
 		DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
 
 
@@ -228,14 +194,6 @@ public abstract class Labor<E extends LaborItem>  {
 			System.out.println("fallo el parse de la fecha default");
 			e.printStackTrace();
 		}
-		//		LocalDate ld = dc.fromString(defaultDate);		
-		//		fechaProperty.setValue(ld);
-		//		fechaProperty.addListener((obs, bool1, bool2) -> {
-		//			System.out.println("cambiando la fecha a "+bool2);
-		//			properties.setProperty(Labor.FECHA_KEY,dc.toString(bool2));
-		//				//	bool2.toString());
-		//		});
-
 
 		precioLabor = initPrecioLaborHa();// initDoubleProperty(CosechaLabor.COSTO_COSECHA_HA, properties);
 		precioInsumo = initPrecioInsumo(); //initDoubleProperty(FertilizacionLabor.COLUMNA_PRECIO_FERT,  "0", properties);	
@@ -834,5 +792,4 @@ public abstract class Labor<E extends LaborItem>  {
 	public abstract E constructFeatureContainer(SimpleFeature next) ;
 
 	public abstract LaborConfig getConfigLabor();
-
 }

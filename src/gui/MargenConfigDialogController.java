@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Optional;
 
 import dao.Clasificador;
+import dao.Labor;
 import dao.margen.Margen;
+import dao.utils.PropertyHelper;
 import gui.utils.DateConverter;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
@@ -126,16 +128,7 @@ public class MargenConfigDialogController  extends Dialog<Margen>{
 		textNombre.textProperty().set(labor.getNombre());
 		textNombre.textProperty().addListener((obj,old,nu)->labor.setNombre(nu));
 		
-		//datePickerFecha.valueProperty().bindBidirectional(l.fechaProperty,);
-		//StringConverter<LocalDate> dateConverter = this.datePickerFecha.getConverter();
-		datePickerFecha.setValue(DateConverter.asLocalDate(l.fecha));
-		datePickerFecha.setConverter(new DateConverter());
-		datePickerFecha.valueProperty().addListener((obs, bool1, n) -> {
-			l.setFecha(DateConverter.asDate(n));
-			//l.fechaProperty.setValue(bool2);
-		});
-
-		
+			
 		StringConverter<Number> converter = new NumberStringConverter(Messages.getLocale());
 
 		//textPrecioGrano
@@ -171,6 +164,13 @@ public class MargenConfigDialogController  extends Dialog<Margen>{
 			
 		});
 
+		PropertyHelper.bindDateToObjectProperty(
+				labor::getFecha,
+				labor::setFecha,
+				datePickerFecha.valueProperty(),
+				labor.getConfigLabor().getConfigProperties(),
+				Labor.FECHA_KEY);
+		
 		Bindings.bindBidirectional(this.textClasesClasificador.textProperty(), labor.clasificador.clasesClasificadorProperty, converter);
 
 //		this.comboClasificador.setItems(FXCollections.observableArrayList(Clasificador.clasficicadores));

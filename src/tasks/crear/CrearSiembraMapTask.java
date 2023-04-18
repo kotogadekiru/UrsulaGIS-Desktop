@@ -18,6 +18,7 @@ import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
 import tasks.ProcessMapTask;
+import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
 
@@ -31,13 +32,14 @@ public class CrearSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 	List<Poligono> polis=null;
 
 	public CrearSiembraMapTask(SiembraLabor labor,List<Poligono> _poli,Double _amount){
-		super(labor);
+		super(labor);		
 		plantasM2Objetivo=_amount;
 		polis=_poli;
 
 	}
 
 	public void doProcess() throws IOException {
+		labor.setContorno(GeometryHelper.unirPoligonos(polis));
 		Semilla semilla = labor.getSemilla();
 		System.out.println("semilla es "+semilla);
 		double entresurco = labor.getEntreSurco();

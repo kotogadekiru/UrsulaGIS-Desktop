@@ -69,9 +69,10 @@ public class CortarCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabo
 	 * proceso que toma una cosecha y selecciona los items que estan dentro de los poligonos seleccionados
 	 */
 	@Override
-	protected void doProcess() throws IOException {	
-
+	protected void doProcess() throws IOException {
 		FeatureReader<SimpleFeatureType, SimpleFeature> reader = this.cosecha.outCollection.reader();
+		this.featureCount=this.cosecha.outCollection.size();
+		updateProgress(0, featureCount);
 		while(reader.hasNext()){
 			SimpleFeature f = reader.next();
 			CosechaItem ci = labor.constructFeatureContainerStandar(f,true);
@@ -111,9 +112,7 @@ public class CortarCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabo
 					
 				}catch(Exception e){
 					e.printStackTrace();
-				}
-				
-				
+				}				
 				ci.setGeometry(buffered);
 				SimpleFeature nf=ci.getFeature(labor.featureBuilder);
 
@@ -122,6 +121,7 @@ public class CortarCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabo
 				if(!ret){
 					System.out.println("no se pudo agregar la feature "+f);
 				}
+				updateProgress(this.featureNumber++, featureCount);
 			}
 		}
 

@@ -30,6 +30,7 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 
 	public CrearSueloMapTask(Suelo labor,Poligono _poli,Double _amount, Double _ppmN, Double _pMO,Double _densidad){
 		super(labor);
+		
 		ppmP=_amount;
 		ppmN=_ppmN;
 		pMO=_pMO;
@@ -40,6 +41,7 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 	}
 
 	public void doProcess() throws IOException {
+		labor.setContorno(poli);
 		SueloItem si = new SueloItem();
 		si.setDensAp(densidad);
 		si.setPpmP(ppmP);

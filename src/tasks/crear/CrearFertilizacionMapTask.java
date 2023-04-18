@@ -13,6 +13,7 @@ import dao.fertilizacion.FertilizacionLabor;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
 import tasks.ProcessMapTask;
+import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
 public class CrearFertilizacionMapTask extends ProcessMapTask<FertilizacionItem,FertilizacionLabor> {
@@ -27,7 +28,7 @@ public class CrearFertilizacionMapTask extends ProcessMapTask<FertilizacionItem,
 	}
 
 	public void doProcess() throws IOException {
-		
+		labor.setContorno(GeometryHelper.unirPoligonos(polis));
 		//GeometryFactory fact = new GeometryFactory();
 		for(Poligono pol : this.polis) {
 			FertilizacionItem ci = new FertilizacionItem();

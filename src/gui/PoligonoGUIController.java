@@ -28,7 +28,9 @@ import com.vividsolutions.jts.geom.Polygon;
 import dao.Labor;
 import dao.Ndvi;
 import dao.Poligono;
+import dao.config.Configuracion;
 import dao.cosecha.CosechaLabor;
+import dao.cosecha.CosechaLabor.CosechaLaborConstants;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.recorrida.Camino;
@@ -107,8 +109,23 @@ public class PoligonoGUIController {
 		main.playSound();		
 	}
 	
+//	public List<Poligono> getPoligonosActivos() {
+//		List<Poligono> geometriasActivas = new ArrayList<Poligono>();
+//		
+//		//1 obtener los poligonos activos
+//		LayerList layers = this.getWwd().getModel().getLayers();
+//		for (Layer l : layers) {
+//			Object o = l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+//			if (l.isEnabled() && o instanceof Poligono){
+//				Poligono p = (Poligono)o;
+//				geometriasActivas.add(p);
+//			}
+//		}
+//		return geometriasActivas;
+//	}
+	
 	@SuppressWarnings("unchecked")
-	private List<Poligono> getEnabledPoligonos() {
+	public List<Poligono> getEnabledPoligonos() {
 		return ((List<Poligono>)main.getObjectFromLayersOfClass(Poligono.class)).stream()
 				.filter((p)-> p.getLayer().isEnabled())
 				.collect(Collectors.toList());
@@ -661,7 +678,9 @@ public class PoligonoGUIController {
 		//h1: que su radio del circulo tangente sea mayor a R
 		//h2: que los puntos alineados se reemplacen por sus extremos
 		//-> reemplazar cada grupo de puntos por un segmento de recta siempre que el error sea menor a e=E/L
+		main.executorPool.submit(()->{
 		Geometry g = p.toGeometry();
+		//g=g.buffer(ProyectionConstants.metersToLongLat(10));
 		
 		g=GeometryHelper.removeClosePoints(g, ProyectionConstants.metersToLongLat(2));
 		g=GeometryHelper.removeSinglePoints(g, ProyectionConstants.metersToLongLat(2));
@@ -669,6 +688,8 @@ public class PoligonoGUIController {
 		Poligono pol =GeometryHelper.constructPoligono(g);
 
 		MeasureTool measureTool = (MeasureTool) p.getLayer().getValue(PoligonLayerFactory.MEASURE_TOOL);
+		measureTool.setPositions((ArrayList<? extends Position>) pol.getPositions());
+		});
 //		List<? extends Position> positions = measureTool.getPositions();//p.getPositions();
 //		List<Position> interpolated = new ArrayList<Position>();
 //		System.out.println("poligon size "+positions.size());
@@ -697,7 +718,7 @@ public class PoligonoGUIController {
 //		interpolated.add(interpolated.get(0));
 		
 		//measureTool.setPositions((ArrayList<? extends Position>) interpolated);
-		measureTool.setPositions((ArrayList<? extends Position>) pol.getPositions());
+		
 		//p.setPositions(interpolated);
 	}
 	
@@ -954,12 +975,16 @@ public class PoligonoGUIController {
 			System.out.println(Messages.getString("JFXMain.266")); //$NON-NLS-1$
 			labor.dispose();//libero los recursos reservados
 			return;
-		}							
-
-		TextInputDialog anchoDialog = new TextInputDialog(Messages.getString("JFXMain.267")); //$NON-NLS-1$
-		anchoDialog.setTitle(Messages.getString("JFXMain.268")); //$NON-NLS-1$
-		anchoDialog.setContentText(Messages.getString("JFXMain.269")); //$NON-NLS-1$
-		Optional<String> anchoOptional = anchoDialog.showAndWait();
+		}		
+		Double rindeEsperado = cosechaConfigured.get().getCultivo().getRindeEsperado();
+		TextInputDialog rindeDialog = new TextInputDialog(Messages.getNumberFormat().format(rindeEsperado));//Messages.getString("JFXMain.272")); 
+			
+		//TextInputDialog rindeDialog = new TextInputDialog(Messages.getString("JFXMain.267")); //$NON-NLS-1$
+		rindeDialog.setTitle(Messages.getString("JFXMain.268")); //$NON-NLS-1$
+		rindeDialog.setContentText(Messages.getString("JFXMain.269")); //$NON-NLS-1$
+		rindeDialog.initOwner(JFXMain.stage);
+		Optional<String> anchoOptional = rindeDialog.showAndWait();
+		if(!anchoOptional.isPresent())return;
 		Double rinde = PropertyHelper.parseDouble(anchoOptional.get()).doubleValue();//Double.valueOf(anchoOptional.get());
 
 		CrearCosechaMapTask umTask = new CrearCosechaMapTask(labor,polis,rinde);

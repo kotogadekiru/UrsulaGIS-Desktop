@@ -29,6 +29,7 @@ public class ConvertirSueloACosechaTask extends ProcessMapTask<CosechaItem,Cosec
 	}
 
 	public void doProcess() throws IOException {		
+		labor.setContorno(suelo.getContorno());
 		featureNumber = 0;
 		featureCount = this.suelo.outCollection.getCount();
 		FeatureReader<SimpleFeatureType, SimpleFeature> reader = this.suelo.outCollection.reader();

@@ -49,7 +49,7 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 	}
 
 	public void doProcess() throws IOException {
-		
+		labor.setContorno(ndvi.getContorno());
 		Iterable<? extends GridPointAttributes> values = ndvi.getSurfaceLayer().getValues();
 		Iterator<? extends GridPointAttributes> it = values.iterator();
 		

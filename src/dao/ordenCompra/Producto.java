@@ -31,7 +31,15 @@ public abstract class Producto {
 	
 	public Producto() {		
 	}
+	
 	public Producto(String nom) {
 		this.nombre=nom;
+	}
+	
+	
+	public int compareTo(Producto p) {
+		System.out.println("comparando producto "+this+" con "+p);
+		if(p==null)return -1;		
+		return this.getNombre().compareTo(p.getNombre());	
 	}
 }

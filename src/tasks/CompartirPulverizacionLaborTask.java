@@ -1,23 +1,13 @@
 package tasks;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
-
-import javax.persistence.ManyToOne;
+import java.util.Optional;
 
 import com.google.api.client.http.ByteArrayContent;
 import com.google.api.client.http.GenericUrl;
@@ -29,12 +19,9 @@ import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.http.json.JsonHttpContent;
-import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson.JacksonFactory;
-import com.google.api.client.util.ArrayMap;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
@@ -44,16 +31,18 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 
-import dao.Labor;
-import dao.config.Configuracion;
-import dao.ordenCompra.OrdenCompra;
-import dao.ordenCompra.Producto;
-import dao.pulverizacion.PulverizacionLabor;
-import dao.recorrida.Recorrida;
-import gui.Messages;
 import api.OrdenPulverizacion;
 import api.OrdenPulverizacionItem;
 import api.StandardResponse;
+import dao.Labor;
+import dao.Poligono;
+import dao.config.Configuracion;
+import dao.ordenCompra.Producto;
+import dao.pulverizacion.CaldoItem;
+import dao.pulverizacion.PulverizacionLabor;
+import dao.utils.PropertyHelper;
+import gui.Messages;
+import gui.OrdenPulverizacionPaneController;
 import javafx.concurrent.Task;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -67,11 +56,10 @@ import utils.DAH;
 import utils.FileHelper;
 import utils.JsonUtil;
 import utils.TarjetaHelper;
-import utils.UnzipUtility;
 
 
 public class CompartirPulverizacionLaborTask extends Task<String> {
-	
+
 	//private static final String GET_RECORRIDAS_BY_ID_URL = "https://www.ursulagis.com/api/recorridas/id/";
 	private static final String MMG_GUI_EVENT_CLOSE_PNG = "/gui/event-close.png";
 	public static final String ZOOM_TO_KEY = "ZOOM_TO";
@@ -83,65 +71,64 @@ public class CompartirPulverizacionLaborTask extends Task<String> {
 	private Label progressBarLabel;
 	private HBox progressContainer;
 
-	
+
 	private PulverizacionLabor pulverizacionLabor =null;
-	
-	
-	public CompartirPulverizacionLaborTask(PulverizacionLabor pulverizacionLabor) {
+	private OrdenPulverizacion ordenPulverizacion;
+
+
+	public CompartirPulverizacionLaborTask(PulverizacionLabor pulverizacionLabor,OrdenPulverizacion ordenPulv) {
 		this.pulverizacionLabor = pulverizacionLabor;
-		
+		this.ordenPulverizacion = ordenPulv;
 		System.out.println("compartiendo PulverizacionLabor "+pulverizacionLabor);
-		System.out.println("items "+pulverizacionLabor.getCaldo().getItems().size());
+		System.out.println("items "+pulverizacionLabor.getItems().size());
 	}
 
 	@Override
 	protected String call()  {
 		this.updateProgress(0, 10);
-		OrdenPulverizacion ordenPulv = constructOrdenPulverizacion(this.pulverizacionLabor);
+		//OrdenPulverizacion ordenPulv = constructOrdenPulverizacion(this.pulverizacionLabor);
+		String ordenUrl = uploadLaborFile(this.pulverizacionLabor);
+		this.ordenPulverizacion.setOrdenShpZipUrl(ordenUrl);
+		this.updateProgress(1, 10);
 		try {
-		// TODO call www.ursulagis.com/api/recorridas/insert/
-		GenericUrl url = new GenericUrl(INSERT_URL);	
-		
-		Gson gson = getGson();
-		
-		System.out.println("convirtirndo PulverizacionLabor a json "+ordenPulv);
-	  	String json_body = gson.toJson(ordenPulv, OrdenPulverizacion.class);
-	  	System.out.println("sending PulverizacionLabor "+ json_body);
-	  	//String document_id = document.getId();
-	  	//String resource_url = "https://api.mendeley.com/documents/" + document_id;
-	  	//GenericUrl gen_url = new GenericUrl(resource_url);
-	  	
-	
-	  	final HttpContent content = new ByteArrayContent("application/json", json_body.getBytes("UTF8") );
+			// TODO call www.ursulagis.com/api/recorridas/insert/
+			GenericUrl url = new GenericUrl(INSERT_URL);	
 
-		//final HttpContent req_content = new JsonHttpContent(new JacksonFactory(), content);
-	  	
+			Gson gson = getGson();
 
-		HttpResponse response = makePostRequest(url,content);
-		InputStream resContent = response.getContent();
-		Reader reader = new InputStreamReader(resContent);
+			System.out.println("convirtirndo PulverizacionLabor a json "+this.ordenPulverizacion);
+			String json_body = gson.toJson(this.ordenPulverizacion, OrdenPulverizacion.class);
+			System.out.println("sending PulverizacionLabor "+ json_body);
 
-		StandardResponse standarResponse =  new Gson().fromJson(reader, StandardResponse.class);
-		System.out.println("standarResponse = "+standarResponse);
-		//StandardResponse standarResponse = response.parseAs(StandardResponse.class);
-		//Recorrida r = new Gson().fromJson((String) resContent.get("data"), Recorrida.class);
-		StandardResponse.StatusResponse status = standarResponse.getStatus();
-		System.out.println("response status = "+status);
-		if(StandardResponse.StatusResponse.SUCCESS.equals(status)) {
-		//com.google.api.client.util.ArrayMap data =(ArrayMap) resContent.get("data");
-			JsonElement data = standarResponse.getData();
-		//Map<String,String> message = (Map<String, String>) resContent.get("data");
-		//System.out.println("message "+message);
-		if(data !=null) {
-			OrdenPulverizacion dbPulverizacionLabor = gson.fromJson(data, OrdenPulverizacion.class);
-			//DAH.save(dbPulverizacionLabor);//merge local recorrida
-		//	Long id = dbRecorrida.getId();
-			String dbUrl = dbPulverizacionLabor.getUrl();
-		//java.math.BigDecimal id = (java.math.BigDecimal) data.get("id");
-		//String prettyresponse = resContent.toPrettyString();
-		//System.out.println("prettyresponse "+prettyresponse);
-	
-		/*
+			final HttpContent content = new ByteArrayContent("application/json", json_body.getBytes("UTF8") );
+
+			this.updateProgress(2, 10);
+			HttpResponse response = makePostRequest(url,content);
+			this.updateProgress(3, 10);
+			InputStream resContent = response.getContent();
+			Reader reader = new InputStreamReader(resContent);
+
+			StandardResponse standarResponse =  new Gson().fromJson(reader, StandardResponse.class);
+			System.out.println("standarResponse = "+standarResponse);
+			//StandardResponse standarResponse = response.parseAs(StandardResponse.class);
+			//Recorrida r = new Gson().fromJson((String) resContent.get("data"), Recorrida.class);
+			StandardResponse.StatusResponse status = standarResponse.getStatus();
+			System.out.println("response status = "+status);
+			if(StandardResponse.StatusResponse.SUCCESS.equals(status)) {
+				//com.google.api.client.util.ArrayMap data =(ArrayMap) resContent.get("data");
+				JsonElement data = standarResponse.getData();
+				//Map<String,String> message = (Map<String, String>) resContent.get("data");
+				//System.out.println("message "+message);
+				if(data !=null) {
+					OrdenPulverizacion dbPulverizacionLabor = gson.fromJson(data, OrdenPulverizacion.class);
+					//DAH.save(dbPulverizacionLabor);//merge local recorrida
+					//	Long id = dbRecorrida.getId();
+					String dbUrl = dbPulverizacionLabor.getUrl();
+					//java.math.BigDecimal id = (java.math.BigDecimal) data.get("id");
+					//String prettyresponse = resContent.toPrettyString();
+					//System.out.println("prettyresponse "+prettyresponse);
+
+					/*
 			prettyresponse {
 		  "status" : "SUCCESS",
 		  "data" : {
@@ -154,43 +141,60 @@ public class CompartirPulverizacionLaborTask extends Task<String> {
 		    "muestras" : [ ]
 		  }
 		}
-		 */
-		//String urlGoto = "https://www.ursulagis.com/api/recorridas/4/";
-			//TODO cambiar esta url por una url mobile que permita hacer la recorrida via web.
-		String urlGoto =dbUrl;// GET_RECORRIDAS_BY_ID_URL+id+"/";
-		return urlGoto;
-		}
-		return "status Success but data null";
-		} else {//status is not Success
-			String message =standarResponse.getMessage();
-			return status+" "+message;
-		}
+					 */
+					//String urlGoto = "https://www.ursulagis.com/api/recorridas/4/";
+					//TODO cambiar esta url por una url mobile que permita hacer la recorrida via web.
+					String urlGoto =dbUrl;// GET_RECORRIDAS_BY_ID_URL+id+"/";
+					this.updateProgress(10, 10);
+					return urlGoto;
+				}
+				return "status Success but data null";
+			} else {//status is not Success
+				String message =standarResponse.getMessage();
+				return status+" "+message;
+			}
 		}catch(Exception e) {
 			e.printStackTrace();
 			return e.getMessage();
 		}
-		
+
 	}
 
-	private OrdenPulverizacion constructOrdenPulverizacion(PulverizacionLabor pl) {
-		OrdenPulverizacion op = new OrdenPulverizacion();
-		op.setDescription(pl.getNombre());
-		Locale loc = new Locale("en", "US");
-		DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.DEFAULT, loc);
-		op.setFecha(dateFormat.format(pl.getFecha()));		
-		op.setSuperficie(Messages.getNumberFormat().format(pl.getCantidadLabor()));
-		pl.getCaldo().getItems().forEach(item->{
-			OrdenPulverizacionItem i = new OrdenPulverizacionItem();
-			i.setDosisHa(item.getDosisHa());
-			i.setProducto(item.getProducto());
-			op.getItems().add(i);
-		});
-		//TODO obtener el contorno de la pulverizacion
-		op.setPoligonoString("{{-33.97004901,-61.97283410}{-33.96899577,-61.97077580}{-33.96843874,-61.97000910}{-33.96754022,-61.96826020}{-33.96388561,-61.96149850}{-33.96288863,-61.95616530}{-33.96700029,-61.95294330}{-33.96704333,-61.95303640}{-33.96700184,-61.95294300}{-33.97246661,-61.94866120}{-33.98082214,-61.96440070}{-33.97551342,-61.96855690}{-33.97550620,-61.96854050}{-33.97551187,-61.96855730}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283410}}");
-		//TODO subir la pulverizacion zipeada a la nube y agregar la url
-		String url = uploadLaborFile(pl);
-		op.setOrdenShpZipUrl(url);
-		return op;
+	public static OrdenPulverizacion constructOrdenPulverizacion(PulverizacionLabor pl) {	
+				OrdenPulverizacion op = new OrdenPulverizacion();
+				op.setNombre(pl.getNombre());
+				Locale loc = new Locale("en", "US");
+				DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.DEFAULT, loc);
+				op.setFecha(dateFormat.format(pl.getFecha()));		
+				op.setSuperficie(Messages.getNumberFormat().format(pl.getCantidadLabor()));
+				for(CaldoItem item:pl.getItems()) {//.forEach(item->{
+					OrdenPulverizacionItem i = new OrdenPulverizacionItem();
+					i.setDosisHa(item.getDosisHa());
+					i.setProducto(item.getProducto());
+					i.setCantidad(i.getDosisHa()*pl.getCantidadInsumo());
+					//System.out.println("seteando cantidad item "+i.getCantidad());
+					i.setObservaciones(item.getObservaciones());
+					//System.out.println("seteando observaciones item "+item.getObservaciones());
+
+					op.getItems().add(i);
+				}//);
+
+				Poligono contorno = pl.getContorno();
+				if(contorno!=null) {
+					op.setPoligonoString(contorno.getPositionsString());
+				}
+				//FIXME remover esta linea cuando este labor.getContorno()
+				//op.setPoligonoString("{{-33.97004901,-61.97283410}{-33.96899577,-61.97077580}{-33.96843874,-61.97000910}{-33.96754022,-61.96826020}{-33.96388561,-61.96149850}{-33.96288863,-61.95616530}{-33.96700029,-61.95294330}{-33.96704333,-61.95303640}{-33.96700184,-61.95294300}{-33.97246661,-61.94866120}{-33.98082214,-61.96440070}{-33.97551342,-61.96855690}{-33.97550620,-61.96854050}{-33.97551187,-61.96855730}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283410}}");
+				
+			
+				Optional<OrdenPulverizacion> retOp = OrdenPulverizacionPaneController.config(op);
+	
+
+		if(retOp.isPresent()) {
+			op=retOp.get();
+			return op;
+		} else {return null;}
+		
 	}
 
 	/**
@@ -217,30 +221,30 @@ public class CompartirPulverizacionLaborTask extends Task<String> {
 				des serializando {"nombre":"Labor de Fertilizacion","id":8553} type class models.OrdenDeCompra.Producto
 				 * */
 				String productoNombre = json.getAsJsonObject().get("nombre").getAsString();
-			try {
-				Producto p = DAH.findProducto(productoNombre);
-				return p;
-			}catch(Exception e) {
-				e.printStackTrace();
-				return null;
-			}
-//				if(p==null) {
-//					p=new Producto(productoNombre);
-//					DAH.save(p);
-//				}
-				
+				try {
+					Producto p = DAH.findProducto(productoNombre);
+					return p;
+				}catch(Exception e) {
+					e.printStackTrace();
+					return null;
+				}
+				//				if(p==null) {
+				//					p=new Producto(productoNombre);
+				//					DAH.save(p);
+				//				}
+
 
 			}
-			
+
 		};
 	}
 	public static Gson getGson() {
 		return new GsonBuilder()
 				.registerTypeAdapter(Producto.class, getProductoDeserializer())
-				  .addSerializationExclusionStrategy(getJSonStrategy())
-				  .create();
+				.addSerializationExclusionStrategy(getJSonStrategy())
+				.create();
 	}
-	
+
 	private static ExclusionStrategy getJSonStrategy() {
 		ExclusionStrategy strategy = new ExclusionStrategy() {
 			@Override
@@ -257,7 +261,7 @@ public class CompartirPulverizacionLaborTask extends Task<String> {
 		return strategy;
 	}	
 
-	
+
 	/**
 	 * metodo que ejecuta un request
 	 * @param url
@@ -289,7 +293,7 @@ public class CompartirPulverizacionLaborTask extends Task<String> {
 		}	
 		return response;
 	}
-	
+
 	/**
 	 * metodo que ejecuta un request
 	 * @param url
@@ -324,7 +328,7 @@ public class CompartirPulverizacionLaborTask extends Task<String> {
 		}	
 		return response;
 	}
-	
+
 
 	public void installProgressBar(Pane progressBox) {
 		this.progressPane= progressBox;
@@ -355,5 +359,5 @@ public class CompartirPulverizacionLaborTask extends Task<String> {
 	public void uninstallProgressBar() {		
 		progressPane.getChildren().remove(progressContainer);
 	}
-	
+
 }

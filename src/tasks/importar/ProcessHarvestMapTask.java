@@ -31,6 +31,7 @@ import com.vividsolutions.jts.util.GeometricShapeFactory;
 
 import dao.Labor;
 import dao.LaborItem;
+import dao.Poligono;
 import dao.config.Configuracion;
 import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaItem;
@@ -41,6 +42,7 @@ import gui.Messages;
 import javafx.geometry.Point2D;
 import tasks.ProcessMapTask;
 import tasks.crear.CrearCosechaMapTask;
+import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
 public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLabor> {
@@ -362,27 +364,19 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			//itemsToShow = 
 			resumirGeometrias();
 			//labor.constructClasificador();//los items cambiaron
-		} else{
-			SimpleFeatureIterator it = labor.outCollection.features();
-			while(it.hasNext()){
-				SimpleFeature f=it.next();
-				//	itemsToShow.add(labor.constructFeatureContainerStandar(f,false));
-			}
-			it.close();
 		}
+		
+	
 
-		//TODO resumir geometrias pero en base a la altimetria y dibujar los contornos en otra capa
-
-		//XXX ojo! si son muchos esto me puede tomar toda la memoria.
-		//System.out.println("mostrando la cosecha con "+itemsToShow.size()+" items");
-		//runLater(itemsToShow);
-		runLater(this.getItemsList());
-		//canvasRunLater();
+		//TODO resumir geometrias pero en base a la altimetria y dibujar los contornos en otra capa		
+		runLater(this.getItemsList());		
 
 		updateProgress(0, featureCount);
 		//		System.out.println("min: (" + minX + "," + minY + ") max: (" + maxX
 		//				+ "," + maxY + ")");
 	}
+
+	
 
 	//	private Geometry crsTransform(Geometry point)  {
 	//		try {

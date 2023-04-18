@@ -63,19 +63,21 @@ public class Cultivo implements Comparable<Cultivo>{
 	
 	private Boolean estival = true;
 	
-	private Double tasaCrecimientoPendiente=new Double(0);
-	private Double tasaCrecimientoOrigen=new Double(0);
+//	private Double tasaCrecimientoPendiente=new Double(0);
+//	private Double tasaCrecimientoOrigen=new Double(0);
 	
-	public static Map<String,Cultivo> cultivos = new HashMap<String,Cultivo>();
-	static{				//String _nombre, Double _absP, Double _extP,Double rinde
-		cultivos.put(MAIZ, getMaiz());
-		cultivos.put(TRIGO,getTrigo());
-		cultivos.put(SOJA, getSoja());
-		cultivos.put(CEBADA,getCebada());
-		cultivos.put(SORGO,getSorgo());
-		cultivos.put(GIRASOL,getGirasol());
+
+	public static Map<String,Cultivo> getCultivosDefault(){
+	 Map<String,Cultivo> cultivos = new HashMap<String,Cultivo>();
+						//String _nombre, Double _absP, Double _extP,Double rinde
+			cultivos.put(MAIZ, getMaiz());
+			cultivos.put(TRIGO,getTrigo());
+			cultivos.put(SOJA, getSoja());
+			cultivos.put(CEBADA,getCebada());
+			cultivos.put(SORGO,getSorgo());
+			cultivos.put(GIRASOL,getGirasol());
+		return cultivos;
 	}
-	
 	public Cultivo() {
 		aporteMO=new Double(0);
 		estival = true;

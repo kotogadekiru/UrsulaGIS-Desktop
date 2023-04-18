@@ -87,7 +87,7 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 				System.out.println("inicializando las variables de la nueva fertilizacion con los de la primera fert a unir");
 				labor.fertilizanteProperty.setValue(fert.fertilizanteProperty.getValue());
 				labor.setPrecioInsumo(fert.getPrecioInsumo());
-				labor.fechaProperty.setValue(fert.fechaProperty.getValue());
+				labor.setFecha(fert.getFecha());
 				labor.setPrecioLabor(fert.getPrecioLabor());
 			}
 //			FeatureReader<SimpleFeatureType, SimpleFeature> reader = fert.outCollection.reader();

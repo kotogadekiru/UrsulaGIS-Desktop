@@ -28,10 +28,10 @@ public class CrearPulverizacionMapTask extends ProcessMapTask<PulverizacionItem,
 		super(labor);
 		amount=_amount;
 		poli=_poli;
-
 	}
 
 	public void doProcess() throws IOException {
+		labor.setContorno(poli);
 		PulverizacionItem ci = new PulverizacionItem();
 		ci.setDosis(amount);
 		labor.setPropiedadesLabor(ci);

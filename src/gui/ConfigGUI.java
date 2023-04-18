@@ -1,7 +1,6 @@
 package gui;
 
 import java.awt.image.BufferedImage;
-import java.text.DateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
@@ -16,10 +15,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import javax.persistence.EntityTransaction;
-
-import org.controlsfx.control.textfield.CustomTextField;
 
 import com.google.gson.Gson;
 import com.google.zxing.BarcodeFormat;
@@ -43,12 +38,9 @@ import dao.config.Semilla;
 import dao.cosecha.CosechaLabor;
 import dao.ordenCompra.OrdenCompra;
 import dao.ordenCompra.OrdenCompraItem;
-import dao.pulverizacion.Caldo;
-import dao.pulverizacion.CaldoItem;
 import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
 import gov.nasa.worldwind.geom.Position;
-import gui.utils.DateConverter;
 import gui.utils.DoubleTableColumn;
 import gui.utils.SmartTableView;
 import javafx.application.Platform;
@@ -61,6 +53,7 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Label;
@@ -71,7 +64,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -82,7 +74,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import tasks.CotizarOdenDeCompraOnlineTask;
-import tasks.procesar.ExportarPrescripcionSiembraTask;
 import utils.DAH;
 import utils.ExcelHelper;
 
@@ -174,16 +165,15 @@ public class ConfigGUI {
 							DAH.getAllCultivos()
 							);
 
-			//	SmartTableView<Cultivo> table = new SmartTableView<Cultivo>(dataLotes);//,dataLotes);
 			SmartTableView<Cultivo> table = new SmartTableView<Cultivo>(dataLotes,
-					Arrays.asList("Id"),
+					Arrays.asList("Id","TasaCrecimientoPendiente","TasaCrecimientoOrigen"),
 					Arrays.asList("Nombre","Estival",
 							"AbsN","ExtN",
 							"AbsP","ExtP",
 							"AbsK","ExtK",
 							"AbsS","ExtS",
-							"AporteMO","RindeEsperado",
-							"TasaCrecimientoPendiente","TasaCrecimientoOrigen")
+							"AporteMO","RindeEsperado"
+							)
 					);
 			table.setEditable(true);
 			table.setOnDoubleClick(()->new Cultivo(Messages.getString("JFXMain.372"))); //$NON-NLS-1$
@@ -215,7 +205,10 @@ public class ConfigGUI {
 							DAH.getAllFertilizantes()
 							);
 
-			SmartTableView<Fertilizante> table = new SmartTableView<Fertilizante>(dataLotes);//,dataLotes);
+			SmartTableView<Fertilizante> table = new SmartTableView<Fertilizante>(dataLotes,
+					Arrays.asList("Id"),//rejected
+					Arrays.asList("Nombre","PorcN","PorcP","PorcK","PorcS")//order
+					);//,dataLotes);
 			table.setEditable(true);
 			table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
 			table.setOnDoubleClick(()->new Fertilizante(Messages.getString("JFXMain.374"))); //$NON-NLS-1$
@@ -248,23 +241,40 @@ public class ConfigGUI {
 
 	public static void doConfigAgroquimicos() {
 		Platform.runLater(()->{
-
-			//			ArrayList<Fertilizante> ciLista = new ArrayList<Fertilizante>();
-			//			System.out.println("Comenzando a cargar la los datos de la tabla");
-			//
-			//			ciLista.addAll(Fertilizante.fertilizantes.values());
-			//			final ObservableList<Fertilizante> dataLotes =
-			//					FXCollections.observableArrayList(
-			//							ciLista
-			//							);
-
 			final ObservableList<Agroquimico> dataLotes =
 					FXCollections.observableArrayList(
 							DAH.getAllAgroquimicos()
 							);
 
-			SmartTableView<Agroquimico> table = new SmartTableView<Agroquimico>(dataLotes);//,dataLotes);
+			SmartTableView<Agroquimico> table = new SmartTableView<Agroquimico>(dataLotes,
+					Arrays.asList("Id"),     //rejected
+					Arrays.asList("Nombre"));//order
 			table.setEditable(true);
+			table.getSelectionModel().setSelectionMode(
+					SelectionMode.MULTIPLE
+					);
+			table.setEliminarAction(list->{
+				System.out.println("eliminadno agroquimicos "+list);
+				List<Object> toRemove = new ArrayList<Object>();
+				System.out.println("agregando a toRemove "+list);
+				toRemove.addAll(list);
+			//JFXMain.executorPool.execute(()->{
+				try {
+					DAH.beginTransaction();
+
+					
+					System.out.println("items en toRemove "+toRemove);
+					DAH.removeAll(toRemove);
+					DAH.commitTransaction();
+					System.out.println("termine de eliminar "+toRemove);
+				}catch(Exception e) {					
+					System.out.println("no se pudo borrar");
+					e.printStackTrace();
+				}
+			//	});
+			}
+			);
+	
 
 			table.setOnDoubleClick(()->new Agroquimico(Messages.getString("JFXMain.376"))); //$NON-NLS-1$
 
@@ -316,8 +326,8 @@ public class ConfigGUI {
 					Arrays.asList("Activo","Nombre","Lote","Area","PositionsString")
 					);
 			table.setEditable(true);
-			table.setEliminarAction(list->
-				JFXMain.executorPool.execute(()->{
+			table.setEliminarAction(list->{
+				//JFXMain.executorPool.execute(()->{
 				try {
 				//decidir que hacer con los ndvi. borralos o dejarlos huerfanos
 				DAH.beginTransaction();
@@ -337,10 +347,12 @@ public class ConfigGUI {
 				DAH.removeAll(toRemove);
 				DAH.commitTransaction();
 				}catch(Exception e) {
-					System.out.println("no se pudo borrar");
 					
+					System.out.println("no se pudo borrar");
+					e.printStackTrace();					
 				}
-			})
+			//});
+				}
 			);
 			table.getSelectionModel().setSelectionMode(
 					SelectionMode.MULTIPLE
@@ -517,8 +529,12 @@ public class ConfigGUI {
 				Object value = map.get(k);
 				if(String.class.isAssignableFrom(value.getClass())) {				
 					Double dValue = new Double(0);
-					try { dValue=new Double((String)value);
-					}catch(Exception e) {System.err.println("error tratando de parsear \""+value+"\" reemplazo por 0");}
+					try { 
+						dValue=Messages.getNumberFormat().parse((String)value).doubleValue();
+						//dValue=new Double((String)value);
+					}catch(Exception e) {
+						System.err.println("error tratando de parsear \""+value+"\" reemplazo por 0");
+						}
 					props.put(k, dValue);//ojo number format exception
 				} else if(Number.class.isAssignableFrom(value.getClass())) {
 					props.put(k, (Number)value);
@@ -589,14 +605,8 @@ public class ConfigGUI {
 		tablaStage.setTitle(Messages.getString("Recorrida.asignarValores")); //$NON-NLS-1$
 		tablaStage.setScene(scene);
 
-		//			tablaStage.onHiddenProperty().addListener((o,old,n)->{
-		//				this.getLayerPanel().update(this.getWwd());
-		//				
-		//				//getWwd().redraw();
-		//			});
-
 		tablaStage.showAndWait();	 
-		//System.out.println("hidding tablastage");
+
 		//Al terminar de editar recoger la informacion y guardar los cambios
 		for(Map<String,Object> ma : data) {
 			String k = (String) ma.get("Nombre");
@@ -891,7 +901,10 @@ public class ConfigGUI {
 							DAH.getAllNdvi()
 							);
 
-			SmartTableView<Ndvi> table = new SmartTableView<Ndvi>(data);
+			SmartTableView<Ndvi> table = new SmartTableView<Ndvi>(data,
+					Arrays.asList("Id","PixelArea","FileName"),
+					Arrays.asList("Activo","Contorno","Fecha","Nombre","MeanNdvi","PorcNubes")
+					);
 			table.getSelectionModel().setSelectionMode(
 					SelectionMode.MULTIPLE
 					);
@@ -959,7 +972,9 @@ public class ConfigGUI {
 				data.add(new Establecimiento());
 			}
 
-			SmartTableView<Establecimiento> table = new SmartTableView<Establecimiento>(data);//,data);
+			SmartTableView<Establecimiento> table = new SmartTableView<Establecimiento>(data,
+					Arrays.asList("Id"),     //rejected
+					Arrays.asList("Nombre","Contorno","Empresa","SuperficieTotal","SuperficieAgricola","SuperficieGanadera","SuperficieDesperdicio"));//order
 			table.setEditable(true);
 			table.setOnDoubleClick(()->new Establecimiento(Messages.getString("JFXMain.386"))); //$NON-NLS-1$
 
@@ -1033,7 +1048,9 @@ public class ConfigGUI {
 			if(data.size()<1){
 				data.add(new Empresa(Messages.getString("JFXMain.390"))); //$NON-NLS-1$
 			}
-			SmartTableView<Empresa> table = new SmartTableView<Empresa>(data);//,data);
+			SmartTableView<Empresa> table = new SmartTableView<Empresa>(data,
+					Arrays.asList("Id"),     //rejected
+					Arrays.asList("Nombre"));//order
 			table.setEditable(true);
 			table.setOnDoubleClick(()->new Empresa(Messages.getString("JFXMain.391"))); //$NON-NLS-1$
 
@@ -1057,7 +1074,10 @@ public class ConfigGUI {
 			final ObservableList<Semilla> dataLotes =
 					FXCollections.observableArrayList(	DAH.getAllSemillas());
 			//System.out.println("mostrando la tabla de las semillas con "+dataLotes);
-			SmartTableView<Semilla> table = new SmartTableView<Semilla>(dataLotes);//,dataLotes);
+			SmartTableView<Semilla> table = new SmartTableView<Semilla>(dataLotes,
+					Arrays.asList("Id"),     //rejected
+					Arrays.asList("Nombre","Cultivo","PesoDeMill","PG"));//order
+	
 			table.setEditable(true);
 			table.setOnDoubleClick(()->new Semilla(Messages.getString("JFXMain.393"),DAH.getAllCultivos().get(0))); //$NON-NLS-1$
 			Scene scene = new Scene(table, 800, 600);
@@ -1070,95 +1090,6 @@ public class ConfigGUI {
 
 	}
 	
-	public static void doConfigCaldos() {
-		Platform.runLater(()->{
-
-			//ArrayList<Semilla> ciLista = new ArrayList<Semilla>();
-			//System.out.println("Comenzando a cargar la los datos de la tabla");
-
-			//ciLista.addAll(Semilla.semillas.values());
-			final ObservableList<Caldo> dataLotes =
-					FXCollections.observableArrayList(	DAH.getAllCaldos());
-			//System.out.println("mostrando la tabla de las semillas con "+dataLotes);
-			SmartTableView<Caldo> table = new SmartTableView<Caldo>(dataLotes,Arrays.asList("Id"),                 //rejected
-					Arrays.asList("Nombre","Descripcion"));//order
-			table.setEditable(true);
-			table.setOnDoubleClick(()->doConfigCaldo(new Caldo())); //$NON-NLS-1$
-			table.setOnShowClick(caldo->doConfigCaldo(caldo));
-			Scene scene = new Scene(table, 800, 600);
-			Stage tablaStage = new Stage();
-			
-			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("JFXMain.Caldo")); //$NON-NLS-1$
-			tablaStage.setScene(scene);
-			tablaStage.show();	 
-		});
-
-	}
-	
-	public static Caldo doConfigCaldo(Caldo ret) {
-
-		final ObservableList<CaldoItem> data =
-				FXCollections.observableArrayList(
-						ret.getItems()
-						);
-
-		SmartTableView<CaldoItem> table = new SmartTableView<CaldoItem>(data,
-				Arrays.asList("Id"),//rejected
-				Arrays.asList("Producto","DosisHa")//order
-				);
-		table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
-		table.setEliminarAction(
-				list->{											
-					list.stream().forEach(i->{
-						i.getCaldo().getItems().remove(i);	
-					});
-				}
-				);
-		table.setEditable(true);
-		table.setOnDoubleClick(()->{
-			CaldoItem i = new CaldoItem();
-			ret.getItems().add(i);
-			i.setCaldo(ret);
-			return i;
-		}); //$NON-NLS-1$
-
-		VBox v=new VBox();
-		TextField nombreTF = new TextField();
-		nombreTF.setText(ret.getNombre());
-		nombreTF.textProperty().addListener((obj,old,n)->{
-			ret.setNombre(n);
-		});
-		TextField descripcionTF = new TextField();
-		descripcionTF.setText(ret.getDescripcion());
-		descripcionTF.textProperty().addListener((obj,old,n)->{
-			ret.setDescripcion(n);
-		});
-		v.getChildren().add(nombreTF);
-		v.getChildren().add(descripcionTF);
-		v.getChildren().add(table);
-	
-		Button guardarB = new Button(Messages.getString("JFXMain.saveAction"));//TODO traducir
-		HBox h = new HBox();
-		h.getChildren().addAll(guardarB);
-
-		v.getChildren().add(h);
-		Scene scene = new Scene(v, 800, 600);
-		Stage tablaStage = new Stage();
-		tablaStage.getIcons().add(new Image(JFXMain.ICON));
-		tablaStage.setTitle(Messages.getString("JFXMain.Caldo")); //$NON-NLS-1$
-		tablaStage.setScene(scene);	
-		
-		guardarB.setOnAction(actionEvent->{
-			//System.out.println("implementar GuardarOrden de compra action");
-			//DAH.save(ret);
-			tablaStage.close();
-		});
-		tablaStage.show();	 
-		return ret;		
-	}
-	
-
 	/**
 	 * Funcion util para vincular un metodo con un item en un menu
 	 * @param name nombre para mostrar en el menu

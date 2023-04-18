@@ -1,12 +1,23 @@
 package utils;
 
+import static org.eclipse.persistence.config.PersistenceUnitProperties.CREATE_OR_EXTEND;
+import static org.eclipse.persistence.config.PersistenceUnitProperties.DDL_GENERATION;
+import static org.eclipse.persistence.config.PersistenceUnitProperties.DDL_GENERATION_MODE;
+import static org.eclipse.persistence.config.PersistenceUnitProperties.ECLIPSELINK_PERSISTENCE_UNITS;
+import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_DRIVER;
+import static org.eclipse.persistence.config.PersistenceUnitProperties.JDBC_URL;
+import static org.eclipse.persistence.config.PersistenceUnitProperties.TARGET_DATABASE;
+import static org.eclipse.persistence.config.PersistenceUnitProperties.TARGET_SERVER;
+import static org.eclipse.persistence.config.PersistenceUnitProperties.TRANSACTION_TYPE;
+
 import java.io.File;
 import java.time.LocalDate;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
@@ -16,8 +27,6 @@ import javax.persistence.TypedQuery;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.eclipse.persistence.config.TargetServer;
-
-import static org.eclipse.persistence.config.PersistenceUnitProperties.*;
 
 import dao.Labor;
 import dao.Ndvi;
@@ -36,10 +45,7 @@ import dao.cosecha.CosechaLabor;
 import dao.ordenCompra.OrdenCompra;
 import dao.ordenCompra.Producto;
 import dao.ordenCompra.ProductoLabor;
-import dao.pulverizacion.Caldo;
 import dao.recorrida.Recorrida;
-import gui.JFXMain;
-import javafx.util.Callback;
 
 public class DAH {
 	private static final String APPDATA = "APPDATA";
@@ -209,7 +215,11 @@ public class DAH {
 
 
 	public static void save(Object entidad) {	
-
+		if (entidad.getClass().getAnnotation(Entity.class) == null) {	
+			System.out.println("no se guardan las clases que no son entidades "+entidad);
+			return;
+		}
+		
 		EntityManager em = em();
 		if(DAH.transaction == null){
 			//	DAH.transaction = em.getTransaction();
@@ -276,11 +286,8 @@ public class DAH {
 	 * @return el producto existente en la base de datos o crea uno nuevo con ese nombre y lo devuelve
 	 */
 	public static ProductoLabor getProductoLabor(String laborName) {	
-		//		EntityManager em = em();
-		//		TypedQuery<Producto> query =
-		//				em.createQuery("SELECT p FROM Producto p where p.nombre like '"+cultivoName+"'", Producto.class);
 		Number count = (Number)em().createNamedQuery(ProductoLabor.COUNT_ALL).getSingleResult();
-		System.out.print("hay "+count+" productos en la base de datos");
+		//System.out.print("hay "+count+" productos en la base de datos");
 		if(count.intValue() ==0) {
 			List<ProductoLabor> results = getAllProductosLabores(DAH.em());//getAll crea los cultivos default
 		}
@@ -306,8 +313,9 @@ public class DAH {
 		List<ProductoLabor> results = query.getResultList();
 
 		if(results.size()==0){
-			ProductoLabor.laboresDefault.values().forEach((d)->DAH.save(d));
-			results.addAll(ProductoLabor.laboresDefault.values());
+			ProductoLabor.laboresDefault.values().forEach((d)->{DAH.save(d);
+			results.add(d);
+			});			
 		}
 		return results;
 	}
@@ -382,9 +390,6 @@ public class DAH {
 	 * @return el producto existente en la base de datos o crea uno nuevo con ese nombre y lo devuelve
 	 */
 	public static Cultivo getCultivo(String cultivoName) {	
-		//		EntityManager em = em();
-		//		TypedQuery<Producto> query =
-		//				em.createQuery("SELECT p FROM Producto p where p.nombre like '"+cultivoName+"'", Producto.class);
 		Number count = (Number)em().createNamedQuery(Cultivo.COUNT_ALL).getSingleResult();
 		//System.out.println("hay "+count+" cultivos en la base de datos");
 
@@ -400,10 +405,6 @@ public class DAH {
 			result = query.getResultList().get(0);//getFirstResult();
 			System.out.println("buscando "+cultivoName+" encontre "+result);
 		}  
-		//		else {
-		//			result = new Cultivo(cultivoName);
-		//			DAH.save(result);
-		//		}
 		return result;
 	}
 
@@ -411,9 +412,10 @@ public class DAH {
 		TypedQuery<Cultivo> query = em.createNamedQuery(Cultivo.FIND_ALL, Cultivo.class);
 		List<Cultivo> results = query.getResultList();
 		if(results.size()==0){
-			Cultivo.cultivos.values().forEach((d)->DAH.save(d));
-			results = query.getResultList();
-			//results.addAll(Cultivo.cultivos.values());
+			Cultivo.getCultivosDefault().values().forEach((d)->{				
+				DAH.save(d);
+				results.add(d);
+			});
 		} else {
 			results.forEach(cult->{
 				//Cultivo.cultivos.s
@@ -427,7 +429,6 @@ public class DAH {
 	public static List<Poligono> getAllPoligonos() {
 		TypedQuery<Poligono> query = em().createNamedQuery(Poligono.FIND_ALL, Poligono.class);
 		List<Poligono> results = query.getResultList();
-		//  closeEm();
 		return results;
 	}
 
@@ -435,7 +436,6 @@ public class DAH {
 		TypedQuery<Ndvi> query =
 				em().createNamedQuery(Ndvi.FIND_ALL, Ndvi.class);
 		List<Ndvi> results = query.getResultList();
-		//  closeEm();
 		return results;
 	}
 
@@ -453,17 +453,14 @@ public class DAH {
 		TypedQuery<Ndvi> query =
 				em().createNamedQuery(Ndvi.FIND_BY_CONTORNO, Ndvi.class);
 		query.setParameter("contorno", contorno);
-	//	query.setParameter("date", assetDate);
 		List<Ndvi> results = query.getResultList();
-		//  closeEm();
 		return results;
 	}
-	
+
 	public static List<Recorrida> getAllRecorridas() {
 		TypedQuery<Recorrida> query =
 				em().createNamedQuery(Recorrida.FIND_ALL, Recorrida.class);
 		List<Recorrida> results = query.getResultList();
-		//  closeEm();
 		return results;
 	}
 
@@ -471,7 +468,6 @@ public class DAH {
 		TypedQuery<Poligono> query =
 				em().createNamedQuery(Poligono.FIND_ACTIVOS, Poligono.class);
 		List<Poligono> results = query.getResultList();
-		//  closeEm();
 		return results;
 	}
 
@@ -497,41 +493,33 @@ public class DAH {
 		TypedQuery<Empresa> query = em().createNamedQuery(
 				Empresa.FIND_ALL, Empresa.class);
 		List<Empresa> results = query.getResultList();
-
 		return results;
 	}
-
-
 
 	public static List<Lote> getAllLotes() {
 		TypedQuery<Lote> query = em().createNamedQuery(
 				Lote.FIND_ALL, Lote.class);
 		List<Lote> results = query.getResultList();
-
 		return results;
 	}
-
-
 
 	public static List<Campania> getAllCampanias() {
 		TypedQuery<Campania> query = em().createNamedQuery(
 				Campania.FIND_ALL, Campania.class);
 		List<Campania> results = query.getResultList();
-
 		return results;
 	}
-
-
 
 	public static List<Fertilizante> getAllFertilizantes() {
 		TypedQuery<Fertilizante> query = em().createNamedQuery(
 				Fertilizante.FIND_ALL, Fertilizante.class);
 		List<Fertilizante> results = query.getResultList();
 		if(results.size()==0){
-			Fertilizante.fertilizantes.values().forEach((d)->DAH.save(d));
-			results.addAll(Fertilizante.fertilizantes.values());
+			Fertilizante.getFertilizantesDefault().values().forEach((d)->{
+				DAH.save(d);
+				results.add(d);
+			});
 		}
-
 		return results;
 	}
 
@@ -540,13 +528,20 @@ public class DAH {
 				Agroquimico.FIND_ALL, Agroquimico.class);
 		List<Agroquimico> results = query.getResultList();
 		if(results.size()==0){
-			Agroquimico.agroquimicos.values().forEach((d)->{
+			results = new ArrayList<Agroquimico>();
+			System.out.println("guardando los agroquimicos default");
+			DAH.beginTransaction();
+			for(Agroquimico d:Agroquimico.getAgroquimicosDefault().values()) {
 				DAH.save(d);	
-			});
-			results = query.getResultList();
+				results.add(d);
+			}
+			DAH.commitTransaction();
 		}
+		
+//		List<Agroquimico> results = new ArrayList<Agroquimico>();
+//		results.addAll(Agroquimico.getAgroquimicosDefault().values());
 
-		return results;
+		return  results;
 	}
 
 
@@ -555,13 +550,11 @@ public class DAH {
 				Semilla.FIND_ALL, Semilla.class);
 		List<Semilla> results = query.getResultList();
 		if(results.size()==0){
-			Semilla.semillas.values().forEach((d)->{
-				System.out.println("guardando semilla default "+d);
-				//	DAH.save(d.getCultivo());	
+			Semilla.getSemillasDefault().values().forEach((d)->{
+				System.out.println("guardando semilla default "+d);					
 				DAH.save(d);
+				results.add(d);
 			});
-			results = query.getResultList();
-			//results.addAll(Fertilizante.fertilizantes.values());
 		}
 
 		return results;
@@ -577,19 +570,9 @@ public class DAH {
 	}
 
 	public static List<OrdenCompra> getAllOrdenesCompra() {
-
-		@SuppressWarnings("rawtypes")
 		TypedQuery<OrdenCompra> query = em().createNamedQuery(
 				OrdenCompra.FIND_ALL, OrdenCompra.class);
-		@SuppressWarnings("unchecked")
 		List<OrdenCompra> results = (List<OrdenCompra> ) query.getResultList();
-		return results;
-	}
-
-	public static  List<Caldo> getAllCaldos() {
-		TypedQuery<Caldo> query = em().createNamedQuery(
-				Caldo.FIND_ALL, Caldo.class);
-		List<Caldo> results = (List<Caldo> ) query.getResultList();
 		return results;
 	}
 
@@ -606,6 +589,18 @@ public class DAH {
 		query.setParameter("name", productoNombre);
 		Producto results = query.getSingleResult();
 		return results;		
+	}
+
+	public static Semilla getSemilla(String nombre) {
+		TypedQuery<Semilla> query = em().createNamedQuery(
+				Semilla.FIND_NAME, Semilla.class);
+		query.setParameter("name", nombre);
+		Semilla result = null;
+		if(query.getResultList().size()>0){
+			result = query.getResultList().get(0);//getFirstResult();
+			System.out.println("buscando "+nombre+" encontre "+result);
+		}  
+		return result;	
 	}
 
 	//	public static void main(String[] args) throws Exception {

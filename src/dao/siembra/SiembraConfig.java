@@ -1,15 +1,7 @@
 package dao.siembra;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import dao.LaborConfig;
 import dao.config.Configuracion;
 import dao.cosecha.CosechaConfig;
-import dao.utils.PropertyHelper;
-import gui.Messages;
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 public class SiembraConfig extends CosechaConfig {
@@ -45,11 +37,4 @@ public class SiembraConfig extends CosechaConfig {
 	}
 
 	public SimpleObjectProperty<SiembraConfig.Unidad> dosisUnitProperty() { return dosisUnitProperty;}
-
-	//	public void save(){
-	//		config.save();
-	//	}
-
-
-
 }

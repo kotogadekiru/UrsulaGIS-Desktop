@@ -17,13 +17,11 @@ public class DateConverter extends StringConverter<LocalDate>
 	// The Date Time Converter
 	private DateTimeFormatter dtFormatter;
 
-	public DateConverter() 
-	{
+	public DateConverter() {
 		dtFormatter = DateTimeFormatter.ofPattern(pattern);
 	}
 
-	public DateConverter(String pattern) 
-	{
+	public DateConverter(String pattern) {
 		this.pattern = pattern;
 		dtFormatter = DateTimeFormatter.ofPattern(pattern);
 	}

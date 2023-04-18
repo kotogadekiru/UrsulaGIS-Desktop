@@ -88,8 +88,8 @@ public class CosechaConfig extends LaborConfig{
 		correccionFlowToRindeProperty = new SimpleBooleanProperty(
 				"true".equals(config.getPropertyOrDefault(CORRECCION_FLOW_TO_RINDE,"false")));
 		correccionFlowToRindeProperty
-		.addListener((obs,bool1,bool2)->{
-			config.setProperty(CORRECCION_FLOW_TO_RINDE, bool2.toString());
+			.addListener((obs,bool1,bool2)->{
+				config.setProperty(CORRECCION_FLOW_TO_RINDE, bool2.toString());
 		});	
 		 
 		}catch(Exception e){

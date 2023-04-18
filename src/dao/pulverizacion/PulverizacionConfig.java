@@ -12,13 +12,6 @@ public class PulverizacionConfig extends CosechaConfig {
 	public PulverizacionConfig(){
 	super();
 	//config = Configuracion.getInstance();//levanto el archivo de propiedades default pero puedo guardarlo en otro archivo seteando el fileURL
-	}
-	
-	
-//	public void save(){
-//		config.save();
-//	}
-
-
+	}	
 	
 }

@@ -39,6 +39,7 @@ import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
 import javafx.geometry.Point2D;
 import tasks.ProcessMapTask;
+import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
 public class CrearCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabor> {
@@ -53,6 +54,7 @@ public class CrearCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 	}
 
 	public void doProcess() throws IOException {
+		labor.setContorno(GeometryHelper.unirPoligonos(polis));
 		for(Poligono poli : polis) {
 		CosechaItem ci = new CosechaItem();
 		ci.setRindeTnHa(rinde);

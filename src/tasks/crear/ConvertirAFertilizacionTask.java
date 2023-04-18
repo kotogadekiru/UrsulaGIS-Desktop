@@ -48,6 +48,8 @@ public class ConvertirAFertilizacionTask extends ProcessMapTask<FertilizacionIte
 	}
 
 	public void doProcess() throws IOException {
+		labor.setContorno(cosecha.getContorno());
+		
 		//Semilla semilla = labor.getSemilla();
 		//System.out.println("semilla es "+semilla);
 		//double entresurco = labor.getEntreSurco();

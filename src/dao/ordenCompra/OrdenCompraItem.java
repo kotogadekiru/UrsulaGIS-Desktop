@@ -37,7 +37,7 @@ public class OrdenCompraItem {
 	@Exclude
 	private OrdenCompra ordenCompra =null;
 	
-	@ManyToOne(cascade= {CascadeType.DETACH})
+	@ManyToOne//(cascade= {CascadeType.DETACH})
 	private Producto producto =null;
 	
 	private Double cantidad = 0.0;
