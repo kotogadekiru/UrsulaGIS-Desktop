@@ -80,7 +80,8 @@ public class PolygonValidator {
 				addPolygon((Polygon)geom, polygonizer);
 				return toPolygonGeometry(polygonizer.getPolygons(), geom.getFactory());
 			}else if(geom instanceof MultiPolygon){
-				try {if(geom.isValid()){
+				try {
+					if(geom!=null && geom.isValid()){
 					geom.normalize(); // validate does not pick up rings in the wrong order - this will fix that
 					return geom; // If the multipolygon is valid just return it
 				}}catch(Exception ex){

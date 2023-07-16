@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.ListResourceBundle;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import dao.config.Configuracion;
 
@@ -15,6 +17,8 @@ public class Messages {
 	private static final String BUNDLE_NAME ="/gui/messages";//"gui.MyResources";//"gui.messages";// "gui.messages"; //$NON-NLS-1$
 	
 	private static Configuracion conf = JFXMain.config;
+	
+	private static List<Consumer<Locale>> localeChangeListeners=new ArrayList<>();
 	
 	private static NumberFormat nf =null;
 	private static Locale locale = new Locale("ES");
@@ -56,11 +60,13 @@ public class Messages {
 	
 	public static void setLocale(Locale loc) {
 		locale=loc;
+		
 		RESOURCE_BUNDLE_CONTAINER.set(BUNDLE_NAME, locale);
 		conf.loadProperties();
 		conf.setProperty(LOCALE_KEY, locale.getLanguage());
 		conf.save();
 		
+		localeChangeListeners.stream().forEach(f->f.accept(locale));
 		System.out.println("guardando el nuevo locale "+locale.getLanguage());
 	}
 	
@@ -75,6 +81,10 @@ public class Messages {
 			}
 		}
 		return false;
+	}
+	
+	public static void registerLocaleChangeListener(Consumer<Locale> f) {
+		localeChangeListeners.add(f);
 	}
 	
 	public static ResourceBundle getBoundle() {
@@ -95,6 +105,8 @@ public class Messages {
 		return nf;
 	}
 }
+
+ 
 
 
 /* ejemplo de como cargar un bundre en menoria

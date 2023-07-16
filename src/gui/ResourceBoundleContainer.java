@@ -34,6 +34,9 @@ public class ResourceBoundleContainer {
 				RESOURCE_BUNDLE=new TxtResourceBundle(is);
 				//RESOURCE_BUNDLE = ResourceBundle.getBundle(bUNDLE_NAME,locale, Messages.class.getClassLoader());
 			} catch (Exception e) {
+				//TODO si el recurso no existe traducir el espaniol al idioma deseado,
+				//guardarlo en el directorio local y devolver el boundle apuntando al nuevo recurso
+				//XXX podemos crear una api en ursula? de esa manera cacheamos los ya generados
 				e.printStackTrace();
 			}
 		} 

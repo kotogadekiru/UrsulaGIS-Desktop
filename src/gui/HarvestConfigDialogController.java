@@ -38,8 +38,10 @@ import dao.Clasificador;
 import dao.Labor;
 import dao.config.Configuracion;
 import dao.config.Cultivo;
+import dao.config.Semilla;
 import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaLabor;
+import dao.siembra.SiembraLabor;
 import dao.utils.PropertyHelper;
 import gui.utils.DateConverter;
 
@@ -298,7 +300,19 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 			labor.cultivo=n;
 			if(n!=null)config.setProperty(CosechaLabor.CosechaLaborConstants.PRODUCTO_DEFAULT,n.getNombre());
 		});
-		this.comboCultivo.getSelectionModel().select(labor.getCultivo());
+		
+		String sDefautlName = config.getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.PRODUCTO_DEFAULT, "");
+		 
+		if(labor.getCultivo()!=null) {
+			this.comboCultivo.getSelectionModel().select(labor.getCultivo());
+		} else {
+			Optional<Cultivo> sDefault = this.comboCultivo.getItems().stream().filter((s)->s.getNombre().equals(sDefautlName)).findFirst();
+			if(sDefault.isPresent()) {
+				this.comboCultivo.getSelectionModel().select(sDefault.get());
+			}
+		}
+		
+		//this.comboCultivo.getSelectionModel().select(labor.getCultivo());
 		
 		DecimalFormat converter = PropertyHelper.getDoubleConverter();
 

@@ -22,6 +22,7 @@ import dao.config.Configuracion;
 public class ExportLaborMapTask extends ProgresibleTask<File>{
 	Labor<?> laborToExport=null;
 	File shapeFile=null;
+	public boolean guardarConfig=true;
 	
 	public ExportLaborMapTask(Labor<?> _laborToExport,File _shapeFile){		
 		 laborToExport=_laborToExport;
@@ -106,12 +107,13 @@ public class ExportLaborMapTask extends ProgresibleTask<File>{
 				e1.printStackTrace();
 			}
 		}		
+		if(guardarConfig) {
 		//TODO guardar un archivo txt con la configuracion de la labor para que quede como registro de las operaciones
 		 Configuracion config = Configuracion.getInstance();
 		 	config.loadProperties();
 			config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
 			config.save();
-			
+		}
 		return shapeFile;
 	}
 

@@ -61,14 +61,13 @@ public class TarjetaHelper {
 				config.setProperty(UUID_TARJETA, tarjetaUuid);
 				System.out.println("cree la tarjeta "+tarjetaUuid);
 				config.save();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
+			} catch (IOException e) {			
 				e.printStackTrace();
 			}
 			
-		}
-		
+		}		
 	}
+	
 	public static void uploadFile(File f,String destUrl) {
 		//hacer un put a REGISTRAR_ARCHIVO_URL 
 		GenericUrl url = new GenericUrl(REGISTRAR_ARCHIVO_URL);	

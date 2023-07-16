@@ -81,7 +81,6 @@ public class CrearCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		String tooltipText = CrearCosechaMapTask.buildTooltipText(cosechaItem, area);
 		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText,renderablePolygon);
-
 	}
 
 	public static String buildTooltipText(CosechaItem cosechaItem, double area) {

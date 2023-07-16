@@ -11,6 +11,7 @@ import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
@@ -290,11 +291,12 @@ public class UpdateTask  extends Task<File>{
 	}
 
 	public static String getUserNumber() {
-		DecimalFormat userNumberFormat = new DecimalFormat("0,000");
-		userNumberFormat.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(new Locale("EN")));
-		userNumberFormat.setGroupingUsed(true);
-		
-		String userString = userNumberFormat.format(Math.random()*1000*1000);
+//		DecimalFormat userNumberFormat = new DecimalFormat("0,000");
+//		userNumberFormat.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(new Locale("EN")));
+//		userNumberFormat.setGroupingUsed(true);
+//		
+//		String userString = userNumberFormat.format(Math.random()*1000*1000);
+		String userString = UUID.randomUUID().toString();
 		Configuracion conf = Configuracion.getInstance();
 		conf.loadProperties();
 		String usr = conf.getPropertyOrDefault("USER", userString);//si no existia la clave se crea una nueva

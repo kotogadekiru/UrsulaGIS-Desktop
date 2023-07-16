@@ -88,7 +88,9 @@ public class SmartTableView<T> extends TableView<T> {
 	private Map<MenuItem,Consumer<T>> consumerMap=new HashMap<>();
 	private List<String> rejectedColumns=new ArrayList<>();
 	private List<String> orderColumns=new ArrayList<>();
+	private  Map<String,String>  namesColumnsMap=null;
 	private boolean permiteEliminar=true;
+	
 	//	public HBox filters = new HBox();
 	//	private FilteredList<T> filteredData=null;
 	//i18n FilterTable Strings
@@ -99,17 +101,26 @@ public class SmartTableView<T> extends TableView<T> {
 	//"filterpanel.resetall.button"
 	public SmartTableView(ObservableList<T> data,List<String> rejectedColumns,List<String> order){
 		super(data);
-		this.rejectedColumns=rejectedColumns;
-		this.orderColumns=order;
+		this.rejectedColumns.addAll(rejectedColumns);
+		this.orderColumns.addAll(order);
 		construct(data);
 
 	}
 
+	public SmartTableView(ObservableList<T> data,List<String> rejectedColumns,List<String> order,List<String> names){
+		super(data);
+		this.rejectedColumns.addAll(rejectedColumns);
+		this.orderColumns.addAll(order);
+		this.namesColumnsMap=new HashMap<>();
+		for(int i=0;i<order.size();i++) {			
+			namesColumnsMap.put(order.get(i), names.get(i));
+		}
+		construct(data);
+	}
+	
 	public SmartTableView(ObservableList<T> data){//,ObservableList<T> observable){
 		super(data);
 		construct(data);
-
-
 	}
 
 	public void toExcel() {
@@ -146,6 +157,7 @@ public class SmartTableView<T> extends TableView<T> {
 	}
 
 	private void construct(ObservableList<T> data) {
+		this.rejectedColumns.add("Class");
 		impl.org.controlsfx.i18n.Localization.setLocale(Locale.forLanguageTag("es-ES"));//XXX en java 10 falla; pasar al controlsfx-9.0.0.jar
 
 		//filteredData = new FilteredList<>(observable, p -> true);
@@ -582,6 +594,11 @@ public class SmartTableView<T> extends TableView<T> {
 		}
 	}//end of TableUtils
 	
+	/**
+	 * 
+	 * @param method
+	 * @return the name of the Method without the get set or is
+	 */
 	private String getMethodName(Method method) {
 		String name = method.getName();
 
@@ -629,8 +646,16 @@ public class SmartTableView<T> extends TableView<T> {
 				Class<?> fieldType = method.getReturnType();
 				name = getMethodName(method);
 				String setMethodName = "set"+name;
-				
+			
 				if(this.rejectedColumns.contains(name)) {continue;}
+				if(this.namesColumnsMap!=null) {
+					if(namesColumnsMap.containsKey(name)) {
+						name = namesColumnsMap.get(name);
+					}else {
+						System.out.println("el map no contiene "+name);
+						 {continue;}
+					}
+				}
 				if(String.class.isAssignableFrom(fieldType)){
 					getStringColumn(clazz,method, name, fieldType, setMethodName);
 				} else 	if(StringProperty.class.isAssignableFrom(fieldType)  ){
@@ -1035,6 +1060,7 @@ public class SmartTableView<T> extends TableView<T> {
 		String propName = name.replace("Property", "");
 		TableColumn<T,String> column = new TableColumn<T,String>(propName);
 		column.setId(propName);
+	
 		column.setEditable(true);
 		column.setCellFactory(TextFieldTableCell.forTableColumn());
 		column.setCellValueFactory(//new PropertyValueFactory<>(propName)
@@ -1167,23 +1193,23 @@ public class SmartTableView<T> extends TableView<T> {
 		this.getColumns().add(column);
 	}
 
-	private void getDoubleColumn(Class<?> clazz, Method method, String name, Class<?> fieldType, String setMethodName) {
-		String propName = name.replace("Property", "");
-		DoubleTableColumn<T> dColumn = new DoubleTableColumn<T>(propName,
-				(p)->{	try {
-					return ((Double) method.invoke(p, (Object[])null));
-				} catch (Exception e) {	e.printStackTrace();}
-				return null;
-				},(p,d)->{ try {
-					Method setMethod = clazz.getMethod(setMethodName, fieldType);
-					setMethod.invoke(p,d);
-					DAH.save(p);
-					refresh();
-				} catch (Exception e) {	e.printStackTrace();}
-				});
-		dColumn.setId(propName);
-		this.getColumns().add(dColumn);
-	}
+//	private void getDoubleColumn(Class<?> clazz, Method method, String name, Class<?> fieldType, String setMethodName) {
+//		String propName = name.replace("Property", "");
+//		DoubleTableColumn<T> dColumn = new DoubleTableColumn<T>(propName,
+//				(p)->{	try {
+//					return ((Double) method.invoke(p, (Object[])null));
+//				} catch (Exception e) {	e.printStackTrace();}
+//				return null;
+//				},(p,d)->{ try {
+//					Method setMethod = clazz.getMethod(setMethodName, fieldType);
+//					setMethod.invoke(p,d);
+//					DAH.save(p);
+//					refresh();
+//				} catch (Exception e) {	e.printStackTrace();}
+//				});
+//		dColumn.setId(propName);
+//		this.getColumns().add(dColumn);
+//	}
 
 	private void getNumberColumn(Class<?> clazz, Method method, String name, Class<?> fieldType, String setMethodName) {
 		String propName = name.replace("Property", "");

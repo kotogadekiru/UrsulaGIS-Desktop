@@ -71,9 +71,15 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 	public void run(FertilizacionLabor laborToExport,File shapeFile) {
 		SimpleFeatureType type = null;
 
-		String typeDescriptor = "*the_geom:"+Polygon.class.getCanonicalName()+":srid=4326,"
-				+ FertilizacionLabor.COLUMNA_DOSIS + ":java.lang.Long";
+		String typeDescriptor = "*the_geom:"+Polygon.class.getCanonicalName()+":srid=4326,"//$NON-NLS-1$
+				+ SiembraLabor.COLUMNA_DOSIS_LINEA +":java.lang.Long,"//java.lang.Long,"//$NON-NLS-1$
+				+ SiembraLabor.COLUMNA_DOSIS_COSTADO +":java.lang.Long,"//$NON-NLS-1$
+				+SiembraLabor.COLUMNA_SEM_10METROS+":"+"java.lang.Long";//$NON-NLS-1$ semilla siempre tiene que ser la 3ra columna
 		
+		/*String 
+		typeDescriptor = "*the_geom:"+Polygon.class.getCanonicalName()+":srid=4326,"
+				+ FertilizacionLabor.COLUMNA_DOSIS + ":java.lang.Long";
+		*/
 		System.out.println("creando type con: "+typeDescriptor); //$NON-NLS-1$ the_geom:Polygon:srid=4326,Fert L:java.lang.Long,Fert C:java.lang.Long,seeding:java.lang.Long
 		System.out.println("Long.SIZE="+Long.SIZE);//64bits=16bytes. ok!! //$NON-NLS-1$
 		try {
@@ -115,11 +121,17 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 			List<Polygon> flatPolygons = PolygonValidator.geometryToFlatPolygons(itemGeometry);
 			
 			for(Polygon p : flatPolygons){
+				if(p.getNumGeometries()>50) {
+					//quedarse con las 50 mas grandes
+				}
 				fb.add(p);
 				Double dosisHa = fi.getDosistHa();
 
 			
-				fb.add(dosisHa.longValue());
+				fb.add(dosisHa.longValue());//fertL
+				fb.add(0);//fertC
+				fb.add(0);//semillas10m
+				
 
 				SimpleFeature exportFeature = fb.buildFeature(fi.getId().toString());
 				exportFeatureCollection.add(exportFeature);

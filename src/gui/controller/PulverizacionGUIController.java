@@ -1,4 +1,4 @@
-package gui;
+package gui.controller;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -12,16 +12,20 @@ import org.geotools.data.FileDataStore;
 import api.OrdenPulverizacion;
 import dao.Labor;
 import dao.pulverizacion.PulverizacionLabor;
+import gui.JFXMain;
+import gui.Messages;
+import gui.PulverizacionConfigDialogController;
 import gui.nww.LaborLayer;
 import gui.nww.LayerAction;
 import javafx.scene.control.Alert;
 import tasks.CompartirPulverizacionLaborTask;
 import tasks.importar.ProcessPulvMapTask;
 import tasks.procesar.ExportarPrescripcionPulverizacionTask;
+import utils.DAH;
 import utils.FileHelper;
 
 public class PulverizacionGUIController {
-	private static final String DD_MM_YYYY = "dd/MM/yyyy";
+	//private static final String DD_MM_YYYY = "dd/MM/yyyy";
 	JFXMain main=null;
 
 	public PulverizacionGUIController(JFXMain _main) {
@@ -37,7 +41,7 @@ public class PulverizacionGUIController {
 							return "opened";	
 						},	Messages.getString("JFXMain.importar")
 						));
-		main.layerPanel.addAccionesClase(rootNodeP,PulverizacionLabor.class);
+		main.getLayerPanel().addAccionesClase(rootNodeP,PulverizacionLabor.class);
 	}
 	
 	public List<LayerAction> addAccionesPulverizaciones(Map<Class<?>, List<LayerAction>> predicates) {
@@ -79,6 +83,7 @@ public class PulverizacionGUIController {
 	public void doCompartirPulverizacion(PulverizacionLabor value) {
 		OrdenPulverizacion op = CompartirPulverizacionLaborTask.constructOrdenPulverizacion(value);
 		if(op==null)return;
+		DAH.save(op);
 		CompartirPulverizacionLaborTask task = new CompartirPulverizacionLaborTask(value,op);			
 			task.installProgressBar(main.progressBox);
 			task.setOnSucceeded(handler -> {
@@ -135,7 +140,7 @@ public class PulverizacionGUIController {
 				ept.uninstallProgressBar();
 				doOpenPulvMap(Collections.singletonList(ret));
 			});
-			main.executorPool.execute(ept);		
+			JFXMain.executorPool.execute(ept);		
 		}
 		
 		public void doOpenPulvMap(List<File> files) {
@@ -159,7 +164,7 @@ public class PulverizacionGUIController {
 					umTask.setOnSucceeded(handler -> {
 						PulverizacionLabor ret = (PulverizacionLabor)handler.getSource().getValue();
 						//	pulverizaciones.add(ret);
-						main.insertBeforeCompass(main.getWwd(), ret.getLayer());
+						JFXMain.insertBeforeCompass(main.getWwd(), ret.getLayer());
 						main.getLayerPanel().update(main.getWwd());
 						umTask.uninstallProgressBar();
 						main.viewGoTo(ret);

@@ -28,6 +28,7 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.eclipse.persistence.config.TargetServer;
 
+import api.OrdenPulverizacion;
 import dao.Labor;
 import dao.Ndvi;
 import dao.Poligono;
@@ -403,7 +404,7 @@ public class DAH {
 		Cultivo result = null;
 		if(query.getResultList().size()>0){
 			result = query.getResultList().get(0);//getFirstResult();
-			System.out.println("buscando "+cultivoName+" encontre "+result);
+			//System.out.println("buscando "+cultivoName+" encontre "+result);
 		}  
 		return result;
 	}
@@ -561,7 +562,7 @@ public class DAH {
 	}
 
 	public static List<Ndvi> getNdviActivos() {
-		System.out.println("buscando ndvi activos");
+		//System.out.println("buscando ndvi activos");
 		TypedQuery<Ndvi> query =
 				em().createNamedQuery(Ndvi.FIND_ACTIVOS, Ndvi.class);
 		List<Ndvi> results = query.getResultList();
@@ -573,6 +574,13 @@ public class DAH {
 		TypedQuery<OrdenCompra> query = em().createNamedQuery(
 				OrdenCompra.FIND_ALL, OrdenCompra.class);
 		List<OrdenCompra> results = (List<OrdenCompra> ) query.getResultList();
+		return results;
+	}
+	
+	public static List<OrdenPulverizacion> getAllOrdenesPulverizacion() {
+		TypedQuery<OrdenPulverizacion> query = em().createNamedQuery(
+				OrdenPulverizacion.FIND_ALL, OrdenPulverizacion.class);
+		List<OrdenPulverizacion> results = (List<OrdenPulverizacion> ) query.getResultList();
 		return results;
 	}
 
@@ -598,11 +606,23 @@ public class DAH {
 		Semilla result = null;
 		if(query.getResultList().size()>0){
 			result = query.getResultList().get(0);//getFirstResult();
-			System.out.println("buscando "+nombre+" encontre "+result);
+			//System.out.println("buscando "+nombre+" encontre "+result);
 		}  
 		return result;	
 	}
 
+	public static Fertilizante getFertilizante(String nombre) {
+		TypedQuery<Fertilizante> query = em().createNamedQuery(
+				Fertilizante.FIND_NAME, Fertilizante.class);
+		query.setParameter("name", nombre);
+		Fertilizante result = null;
+		if(query.getResultList().size()>0){
+			result = query.getResultList().get(0);//getFirstResult();
+			//System.out.println("buscando "+nombre+" encontre "+result);
+		}  
+		return result;	
+	}
+	
 	//	public static void main(String[] args) throws Exception {
 	//	       // Open a database connection
 	//     // (create a new database if it doesn't exist yet):

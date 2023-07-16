@@ -65,6 +65,10 @@ public class SueloConfigDialogController  extends Dialog<Suelo>{
 	private ComboBox<String> comboAguaUtil;//ok
 
 	@FXML
+	private ComboBox<String> comboDensidad;//ok
+
+
+	@FXML
 	private ComboBox<String> comboElev;//ok
 
 
@@ -189,6 +193,9 @@ public class SueloConfigDialogController  extends Dialog<Suelo>{
 		
 		this.comboElev.setItems(FXCollections.observableArrayList(availableColums));
 		this.comboElev.valueProperty().bindBidirectional(labor.colElevacion);
+		
+		this.comboDensidad.setItems(FXCollections.observableArrayList(availableColums));
+		this.comboDensidad.valueProperty().bindBidirectional(labor.colDensidadProperty);
 		
 		StringConverter<Number> converter = new NumberStringConverter(Messages.getLocale());
 

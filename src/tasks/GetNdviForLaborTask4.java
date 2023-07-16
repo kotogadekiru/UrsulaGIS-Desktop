@@ -43,7 +43,7 @@ import dao.Ndvi;
 import dao.Poligono;
 //import gov.nasa.worldwind.geom.Angle;
 //import gov.nasa.worldwind.geom.Position;
-
+import javafx.application.Platform;
 //import utils.DateConverter;
 import javafx.concurrent.Task;
 import javafx.scene.control.Button;
@@ -537,7 +537,7 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 		progressBarTask.setProgress(0);
 
 		progressBarTask.progressProperty().bind(this.progressProperty());
-		progressBarLabel = new Label("NDVI2 para "+this.end);
+		progressBarLabel = new Label(contorno.getNombre()+" "+this.begin+"->"+this.end);
 		progressBarLabel.setTextFill(Color.BLACK);
 
 
@@ -553,7 +553,9 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 		//progressBarLabel.setStyle("-fx-color: black");
 		progressContainer = new HBox();
 		progressContainer.getChildren().addAll(cancel,progressBarLabel,progressBarTask);
-		progressBox.getChildren().add(progressContainer);
+		Platform.runLater(()->{
+			progressBox.getChildren().add(progressContainer);
+		});
 
 
 	}

@@ -7,7 +7,9 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -21,6 +23,7 @@ import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.WorldWindow;
 import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.RenderableLayer;
+import gui.JFXMain;
 import gui.Messages;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyDoubleProperty;
@@ -95,8 +98,22 @@ public class LayerPanel extends VBox {
 		scrollPane.setFitToWidth(true);
 
 		this.getChildren().add(scrollPane);
+		
+		Messages.registerLocaleChangeListener(getLocaleChangeHandler(wwd));
 	}
 
+	private Consumer<Locale> getLocaleChangeHandler(WorldWindow wwd){
+		return new Consumer<Locale>(){
+			@Override
+			public void accept(Locale t) {
+				rootItem=null;
+				constructRootItem();	
+				update(wwd);
+			}
+			
+		};
+	}
+	
 	public void setMenuItems(Map<Class<?>,List<LayerAction>> actions){
 		this.actions= actions;
 	}
@@ -105,7 +122,7 @@ public class LayerPanel extends VBox {
 		// Fill the layers panel with the titles of all layers in the world
 		// window's current model.
 
-		if(rootItem==null){
+		if(rootItem==null){//TODO si cambio el locale reconstriur el root item
 			constructRootItem();  
 		} else{
 			for(TreeItem<?> item : rootItem.getChildren()){

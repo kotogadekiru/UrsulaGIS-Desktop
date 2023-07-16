@@ -149,6 +149,11 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 			Geometry itemGeometry=fi.getGeometry();
 			List<Polygon> flatPolygons = PolygonValidator.geometryToFlatPolygons(itemGeometry);
 			for(Polygon p : flatPolygons){
+				int partes = p.getNumGeometries();
+				System.out.println("exportando item con "+partes+" partes");
+				if(partes>50) {
+					System.err.println("error tiene mas de 50 partes!!");
+				}
 				fb.add(p);
 //				availableColums.add(SiembraLabor.COLUMNA_SEM_10METROS);//("Sem10ml");
 //				availableColums.add(SiembraLabor.COLUMNA_DOSIS_SEMILLA);//("kgSemHa");

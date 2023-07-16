@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import gui.Messages;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -19,9 +20,9 @@ public class DoubleTableColumn<T> extends TableColumn<T,String> {
 	public DoubleTableColumn(String title,Function<T,Double>  getMethod, BiConsumer<T,Double> setMethod){
 		super(title);	
 		setEditable(setMethod != null);
-		NumberFormat nf = NumberFormat.getNumberInstance();
+		NumberFormat nf = Messages.getNumberFormat();
 		nf.setGroupingUsed(true);
-		nf.setMaximumFractionDigits(2);
+		nf.setMaximumFractionDigits(3);//DosisHa necita 3 decimales
 		//DecimalFormat df = new DecimalFormat("###,###.##");
 
 		//	 this.setCellValueFactory(new PropertyValueFactory<T, Date>("date"));

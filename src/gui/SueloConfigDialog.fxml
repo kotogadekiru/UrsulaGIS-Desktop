@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
@@ -19,7 +15,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="content" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.SueloConfigDialogController">
+<VBox fx:id="content" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.SueloConfigDialogController">
    <children>
       <TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="361.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE">
         <tabs>
@@ -103,6 +99,12 @@
                                  </opaqueInsets>
                               </Label>
                               <ComboBox id="comboElev" fx:id="comboElev" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+                              <Label text="%SueloConfigDialog.densidadLabel" GridPane.columnIndex="2" GridPane.rowIndex="8">
+                                 <opaqueInsets>
+                                    <Insets left="5.0" right="5.0" />
+                                 </opaqueInsets>
+                              </Label>
+                              <ComboBox id="comboElev" fx:id="comboDensidad" prefWidth="150.0" GridPane.columnIndex="3" GridPane.rowIndex="8" />
                            </children>
                         </GridPane>
                      </children>

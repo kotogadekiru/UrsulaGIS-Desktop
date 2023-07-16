@@ -65,7 +65,7 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 
 		String fertKEY = properties.getPropertyOrDefault(FertilizacionLabor.FERTILIZANTE_DEFAULT,
 				Fertilizante.FOSFATO_DIAMONICO_DAP);
-		fertilizanteProperty = new SimpleObjectProperty<Fertilizante>(Fertilizante.fertilizantes.get(fertKEY));//values().iterator().next());
+		fertilizanteProperty = new SimpleObjectProperty<Fertilizante>(DAH.getFertilizante(fertKEY));//values().iterator().next());
 		fertilizanteProperty.addListener((obs, bool1, bool2) -> {
 			properties.setProperty(FertilizacionLabor.FERTILIZANTE_DEFAULT,
 					bool2.getNombre());

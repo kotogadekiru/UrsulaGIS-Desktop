@@ -182,7 +182,7 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 
 		//textPrecioGrano
 		//Bindings.bindBidirectional(this.textPrecioFert.textProperty(), labor.precioInsumoProperty, converter);
-		this.textPrecioFert.textProperty().set(labor.getConfigLabor().getConfigProperties().getPropertyOrDefault(FertilizacionLabor.COLUMNA_PRECIO_FERT, labor.getPrecioInsumo().toString()));
+		this.textPrecioFert.textProperty().set(labor.getConfigLabor().getConfigProperties().getPropertyOrDefault(FertilizacionLabor.COLUMNA_PRECIO_FERT, converter.toString(labor.getPrecioInsumo())));
 		this.textPrecioFert.textProperty().addListener((obj,old,n)->{
 
 			labor.setPrecioInsumo(converter.fromString(n).doubleValue());

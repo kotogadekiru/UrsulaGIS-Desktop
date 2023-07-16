@@ -22,6 +22,8 @@ import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.operation.buffer.BufferParameters;
+import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
 import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 
 import dao.Poligono;
@@ -480,9 +482,17 @@ public class GeometryHelper {
 	 */
 
 	public static Geometry getIntersection(Geometry g1, Geometry g2){
+		if(g1==null || g2 ==null) {
+			System.err.println("antes de validar geometrias devolviendo null porque una de las geometrias a intersectar es null. g1= "+g1+",g2= "+g2);
+			return null;
+		}
 		g1 = PolygonValidator.validate(g1);
 		g2 = PolygonValidator.validate(g2);
-		Geometry intersection =null;
+		Geometry intersection = null;
+		if(g1==null || g2 ==null) {
+			System.err.println("devolviendo null porque una de las geometrias a intersectar es null. g1= "+g1+",g2= "+g2);
+			return null;
+		}
 		if (g1 != null && g2!=null && g1.intersects(g2)){
 			try {			
 				//intersection= EnhancedPrecisionOp.intersection(g1,g2);
@@ -490,10 +500,13 @@ public class GeometryHelper {
 				intersection = PolygonValidator.validate(intersection);
 
 			} catch (Exception te) {
+				System.err.println("error al hacer la interseccion de las geometrias "+g1+", "+g2);
+				System.err.println("EnhancedPrecisionOp.intersection");
+				te.printStackTrace();
 				try{
 					intersection = EnhancedPrecisionOp.intersection(g1, g2);
 				}catch(Exception e){
-					te.printStackTrace();
+					e.printStackTrace();
 				}
 			}
 		}
@@ -527,39 +540,45 @@ public class GeometryHelper {
 	}
 	/**
 	 * metodo que recorre todas las geometrias haciendo las intersecciones de todos con todos.
-	 * @param geometriasActivas
+	 * @param aIntersectar
 	 * @return
 	 */
-	public static Set<Geometry> obtenerIntersecciones(List<Geometry> geometriasActivas){
+	public static Set<Geometry> obtenerIntersecciones(List<Geometry> aIntersectar){
 		//	import org.locationtech.jts.densify.Densifier;
 
 		// unir todas las geometrias.
 		//crear un poligono con los exterior rings de todas las geometrias
 		//obtener la diferencia entre la union y los vertices
-		GeometryFactory fact = geometriasActivas.get(0).getFactory();
-		GeometryCollection colectionCat = fact.createGeometryCollection(geometriasActivas.toArray(new Geometry[geometriasActivas.size()]));
 
-		Geometry convexHull = colectionCat.buffer(ProyectionConstants.metersToLongLat(0));
-
-		List<Geometry> boundarys = new ArrayList<Geometry>();
-		for(Geometry g : geometriasActivas) {
-			boundarys.add(g.getBoundary());
-		}
-		GeometryCollection boundarysCol = fact.createGeometryCollection(boundarys.toArray(new Geometry[boundarys.size()]));
-		Geometry boundary_buffer = boundarysCol.buffer(ProyectionConstants.metersToLongLat(0.25));
-
+		Geometry[] boundaryArr =  aIntersectar.stream().map(g->g.getBoundary()).toArray(s->new Geometry[s]);
+		
+		GeometryFactory fact = ProyectionConstants.getGeometryFactory();
+		GeometryCollection boundarysCol = fact.createGeometryCollection(boundaryArr);
+		Double buffer25=ProyectionConstants.metersToLongLat(0.25);
+		Geometry boundary_buffer = boundarysCol.buffer(buffer25,1,BufferParameters.CAP_FLAT);
+		
+		GeometryCollection colectionCat = fact.createGeometryCollection(
+				aIntersectar.toArray(new Geometry[aIntersectar.size()]));
+		//(buffer0,1,BufferParameters.CAP_SQUARE);
+		Double buffer0=ProyectionConstants.metersToLongLat(0);
+		Geometry convexHull = colectionCat.buffer(buffer0,1,BufferParameters.CAP_FLAT);
+		
 		Geometry diff = convexHull.difference(boundary_buffer);
 		Set<Geometry> geometriasOutput = new HashSet<Geometry>();
 		//double tolerance = ProyectionConstants.metersToLongLat(1);
-		double bufferWidth = ProyectionConstants.metersToLongLat(0.25);
+		double bufferWidth = 2*buffer25;
+		Double buffer30=ProyectionConstants.metersToLongLat(0.28);
 		for(int n = 0; n < diff.getNumGeometries(); n++){
 			Geometry g = diff.getGeometryN(n);
-			g=g.buffer(bufferWidth);//mitad del buffer esta en esta y mitad en la otra
-			//g=	Densifier.densify(g,tolerance );
+			//XXX al hacer el buffer se crean puntitos en las esquinas. las descarto
+			if(g.getArea()<bufferWidth*bufferWidth) {
+				continue;
+			}
+			
+			g=g.buffer(buffer30,1,BufferParameters.CAP_FLAT);//mitad del buffer esta en esta y mitad en la otra
 			g = PolygonValidator.validate(g);
 			geometriasOutput.add(g);
 		}
-
 
 		return geometriasOutput;
 	}
@@ -641,20 +660,25 @@ public class GeometryHelper {
 		return area;
 	}
 
-	public static Geometry unirGeometrias(List<Geometry> geometriasActivas) {
-
-		geometriasActivas = geometriasActivas.stream().map(g->{
+	public static Geometry unirGeometrias(List<Geometry> aUnir) {
+		aUnir = aUnir.stream().map(g->{
 			Densifier densifier = new Densifier(g);
 			densifier.setDistanceTolerance(ProyectionConstants.metersToLongLat(10));
 			g=densifier.getResultGeometry();
 			return  g;			
 		}).collect(Collectors.toList());
-
+		
 		GeometryFactory fact = ProyectionConstants.getGeometryFactory();		
-		Geometry[] geomArray = geometriasActivas.toArray(new Geometry[geometriasActivas.size()]);
-		GeometryCollection collection = fact.createGeometryCollection(geomArray);
-
-		Geometry union = collection.buffer(0);//ProyectionConstants.metersToLongLat(20));
+		Geometry[] geomArray = aUnir.toArray(new Geometry[aUnir.size()]);//put into an array
+		GeometryCollection collection = fact.createGeometryCollection(geomArray);//create a collection
+		Double buffer = ProyectionConstants.metersToLongLat(0.25);
+		Geometry union =collection.buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection
+		Geometry boundary = union.getBoundary().buffer(buffer,1,BufferParameters.CAP_FLAT);
+		union=union.difference(boundary);
+		//buffered = CascadedPolygonUnion.union(geometriesCat);
+		//Geometry union = collection.buffer(0);//ProyectionConstants.metersToLongLat(20));
+		//TODO hacer un buffer 0.25
+		//y despues hacer un dif contra el boundary buffer 0.25 para evitar que crezcan los items
 		//System.out.println("geometria densa unida "+union);
 		return union;		
 	}

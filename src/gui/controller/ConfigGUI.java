@@ -1,6 +1,7 @@
-package gui;
+package gui.controller;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
@@ -23,6 +24,7 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
+import api.OrdenPulverizacion;
 import dao.Labor;
 import dao.Ndvi;
 import dao.Poligono;
@@ -41,6 +43,8 @@ import dao.ordenCompra.OrdenCompraItem;
 import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
 import gov.nasa.worldwind.geom.Position;
+import gui.JFXMain;
+import gui.Messages;
 import gui.utils.DoubleTableColumn;
 import gui.utils.SmartTableView;
 import javafx.application.Platform;
@@ -55,6 +59,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
@@ -74,6 +79,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import tasks.CotizarOdenDeCompraOnlineTask;
+import tasks.UpdateTask;
 import utils.DAH;
 import utils.ExcelHelper;
 
@@ -126,11 +132,34 @@ public class ConfigGUI {
 		addMenuItem(Messages.getString("JFXMain.configRecorridaMI"),(a)->doShowRecorridaTable(),menuConfiguracion); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.OrdenCompra"),(a)->doShowOrdenesCompra(),menuConfiguracion); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.362"),(a)->doShowLaboresTable(),menuConfiguracion); //$NON-NLS-1$
-
+		addMenuItem(Messages.getString("JFXMain.configPulverizacionMI"),(a)->doShowOrdenesPulverizacionTable(),menuConfiguracion); //$NON-NLS-1$
+		
 		addMenuItem(Messages.getString("JFXMain.configIdiomaMI"),(a)->doChangeLocale(),menuConfiguracion); //$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.configHelpMI"),(a)->doShowAcercaDe(),menuConfiguracion); //$NON-NLS-1$
+		addMenuItem(Messages.getString("JFXMain.configHelpMI"),(a)->doShowAcercaDe(),menuConfiguracion); //$NON-NLS-1$\
+		
+		MenuItem actualizarMI=addMenuItem(Messages.getString("JFXMain.configUpdate"),null,menuConfiguracion); 
+		actualizarMI.setOnAction((a)->doUpdate());
+		actualizarMI.setVisible(false);
+
+		JFXMain.executorPool.submit(()->{
+			if(UpdateTask.isUpdateAvailable()){
+				actualizarMI.setVisible(true);
+				actualizarMI.getStyleClass().add("menu-item:focused"); 
+				actualizarMI.setStyle("-fx-background: -fx-accent;" 
+						+"-fx-background-color: -fx-selection-bar;" 
+						+ "-fx-text-fill: -fx-selection-bar-text;" 
+						+ "fx-text-fill: white;"); 
+				//menuConfiguracion.show();
+				menuConfiguracion.setStyle("-fx-background: -fx-accent;" 
+						+"-fx-background-color: -fx-selection-bar;" 
+						+ "-fx-text-fill: -fx-selection-bar-text;" 
+						+ "fx-text-fill: white;"); 
+			}
+		});
 		return menuConfiguracion;
 	}
+	
+	
 	/**
 	 * 
 	 */
@@ -802,6 +831,63 @@ public class ConfigGUI {
 		//		});	
 
 	}
+	
+	public void doShowOrdenesPulverizacionTable() {
+		Platform.runLater(()->{
+			List<OrdenPulverizacion> ordenes = DAH.getAllOrdenesPulverizacion();
+			final ObservableList<OrdenPulverizacion> data = FXCollections.observableArrayList(ordenes);
+
+			SmartTableView<OrdenPulverizacion> table = new SmartTableView<OrdenPulverizacion>(data,
+					Arrays.asList("Id","PoligonoString","Uuid","Url","OrdenShpZipUrl","Owner","Items"),
+					Arrays.asList("NumeroOrden",
+							"Fecha",
+							"Nombre",
+							"Description",
+							"Productor",
+							"Establecimiento",
+							"NombreIngeniero",
+							"Contratista",
+							"Cultivo",
+							"Estado","Superficie"							
+							),
+					Arrays.asList("Numero",
+							"Fecha",
+							"Nombre",
+							"Descripcion",
+							"Productor",
+							"Establecimiento",
+							"Ingeniero",
+							"Contratista",
+							"Cultivo",
+							"Estado","Superficie"							
+							)
+					);
+			table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
+			table.setEditable(true);
+			//			table.setOnDoubleClick(()->new Poligono());
+			table.setOnShowClick((recorrida)->{
+				//poli.setActivo(true);
+				//main.doShowRecorrida(recorrida);
+			});
+
+			table.addSecondaryClickConsumer("Editar",(r)-> {
+				//doShowMuestrasTable(r.getMuestras());
+			});
+
+			Scene scene = new Scene(table, 800, 600);
+			Stage tablaStage = new Stage();
+			tablaStage.getIcons().add(new Image(JFXMain.ICON));
+			tablaStage.setTitle(Messages.getString("JFXMain.configPulverizacionMI")); //$NON-NLS-1$
+			tablaStage.setScene(scene);
+
+			tablaStage.onHiddenProperty().addListener((o,old,n)->{
+				main.getLayerPanel().update(main.getWwd());
+				//getWwd().redraw();
+			});
+
+			tablaStage.show();	 
+		});	
+	}
 
 	public void doShowRecorridaTable(List<Recorrida> recorridas) {
 		Platform.runLater(()->{
@@ -912,7 +998,7 @@ public class ConfigGUI {
 			//			table.setOnDoubleClick(()->new Poligono());
 			table.setOnShowClick((ndvi)->{
 				ndvi.setActivo(true);
-				main.doShowNDVI(ndvi);
+				main.ndviGUIController.doShowNDVI(ndvi);
 			});
 
 
@@ -1127,7 +1213,32 @@ public class ConfigGUI {
 		a.show();
 	}
 
-
+	private void doUpdate() {
+		Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+		alert.setContentText(Messages.getString("JFXMain.doUpdateText")); 
+		alert.initOwner(JFXMain.stage);
+		alert.showAndWait();
+		if(ButtonType.OK.equals(alert.getResult())){
+			UpdateTask uTask = new UpdateTask();
+			uTask.installProgressBar(main.progressBox);
+			uTask.setOnSucceeded(handler -> {
+				File newVersion = (File) handler.getSource().getValue();	
+				if(newVersion==null){
+					Alert error = new Alert(Alert.AlertType.ERROR);
+					error.setContentText(Messages.getString("JFXMain.doUpdateErrorText")); 
+					error.initOwner(JFXMain.stage);
+					error.showAndWait();
+				} else{
+					Alert error = new Alert(Alert.AlertType.CONFIRMATION);
+					error.setContentText(Messages.getString("JFXMain.doUpdateSuccessText")); 
+					error.initOwner(JFXMain.stage);
+					error.showAndWait();
+				}			
+				uTask.uninstallProgressBar();
+			});
+			JFXMain.executorPool.submit(uTask);
+		}//fin del if OK	
+	}
 
 	public static BufferedImage generateQR(String code) {
 		QRCodeWriter barcodeWriter = new QRCodeWriter();

@@ -202,10 +202,15 @@ public class SiembraConfigDialogController  extends Dialog<SiembraLabor>{
 		
 		String sDefautlName = props.getPropertyOrDefault(SiembraLabor.SEMILLA_DEFAULT, "");
 		 
-		Optional<Semilla> sDefault = this.comboInsumo.getItems().stream().filter((s)->s.getNombre().equals(sDefautlName)).findFirst();
-		if(sDefault.isPresent()) {
-			this.comboInsumo.getSelectionModel().select(sDefault.get());
+		if(labor.getSemilla()!=null) {
+			this.comboInsumo.getSelectionModel().select(labor.getSemilla());
+		} else {
+			Optional<Semilla> sDefault = this.comboInsumo.getItems().stream().filter((s)->s.getNombre().equals(sDefautlName)).findFirst();
+			if(sDefault.isPresent()) {
+				this.comboInsumo.getSelectionModel().select(sDefault.get());
+			}
 		}
+	
 		
 		StringConverter<Number> converter = new NumberStringConverter(Messages.getLocale());
 

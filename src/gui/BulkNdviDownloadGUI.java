@@ -123,7 +123,8 @@ public class BulkNdviDownloadGUI {
 					SelectionMode.MULTIPLE
 					);
 
-			SmartTableView<Poligono> tabla2 = new SmartTableView<Poligono>(selected,	Arrays.asList("Id","PositionsString","PoligonoToString","Activo","Area"),
+			SmartTableView<Poligono> tabla2 = new SmartTableView<Poligono>(selected,	
+					Arrays.asList("Id","PositionsString","PoligonoToString","Activo","Area"),
 					Arrays.asList("Nombre"));
 			tabla2.setEditable(false);
 			tabla2.getSelectionModel().setSelectionMode(

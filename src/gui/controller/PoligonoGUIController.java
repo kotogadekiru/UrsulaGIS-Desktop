@@ -1,8 +1,10 @@
-package gui;
+package gui.controller;
 
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -45,6 +47,16 @@ import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.LayerList;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import gov.nasa.worldwind.util.measure.MeasureTool;
+import gui.FertilizacionConfigDialogController;
+import gui.HarvestConfigDialogController;
+import gui.JFXMain;
+import gui.Messages;
+import gui.NDVIDatePickerDialog;
+import gui.PathLayerFactory;
+import gui.PoligonLayerFactory;
+import gui.PoligonoDialog;
+import gui.PulverizacionConfigDialogController;
+import gui.SiembraConfigDialogController;
 import gui.nww.LaborLayer;
 import gui.nww.LayerAction;
 import gui.nww.LayerPanel;
@@ -625,7 +637,7 @@ public class PoligonoGUIController {
 				System.out.println(Messages.getString("JFXMain.216")); //$NON-NLS-1$
 				if(c.next()){
 					c.getAddedSubList().forEach((ndvi)->{
-						main.doShowNDVI(ndvi);
+						main.ndviGUIController.doShowNDVI(ndvi);
 					});//fin del foreach
 				}			
 			});
@@ -653,6 +665,39 @@ public class PoligonoGUIController {
 			});
 			JFXMain.executorPool.submit(task);
 		}
+	}
+	
+	/**
+	 * descargar los tiff correspondientes a un polygono y mostrarlos como ndvi
+	 * @param placementObject
+	 */
+	@SuppressWarnings("unchecked")
+	private void doGetLatestNdviForPoligono(Poligono poligono) {
+		
+		LocalDate fin =DateConverter.asLocalDate(new Date());
+		LocalDate begin = fin.minus(1, ChronoUnit.MONTHS);		
+			
+			//aca empieza el codigo una vez que la fecha esta configurada
+			ObservableList<Ndvi> observableList = FXCollections.observableArrayList(new ArrayList<Ndvi>());
+			observableList.addListener((ListChangeListener<Ndvi>) c -> {
+				
+				if(c.next()){
+					c.getAddedSubList().forEach((ndvi)->{
+						main.ndviGUIController.showNdvi(poligono, ndvi, false);
+					});//fin del foreach
+				}			
+			});				
+	
+			GetNdviForLaborTask4 task = new GetNdviForLaborTask4(poligono, observableList);
+			task.setBeginDate(begin);
+			task.setFinDate(fin);			
+			task.setIgnoreNDVI((List<Ndvi>) main.getObjectFromLayersOfClass(Ndvi.class));
+			System.out.println("procesando los datos entre "+begin+" y "+fin);//hasta aca ok!
+			task.installProgressBar(progressBox);
+			task.setOnSucceeded(handler -> {			
+				task.uninstallProgressBar();			
+			});
+			JFXMain.executorPool.submit(task);		
 	}
 	
 	/**
@@ -1028,17 +1073,15 @@ public class PoligonoGUIController {
 			try {
 				downloadLocation = File.createTempFile(Messages.getString("JFXMain.214"), Messages.getString("JFXMain.215")).getParentFile(); //$NON-NLS-1$ //$NON-NLS-2$
 			} catch (IOException e) {
-
 				e.printStackTrace();
-			}//directoryChooser();
+			}
 			if(downloadLocation == null) return;
 			for(Poligono p : poligonos) {
 				ObservableList<Ndvi> observableList = FXCollections.observableArrayList(new ArrayList<Ndvi>());
-				observableList.addListener((ListChangeListener<Ndvi>) c -> {
-					System.out.println(Messages.getString("JFXMain.216")); //$NON-NLS-1$
+				observableList.addListener((ListChangeListener<Ndvi>) c -> {					
 					if(c.next()){
 						c.getAddedSubList().forEach((ndvi)->{
-							main.doShowNDVI(ndvi);
+							main.ndviGUIController.doShowNDVI(ndvi);
 						});//fin del foreach
 					}			
 				});
@@ -1076,6 +1119,16 @@ public class PoligonoGUIController {
 		}
 		});
 	}
+	
+	public void showPoligonosActivos() {
+		List<Poligono> poligonos = DAH.getPoligonosActivos();
+		showPoligonos(poligonos);
+		//XXX obtener todos los ndvi de los poligonos activos no es bueno
+		//TODO marcar poligonos como a actualizar o actualizar los ndvi de
+		//los contornos de los lotes
+		//poligonos.stream().forEach(p->this.doGetLatestNdviForPoligono(p));		
+	}
+
 	
 	/**
 	 * @see doExtraerPoligonos(Labor<?>) para ver como optimizar este codigo

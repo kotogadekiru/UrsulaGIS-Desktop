@@ -60,7 +60,6 @@ public class FileHelper {
 		try {
 			tempDirWithPrefix = Files.createTempDirectory(prefix);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return tempDirWithPrefix;
@@ -340,6 +339,7 @@ public class FileHelper {
 		File shpFile = FileHelper.getNewShapeFileAt(dir,"labor.shp");
 		//2 exportar la labor al directorio
 		ExportLaborMapTask export = new ExportLaborMapTask(labor,shpFile);
+		export.guardarConfig=false;//como es un temp dir no quiero guardar LAST_FILE
 		export.call();
 		File zipFile = UnzipUtility.zipFiles(FileHelper.selectAllFiles(dir),dir.toFile());
 		return zipFile;

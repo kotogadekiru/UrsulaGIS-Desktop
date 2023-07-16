@@ -475,9 +475,13 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 				Geometry buffered = null;
 			
 				try{
+					System.out.println("haciendo cascade union");
 					buffered = CascadedPolygonUnion.union(geometriesCat);
 					//buffered = at.transform(colectionCat);
 					buffered = buffered.buffer(bufer,1,BufferParameters.CAP_SQUARE);//sino le pongo buffer al resumir geometrias me quedan rectangulos medianos
+					Geometry boundary = buffered.getBoundary();
+					boundary=boundary.buffer(bufer,1,BufferParameters.CAP_SQUARE);
+					buffered = buffered.difference(boundary);
 					//buffered = colectionCat.buffer(0,1,BufferParameters.CAP_SQUARE);
 					//	buffered = inverse.transform(buffered);
 					//buffered = buffered.buffer(-bufer,1,BufferParameters.CAP_ROUND);
