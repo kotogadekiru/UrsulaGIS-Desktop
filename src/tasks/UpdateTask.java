@@ -242,6 +242,8 @@ public class UpdateTask  extends Task<File>{
 	 * @return si la ultima version es mas grande que esta version devolver true
 	 */
 	public static boolean isUpdateAvailable() {
+		//TODO si ya se habia invocado no volver a llamar.
+		if(lastVersionNumber ==null) {
 		GenericUrl url = new GenericUrl(UPDATE_URL);//"http://www.ursulagis.com/update");// "http://www.lanacion.com.ar");
 		url.put("VERSION", JFXMain.VERSION);
 		
@@ -287,6 +289,9 @@ public class UpdateTask  extends Task<File>{
 			e.printStackTrace();
 			return false;
 		}	
+		} else if(versionToDouble(lastVersionNumber)>versionToDouble(JFXMain.VERSION)){			
+			return true;	
+		}
 		return false;
 	}
 
