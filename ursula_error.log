@@ -16,16 +16,9 @@ Caused by: java.lang.reflect.InvocationTargetException
 	at com.sun.glass.ui.win.WinApplication._runLoop(Native Method)
 	at com.sun.glass.ui.win.WinApplication.lambda$null$4(WinApplication.java:185)
 	... 1 more
-Caused by: java.lang.Error: Unresolved compilation problems: 
-	The import dao.pulverizacion.Caldo cannot be resolved
-	Caldo cannot be resolved to a type
-	The method getAllCaldos() is undefined for the type DAH
-	Caldo cannot be resolved to a type
-	Caldo cannot be resolved to a type
-	Caldo cannot be resolved to a type
-	Caldo cannot be resolved to a type
-	The method getCaldo() is undefined for the type CaldoItem
+Caused by: java.lang.Error: Unresolved compilation problem: 
+	The method getAllOrdenesSiembra() is undefined for the type DAH
 
-	at gui.ConfigGUI.<init>(ConfigGUI.java:46)
-	at gui.JFXMain.<init>(JFXMain.java:208)
+	at gui.controller.ConfigGUI.<init>(ConfigGUI.java:838)
+	at gui.JFXMain.<init>(JFXMain.java:179)
 	... 13 more

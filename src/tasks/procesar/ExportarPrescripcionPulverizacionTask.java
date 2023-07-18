@@ -53,6 +53,7 @@ import utils.ProyectionConstants;
 public class ExportarPrescripcionPulverizacionTask extends ProgresibleTask<File>{
 	private PulverizacionLabor laborToExport=null;
 	private File outFile=null;
+	public boolean guardarConfig=true;
 	
 	public ExportarPrescripcionPulverizacionTask(PulverizacionLabor laborToExport,File shapeFile) {
 		super();
@@ -164,9 +165,18 @@ public class ExportarPrescripcionPulverizacionTask extends ProgresibleTask<File>
 		}		
 
 		System.out.println("despues de guardar el shp el schema es: "+ shapeFile); //$NON-NLS-1$
-		Configuracion config = Configuracion.getInstance();
-		config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
-		config.save();
+//		Configuracion config = Configuracion.getInstance();
+//		config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
+//		config.save();
+		
+		if(guardarConfig) {
+			//TODO guardar un archivo txt con la configuracion de la labor para que quede como registro de las operaciones
+			 Configuracion config = Configuracion.getInstance();
+			 	config.loadProperties();
+				config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
+				config.save();
+			}
+		
 		updateProgress(100, 100);//all done;
 	}
 
@@ -324,9 +334,14 @@ public class ExportarPrescripcionPulverizacionTask extends ProgresibleTask<File>
 
 
 	@Override
-	protected File call() throws Exception {
+	public File call() {
+	//	try {
 		this.run(this.laborToExport,this.outFile);
 		return outFile;
+//		}catch(Exception e) {
+//			e.printStackTrace();
+//			return null;
+//		}
 	}
 
 //	public void exe(FertilizacionLabor laborToExport,File shapeFile)  {

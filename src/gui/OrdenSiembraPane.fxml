@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Group?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextArea?>
@@ -108,6 +109,7 @@
                   <Insets right="5.0" />
                </padding>
             </BorderPane>
+            <ComboBox fx:id="cb" layoutX="543.0" layoutY="108.0" prefWidth="150.0" />
          </children>
       </AnchorPane>
    </children>

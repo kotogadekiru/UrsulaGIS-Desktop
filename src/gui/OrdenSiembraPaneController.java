@@ -6,13 +6,17 @@ import java.text.ParseException;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 import api.OrdenSiembra;
 import api.OrdenSiembraItem;
 import dao.config.Configuracion;
+import dao.siembra.SiembraLabor;
+import gui.controller.SiembraGUIController;
 import gui.utils.DateConverter;
 import gui.utils.SmartTableView;
 import javafx.collections.FXCollections;
@@ -24,6 +28,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
@@ -31,27 +36,28 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class OrdenSiembraPaneController extends Dialog<OrdenSiembra>{
-	private static final String ORDEN_PULV_DESCRIPCION = "OrdenPulv.DESCRIPCION";
+	private static final String ORDEN_SIEMBRA_DESCRIPCION = "OrdenSiembra.DESCRIPCION";
 
-	private static final String ORDEN_PULV_CULTIVO = "OrdenPulv.CULTIVO";
+	private static final String ORDEN_SIEMBRA_CULTIVO = "OrdenSiembra.CULTIVO";
 
-	private static final String ORDEN_PULV_CONTRATISTA = "OrdenPulv.CONTRATISTA";
+	private static final String ORDEN_SIEMBRA_CONTRATISTA = "OrdenSiembra.CONTRATISTA";
 
-	private static final String ORDEN_PULV_ESTABLECIMIENTO = "OrdenPulv.ESTABLECIMIENTO";
+	private static final String ORDEN_SIEMBRA_ESTABLECIMIENTO = "OrdenSiembra.ESTABLECIMIENTO";
 
-	private static final String ORDEN_PULV_PRODUCTOR = "OrdenPulv.PRODUCTOR";
+	private static final String ORDEN_SIEMBRA_PRODUCTOR = "OrdenSiembra.PRODUCTOR";
 
-	private static final String ORDEN_PULV_ING = "OrdenPulv.ING";
+	private static final String ORDEN_SIEMBRA_ING = "OrdenSiembra.ING";
 
-	private static final String ORDEN_PULV_NRO = "OrdenPulv.Nro";
+	private static final String ORDEN_SIEMBRA_NRO = "OrdenSiembra.Nro";
 
 	private static final String CONFIG_DIALOG_FXML = "OrdenSiembraPane.fxml"; //$NON-NLS-1$
+
+	private static final String ORDEN_SIEMBRA_UNIDAD = "OrdenSiembra.Unidad";
 	
 	@FXML
 	private VBox content;
@@ -85,6 +91,9 @@ public class OrdenSiembraPaneController extends Dialog<OrdenSiembra>{
 
     @FXML
     private TextField tfIng;
+    
+    @FXML
+    private ComboBox<String> cb;// = new ComboBox<String>();
 
 	private OrdenSiembra ordenSiembra;
 	
@@ -127,24 +136,30 @@ public class OrdenSiembraPaneController extends Dialog<OrdenSiembra>{
 		String fecha = dateFormat.format(DateConverter.asDate(this.dPfecha.getValue()));
 		this.ordenSiembra.setFecha(fecha);
 		this.ordenSiembra.setNumeroOrden(tfNroOrden.getText());
-		config.setProperty(ORDEN_PULV_NRO, this.ordenSiembra.getNumeroOrden());
+		config.setProperty(ORDEN_SIEMBRA_NRO, this.ordenSiembra.getNumeroOrden());
 
 		this.ordenSiembra.setNombreIngeniero(tfIng.getText());
-		config.setProperty(ORDEN_PULV_ING, this.ordenSiembra.getNombreIngeniero());
+		//XXX el ingeniero deberia ser el mismo en todas las ordenes?
+		config.setProperty(ORDEN_SIEMBRA_ING, this.ordenSiembra.getNombreIngeniero());
 		
 		this.ordenSiembra.setProductor(this.tfProductor.getText());
-		config.setProperty(ORDEN_PULV_PRODUCTOR, this.ordenSiembra.getProductor());
+		config.setProperty(ORDEN_SIEMBRA_PRODUCTOR, this.ordenSiembra.getProductor());
 		
 		this.ordenSiembra.setEstablecimiento(this.tfEstablecimiento.getText());
-		config.setProperty(ORDEN_PULV_ESTABLECIMIENTO, this.ordenSiembra.getEstablecimiento());
+		config.setProperty(ORDEN_SIEMBRA_ESTABLECIMIENTO, this.ordenSiembra.getEstablecimiento());
 		
 		this.ordenSiembra.setContratista(this.tfContratista.getText());
-		config.setProperty(ORDEN_PULV_CONTRATISTA, this.ordenSiembra.getContratista());
+		config.setProperty(ORDEN_SIEMBRA_CONTRATISTA, this.ordenSiembra.getContratista());
 
 		this.ordenSiembra.setCultivo(this.tfCultivo.getText());
-		config.setProperty(ORDEN_PULV_CULTIVO, this.ordenSiembra.getCultivo());
+		config.setProperty(ORDEN_SIEMBRA_CULTIVO, this.ordenSiembra.getCultivo());
 		this.ordenSiembra.setDescription(this.taObservaciones.getText());
-		config.setProperty(ORDEN_PULV_DESCRIPCION, this.ordenSiembra.getDescription());
+		config.setProperty(ORDEN_SIEMBRA_DESCRIPCION, this.ordenSiembra.getDescription());
+		
+		String unidadKey = cb.getSelectionModel().getSelectedItem();
+		String unidadValue =SiembraGUIController.getUnidadesPrescripcionSiembra().get(unidadKey);
+		this.ordenSiembra.setUnidad(unidadValue);
+		config.setProperty(ORDEN_SIEMBRA_UNIDAD, this.ordenSiembra.getUnidad());
 		config.save();
 					
 		return this.ordenSiembra;//TODO read elements data from pane
@@ -187,22 +202,25 @@ public class OrdenSiembraPaneController extends Dialog<OrdenSiembra>{
 		NumberFormat nf = Messages.getNumberFormat();
 		nf.setMaximumFractionDigits(0);
 		try {
-			Number nroOrden = nf.parse(config.getPropertyOrDefault(ORDEN_PULV_NRO, "0"));
+			Number nroOrden = nf.parse(config.getPropertyOrDefault(ORDEN_SIEMBRA_NRO, "0"));
 			this.tfNroOrden.setText(nf.format(nroOrden.doubleValue()+1));
 		} catch (ParseException e) {			
 			e.printStackTrace();
 		}
 		
-		this.tfIng.setText(config.getPropertyOrDefault(ORDEN_PULV_ING, ""));
-		this.tfProductor.setText(config.getPropertyOrDefault(ORDEN_PULV_PRODUCTOR, ""));
-		this.tfEstablecimiento.setText(config.getPropertyOrDefault(ORDEN_PULV_ESTABLECIMIENTO, ""));
-		this.tfContratista.setText(config.getPropertyOrDefault(ORDEN_PULV_CONTRATISTA, ""));		
+		this.tfIng.setText(config.getPropertyOrDefault(ORDEN_SIEMBRA_ING, ""));
+		this.tfProductor.setText(config.getPropertyOrDefault(ORDEN_SIEMBRA_PRODUCTOR, ""));
+		this.tfEstablecimiento.setText(config.getPropertyOrDefault(ORDEN_SIEMBRA_ESTABLECIMIENTO, ""));
+		this.tfContratista.setText(config.getPropertyOrDefault(ORDEN_SIEMBRA_CONTRATISTA, ""));		
 		
-		this.tfCultivo.setText(config.getPropertyOrDefault(ORDEN_PULV_CULTIVO, ""));	
-		this.taObservaciones.setText(config.getPropertyOrDefault(ORDEN_PULV_DESCRIPCION, ""));		
+		this.tfCultivo.setText(config.getPropertyOrDefault(ORDEN_SIEMBRA_CULTIVO, ""));	
+		this.taObservaciones.setText(config.getPropertyOrDefault(ORDEN_SIEMBRA_DESCRIPCION, ""));		
+		
+		Map<String,String> availableColums = SiembraGUIController.getUnidadesPrescripcionSiembra();
+		this.cb.setItems(FXCollections.observableArrayList(availableColums.keySet()));
+		this.cb.getSelectionModel().select(0);	
 		
 		this.contructCaldoTable();
-
 	}
 	
 	private void contructCaldoTable() {
@@ -229,9 +247,9 @@ public class OrdenSiembraPaneController extends Dialog<OrdenSiembra>{
 	
 	public void init() {
 		System.out.println("iniciando OrdenSiembraController");
-		VBox v= new VBox(new ImageView(new Image(JFXMain.ICON)));
+		//VBox v= new VBox(new ImageView(new Image(JFXMain.ICON)));
 		this.getDialogPane().setContent(content);
-
+	
 		this.getDialogPane().heightProperty().addListener((o,old,nu)->{
 			content.setPrefSize(this.getWidth(), nu.doubleValue());	
 		});

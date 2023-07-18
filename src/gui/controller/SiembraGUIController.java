@@ -228,11 +228,7 @@ public class SiembraGUIController {
 				d.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
 				d.setResizable(true);
 				ComboBox<String> cb = new ComboBox<String>();
-				Map<String,String> availableColums = new LinkedHashMap<String,String>();
-				availableColums.put(Messages.getString("SiembraLabor.COLUMNA_SEM_10METROS"),SiembraLabor.COLUMNA_SEM_10METROS);//("Sem10ml");
-				availableColums.put(Messages.getString("SiembraLabor.COLUMNA_DOSIS_SEMILLA"),SiembraLabor.COLUMNA_KG_SEMILLA);//("kgSemHa");
-				availableColums.put(Messages.getString("SiembraLabor.COLUMNA_MILES_SEM_HA"),SiembraLabor.COLUMNA_MILES_SEM_HA);//("MilSemHa");
-				availableColums.put(Messages.getString("SiembraLabor.COLUMNA_SEM_ML"),SiembraLabor.COLUMNA_SEM_ML);//("semML");
+				Map<String, String> availableColums = getUnidadesPrescripcionSiembra();
 
 				cb.setItems(FXCollections.observableArrayList(availableColums.keySet()));
 				cb.getSelectionModel().select(0);
@@ -252,6 +248,15 @@ public class SiembraGUIController {
 				String unidad = d.getResult();
 				System.out.println("unidad seleccionada " + unidad);
 				return unidad;
+	}
+
+	public static Map<String, String> getUnidadesPrescripcionSiembra() {
+		Map<String,String> availableColums = new LinkedHashMap<String,String>();
+		availableColums.put(Messages.getString("SiembraLabor.COLUMNA_SEM_10METROS"),SiembraLabor.COLUMNA_SEM_10METROS);//("Sem10ml");
+		availableColums.put(Messages.getString("SiembraLabor.COLUMNA_DOSIS_SEMILLA"),SiembraLabor.COLUMNA_KG_SEMILLA);//("kgSemHa");
+		availableColums.put(Messages.getString("SiembraLabor.COLUMNA_MILES_SEM_HA"),SiembraLabor.COLUMNA_MILES_SEM_HA);//("MilSemHa");
+		availableColums.put(Messages.getString("SiembraLabor.COLUMNA_SEM_ML"),SiembraLabor.COLUMNA_SEM_ML);//("semML");
+		return availableColums;
 	}
 	
 	private void doExportPrescripcionSiembra(SiembraLabor laborToExport) {

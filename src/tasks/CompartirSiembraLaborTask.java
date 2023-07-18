@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Type;
+import java.nio.file.Path;
 import java.text.DateFormat;
 import java.util.Locale;
 import java.util.Optional;
@@ -50,10 +51,12 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import tasks.procesar.ExportarPrescripcionSiembraTask;
 import utils.DAH;
 import utils.FileHelper;
 import utils.JsonUtil;
 import utils.TarjetaHelper;
+import utils.UnzipUtility;
 
 public class CompartirSiembraLaborTask extends Task<String> {
 
@@ -71,6 +74,7 @@ public class CompartirSiembraLaborTask extends Task<String> {
 
 	private SiembraLabor siembraLabor =null;
 	private OrdenSiembra ordenSiembra;
+
 
 
 	public CompartirSiembraLaborTask(SiembraLabor siembraLabor,OrdenSiembra ordenPulv) {
@@ -121,6 +125,8 @@ public class CompartirSiembraLaborTask extends Task<String> {
 					//DAH.save(dbSiembraLabor);//merge local recorrida
 					//	Long id = dbRecorrida.getId();
 					String dbUrl = dbSiembraLabor.getUrl();
+					this.ordenSiembra.setUrl(dbUrl);
+					DAH.save(ordenSiembra);
 					//java.math.BigDecimal id = (java.math.BigDecimal) data.get("id");
 					//String prettyresponse = resContent.toPrettyString();
 					//System.out.println("prettyresponse "+prettyresponse);
@@ -203,13 +209,27 @@ public class CompartirSiembraLaborTask extends Task<String> {
 	 * @param pl la labor de siembra
 	 * @return la url de destino en la nube de la labor
 	 */
-	private String uploadLaborFile(Labor pl) {
-		File zipFile = FileHelper.zipLaborToTmpDir(pl);//ok funciona
-		//TODO subir el zipFile a la tarjeta del usuario
+	private String uploadLaborFile(SiembraLabor pl) {
+		//TODO exportar siembra a prescripcion
+		File zipFile = zipLaborToTmpDir(pl);//ok funciona
+		//subir el zipFile a la tarjeta del usuario
 		TarjetaHelper.uploadFile(zipFile, "/labores");
 		return "/labores/"+zipFile.getName();
 	}
 
+	private File zipLaborToTmpDir(SiembraLabor labor) {
+		//1 crear un directorio temporal
+		Path dir = FileHelper.createTempDir("toUpload");
+		//2 crear un archivo shape dentro del directorio para subir
+		File shpFile = FileHelper.getNewShapeFileAt(dir,"labor.shp");
+		//2 exportar la labor al directorio
+		ExportarPrescripcionSiembraTask export = new ExportarPrescripcionSiembraTask(labor,shpFile,ordenSiembra.getUnidad());
+		export.guardarConfig=false;//como es un temp dir no quiero guardar LAST_FILE
+		export.call();
+		File zipFile = UnzipUtility.zipFiles(FileHelper.selectAllFiles(dir),dir.toFile());
+		return zipFile;
+	}
+	
 	public static  JsonDeserializer<Producto> getProductoDeserializer() {
 		return new JsonDeserializer<Producto>() {
 
@@ -312,10 +332,9 @@ public class CompartirSiembraLaborTask extends Task<String> {
 						request.setParser(new JsonObjectParser(JSON_FACTORY));
 						request.setReadTimeout(0);
 						request.setConnectTimeout(0);
+						
 						HttpHeaders headers = request.getHeaders();//USER=693,468
 						headers.set("USER", Configuracion.getInstance().getPropertyOrDefault("USER", "nonefound"));
-
-
 					}
 				});//java.net.SocketException: Address family not supported by protocol family: connect
 

@@ -52,12 +52,12 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 	private SiembraLabor laborToExport=null;
 	private File shapeFile=null;
 	private String unidad=null;
+	public boolean guardarConfig=true;
 	
 	public  ExportarPrescripcionSiembraTask(SiembraLabor _laborToExport,File _shapeFile,String _unidad) {	
 		laborToExport=_laborToExport;
 		shapeFile=_shapeFile;
-		unidad=_unidad;
-		
+		unidad=_unidad;		
 	}
 	
 	public File call() {
@@ -222,10 +222,17 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 			}
 		}		
 
-		System.out.println(Messages.getString("JFXMain.355")+ shapeFile); //$NON-NLS-1$
-		Configuracion config = Configuracion.getInstance();
-		config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
-		config.save();
+		if(guardarConfig) {
+			//TODO guardar un archivo txt con la configuracion de la labor para que quede como registro de las operaciones
+			 Configuracion config = Configuracion.getInstance();
+			 	config.loadProperties();
+				config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
+				config.save();
+			}
+//		System.out.println(Messages.getString("JFXMain.355")+ shapeFile); //$NON-NLS-1$
+//		Configuracion config = Configuracion.getInstance();
+//		config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
+//		config.save();
 		
 		return shapeFile;
 		}catch(Exception e) {

@@ -13,6 +13,7 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 
 import dao.AbstractBaseEntity;
+import dao.siembra.SiembraLabor;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -48,6 +49,7 @@ public class OrdenSiembra extends AbstractBaseEntity {
 	private String estado=new String("Pendiente");	
 	
 	private String cultivo = "default";
+	private String unidad = SiembraLabor.COLUMNA_SEM_10METROS;
 
 	private String productor="default";
 	private String establecimiento="default";

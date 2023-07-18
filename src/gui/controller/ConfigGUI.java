@@ -25,6 +25,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
 import api.OrdenPulverizacion;
+import api.OrdenSiembra;
 import dao.Labor;
 import dao.Ndvi;
 import dao.Poligono;
@@ -133,6 +134,7 @@ public class ConfigGUI {
 		addMenuItem(Messages.getString("JFXMain.OrdenCompra"),(a)->doShowOrdenesCompra(),menuConfiguracion); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.362"),(a)->doShowLaboresTable(),menuConfiguracion); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.configPulverizacionMI"),(a)->doShowOrdenesPulverizacionTable(),menuConfiguracion); //$NON-NLS-1$
+		addMenuItem(Messages.getString("JFXMain.configSiembraMI"),(a)->doShowOrdenesSiembraTable(),menuConfiguracion); //$NON-NLS-1$
 		
 		addMenuItem(Messages.getString("JFXMain.configIdiomaMI"),(a)->doChangeLocale(),menuConfiguracion); //$NON-NLS-1$
 		addMenuItem(Messages.getString("JFXMain.configHelpMI"),(a)->doShowAcercaDe(),menuConfiguracion); //$NON-NLS-1$\
@@ -831,6 +833,65 @@ public class ConfigGUI {
 
 	}
 	
+	public void doShowOrdenesSiembraTable() {
+		Platform.runLater(()->{
+			List<OrdenSiembra> ordenes = DAH.getAllOrdenesSiembra();
+			final ObservableList<OrdenSiembra> data = FXCollections.observableArrayList(ordenes);
+
+			SmartTableView<OrdenSiembra> table = new SmartTableView<OrdenSiembra>(data,
+					Arrays.asList("Id","PoligonoString","Uuid","Url","OrdenShpZipUrl","Owner","Items"),
+					Arrays.asList("NumeroOrden",
+							"Fecha",
+							"Nombre",
+							"Description",
+							"Productor",
+							"Establecimiento",
+							"NombreIngeniero",
+							"Contratista",
+							"Cultivo",
+							"Estado","Superficie"							
+							),
+					Arrays.asList("Numero",
+							"Fecha",
+							"Nombre",
+							"Descripcion",
+							"Productor",
+							"Establecimiento",
+							"Ingeniero",
+							"Contratista",
+							"Cultivo",
+							"Estado","Superficie"							
+							)
+					);
+			table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
+			table.setEditable(true);
+			//			table.setOnDoubleClick(()->new Poligono());
+			table.setOnShowClick((recorrida)->{
+				showQR(recorrida.url);
+				//TODO descargar el archivo e importarlo
+				//poli.setActivo(true);
+				//main.doShowRecorrida(recorrida);
+			});
+
+			table.addSecondaryClickConsumer("Editar",(r)-> {
+				//doShowMuestrasTable(r.getMuestras());
+			});
+
+			Scene scene = new Scene(table, 800, 600);
+			Stage tablaStage = new Stage();
+			tablaStage.getIcons().add(new Image(JFXMain.ICON));
+			tablaStage.setTitle(Messages.getString("JFXMain.configSiembraMI")); //$NON-NLS-1$
+			tablaStage.setScene(scene);
+
+			tablaStage.onHiddenProperty().addListener((o,old,n)->{
+				main.getLayerPanel().update(main.getWwd());
+				//getWwd().redraw();
+			});
+
+			tablaStage.show();	 
+		});	
+	}
+	
 	public void doShowOrdenesPulverizacionTable() {
 		Platform.runLater(()->{
 			List<OrdenPulverizacion> ordenes = DAH.getAllOrdenesPulverizacion();
@@ -864,7 +925,9 @@ public class ConfigGUI {
 			table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
 			table.setEditable(true);
 			//			table.setOnDoubleClick(()->new Poligono());
-			table.setOnShowClick((recorrida)->{
+			table.setOnShowClick((op)->{
+				showQR(op.url);
+				//TODO descargar el archivo e importarlo
 				//poli.setActivo(true);
 				//main.doShowRecorrida(recorrida);
 			});
@@ -1194,7 +1257,7 @@ public class ConfigGUI {
 
 		Alert a = new Alert(AlertType.INFORMATION);
 		ImageView view = new ImageView();
-		a.initOwner(this.main.stage);
+		a.initOwner(JFXMain.stage);
 		a.setTitle("Qr Code");
 		view.setImage(image);
 		VBox v = new VBox();
@@ -1246,7 +1309,6 @@ public class ConfigGUI {
 			bitMatrix = barcodeWriter.encode(code, BarcodeFormat.QR_CODE, 200, 200);
 			return MatrixToImageWriter.toBufferedImage(bitMatrix);
 		} catch (WriterException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
