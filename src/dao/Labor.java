@@ -335,7 +335,6 @@ public abstract class Labor<E extends LaborItem>  {
 				System.out.println("Prescription Type: "+DataUtilities.spec(schema));
 				System.out.println(schema);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 

@@ -3,13 +3,17 @@ package utils;
 import java.awt.geom.Point2D;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.PrecisionModel;
 
+import org.geotools.referencing.CRS;
 import org.geotools.referencing.GeodeticCalculator;
+
+
 import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.geometry.primitive.Point;
+import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
@@ -22,65 +26,145 @@ public class ProyectionConstants {
 	//segun wgs84
 	public static final double RADIO_TERRESTRE_ECUATORIAL = 6378137/1.021891112380502;//para que el area del pixel de landsat sea 100m2 pero me parece que es mas grande 2%
 	public static final double RADIO_TERRESTRE_POLAR =  6356752.3;//6356752;
-	
+
 	private static final double LATITUD_ARGENTINA =-33.5;
 	public static final double METROS2_POR_HA = 10000;
-	
+
 	private static double LATITUD_CALCULO=LATITUD_ARGENTINA;
+	private static GeometryFactory factory=null;
 	//public static double metersToLong = 180 / ( Math.PI * RADIO_TERRESTRE_ECUATORIAL*Math.cos(Math.toRadians(LATITUD_ARGENTINA)));// para
 	//public static double metersToLat = 180 / ( Math.PI * RADIO_TERRESTRE_POLAR);// para
-	
+
 	//getArea() - area returned in the same units as the coordinates (be careful of lat/lon data!)
 	//public static final double A_HAS =1/(metersToLong()*metersToLat()*METROS2_POR_HA);//1/8.06e-11 * 10000
-	
+
 	public static void setLatitudCalculo(double lat){
-	//	System.out.println("actualizando la latitud de trabajo a: "+lat);
+		//	System.out.println("actualizando la latitud de trabajo a: "+lat);
 		LATITUD_CALCULO=lat;
 	}
+
 	public static double A_HAS(){
 		return 1/(metersToLong()*metersToLat()*METROS2_POR_HA);
 	}
+
 	/**
 	 * 
 	 * @return la constante por la que hay que multiplicar a una longitud para convertirla en metros
 	 */
 	public static double metersToLong(){
-		return 180 / ( Math.PI * RADIO_TERRESTRE_ECUATORIAL*Math.cos(Math.toRadians(LATITUD_CALCULO)));
+		//return 180 / ( Math.PI * RADIO_TERRESTRE_ECUATORIAL*Math.cos(Math.toRadians(LATITUD_CALCULO)));
+		GeometryFactory fact = getGeometryFactory();
+		Point start = fact.createPoint(new Coordinate(0,LATITUD_CALCULO));
+		Point dest =getPoint(start,90,100);//dest esta a 100mts al este
+		double deltaY=dest.getX()-start.getX();
+		//double despues = deltaY/100;
+		//antes=9.013372994427096E-6 despues=9.01515282770049E-6
+		//System.out.println("antes="+antes+" despues="+despues);
+		return deltaY/100;
 	}
-	
+
+	/**
+	 * 
+	 * @return devuelve el valor por el que hay que multiplicar una longitud en metros para convertirla en un arco en grados latitud norte/sur
+	 */
 	public static double metersToLat(){
-		return 180 / ( Math.PI * RADIO_TERRESTRE_POLAR);
+		//double antes=  180 / ( Math.PI * RADIO_TERRESTRE_POLAR);
+		GeometryFactory fact = getGeometryFactory();
+		Point start = fact.createPoint(new Coordinate(0,LATITUD_CALCULO));
+		Point dest =getPoint(start,0,100);//dest esta a 100mts al norte
+		double deltaY=dest.getY()-start.getY();
+		//double despues = deltaY/100;
+		//antes=9.013372994427096E-6 despues=9.01515282770049E-6
+		//System.out.println("antes="+antes+" despues="+despues);
+		return deltaY/100;
+
+
+
 	}
 	public static double metersToLongLat(double meters){
-//		GeometryFactory factory = new GeometryFactory(new PrecisionModel(
-//				PrecisionModel.FLOATING), SRID.WGS84_SRID.getSRID());
-		
-//		CoordinateReferenceSystem utmArg = factory.createCoordinateReferenceSystem("EPSG:28880");
-//		CoordinateReferenceSystem defaultcrs = factory.createCoordinateReferenceSystem("EPSG:4326");
-//		   MathTransform transform = CRS.findMathTransform(dataCRS, worldCRS, lenient);
+		//		GeometryFactory factory = new GeometryFactory(new PrecisionModel(
+		//				PrecisionModel.FLOATING), SRID.WGS84_SRID.getSRID());
+
+		//		CoordinateReferenceSystem utmArg = factory.createCoordinateReferenceSystem("EPSG:28880");
+		//		CoordinateReferenceSystem defaultcrs = factory.createCoordinateReferenceSystem("EPSG:4326");
+		//		   MathTransform transform = CRS.findMathTransform(dataCRS, worldCRS, lenient);
 		return meters*metersToLat();
 	}
-	
+
 	public static GeometryFactory getGeometryFactory(){
-		GeometryFactory factory = new GeometryFactory(new PrecisionModel(
-				PrecisionModel.FLOATING), SRID.WGS84_SRID.getSRID());
+		if(factory==null) {
+			factory = new GeometryFactory(new PrecisionModel(
+					PrecisionModel.FLOATING), SRID.WGS84_SRID.getSRID());
+		}
 		return factory;
 	}
-	
-	public static double getDistancia(Point2D origen, Point2D destino){
-		GeodeticCalculator gc = new GeodeticCalculator();//Constructs a new geodetic calculator associated with the WGS84 ellipsoid.
-		gc.setStartingGeographicPoint(origen);
-		gc.setDestinationGeographicPoint(destino);
-		return gc.getOrthodromicDistance();
+
+	public static CoordinateReferenceSystem getCRS4326() {	
+		return getCRS("EPSG:4326");
 	}
-	
-	public static Point2D getPoint(Point2D origen, double azimut,double metros){
-		GeodeticCalculator gc = new GeodeticCalculator();
-		gc.setStartingGeographicPoint(origen);
+
+	public static CoordinateReferenceSystem getCRS(String crsID) {
+		CoordinateReferenceSystem crs=null;
+		try {
+			crs = CRS.decode(crsID);
+		} catch (FactoryException e) {			
+			e.printStackTrace();
+		}
+		return crs;
+	}
+
+	public static double getDistancia(Point startPoint, Point destPoint){
+		Point2D start =  new Point2D.Double(startPoint.getX(),startPoint.getY());
+		Point2D dest =  new Point2D.Double(destPoint.getX(),destPoint.getY());
+		//startPoint.getFactory().getSRID()
+
+		GeodeticCalculator gc = new GeodeticCalculator(getCRS4326());//Constructs a new geodetic calculator associated with the WGS84 ellipsoid.
+		gc.setStartingGeographicPoint(start);
+		gc.setDestinationGeographicPoint(dest);
+		return gc.getOrthodromicDistance();//Returns the orthodromic distance (expressed in meters)
+	}
+
+	public static double getRumbo(Point startPoint,Point destPoint){
+		Point2D start =  new Point2D.Double(startPoint.getX(),startPoint.getY());
+		Point2D dest =  new Point2D.Double(destPoint.getX(),destPoint.getY());
+		GeodeticCalculator gc = new GeodeticCalculator(getCRS4326());//Constructs a new geodetic calculator associated with the WGS84 ellipsoid.
+		gc.setStartingGeographicPoint(start);
+		gc.setDestinationGeographicPoint(dest);
+		double azimuth =gc.getAzimuth(); 
+		
+		return azimuth>0?azimuth:(azimuth+360);//devuelve el rumbo que hay que tomar para llegar de start a dest
+	}
+
+	public static Point getPoint(Point origen, double azimut,double metros){
+		azimut=azimut>180?azimut-360:azimut;
+		//Azimuth 231°24.0'E is out of range (±180°).
+		GeometryFactory fact =origen.getFactory();
+		Point2D start =  new Point2D.Double(origen.getX(),origen.getY());
+		GeodeticCalculator gc = new GeodeticCalculator(getCRS4326());
+		gc.setStartingGeographicPoint(start);
 		gc.setDirection(azimut, metros);
-		return gc.getDestinationGeographicPoint();
+		Point2D dest2D=  gc.getDestinationGeographicPoint();
+		Point dest = fact.createPoint(new Coordinate(dest2D.getX(),dest2D.getY()));
+		return dest;
 	}
-	
+
+	public static void main(String[] args) {
+		GeometryFactory fact = getGeometryFactory();
+		double lon=0;
+		double lat=0;
+		double delta=-1;//1grado en el ecuador dist = 111319.4907932264 azimut=90.0
+		Point start = fact.createPoint(new Coordinate(lon,lat));
+		Point dest =fact.createPoint(new Coordinate(lon+delta,lat));
+		System.out.println("start="+start+" dest="+dest);//dist 57.8mts vs  57.87768844431185
+		double dist = getDistancia(start,dest);
+
+		double azimut=getRumbo(start, dest);
+		System.out.println("dist = "+dist+" azimut="+azimut);
+		Point point = getPoint(start,45,10);
+		System.out.println("start="+start+" +10a45="+point);//dist 57.8mts vs  57.87768844431185
+
+	}
+
 	public enum SRID { 
 
 		/**
@@ -108,12 +192,12 @@ public class ProyectionConstants {
 				return 4326; 
 			} 
 		}; 
-	 
-	    /**
-	     * @return an SRID (Spatial Reference IDentifier) * 
-	     * @see <a href="http://en.wikipedia.org/wiki/SRID" >SRID</a> 
-	     */ 
-	    public abstract int getSRID(); 
+
+		/**
+		 * @return an SRID (Spatial Reference IDentifier) * 
+		 * @see <a href="http://en.wikipedia.org/wiki/SRID" >SRID</a> 
+		 */ 
+		public abstract int getSRID(); 
 	}
 
 	/**
@@ -121,14 +205,13 @@ public class ProyectionConstants {
 	 * @param feature
 	 * @return la superficie en has de la geometria default tomando en cuenta la latitudo de la primera coordenada
 	 */
-	
-		public static double getHasFeature(SimpleFeature feature) {
-			Geometry geom =((Geometry)feature.getDefaultGeometry());
-			Coordinate[] c = geom.getCoordinates();
-			setLatitudCalculo(c[0].y);
-			return A_HAS(geom.getArea());
-			
-		}
+	public static double getHasFeature(SimpleFeature feature) {
+		Geometry geom =((Geometry)feature.getDefaultGeometry());
+		Coordinate[] c = geom.getCoordinates();
+		setLatitudCalculo(c[0].y);
+		return A_HAS(geom.getArea());
+
+	}
 	/**
 	 * 
 	 * @param area area en grados al cuadrado como viene de Geometry.getArea();

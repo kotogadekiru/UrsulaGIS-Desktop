@@ -4,18 +4,13 @@ import java.io.IOException;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
 
-import org.geotools.data.FeatureReader;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.factory.GeoTools;
 import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.opengis.feature.Feature;
-import org.opengis.feature.FeatureVisitor;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeType;
@@ -34,7 +29,7 @@ import dao.LaborItem;
 import utils.GeometryHelper;
 
 public class LaborDataStore<E> {
-	private static List<Labor> locked = Collections.synchronizedList(new ArrayList<Labor>());
+	private static List<Labor<?>> locked = Collections.synchronizedList(new ArrayList<Labor<?>>());
 	
 	public static List<String> getAvailableColumns(Labor<? extends LaborItem> labor) {
 		List<String> availableColumns = new ArrayList<String>();
@@ -195,7 +190,7 @@ public class LaborDataStore<E> {
 			return;
 		}
 
-		List<SimpleFeature> sFeaturesToAdd = new ArrayList<SimpleFeature>();
+		//List<SimpleFeature> sFeaturesToAdd = new ArrayList<SimpleFeature>();
 		// cargar todas las features en memoria pero guardarlas indexadas en cachedEnvelopes
 		
 		Quadtree auxTreeCache = new Quadtree();
@@ -226,7 +221,11 @@ public class LaborDataStore<E> {
 	}
 
 	public static void dispose(Labor<? extends LaborItem> labor) {
+		if(locked.contains(labor)) {
+			System.out.println("no puedo hacer dispose porque esta lockeada");
+		}
 		checkLock(labor);
+		System.out.println("haciendo dispose de "+labor.getNombre());
 		
 		if(labor.inStore!=null){
 			labor.inStore.dispose();

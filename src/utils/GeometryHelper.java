@@ -369,6 +369,11 @@ public class GeometryHelper {
 		return new Coordinate(c1.x+deltaX*t,c1.y+deltaY*t);
 	}
 
+	public static Geometry createCircle(Point c,double radius) {
+		radius = ProyectionConstants.metersToLongLat(radius);
+		return c.buffer(radius);
+	}
+	
 	public static Polygon constructPolygon(ReferencedEnvelope e) {
 		Coordinate D = new Coordinate(e.getMaxX(), e.getMaxY()); // x-l-d
 		Coordinate C = new Coordinate(e.getMinX(), e.getMaxY());// X+l-d
@@ -426,6 +431,36 @@ public class GeometryHelper {
 		return poly;
 	}
 
+	/**
+	 * 
+	 * @param deltaX cateto X
+	 * @param deltaY cateto Y
+	 * @return devuelve el angulo en grados; null si no se puede calcular
+	 */
+	public static Double getAzimuth(double deltaX,double deltaY) {
+		Double rumbo = null;
+		if(deltaX==0) {
+			if(deltaY>0) {
+				return 0.0;
+			} else if (deltaY==0) {
+				return null;//no hay angulo para 0,0
+			}else {return 180.0;}
+		}
+		double tan = deltaY/deltaX;//+Math.PI/2;
+		rumbo = Math.atan(tan);
+		rumbo = Math.toDegrees(rumbo);//como esto me da entre -90 y 90 le sumo 90 para que me de entre 0 180
+
+		rumbo=90-rumbo;
+		return rumbo<0?rumbo+360:rumbo;
+		//return rumbo;
+	}
+	
+	public static void main(String[] args) {
+		Point X=ProyectionConstants.getGeometryFactory().createPoint(new Coordinate(-60,-33));
+		Geometry circle = createCircle(X,20);
+		System.out.println("cirlce = "+circle);
+		
+	}
 	public static Poligono constructPoligono(Geometry g) {
 		Poligono p = new Poligono();
 		List<Position> positions = new ArrayList<Position>();

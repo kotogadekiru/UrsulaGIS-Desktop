@@ -96,7 +96,7 @@ public class SiembraGUIController {
 		 */
 		siembrasP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.compartirPulverizacionAction"),(layer)->{		
 			doCompartirSiembra((SiembraLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-			return "pulverizacion compartida" + layer.getName(); //$NON-NLS-1$
+			return "siembra compartida" + layer.getName(); //$NON-NLS-1$
 		}));
 	}
 	

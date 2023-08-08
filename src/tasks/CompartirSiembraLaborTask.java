@@ -176,6 +176,7 @@ public class CompartirSiembraLaborTask extends Task<String> {
 					
 					i.setProducto(siembra.getSemilla());
 					i.setCantidad(siembra.getCantidadInsumo());
+					//TODO agregar fertilizante en la linea y al costado
 					if(has>0) {
 						i.setDosisHa(i.getCantidad()/has);
 					}

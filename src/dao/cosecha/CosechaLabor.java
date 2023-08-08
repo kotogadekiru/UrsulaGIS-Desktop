@@ -1,10 +1,8 @@
 package dao.cosecha;
 
 import java.util.List;
+import java.util.Optional;
 
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -19,7 +17,6 @@ import dao.LaborConfig;
 import dao.LaborItem;
 import dao.config.Configuracion;
 import dao.config.Cultivo;
-import dao.ordenCompra.Producto;
 import dao.ordenCompra.ProductoLabor;
 import dao.utils.PropertyHelper;
 import javafx.beans.property.DoubleProperty;
@@ -52,6 +49,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 	public static final double KG_POR_LIBRA = 0.453592;
 
 	public static final String COLUMNA_VELOCIDAD = "Velocidad";
+	public static final String COLUMNA_HUMEDAD_KEY = "Humedad";
 	public static final String COLUMNA_RENDIMIENTO = "Rendimient";
 	public static final String COLUMNA_DESVIO_REND = "DesvRendim";
 
@@ -199,7 +197,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 		} 
 
 		if (config.correccionFlowToRindeProperty().getValue()) {
-			//TODO si existe el campo Moisture_s tomarlo encuenta para secar el grano
+			
 
 			/*
 			 * mass_flow[kg/s]=0.4535*lb/s ancho[m] velocidad[m/s] rinde[kg/ha] =
@@ -220,22 +218,27 @@ public class CosechaLabor extends Labor<CosechaItem> {
 			if(divisor>0){
 				rindeDouble = rindeDouble * constantes / (divisor);
 			} 
-			
+			//TODO si existe el campo Moisture_s tomarlo encuenta para secar el grano		
 			List<AttributeType> descriptors = harvestFeature.getType().getTypes();
-			String moistureColumn =null;
-			for(AttributeType att:descriptors){
-			String colName = att.getName().toString();
-				 if("Moisture_s".equalsIgnoreCase(colName)){
-					moistureColumn =colName;	
-				}
-			}
+		//	String moistureColumn =null;
+			String col_moisture =this.config.getConfigProperties().getPropertyOrDefault(CosechaLaborConstants.COLUMNA_HUMEDAD_KEY, "Moisture_s");
+			Optional<String> opt = descriptors.stream()
+					.map(att->att.getName().toString())
+					.filter(att->att.equalsIgnoreCase(col_moisture))
+					.findAny();
+//			for(AttributeType att:descriptors){
+//			String colName = att.getName().toString();			
+//				 if(col_moisture.equalsIgnoreCase(colName)){
+//					moistureColumn =colName;	
+//				}
+//			}
 			
-			if(moistureColumn!=null){
-				Double moisture =LaborItem.getDoubleFromObj(harvestFeature.getAttribute(moistureColumn));
+			if(opt.isPresent()){
+				Double moisture =LaborItem.getDoubleFromObj(harvestFeature.getAttribute(opt.get()));
 				Double rindeH = ci.getRindeTnHa();
 				Double k = 100/(100+moisture);
 				ci.setRindeTnHa(rindeH*k);
-				ci.setPrecioTnGrano(this.precioGrano);
+				//ci.setPrecioTnGrano(this.precioGrano);
 			}
 			
 			//CAMBIO LA ELEVACION DE PIES A METROS

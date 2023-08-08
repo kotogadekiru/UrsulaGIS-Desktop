@@ -727,6 +727,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 					//float r =0,g = 0,b=0,
 					float elev=0;
 					double amount=0;
+					
 					for(FC it : fueaturesToAdd){
 						elev+= it.getElevacion()-minElev;
 						amount+=it.getAmount();
@@ -1196,10 +1197,12 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		//int medRes=5*lowRes;
 	//	System.out.println("mid res rendering milis: "+medRes);
 		int highRes=Math.min(10*lowRes,30000);
+		System.out.println("lowRes= "+lowRes);
+		System.out.println("highRes= "+highRes);
 		installPlaceMark();
 		//
 
-	//	if( highRes > TARGET_LOW_RES_TIME*2 && highRes < 60000) {//solo si es menor a un minuto
+		if( highRes > TARGET_LOW_RES_TIME*2 && highRes < 60000) {//solo si es menor a un minuto
 			CompletableFuture.runAsync(() -> {
 //				System.out.println("corriendo analyticSurfaceLayerMD");
 //				RenderableLayer analyticSurfaceLayerMD = createAnalyticSurfaceFromQuery(medRes);//10
@@ -1223,7 +1226,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				if (e != null) e.printStackTrace();		
 				return null;
 			});
-//		} else {
+		}// else {
 //			System.out.println("no corro analyticSurfaceLayerHD");
 //		}
 	}
@@ -1397,7 +1400,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 
 
-				DoubleProperty dp = new SimpleDoubleProperty();
+			//	DoubleProperty dp = new SimpleDoubleProperty();
 //				boolean doRender = (!finished && id==dc.getView().getViewStateID())
 //						&&(lastStateRendered!=dc.getView().getViewStateID());
 //
@@ -1417,7 +1420,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 					if(System.currentTimeMillis()-init<500
 							||(!finished && id==dc.getView().getViewStateID())
 							) {//solo rendereo menos de un segundo. 
-						dp.set(dp.get()+1);
+				//		dp.set(dp.get()+1);
 						r.render(dc);
 					}else {
 						this.finished=false;
