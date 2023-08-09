@@ -8,9 +8,11 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -62,6 +64,8 @@ public class Clasificador {
 			Color.DARKBLUE};	  //8 de min + 7 a +inf
 	//		Color.rgb(94,79,162)
 	//		};
+	
+	public static Map<Color,java.awt.Color> awtColorMap = new HashMap<Color,java.awt.Color>();
 	public static char[] abc = "ABCDEFGHIJKLM".toCharArray();
 	public static String cba = "HGFEDCBA";
 
@@ -416,6 +420,18 @@ public class Clasificador {
 		return getColorForCategoria(absCat,getNumClasses());
 	}
 
+	public java.awt.Color getAwtColorForCategoria(Integer absCat){
+		Color colorKey = getColorForCategoria(absCat);
+		if(awtColorMap.containsKey(colorKey)) {
+			return awtColorMap.get(colorKey);
+		}
+		int red = new Double(colorKey.getRed()*255).intValue();
+		int green = new Double(colorKey.getGreen()*255).intValue();
+		int blue = new Double(colorKey.getBlue()*255).intValue();
+		java.awt.Color awtColor =new java.awt.Color(red,green,blue);
+		awtColorMap.put(colorKey, awtColor);
+		return awtColor;
+	}
 	/**
 	 * 
 	 * @param absCat

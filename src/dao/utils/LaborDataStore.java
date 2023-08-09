@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.persistence.Transient;
+
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.factory.CommonFactoryFinder;
@@ -221,6 +223,7 @@ public class LaborDataStore<E> {
 	}
 
 	public static void dispose(Labor<? extends LaborItem> labor) {
+		System.out.println("antes de dispose locked contiene "+locked.size()+" elementos");
 		if(locked.contains(labor)) {
 			System.out.println("no puedo hacer dispose porque esta lockeada");
 		}
@@ -232,7 +235,7 @@ public class LaborDataStore<E> {
 			labor.inStore = null;
 		}
 
-		labor.clearCache();
+		labor.clearCache();//aca se borra quadtree
 
 		if(labor.outCollection!=null){
 			labor.outCollection.clear();
@@ -244,7 +247,7 @@ public class LaborDataStore<E> {
 			labor.inCollection=null;
 		}
 
-		if(labor.layer!=null){
+		if(labor.layer!=null){		
 			labor.layer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, null);
 			labor.layer.setValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR, null);
 			labor.layer.removeAllRenderables();
@@ -253,6 +256,7 @@ public class LaborDataStore<E> {
 			labor.layer=null;
 		}
 		locked.remove(labor);
+		System.out.println("despues de dispose locked contiene "+locked.size()+" elementos");
 	}
 	
 	public static void insertFeature(LaborItem laborItem, Labor<? extends LaborItem> labor) {

@@ -82,8 +82,7 @@ public class WWPanel extends JPanel {
 			System.out.println("fallo la carga del layer en Sentinel2Layer");
 			e.printStackTrace();
 		}
-		double transicion =3*1000;
-
+	//	double transicion =3*1000;
 //		GoogleTiledImageLayer sat = new GoogleTiledImageLayer();
 //		sat.setValue(AVKey.DATA_CACHE_NAME, "/Earth/Google/Satellite");
 //		sat.setMinActiveAltitude(transicion);

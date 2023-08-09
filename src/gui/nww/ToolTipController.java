@@ -7,7 +7,6 @@
 package gui.nww;
 
 import dao.LaborItem;
-import dao.fertilizacion.FertilizacionItem;
 import gov.nasa.worldwind.*;
 import gov.nasa.worldwind.avlist.*;
 import gov.nasa.worldwind.event.*;
@@ -44,8 +43,7 @@ public class ToolTipController implements SelectListener, Disposable
      * @param hoverKey    the key to use when looking up tool tip text from the shape's AVList when a hover event
      *                    occurs. May be null, in which case a tool tip is not displayed for hover events.
      */
-    public ToolTipController(WorldWindow wwd, String rolloverKey, String hoverKey)
-    {
+    public ToolTipController(WorldWindow wwd, String rolloverKey, String hoverKey){
         this.wwd = wwd;
         this.hoverKey = hoverKey;
         this.rolloverKey = rolloverKey;
@@ -58,66 +56,78 @@ public class ToolTipController implements SelectListener, Disposable
      *
      * @param wwd         the World Window to monitor.
      */
-    public ToolTipController(WorldWindow wwd)
-    {
+    public ToolTipController(WorldWindow wwd) {
         this.wwd = wwd;
         this.rolloverKey = AVKey.DISPLAY_NAME;
 
         this.wwd.addSelectListener(this);        
     }
 
-    public void dispose()
-    {
+    public void dispose(){
         this.wwd.removeSelectListener(this);
     }
 
-    protected String getHoverText(SelectEvent event)
-    {
+    protected String getHoverText(SelectEvent event)  {
         return event.getTopObject() != null && event.getTopObject() instanceof AVList ?
             ((AVList) event.getTopObject()).getStringValue(this.hoverKey) : null;
     }
 
-    protected String getRolloverText(SelectEvent event)
-    {
+    protected String getRolloverText(SelectEvent event) {
         return event.getTopObject() != null && event.getTopObject() instanceof AVList ?
             ((AVList) event.getTopObject()).getStringValue(this.rolloverKey) : null;
     }
 
-    public void selected(SelectEvent event)
-    {
-        try
-        {
-            if (event.isRollover() && this.rolloverKey != null)
-                this.handleRollover(event);
-            else if (event.isHover() && this.hoverKey != null)
+    public void selected(SelectEvent event) {
+    	//System.out.println("tooltip selec listener event "+event.getEventAction());
+        try {
+            if (event.isRollover() && this.rolloverKey != null) {
+            	
+            } else if (event.isHover() ) {//&& this.hoverKey != null) {
+            	 System.out.println("event.isHover");
+            	this.handleRollover(event);
+            }
                 
            if(event.isRightClick())    {//este evento no se lanza
         	   System.out.println("right click!");
         	   this.handleRigthClick(event);
            }
             
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             // Wrap the handler in a try/catch to keep exceptions from bubbling up
             Logging.logger().warning(e.getMessage() != null ? e.getMessage() : e.toString());
         }
+
     }
 
-    private void handleRigthClick(SelectEvent event) {
+    private void handleRigthClickOld(SelectEvent event) {
     	this.lastRightClickObject = event.getTopObject();
     	if(this.lastRightClickObject != null && this.lastRightClickObject instanceof AVList) {
     		LaborItem item = ((LaborItem)  ((AVList) this.lastRightClickObject).getValue(ProcessMapTask.LABOR_ITEM_AVKey) );	
     		this.showToolTip(event, "Borrar item "+item.getId()+"?"); 
-    		this.wwd.redraw();
-    		
+    		this.wwd.redraw();    		
     	}
 	}
 
-	protected void handleRollover(SelectEvent event)
-    {
-        if (this.lastRolloverObject != null)
-        {
+	protected void handleRigthClick(SelectEvent event)  {
+        if (this.lastRightClickObject != null) {
+            if (this.lastRightClickObject == event.getTopObject() && !WWUtil.isEmpty(getRolloverText(event)))
+                return;
+
+            this.hideToolTip();
+            this.lastRightClickObject = null;
+            this.wwd.redraw();
+        }
+
+        if (event.getTopObject() != null && event.getTopObject() instanceof AVList) {
+            this.lastRightClickObject = event.getTopObject();
+            LaborItem item = ((LaborItem)  ((AVList) this.lastRightClickObject).getValue(ProcessMapTask.LABOR_ITEM_AVKey) );	
+            this.showToolTip(event, "Borrar item "+item.getId()+"?"); 
+            this.wwd.redraw();
+        }
+    }
+    
+	protected void handleRollover(SelectEvent event)  {
+        if (this.lastRolloverObject != null) {
             if (this.lastRolloverObject == event.getTopObject() && !WWUtil.isEmpty(getRolloverText(event)))
                 return;
 
@@ -134,10 +144,8 @@ public class ToolTipController implements SelectListener, Disposable
         }
     }
 
-    protected void handleHover(SelectEvent event)
-    {
-        if (this.lastHoverObject != null)
-        {
+    protected void handleHover(SelectEvent event) {
+        if (this.lastHoverObject != null){
             if (this.lastHoverObject == event.getTopObject())
                 return;
 
@@ -146,28 +154,21 @@ public class ToolTipController implements SelectListener, Disposable
             this.wwd.redraw();
         }
 
-        if (getHoverText(event) != null)
-        {
+        if (getHoverText(event) != null) {
             this.lastHoverObject = event.getTopObject();
             this.showToolTip(event, getHoverText(event).replace("\\n", "\n"));
             this.wwd.redraw();
         }
     }
 
-    protected void showToolTip(SelectEvent event, String text)
-    {
-        if (annotation != null)
-        {
-            annotation.setText(text);
-            annotation.setScreenPoint(event.getPickPoint());
-        }
-        else
-        {
+    protected void showToolTip(SelectEvent event, String text) {
+        if (annotation != null) {
+            annotation.setText(text);           
+        }  else  {
             annotation = new ToolTipAnnotation(text);
         }
-
-        if (layer == null)
-        {
+        annotation.setScreenPoint(event.getPickPoint());
+        if (layer == null) {
             layer = new AnnotationLayer();
             layer.setPickEnabled(false);
         }
@@ -177,8 +178,7 @@ public class ToolTipController implements SelectListener, Disposable
         this.addLayer(layer);
     }
 
-    protected void hideToolTip()
-    {
+    protected void hideToolTip() {
         if (this.layer != null)
         {
             this.layer.removeAllAnnotations();

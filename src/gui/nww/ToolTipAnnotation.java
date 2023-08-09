@@ -6,12 +6,16 @@
 
 package gui.nww;
 
-import gov.nasa.worldwind.avlist.AVKey;
-import gov.nasa.worldwind.render.*;
-import javafx.geometry.Rectangle2D;
-import javafx.stage.Screen;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Rectangle;
 
-import java.awt.*;
+import gov.nasa.worldwind.avlist.AVKey;
+import gov.nasa.worldwind.render.DrawContext;
+import gov.nasa.worldwind.render.ScreenAnnotation;
 
 /**
  * @author tag
@@ -67,6 +71,8 @@ public class ToolTipAnnotation extends ScreenAnnotation {
 		return this.tooltipOffset != null ? this.tooltipOffset.y : 0;
 	}
 
+	
+	
 	@Override
 	protected void doRenderNow(DrawContext dc) {
 		if (dc.getPickPoint() == null)

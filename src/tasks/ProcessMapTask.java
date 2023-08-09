@@ -1,18 +1,13 @@
 package tasks;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -33,7 +28,6 @@ import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.operation.buffer.BufferParameters;
 import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
 import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 
@@ -41,8 +35,6 @@ import dao.Clasificador;
 import dao.Labor;
 import dao.LaborItem;
 import dao.Poligono;
-import dao.config.Configuracion;
-import dao.cosecha.CosechaItem;
 import gov.nasa.worldwind.WorldWind;
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Extent;
@@ -64,13 +56,8 @@ import gov.nasa.worldwindx.examples.analytics.AnalyticSurface.GridPointAttribute
 import gov.nasa.worldwindx.examples.analytics.AnalyticSurfaceAttributes;
 import gov.nasa.worldwindx.examples.analytics.AnalyticSurfaceLegend;
 import gov.nasa.worldwindx.examples.analytics.ExportableAnalyticSurface;
-import gui.JFXMain;
 import gui.Messages;
 import gui.nww.ReusableExtrudedPolygon;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -154,7 +141,10 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		java.awt.Color awtColor = new java.awt.Color((float) currentColor.getRed(),(float) currentColor.getGreen(),(float) currentColor.getBlue());
 		Material material = new Material(awtColor);
 
-		ShapeAttributes outerAttributes = new BasicShapeAttributes();
+		ShapeAttributes outerAttributes = renderablePolygon.getAttributes();
+		if(outerAttributes==null) {
+			outerAttributes=new BasicShapeAttributes();
+		}		
 
 		outerAttributes.setOutlineWidth(0.01);
 		outerAttributes.setOutlineOpacity(0.01);
@@ -164,7 +154,11 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		outerAttributes.setInteriorMaterial(material);
 		//normalAttributes.setOutlineMaterial(material);
 
-		ShapeAttributes sideAttributes = new BasicShapeAttributes();
+		//ShapeAttributes sideAttributes = new BasicShapeAttributes();
+		ShapeAttributes sideAttributes = renderablePolygon.getSideAttributes();
+		if(sideAttributes==null) {
+			sideAttributes=new BasicShapeAttributes();
+		}
 		sideAttributes.setOutlineWidth(0.01);
 		sideAttributes.setOutlineOpacity(0.01);
 		sideAttributes.setDrawInterior(true);
@@ -222,10 +216,15 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 
 				}
-				List<Position> exteriorPositions = coordinatesToPositions(coordinates);
+				ReusableExtrudedPolygon reusable = (ReusableExtrudedPolygon)renderablePolygon;
+				reusable.clearBoundarys();
+				@SuppressWarnings("unchecked")
+				List<Position> boundary = (List<Position>) reusable.getBoundary();
+				//List<Position> exteriorPositions = 
+				coordinatesToPositions(coordinates,boundary);
 
-				((ReusableExtrudedPolygon)renderablePolygon).clearBoundarys();
-				renderablePolygon.setOuterBoundary(exteriorPositions);
+
+				//renderablePolygon.setOuterBoundary(exteriorPositions);
 				//	forPolygon= (Polygon) makeGood(forPolygon);
 				//XXX si no pongo esto se superponene los poligonos.
 				//XXX pero si lo pongo y el poligono tiene algun error no se muestra correctamente 
@@ -727,7 +726,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 					//float r =0,g = 0,b=0,
 					float elev=0;
 					double amount=0;
-					
+
 					for(FC it : fueaturesToAdd){
 						elev+= it.getElevacion()-minElev;
 						amount+=it.getAmount();
@@ -743,23 +742,15 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				} else {
 					//System.out.println("no hay features para fila,columna= "+fila+","+col);
 				}
-
 				try{
 					attributesList.set(index,newGridPoint);				
 				}catch(Exception e){
 					System.out.println("excepcion tratando de agregar el index "+index+" size="+attributesList.size());
-					//e.printStackTrace();
 				}
 			}
-
 		};
-		//long time = System.currentTimeMillis();
 		construirGrilla(bounds, ancho,polygonConsumer);
 
-		//System.out.println("columnas sin datos: "+cols.toString());
-		//System.out.println("tarde "+(System.currentTimeMillis()-time)+" en crear la grilla");
-
-		//System.out.println("termine de crear attributesList con size = "+attributesList.size());
 		/*   creo la superficie  */
 		AnalyticSurfaceAttributes attr = new AnalyticSurfaceAttributes();
 		attr.setDrawOutline(false);
@@ -772,10 +763,6 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		surface.setSector(sector);
 		surface.setDimensions((int)width ,(int)  height );
 
-
-		//		Material material = new Material(java.awt.Color.blue);		
-		//		surface.getSurfaceAttributes().setInteriorMaterial(material);
-
 		surface.setValues(attributesList);//.subList(0, width*height));
 
 		double scale =1.0;
@@ -786,11 +773,9 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		surface.setSurfaceAttributes(attr);
 		surface.setAltitude(1);
 
-
 		/*   Creo la leyenda   */
-		//	Format legendLabelFormat = new DecimalFormat() ;
 		NumberFormat legendLabelFormat=Messages.getNumberFormat();
-		
+
 		Color colorMin = labor.getClasificador().getColorFor(labor.minAmount);// Clasificador.colors[0];
 		Color colorMax =labor.getClasificador().getColorFor(labor.maxAmount);// Clasificador.colors[Clasificador.colors.length-1];
 		double HUE_MIN = colorMin.getHue()/360d;//0d / 360d;
@@ -816,8 +801,6 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			}
 		};
 
-
-		//RenderableLayer layer = new RenderableLayer();
 		SurfaceImageLayer layer = new SurfaceImageLayer();
 		layer.addRenderable(surface);
 		layer.addRenderable(legendRenderable);
@@ -915,6 +898,22 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			}
 		}
 
+	}
+
+	private void coordinatesToPositions(Coordinate[] coordinates,List<Position> positions ){
+		//ArrayList<Position> positions = new ArrayList<Position>();     
+		for (int i = 0; i < coordinates.length; i++) {
+			Coordinate coord = coordinates[i];	
+
+			//double z =1;//coord.z>=0?coord.z:0;//XXX hacer que dibujar las coordenadas sea opcional o mover las alturas al model (mas difici)
+			//			double z = coord.z>=1?5*(coord.z+1-labor.minElev):1;//XXX hacer que dibujar las coordenadas sea opcional o mover las alturas al model (mas difici)
+			//		
+			//			if(z<1)z=1;
+			Position pos = Position.fromDegrees(coord.y,coord.x,coord.z);
+			positions.add(pos);
+		}
+
+		//return positions;
 	}
 
 	private List<Position> coordinatesToPositions(Coordinate[] coordinates){
@@ -1020,7 +1019,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	}
 	protected abstract gov.nasa.worldwind.render.ExtrudedPolygon getPathTooltip(Geometry p, FC  fc,gov.nasa.worldwind.render.ExtrudedPolygon  renderablePolygon);
 
-	
+
 	protected List<FC> getItemsList(){
 		List<FC> cItems = new ArrayList<FC>();
 		try {
@@ -1045,8 +1044,8 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 		labor.setCantidadLabor(new Double(0.0));
 		labor.setCantidadInsumo(new Double(0.0));
-		
-		
+
+
 
 		itemsToShow.parallelStream().forEach(fc->{
 			Geometry g = fc.getGeometry();
@@ -1175,27 +1174,27 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		int lowRes= TARGET_LOW_RES_TIME;//Integer.parseInt(config.getPropertyOrDefault(FAST_LAYER_PROCESS_TIME, Integer.toString(TARGET_LOW_RES_TIME)));
 		//lowRes = 1000000;
 		long start = System.currentTimeMillis();
-//		System.out.println("creando analyticSurface lowRes");
+		//		System.out.println("creando analyticSurface lowRes");
 		RenderableLayer analyticSurfaceLayer = createAnalyticSurfaceFromQuery(lowRes);//21ms
 		long end = System.currentTimeMillis();
 		long actualTime= end-start;
-//		System.out.println("lowRes Rendering Time = "+actualTime);
+		//		System.out.println("lowRes Rendering Time = "+actualTime);
 
 		if(actualTime > 0) {
 			lowRes=new Long(TARGET_LOW_RES_TIME*TARGET_LOW_RES_TIME/actualTime).intValue();
 		}
-		
+
 		analyticSurfaceLayer.setPickEnabled(false);//ya es false de fabrica
 
 		labor.getLayer().removeAllRenderables();
 		labor.getLayer().setAnalyticSurfaceLayer(analyticSurfaceLayer);
 		labor.getLayer().setExtrudedPolygonsLayer(extrudedPolygonsLayer);
 		labor.getLayer().setElementsCount(itemsToShow.size());
-		
+
 		//System.out.println("low res rendering milis: "+lowRes);
 
 		//int medRes=5*lowRes;
-	//	System.out.println("mid res rendering milis: "+medRes);
+		//	System.out.println("mid res rendering milis: "+medRes);
 		int highRes=Math.min(10*lowRes,30000);
 		System.out.println("lowRes= "+lowRes);
 		System.out.println("highRes= "+highRes);
@@ -1204,16 +1203,16 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 		if( highRes > TARGET_LOW_RES_TIME*2 && highRes < 60000) {//solo si es menor a un minuto
 			CompletableFuture.runAsync(() -> {
-//				System.out.println("corriendo analyticSurfaceLayerMD");
-//				RenderableLayer analyticSurfaceLayerMD = createAnalyticSurfaceFromQuery(medRes);//10
-//				analyticSurfaceLayerMD.setPickEnabled(false);//ya es false de fabrica
-//				labor.getLayer().setAnalyticSurfaceLayer(analyticSurfaceLayerMD);
-//				System.out.println("termine analyticSurfaceLayerMD");
-//			}).handle((r,e) -> {
-//				if (e != null) e.printStackTrace();		
-//				return CompletableFuture.runAsync(()->{});
-//			}).thenRun(
-//					()->{
+				//				System.out.println("corriendo analyticSurfaceLayerMD");
+				//				RenderableLayer analyticSurfaceLayerMD = createAnalyticSurfaceFromQuery(medRes);//10
+				//				analyticSurfaceLayerMD.setPickEnabled(false);//ya es false de fabrica
+				//				labor.getLayer().setAnalyticSurfaceLayer(analyticSurfaceLayerMD);
+				//				System.out.println("termine analyticSurfaceLayerMD");
+				//			}).handle((r,e) -> {
+				//				if (e != null) e.printStackTrace();		
+				//				return CompletableFuture.runAsync(()->{});
+				//			}).thenRun(
+				//					()->{
 				if(labor.getContorno()==null) {
 					extractContorno();
 				}
@@ -1227,33 +1226,33 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				return null;
 			});
 		}// else {
-//			System.out.println("no corro analyticSurfaceLayerHD");
-//		}
+		//			System.out.println("no corro analyticSurfaceLayerHD");
+		//		}
 	}
-	
+
 	public void extractContorno() {
 		//TODO compute contorno
 		List<Geometry> geometriesCat = new ArrayList<Geometry>();
-			SimpleFeatureIterator it = labor.outCollection.features();
-			while(it.hasNext()){
-				SimpleFeature f=it.next();
-				geometriesCat.add((Geometry)f.getDefaultGeometry());
-			}
-			it.close();		
-			
-			try{						
-				Geometry buffered = CascadedPolygonUnion.union(geometriesCat);
-				//sino le pongo buffer al resumir geometrias me quedan rectangulos medianos
-//				buffered = buffered.buffer(
-//						ProyectionConstants.metersToLongLat(0.25),
-//						1,BufferParameters.CAP_SQUARE);
-				//buffered =GeometryHelper.simplificarContorno(buffered);
-				Poligono contorno =GeometryHelper.constructPoligono(buffered);
-				
-				labor.setContorno(contorno);
-			}catch(Exception e){
-				e.printStackTrace();
-			}
+		SimpleFeatureIterator it = labor.outCollection.features();
+		while(it.hasNext()){
+			SimpleFeature f=it.next();
+			geometriesCat.add((Geometry)f.getDefaultGeometry());
+		}
+		it.close();		
+
+		try{						
+			Geometry buffered = CascadedPolygonUnion.union(geometriesCat);
+			//sino le pongo buffer al resumir geometrias me quedan rectangulos medianos
+			//				buffered = buffered.buffer(
+			//						ProyectionConstants.metersToLongLat(0.25),
+			//						1,BufferParameters.CAP_SQUARE);
+			//buffered =GeometryHelper.simplificarContorno(buffered);
+			Poligono contorno =GeometryHelper.constructPoligono(buffered);
+
+			labor.setContorno(contorno);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	private RenderableLayer createExtrudedPolygonsLayer(Collection<FC> itemsToShow) {	
@@ -1277,19 +1276,19 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 		ReferencedEnvelope bounds = labor.outCollection.getBounds();//null pointer
 		Sector sector =  Sector.fromDegrees(bounds.getMinY(), bounds.getMaxY(),bounds.getMinX() ,bounds.getMaxX());
-//		Renderable analiticLegendrenderable =  new Renderable(){
-//			public void render(DrawContext dc){
-//				//FIXME 2017-01-02T18:30:35.649-0300  SEVERE  Exception while picking Renderable
-//				// 2017-01-02T18:30:35.828-0300  SEVERE  Exception while rendering Renderable
-//				// java.util.ConcurrentModificationException
-//				Extent extent =  Sector.computeBoundingBox(dc.getGlobe(), dc.getVerticalExaggeration(), sector );
-//				if (!extent.intersects(dc.getView().getFrustumInModelCoordinates()))
-//					return;
-//				if (WWMath.computeSizeInWindowCoordinates(dc, extent) < 300)
-//					return;
-//				legend.render(dc);
-//			}
-//		};
+		//		Renderable analiticLegendrenderable =  new Renderable(){
+		//			public void render(DrawContext dc){
+		//				//FIXME 2017-01-02T18:30:35.649-0300  SEVERE  Exception while picking Renderable
+		//				// 2017-01-02T18:30:35.828-0300  SEVERE  Exception while rendering Renderable
+		//				// java.util.ConcurrentModificationException
+		//				Extent extent =  Sector.computeBoundingBox(dc.getGlobe(), dc.getVerticalExaggeration(), sector );
+		//				if (!extent.intersects(dc.getView().getFrustumInModelCoordinates()))
+		//					return;
+		//				if (WWMath.computeSizeInWindowCoordinates(dc, extent) < 300)
+		//					return;
+		//				legend.render(dc);
+		//			}
+		//		};
 
 		//System.out.println("antes de crear el layer "+(System.currentTimeMillis()-time)); 
 		//labor.getLayer().addRenderable(analiticLegendrenderable);
@@ -1298,8 +1297,9 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			private long lastStateRendered=-1;
 			private Sector s = null;
 			private boolean finished = false;
-
+			private Envelope env=null;
 			private List<Renderable> renderablesPool=new ArrayList<Renderable>();
+			private boolean created =false;
 
 			private ExtrudedPolygon getFreeRenderable() {
 				gov.nasa.worldwind.render.ExtrudedPolygon  renderablePolygon =null;
@@ -1311,9 +1311,8 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				}
 				return renderablePolygon;
 			}
-			
-			public void render(DrawContext dc){//no se ejecuta hasta que se muestra el layer. como corresponde
 
+			public void render(DrawContext dc){//no se ejecuta hasta que se muestra el layer. como corresponde
 				Extent extent =  Sector.computeBoundingBox(dc.getGlobe(), dc.getVerticalExaggeration(), sector );
 				if (!extent.intersects(dc.getView().getFrustumInModelCoordinates()))
 					return;
@@ -1321,117 +1320,148 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 					return;
 
 				long init = System.currentTimeMillis();
-				//System.out.println("rendering ExtrudedPolygonsLayer");
-				//				Position p1 = dc.getView().computePositionFromScreenPoint(0, 0);
-				//				Position p2 = dc.getView().computePositionFromScreenPoint(-1920, -1080);
 				long stateID = dc.getView().getViewStateID();
-				Sector visibleSector = dc.getVisibleSector();
-				if(s==null || !s.equals(visibleSector)){
-					s=visibleSector;
-					this.getRenderables().forEach(r->{
-						this.renderablesPool.add(r);	
-						this.removeRenderable(r);
-					});//quito todos los rendereables. pero solo tendria que quitar los que no van
-					//this.clearRenderables();
-					//this.getRenderables().forEach(r->this.removeRenderable(r));//quito todos los rendereables. pero solo tendria que quitar los que no van
 
-					double maxX = visibleSector.getMaxLongitude().degrees;
-					double minX = visibleSector.getMinLongitude().degrees;
-					double maxY = visibleSector.getMaxLatitude().degrees;
-					double minY = visibleSector.getMinLatitude().degrees;
-					double dX = 0; //(maxX - minX)/200;
-					double dY = 0;//(maxY - minY)/200;
-					Envelope env = new Envelope(minX+dX,maxX-dX,minY+dY,maxY-dY);
+				if(created) {
+					//TODO continuar dibujando los rendereables
+					//System.out.println("rendering same scene");
 					
-					List<FC> features = labor.cachedOutStoreQuery(env);//java.util.ConcurrentModificationException
-					char[] abc = "ABCDEFGHIJKLM".toCharArray();
-					int size = labor.getClasificador().getNumClasses()-1;
-					features.stream().forEach((c)->{
-						Geometry g = c.getGeometry();
-						if(g instanceof Point){
-							//System.out.println("creando un marker para "+g);
-							Point center =(Point)g;
-							try{
-								Position pointPosition = Position.fromDegrees(center.getY(),center.getX());
-								
-								PointPlacemark pmStandard = new PointPlacemark(pointPosition);
-								pmStandard.setLabelText(Messages.getString("ProcessMapTask.categoria")+": "+abc[size-c.getCategoria()]);//
-								Color color = labor.getClasificador().getColorForCategoria(c.getCategoria());
-								int red = new Double(color.getRed()*255).intValue();
-								int green = new Double(color.getGreen()*255).intValue();
-								int blue = new Double(color.getBlue()*255).intValue();
-
-								PointPlacemarkAttributes pointAttribute = new PointPlacemarkAttributes();
-								//pointAttribute.setLabelMaterial(Material.DARK_GRAY);
-								pointAttribute.setImageColor(new java.awt.Color(red,green,blue));
-								pmStandard.setAttributes(pointAttribute);
-
-								if(pmStandard!=null)this.addRenderable(pmStandard);//extPoly.render(dc);
-
-							}catch(Exception e){
-								System.out.println("error al tratar de contruir un poligono desde un punto");
-								e.printStackTrace();
-							}
-						} else if(g instanceof Polygon){
-
-							gov.nasa.worldwind.render.ExtrudedPolygon extPoly=	getPathTooltip((Polygon)g,c,this.getFreeRenderable());
-							//	System.out.println("dibujando "+extPoly);
-							if(extPoly!=null)this.addRenderable(extPoly);//extPoly.render(dc);
-
-						} else if(g instanceof MultiPolygon){
-							MultiPolygon mp = (MultiPolygon)g;			
-							for(int i=0;i<mp.getNumGeometries();i++){
-								Polygon p = (Polygon) (mp).getGeometryN(i);
-
-								gov.nasa.worldwind.render.ExtrudedPolygon extPoly=	getPathTooltip((Polygon)p,c,this.getFreeRenderable());
-								//		System.out.println("dibujando "+extPoly);
-								if(extPoly!=null)this.addRenderable(extPoly);
-
-							}
-						}
-					});//for each feature create renderable
-
 				} else {
-					//esto se ejecuta cada vez que se mueve el mouse sobre el mapa. es muy util
-					//System.out.println("ProcessMapTask 993: el sector visible no cambio asi que no cambio los renderables");
+					//toBeRendered.clear();
+					Sector visibleSector = dc.getVisibleSector();
+					if(s==null || !s.equals(visibleSector)){
+						s=visibleSector;
+						
+						this.renderablesPool.addAll(renderables);	
+						renderables.clear();
+						
+
+						double maxX = visibleSector.getMaxLongitude().degrees;
+						double minX = visibleSector.getMinLongitude().degrees;
+						double maxY = visibleSector.getMaxLatitude().degrees;
+						double minY = visibleSector.getMinLatitude().degrees;
+						double dX = 0; //(maxX - minX)/200;
+						double dY = 0;//(maxY - minY)/200;
+						if(env == null) {
+							env = new Envelope(minX+dX,maxX-dX,minY+dY,maxY-dY);
+						}else {
+							env.init(minX+dX,maxX-dX,minY+dY,maxY-dY);
+						}				
+
+						List<FC> features = labor.cachedOutStoreQuery(env);//java.util.ConcurrentModificationException
+						char[] abc = "ABCDEFGHIJKLM".toCharArray();
+						int size = labor.getClasificador().getNumClasses()-1;
+
+						features.stream().forEach((c)->{
+							Geometry g = c.getGeometry();
+							if(g instanceof Point){
+								Point center =(Point)g;
+								try{
+									Position pointPosition = Position.fromDegrees(center.getY(),center.getX());
+
+									PointPlacemark pmStandard = new PointPlacemark(pointPosition);
+									pmStandard.setLabelText(Messages.getString("ProcessMapTask.categoria")+": "+abc[size-c.getCategoria()]);//
+
+									PointPlacemarkAttributes pointAttribute = new PointPlacemarkAttributes();								
+									pointAttribute.setImageColor(getAwtColor(c));
+									pmStandard.setAttributes(pointAttribute);
+
+									if(pmStandard!=null)this.addRenderable(pmStandard);//extPoly.render(dc);
+
+								}catch(Exception e){
+									System.out.println("error al tratar de contruir un poligono desde un punto");
+									e.printStackTrace();
+								}
+							} else if(g instanceof Polygon){
+
+								gov.nasa.worldwind.render.ExtrudedPolygon extPoly=	getPathTooltip((Polygon)g,c,this.getFreeRenderable());
+								//	System.out.println("dibujando "+extPoly);
+								if(extPoly!=null)this.addRenderable(extPoly);//extPoly.render(dc);
+
+							} else if(g instanceof MultiPolygon){
+								MultiPolygon mp = (MultiPolygon)g;			
+								for(int i=0;i<mp.getNumGeometries();i++){
+									Polygon p = (Polygon) (mp).getGeometryN(i);
+
+									gov.nasa.worldwind.render.ExtrudedPolygon extPoly=	getPathTooltip((Polygon)p,c,this.getFreeRenderable());
+
+									if(extPoly!=null)this.addRenderable(extPoly);
+
+								}
+							}
+						});//for each feature create renderable
+						//toBeRendered.addAll(this.renderables);
+
+					} 
+					created=true;
 				}
-
-				//	analiticLegendrenderable.render(dc);
-
-
-
-			//	DoubleProperty dp = new SimpleDoubleProperty();
-//				boolean doRender = (!finished && id==dc.getView().getViewStateID())
-//						&&(lastStateRendered!=dc.getView().getViewStateID());
-//
-//				if(doRender) {
-//
-//					this.renderables.stream().onClose(()->{finished=true;}).forEach(r->{					
-//						if(System.currentTimeMillis()-init<100
-//								&& doRender) {//solo rendereo menos de un segundo. 
-//							dp.set(dp.get()+1);
-//							r.render(dc);
-//						}
-//					});
-//					lastStateRendered=dc.getView().getViewStateID();
-//
-//				}
-				for(Renderable r : this.getRenderables()) {
+				renderables.stream().forEach(r->{
 					if(System.currentTimeMillis()-init<500
-							||(!finished && id==dc.getView().getViewStateID())
-							) {//solo rendereo menos de un segundo. 
-				//		dp.set(dp.get()+1);
+							||(!finished && id==stateID)
+							) {
+						//System.out.println("rendering "+r);
 						r.render(dc);
-					}else {
+					} else {
 						this.finished=false;
-						break;
+						//break;
 					}
 					finished=true;
-				}
+				
+				});
+				//System.out.println(toBeRendered.size()+" items to be rendered"); 
+				//for(Renderable r:renderables) {
+				
+//					if(System.currentTimeMillis()-init<500
+//							||(!finished && id==stateID)
+//							) {
+//						//System.out.println("rendering "+r);
+//						r.render(dc);
+//					} else {
+//						this.finished=false;
+//						break;
+//					}
+//					finished=true;
+//				}
 				id=stateID;
-			//	System.out.println("tarde "+(System.currentTimeMillis()-init)+" milis en renderear los "+ dp.get()+" rendereables");
-			}};
+				//	System.out.println("tarde "+(System.currentTimeMillis()-init)+" milis en renderear los "+ dp.get()+" rendereables");
+			}
 
+			public java.awt.Color getAwtColor(FC c) {
+				return labor.getClasificador().getAwtColorForCategoria(c.getCategoria());
+				//				Color color = labor.getClasificador().getColorForCategoria(c.getCategoria());
+				//				int red = new Double(color.getRed()*255).intValue();
+				//				int green = new Double(color.getGreen()*255).intValue();
+				//				int blue = new Double(color.getBlue()*255).intValue();
+				//				java.awt.Color awtColor =new java.awt.Color(red,green,blue);
+				//				return awtColor;
+			}
+			@Override
+			public void dispose() {
+				System.out.println("disposing of extrudedPoligonsLayer");
+				env=null;
+				renderables.stream().forEach(r->{
+					if(r instanceof ReusableExtrudedPolygon) {
+						
+//					((ReusableExtrudedPolygon)r).setAttributes(null);
+//					((ReusableExtrudedPolygon)r).setSideAttributes(null);
+					((ReusableExtrudedPolygon)r).clearBoundarys();
+					((ReusableExtrudedPolygon)r).clearList();
+					}
+				});
+				renderablesPool.stream().forEach(r->{
+					if(r instanceof ReusableExtrudedPolygon) {
+					((ReusableExtrudedPolygon)r).clearBoundarys();
+					((ReusableExtrudedPolygon)r).clearList();
+					}
+				});
+				renderablesPool.clear();
+				renderablesPool=null;
+				this.renderables.clear();
+				super.dispose();
+			}
+			};
+
+			
 
 			//layer.addRenderables(labor.getLayer().getRenderables());
 			//	layer.addRenderable(analiticLegendrenderable);		

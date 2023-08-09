@@ -35,6 +35,19 @@ public class LaborLayer extends RenderableLayer {
 //		
 //		dc.setGLContext(glContext);
 //	}
+	@Override
+	public void dispose() {
+		System.out.println("disposing of LaborLayer");
+		if(extrudedPolygonsLayer!=null) {
+		extrudedPolygonsLayer.dispose();
+		extrudedPolygonsLayer=null;
+		}
+		if(analyticSurfaceLayer!=null) {
+		analyticSurfaceLayer.dispose();
+		analyticSurfaceLayer=null;
+		}
+		super.dispose();
+	}
 	
 	public void render(DrawContext dc){
 		if(!this.isEnabled())return;

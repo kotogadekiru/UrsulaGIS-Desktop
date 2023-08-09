@@ -1,6 +1,8 @@
 package utils;
 
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Point;
@@ -32,12 +34,29 @@ public class ProyectionConstants {
 
 	private static double LATITUD_CALCULO=LATITUD_ARGENTINA;
 	private static GeometryFactory factory=null;
+	private static List<GeodeticCalculator> calculatorPool = new ArrayList<GeodeticCalculator>();
 	//public static double metersToLong = 180 / ( Math.PI * RADIO_TERRESTRE_ECUATORIAL*Math.cos(Math.toRadians(LATITUD_ARGENTINA)));// para
 	//public static double metersToLat = 180 / ( Math.PI * RADIO_TERRESTRE_POLAR);// para
 
 	//getArea() - area returned in the same units as the coordinates (be careful of lat/lon data!)
 	//public static final double A_HAS =1/(metersToLong()*metersToLat()*METROS2_POR_HA);//1/8.06e-11 * 10000
 
+	private synchronized static GeodeticCalculator getCalculator() {
+		GeodeticCalculator gc = null;
+		
+		if(calculatorPool.size()>0) {			
+			gc= calculatorPool.get(0);
+			calculatorPool.remove(0);
+			if(calculatorPool.size()>100) {
+				calculatorPool.clear();
+			}
+		} 
+		if(gc==null){
+			gc= new GeodeticCalculator(getCRS4326());
+		}
+		
+		return gc;
+	}
 	public static void setLatitudCalculo(double lat){
 		//	System.out.println("actualizando la latitud de trabajo a: "+lat);
 		LATITUD_CALCULO=lat;
@@ -118,21 +137,26 @@ public class ProyectionConstants {
 		Point2D dest =  new Point2D.Double(destPoint.getX(),destPoint.getY());
 		//startPoint.getFactory().getSRID()
 
-		GeodeticCalculator gc = new GeodeticCalculator(getCRS4326());//Constructs a new geodetic calculator associated with the WGS84 ellipsoid.
+		//Constructs a new geodetic calculator associated with the WGS84 ellipsoid.
+		GeodeticCalculator gc = getCalculator();	
 		gc.setStartingGeographicPoint(start);
 		gc.setDestinationGeographicPoint(dest);
-		return gc.getOrthodromicDistance();//Returns the orthodromic distance (expressed in meters)
+		double dist=  gc.getOrthodromicDistance();//Returns the orthodromic distance (expressed in meters)
+		calculatorPool.add(gc);
+		return dist;		
 	}
 
 	public static double getRumbo(Point startPoint,Point destPoint){
 		Point2D start =  new Point2D.Double(startPoint.getX(),startPoint.getY());
 		Point2D dest =  new Point2D.Double(destPoint.getX(),destPoint.getY());
-		GeodeticCalculator gc = new GeodeticCalculator(getCRS4326());//Constructs a new geodetic calculator associated with the WGS84 ellipsoid.
+		//GeodeticCalculator gc = new GeodeticCalculator(getCRS4326());//Constructs a new geodetic calculator associated with the WGS84 ellipsoid.
+		GeodeticCalculator gc = getCalculator();	
 		gc.setStartingGeographicPoint(start);
 		gc.setDestinationGeographicPoint(dest);
 		double azimuth =gc.getAzimuth(); 
-		
+		calculatorPool.add(gc);
 		return azimuth>0?azimuth:(azimuth+360);//devuelve el rumbo que hay que tomar para llegar de start a dest
+		
 	}
 
 	public static Point getPoint(Point origen, double azimut,double metros){
@@ -140,12 +164,15 @@ public class ProyectionConstants {
 		//Azimuth 231°24.0'E is out of range (±180°).
 		GeometryFactory fact =origen.getFactory();
 		Point2D start =  new Point2D.Double(origen.getX(),origen.getY());
-		GeodeticCalculator gc = new GeodeticCalculator(getCRS4326());
+		//GeodeticCalculator gc = new GeodeticCalculator(getCRS4326());
+		GeodeticCalculator gc = getCalculator();	
 		gc.setStartingGeographicPoint(start);
 		gc.setDirection(azimut, metros);
 		Point2D dest2D=  gc.getDestinationGeographicPoint();
+		calculatorPool.add(gc);
 		Point dest = fact.createPoint(new Coordinate(dest2D.getX(),dest2D.getY()));
 		return dest;
+		
 	}
 
 	public static void main(String[] args) {
