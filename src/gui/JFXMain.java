@@ -18,7 +18,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -31,6 +30,7 @@ import java.util.stream.Stream;
 
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -129,7 +129,6 @@ import tasks.CompartirRecorridaTask;
 import tasks.ExportLaborMapTask;
 import tasks.GoogleGeocodingHelper;
 import tasks.ProcessMapTask;
-import tasks.ShowNDVITifFileTask;
 import tasks.ShowRecorridaDirigidaTask;
 import tasks.crear.ConvertirSueloACosechaTask;
 import tasks.crear.GenerarOrdenCompraTask;
@@ -158,7 +157,7 @@ public class JFXMain extends Application {
 
 	public static final String VERSION = "0.2.29"; 
 	public static final String TITLE_VERSION = "Ursula GIS-"+VERSION; 
-	public static final String buildDate = "19/06/2023";
+	public static final String buildDate = "18/08/2023";
 	public static  final String ICON ="gui/ursula_logo_2020.png";//"gui/32x32-icon-earth.png";// "gui/1-512.png";//UrsulaGIS-Desktop/src/gui/32x32-icon-earth.png 
 	private static final String SOUND_FILENAME = "gui/exito4.mp3";//"gui/Alarm08.wav";//"Alarm08.wav" funciona desde eclipse pero no desde el jar  
 
@@ -174,7 +173,7 @@ public class JFXMain extends Application {
 	public static ExecutorService executorPool = Executors.newCachedThreadPool();
 	private Node wwNode=null;//contiene el arbol con los layers y el swingnode con el world wind
 	private boolean isPlayingSound=false;
-	
+
 	//GUI Controllers
 	public ConfigGUI configGUIController = new ConfigGUI(this);
 	public CosechaGUIController cosechaGUIController=new CosechaGUIController(this);
@@ -182,7 +181,7 @@ public class JFXMain extends Application {
 	public PulverizacionGUIController pulverizacionGUIController = new PulverizacionGUIController(this);
 	public SiembraGUIController siembraGUIController = new SiembraGUIController(this);
 	public NdviGUIController ndviGUIController= new NdviGUIController(this);
-	
+
 	@Override
 	public void start(Stage primaryStage) {
 		try {
@@ -303,9 +302,26 @@ public class JFXMain extends Application {
 		}
 
 		//setDefaultSize(50);//esto funciona para la barra de abajo pero no para los placemarks
+		//		try {
+		//			// Create the WorldWindow.
+		//			this.wwjPanel =	new WWPanel(canvasSize, true);
+		//		}catch(Exception e) {
+		//			Platform.runLater(()->{
+		//				Alert a = new Alert(Alert.AlertType.ERROR);
+		//				a.setHeaderText("No se pudo crear WorldWindow");
+		//				String stackTrace = Arrays.toString(e.getStackTrace());
+		//				a.setContentText(stackTrace);
+		//				a.show();
+		//			});
+		//		}
+		//una vez que se establecio el tamaño inicial ese es el tamaño maximo
+		//this.wwjPanel.setPreferredSize(canvasSize);
+		final SwingNode wwSwingNode = new SwingNode();
+		// SwingUtilities.invokeLater(()-> {			                	 
 		try {
 			// Create the WorldWindow.
-			this.wwjPanel =	new WWPanel(canvasSize, true);
+			wwjPanel =	new WWPanel(canvasSize, true);
+			wwSwingNode.setContent(wwjPanel);
 		}catch(Exception e) {
 			Platform.runLater(()->{
 				Alert a = new Alert(Alert.AlertType.ERROR);
@@ -315,13 +331,8 @@ public class JFXMain extends Application {
 				a.show();
 			});
 		}
-		//una vez que se establecio el tamaño inicial ese es el tamaño maximo
-		//this.wwjPanel.setPreferredSize(canvasSize);
-		final SwingNode wwSwingNode = new SwingNode();
-		wwSwingNode.setContent(wwjPanel);
-		
-		// Put the pieces together.
-		//wwSwingNode.autosize();
+		//});
+
 		this.layerPanel = new LayerPanel(this.wwjPanel.getWwd(),stage.widthProperty(),stage.heightProperty());
 		this.layerPanel.addToScrollPaneBottom(progressBox);
 
@@ -403,19 +414,19 @@ public class JFXMain extends Application {
 		return sp;
 	}
 
-//	public static void setDefaultSize(int size) {
-//		Set<Object> keySet = UIManager.getLookAndFeelDefaults().keySet();
-//		//Object[] keys = keySet.toArray(new Object[keySet.size()]);
-//		keySet.forEach(key->{
-//			if (key != null && key.toString().toLowerCase().contains("font")) {
-//				Font font = UIManager.getDefaults().getFont(key);
-//				if (font != null) {
-//					font = font.deriveFont((float)size);
-//					UIManager.put(key, font);
-//				}
-//			}
-//		});
-//	}
+	//	public static void setDefaultSize(int size) {
+	//		Set<Object> keySet = UIManager.getLookAndFeelDefaults().keySet();
+	//		//Object[] keys = keySet.toArray(new Object[keySet.size()]);
+	//		keySet.forEach(key->{
+	//			if (key != null && key.toString().toLowerCase().contains("font")) {
+	//				Font font = UIManager.getDefaults().getFont(key);
+	//				if (font != null) {
+	//					font = font.deriveFont((float)size);
+	//					UIManager.put(key, font);
+	//				}
+	//			}
+	//		});
+	//	}
 
 	private void addMenuesToMenuBar(MenuBar menuBar) {
 		/*Menu Importar*/
@@ -447,7 +458,7 @@ public class JFXMain extends Application {
 		addMenuesToMenuBar(menuBar);
 
 		menuBar.setPrefWidth(scene.getWidth());
-		
+
 		Messages.registerLocaleChangeListener(loc->{
 			menuBar.getMenus().clear();
 			addMenuesToMenuBar(menuBar);
@@ -455,7 +466,7 @@ public class JFXMain extends Application {
 
 		return menuBar;
 	}
-	
+
 	/**
 	 * aca se configuran los menues contextuales del arbol de capas
 	 //XXX agregar nuevas funcionalidades aca!!! 
@@ -479,7 +490,7 @@ public class JFXMain extends Application {
 
 		poligonoGUIController.addAccionesPoligonos(predicates);
 		poligonoGUIController.addAccionesCaminos(predicates);
-		
+
 		addAccionesRecorridas(predicates);
 		//addAccionesNdvi(predicates);
 		ndviGUIController.addAccionesNdvi(predicates);
@@ -492,14 +503,14 @@ public class JFXMain extends Application {
 
 		layerPanel.setMenuItems(predicates);
 	}
-	
+
 	private void addFertilizacionesRootNodeActions() {
 		List<LayerAction> rootNodeP = new ArrayList<LayerAction>();
 		rootNodeP.add(new LayerAction((layer)->{
 			doOpenFertMap(null);
 			return "opened";	
 		},Messages.getString("JFXMain.importar")));
- 
+
 		rootNodeP.add(new LayerAction(Messages.getString("JFXMain.unirFertilizaciones"),(layer)->{
 			doUnirFertilizaciones();
 			return "unidas";	
@@ -591,7 +602,7 @@ public class JFXMain extends Application {
 			doEditSuelo((Suelo) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 			return "suelo editado" + layer.getName(); 
 		}));
-		
+
 		//TODO implementar estimar potencial de rendimiento desde suelo
 		suelosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.estimarPotencialRendimiento"),(layer)->{	
 			doEstimarPotencialRendimiento((Suelo) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
@@ -736,7 +747,7 @@ public class JFXMain extends Application {
 		enDesarrollo.showAndWait();
 	}
 
-//TODO permitir actualizar el modelo de elevaciones con informacion de las labores
+	//TODO permitir actualizar el modelo de elevaciones con informacion de las labores
 	private void importElevations(){
 		executorPool.execute(()->{
 			//try{
@@ -786,7 +797,7 @@ public class JFXMain extends Application {
 	public LayerPanel getLayerPanel() {
 		return layerPanel;
 	}
-	
+
 	/**
 	 * Insert the layer into the layer list just before the compass.
 	 */	
@@ -821,31 +832,31 @@ public class JFXMain extends Application {
 	}
 
 
-//	private void doLeerCosechaJD() {
-//		//empezar por el fdl y leer el nombre del archivo y el formato del archivo fdd
-//		/**
-//		 <LogDataBlock logDataProcessor="EvenByteDelta">
-//			<EvenByteDelta filePathName="50b2706b-0000-1000-7fdb-e1e1e114c450.fdd"
-//				xmlns="urn:schemas-johndeere-com:LogDataBlock:EvenByteDelta"
-//				filePosition="0" />
-//		</LogDataBlock>
-//		 */
-//		List<File> files =FileHelper.chooseFiles("FDL", "*.fdl");  
-//		ReadJDHarvestLog task = new ReadJDHarvestLog(files.get(0));
-//		task.installProgressBar(progressBox);
-//
-//		task.setOnSucceeded(handler -> {
-//			//File ret = (File)handler.getSource().getValue();
-//
-//			task.uninstallProgressBar();
-//			System.out.println("ReadJDHarvestLog succeded"); 
-//			playSound();
-//		});//fin del OnSucceeded						
-//		//umTask.start();					
-//		//this.executorPool.execute(task);
-//
-//		executorPool.submit(task);
-//	}
+	//	private void doLeerCosechaJD() {
+	//		//empezar por el fdl y leer el nombre del archivo y el formato del archivo fdd
+	//		/**
+	//		 <LogDataBlock logDataProcessor="EvenByteDelta">
+	//			<EvenByteDelta filePathName="50b2706b-0000-1000-7fdb-e1e1e114c450.fdd"
+	//				xmlns="urn:schemas-johndeere-com:LogDataBlock:EvenByteDelta"
+	//				filePosition="0" />
+	//		</LogDataBlock>
+	//		 */
+	//		List<File> files =FileHelper.chooseFiles("FDL", "*.fdl");  
+	//		ReadJDHarvestLog task = new ReadJDHarvestLog(files.get(0));
+	//		task.installProgressBar(progressBox);
+	//
+	//		task.setOnSucceeded(handler -> {
+	//			//File ret = (File)handler.getSource().getValue();
+	//
+	//			task.uninstallProgressBar();
+	//			System.out.println("ReadJDHarvestLog succeded"); 
+	//			playSound();
+	//		});//fin del OnSucceeded						
+	//		//umTask.start();					
+	//		//this.executorPool.execute(task);
+	//
+	//		executorPool.submit(task);
+	//	}
 
 	/**
 	 * metodo que toma las labores activas de siembra fertilizacion y pulverizacion y hace una lista con los insumos y cantidades para
@@ -853,9 +864,9 @@ public class JFXMain extends Application {
 	 */
 	private void doGenerarOrdenDeCompra() {
 		GenerarOrdenCompraTask gOCTask = new GenerarOrdenCompraTask(
-														getSiembrasSeleccionadas(),
-														getFertilizacionesSeleccionadas(),
-														getPulverizacionesSeleccionadas());
+				getSiembrasSeleccionadas(),
+				getFertilizacionesSeleccionadas(),
+				getPulverizacionesSeleccionadas());
 		gOCTask.installProgressBar(progressBox);
 		gOCTask.setOnSucceeded(handler -> {
 			OrdenCompra ret = (OrdenCompra)handler.getSource().getValue();
@@ -929,14 +940,14 @@ public class JFXMain extends Application {
 		}
 		return recorridasActivas;
 	}
-	
+
 	private void loadActiveLayers(){
-//		long now = System.currentTimeMillis();
-//		DAH.getAllAgroquimicos();
-//		DAH.getAllCultivos();
-//		DAH.getAllSemillas();
-//		DAH.getAllFertilizantes();
-//		System.out.println("tarde "+(System.currentTimeMillis()-now)+" en inicializar los defaults");
+		//		long now = System.currentTimeMillis();
+		//		DAH.getAllAgroquimicos();
+		//		DAH.getAllCultivos();
+		//		DAH.getAllSemillas();
+		//		DAH.getAllFertilizantes();
+		//		System.out.println("tarde "+(System.currentTimeMillis()-now)+" en inicializar los defaults");
 		//tarde 11148 en inicializar los defaults
 		TarjetaHelper.initTarjeta();
 		this.poligonoGUIController.showPoligonosActivos();
@@ -958,7 +969,7 @@ public class JFXMain extends Application {
 		parent.getItems().addAll(menuItemProductos);
 		return menuItemProductos;
 	}
-	
+
 	private void showGoToDialog() {
 		TextInputDialog anchoDialog = new TextInputDialog(Messages.getString("JFXMain.goToExample")); 
 		anchoDialog.setTitle(Messages.getString("JFXMain.goToDialogTitle")); 
@@ -988,7 +999,7 @@ public class JFXMain extends Application {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void viewGoTo(Position position) {
 		if(position==null) return;
 		config.loadProperties();//si viene de editar siembra se pisan los datos con los viejos
@@ -1224,7 +1235,7 @@ public class JFXMain extends Application {
 	}
 
 
-	
+
 
 
 
@@ -1241,10 +1252,10 @@ public class JFXMain extends Application {
 			labor.dispose();//libero los recursos reservados
 			return;
 		}		
-		
+
 		//Dialogo preguntar min y max a aplicar y dosis
 		Alert minMaxDialog = new Alert(AlertType.CONFIRMATION);	
-		
+
 		NumberFormat df=Messages.getNumberFormat();
 		TextField dc = new TextField(df.format(0));
 		TextField min = new TextField(df.format(0));
@@ -1362,7 +1373,7 @@ public class JFXMain extends Application {
 			Optional<String> rPromOptional = rindePromDialog.showAndWait();
 			mmLluvia = PropertyHelper.parseDouble(rPromOptional.get()).doubleValue();//Double.valueOf(anchoOptional.get());
 		}catch(java.lang.NumberFormatException e) {
-			
+
 			DecimalFormat format=PropertyHelper.getDoubleConverter();
 			DecimalFormatSymbols symbols=format.getDecimalFormatSymbols();
 			char sep=symbols.getDecimalSeparator();
@@ -1401,7 +1412,7 @@ public class JFXMain extends Application {
 		});//fin del OnSucceeded
 		JFXMain.executorPool.execute(umTask);		
 	}
-	
+
 	private void doEditSuelo(Suelo cConfigured) {			
 		Optional<Suelo> cosechaConfigured= SueloConfigDialogController.config(cConfigured);
 		if(cosechaConfigured.isPresent()){
@@ -1418,7 +1429,7 @@ public class JFXMain extends Application {
 			JFXMain.executorPool.execute(umTask);
 		}
 	}
-	
+
 
 
 	private void doEditFertilizacion(FertilizacionLabor cConfigured ) {
@@ -1475,13 +1486,13 @@ public class JFXMain extends Application {
 
 	}
 
-	
 
-	
 
-	
 
-	
+
+
+
+
 
 	/**
 	 * accion ejecutada al presionar el boton openFile Despliega un file
@@ -1656,8 +1667,8 @@ public class JFXMain extends Application {
 
 		ProcessBalanceDeNutrientes balanceNutrientesTask = 
 				new ProcessBalanceDeNutrientes(suelosEnabled,
-											   cosechasEnabled,
-											   fertEnabled);
+						cosechasEnabled,
+						fertEnabled);
 
 		balanceNutrientesTask.installProgressBar(progressBox);
 
@@ -1712,7 +1723,7 @@ public class JFXMain extends Application {
 		});
 		executorPool.execute(ept);		
 	}
-	
+
 	private void doExportRecorrida(Recorrida recorrida) {
 		String nombre = recorrida.getNombre();
 		File shapeFile = FileHelper.getNewShapeFile(nombre);
@@ -1724,7 +1735,7 @@ public class JFXMain extends Application {
 		});
 		executorPool.execute(task);
 	}
-	
+
 	/**
 	 * metodo que toma una labor y muestra una tabla con los campos de la labor
 	 * @param labor

@@ -586,8 +586,7 @@ public class NdviGUIController {
 
 		if(ndviDpDLG.finalDate != null){
 			ObservableList<Ndvi> observableList = FXCollections.observableArrayList(new ArrayList<Ndvi>());
-			observableList.addListener((ListChangeListener<Ndvi>) c -> {
-				System.out.println(Messages.getString("JFXMain.216")); 
+			observableList.addListener((ListChangeListener<Ndvi>) c -> {				
 				if(c.next()){
 					c.getAddedSubList().forEach((ndvi)->{
 						doShowNDVI(ndvi);

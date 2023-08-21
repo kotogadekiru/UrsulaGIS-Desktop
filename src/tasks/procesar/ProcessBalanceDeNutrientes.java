@@ -15,6 +15,7 @@ import org.opengis.feature.simple.SimpleFeatureType;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
+import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 
 import dao.Labor;
@@ -114,7 +115,8 @@ public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> 
 		
 		
 		//unir las geometrias de todas las labores para obtener un poligono de contorno
-		GeometryCollection activasCollection = ProyectionConstants.getGeometryFactory().createGeometryCollection( geometriasActivas.toArray(new Geometry[geometriasActivas.size()]));
+		
+		GeometryCollection activasCollection = GeometryHelper.toGeometryCollection(geometriasActivas);
 		Geometry cover =  activasCollection.buffer(0);
 		//intersectar la grilla con el contorno
 		List<Geometry> grillaCover = grilla.parallelStream().collect(
@@ -136,20 +138,24 @@ public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> 
 		//}
 
 		featureCount = grillaCover.size();
-
-		for(Geometry geometry :grillaCover){//TODO usar streams paralelos
-			SueloItem sueloItem = createSueloForPoly(geometry);		
-			if(sueloItem!=null){
-				labor.insertFeature(sueloItem);
-			//	itemsToShow.add(sueloItem);
-			}
-			featureNumber++;
-			updateProgress(featureNumber, featureCount);
-		}
-
-//		for(Labor<?> c:labores){
-//			c.clearCache();
+		grillaCover.parallelStream().forEach(g->{		
+				SueloItem sueloItem = createSueloForPoly(g);		
+				if(sueloItem!=null){
+					labor.insertFeature(sueloItem);
+				}
+				featureNumber++;
+				updateProgress(featureNumber, featureCount);			
+		});
+//		for(Geometry geometry :grillaCover){//TODO usar streams paralelos
+//			SueloItem sueloItem = createSueloForPoly(geometry);		
+//			if(sueloItem!=null){
+//				labor.insertFeature(sueloItem);
+//			}
+//			featureNumber++;
+//			updateProgress(featureNumber, featureCount);
 //		}
+
+
 		labor.constructClasificador();
 		runLater(this.getItemsList());
 		updateProgress(0, featureCount);

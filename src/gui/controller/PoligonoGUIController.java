@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -30,9 +29,7 @@ import com.vividsolutions.jts.geom.Polygon;
 import dao.Labor;
 import dao.Ndvi;
 import dao.Poligono;
-import dao.config.Configuracion;
 import dao.cosecha.CosechaLabor;
-import dao.cosecha.CosechaLabor.CosechaLaborConstants;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.recorrida.Camino;
@@ -41,7 +38,6 @@ import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
 import dao.utils.PropertyHelper;
 import gov.nasa.worldwind.WorldWindow;
-import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.LayerList;
@@ -66,7 +62,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.Pane;
@@ -80,7 +75,6 @@ import tasks.crear.CrearSiembraMapTask;
 import tasks.crear.CrearSueloMapTask;
 import tasks.procesar.ExtraerPoligonosDeLaborTask;
 import tasks.procesar.SimplificarCaminoTask;
-import tasks.procesar.UnirCosechasMapTask;
 import utils.DAH;
 import utils.FileHelper;
 import utils.GeometryHelper;
@@ -348,9 +342,12 @@ public class PoligonoGUIController {
 			if (layerObject==null){
 			}else if(Poligono.class.isAssignableFrom(layerObject.getClass())){
 				Poligono poli = (Poligono)layerObject;
-				Point c = poli.toGeometry().getCentroid();
+				Geometry geom = poli.toGeometry();
+				if(geom!=null) {
+				Point c = geom.getCentroid();
 				Position pos =Position.fromDegrees(c.getY(), c.getX());
 				viewGoTo(pos);
+				}
 			}
 			return "went to " + layer.getName(); //$NON-NLS-1$
 		}));
@@ -368,6 +365,8 @@ public class PoligonoGUIController {
 	public void addAccionesCaminos(Map<Class<?>, List<LayerAction>> predicates) {
 		List<LayerAction> poligonosP = new ArrayList<LayerAction>();
 		predicates.put(Camino.class, poligonosP);
+		
+		//TODO agregar aqui funcion para convertir camino a recorrida dirigida
 
 		poligonosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.editarLayer"),(layer)->{
 			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
@@ -375,7 +374,7 @@ public class PoligonoGUIController {
 				//mostrar un dialogo para editar el nombre del poligono
 				Camino p =(Camino)layerObject;
 				TextInputDialog nombreDialog = new TextInputDialog(p.getNombre());
-				nombreDialog.initOwner(main.stage);
+				nombreDialog.initOwner(JFXMain.stage);
 				nombreDialog.setTitle(Messages.getString("JFXMain.editarLayerDialogTitle")); //$NON-NLS-1$
 				nombreDialog.setContentText(Messages.getString("JFXMain.editarLayerPoligonName")); //$NON-NLS-1$
 
@@ -633,8 +632,7 @@ public class PoligonoGUIController {
 //			}//directoryChooser();
 		//	if(downloadLocation == null) return;
 			ObservableList<Ndvi> observableList = FXCollections.observableArrayList(new ArrayList<Ndvi>());
-			observableList.addListener((ListChangeListener<Ndvi>) c -> {
-				System.out.println(Messages.getString("JFXMain.216")); //$NON-NLS-1$
+			observableList.addListener((ListChangeListener<Ndvi>) c -> {				
 				if(c.next()){
 					c.getAddedSubList().forEach((ndvi)->{
 						main.ndviGUIController.doShowNDVI(ndvi);
@@ -723,13 +721,16 @@ public class PoligonoGUIController {
 		//h1: que su radio del circulo tangente sea mayor a R
 		//h2: que los puntos alineados se reemplacen por sus extremos
 		//-> reemplazar cada grupo de puntos por un segmento de recta siempre que el error sea menor a e=E/L
-		main.executorPool.submit(()->{
+		JFXMain.executorPool.submit(()->{
 		Geometry g = p.toGeometry();
 		//g=g.buffer(ProyectionConstants.metersToLongLat(10));
 		
-		g=GeometryHelper.removeClosePoints(g, ProyectionConstants.metersToLongLat(2));
-		g=GeometryHelper.removeSinglePoints(g, ProyectionConstants.metersToLongLat(2));
-		g=GeometryHelper.reduceAlignedPoints(g, 0.2);
+		//TODO remover un punto si el area que forma el triangulo con sus vecinos es suficientemente pequenia
+		g=GeometryHelper.removeSmallTriangles(g, (0.005)/ProyectionConstants.A_HAS());
+		
+		//g=GeometryHelper.removeClosePoints(g, ProyectionConstants.metersToLongLat(2));
+		//g=GeometryHelper.removeSinglePoints(g, ProyectionConstants.metersToLongLat(2));
+		//g=GeometryHelper.reduceAlignedPoints(g, 0.2);
 		Poligono pol =GeometryHelper.constructPoligono(g);
 
 		MeasureTool measureTool = (MeasureTool) p.getLayer().getValue(PoligonLayerFactory.MEASURE_TOOL);

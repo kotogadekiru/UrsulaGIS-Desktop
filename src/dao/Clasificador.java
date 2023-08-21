@@ -310,8 +310,8 @@ public class Clasificador {
 	}
 
 	private Double[] constructValoresHisto(Set<Double> valores) {
-		System.out.println("creando histograma para un set menor o igual a la cantidad de clases del sistema");
-		int numLimites = valores.size()-1;//esto es porque el histograma se extiende hacia el infinito por lo que gana una clase
+		System.out.println("creando histograma para un set menor o igual a la cantidad de clases del sistema valores.size() "+ valores.size());
+		int numLimites = valores.size()>1?valores.size()-1:1;//esto es porque el histograma se extiende hacia el infinito por lo que gana una clase
 		histograma=new Double[numLimites];//2 clases 1 limite, 3 clases 2 limites...
 		this.clasesClasificadorProperty.set(numLimites+1);
 		List<Double> sorted = valores.stream().sorted().collect(Collectors.toList());
@@ -420,6 +420,11 @@ public class Clasificador {
 		return getColorForCategoria(absCat,getNumClasses());
 	}
 
+	public java.awt.Color getAwtColorFor(Double amount){
+		int absCat = getCategoryFor(amount);//entre 0 y numClases-1
+		return getAwtColorForCategoria(absCat);
+	}
+	
 	public java.awt.Color getAwtColorForCategoria(Integer absCat){
 		Color colorKey = getColorForCategoria(absCat);
 		if(awtColorMap.containsKey(colorKey)) {

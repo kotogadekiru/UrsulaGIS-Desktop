@@ -29,30 +29,33 @@ public class Lote implements Comparable<Lote> {
 	public String nombre= new String();
 
 	public Double superficie=new Double(0.0);
-	
+
 	@ManyToOne
 	private Poligono contorno=null;
-	
+
 	@ManyToOne
 	private Establecimiento establecimiento=null;
 
 	public Lote() {
 	}
-	
+
 	public Lote(Establecimiento e, String n){
 		this.establecimiento=e;
 		this.nombre=n;
 	}
 
 	public Lote(String n) {
-	this.nombre=n;
+		this.nombre=n;
 	}
 
 	@Override
 	public int compareTo(Lote arg0) {
-		return this.nombre.compareTo(arg0.nombre);
+		if(arg0!=null && arg0.nombre!=null) {
+			return this.nombre.compareTo(arg0.nombre);
+		} 
+		return -1;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */

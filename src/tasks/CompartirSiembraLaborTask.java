@@ -38,6 +38,7 @@ import api.StandardResponse;
 import dao.Labor;
 import dao.Poligono;
 import dao.config.Configuracion;
+import dao.config.Fertilizante;
 import dao.ordenCompra.Producto;
 import dao.siembra.SiembraLabor;
 import gui.Messages;
@@ -170,34 +171,42 @@ public class CompartirSiembraLaborTask extends Task<String> {
 				DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.DEFAULT, loc);
 				op.setFecha(dateFormat.format(siembra.getFecha()));		
 				op.setSuperficie(Messages.getNumberFormat().format(siembra.getCantidadLabor()));
-				//for(CaldoItem item:pl.getItems()) {//.forEach(item->{
+				
 					OrdenSiembraItem i = new OrdenSiembraItem();
-					Double has =siembra.getCantidadLabor();
-					
+					Double has =siembra.getCantidadLabor();					
 					i.setProducto(siembra.getSemilla());
-					i.setCantidad(siembra.getCantidadInsumo());
-					//TODO agregar fertilizante en la linea y al costado
+					i.setCantidad(siembra.getCantidadInsumo());				
 					if(has>0) {
 						i.setDosisHa(i.getCantidad()/has);
-					}
-					//System.out.println("seteando cantidad item "+i.getCantidad());
-					//i.setObservaciones(pl.getObservaciones());
-					//System.out.println("seteando observaciones item "+item.getObservaciones());
-
+					}				
 					op.getItems().add(i);
-				//}//);
+					
+					OrdenSiembraItem costado = new OrdenSiembraItem();								
+					costado.setProducto(siembra.getFertLinea());
+					costado.setCantidad(siembra.getCantidadFertilizanteLinea());			
+					if(has>0) {
+						costado.setDosisHa(i.getCantidad()/has);
+					}
+					if(costado.getProducto()!=null) {
+						op.getItems().add(costado);				
+					}					
+					
+					OrdenSiembraItem linea = new OrdenSiembraItem();								
+					linea.setProducto(siembra.getFertLinea());
+					linea.setCantidad(siembra.getCantidadFertilizanteLinea());				
+					if(has>0) {
+						linea.setDosisHa(i.getCantidad()/has);
+					}				
+					if(linea.getProducto()!=null) {
+						op.getItems().add(linea);				
+					}
+			
 
 				Poligono contorno = siembra.getContorno();
 				if(contorno!=null) {
 					op.setPoligonoString(contorno.getPositionsString());
 				}
-				//FIXME remover esta linea cuando este labor.getContorno()
-				//op.setPoligonoString("{{-33.97004901,-61.97283410}{-33.96899577,-61.97077580}{-33.96843874,-61.97000910}{-33.96754022,-61.96826020}{-33.96388561,-61.96149850}{-33.96288863,-61.95616530}{-33.96700029,-61.95294330}{-33.96704333,-61.95303640}{-33.96700184,-61.95294300}{-33.97246661,-61.94866120}{-33.98082214,-61.96440070}{-33.97551342,-61.96855690}{-33.97550620,-61.96854050}{-33.97551187,-61.96855730}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283410}}");
-				
-			
 				Optional<OrdenSiembra> retOp = OrdenSiembraPaneController.config(op);
-	
-
 		if(retOp.isPresent()) {
 			op=retOp.get();
 			return op;

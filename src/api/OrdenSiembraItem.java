@@ -2,6 +2,7 @@ package api;
 
 import javax.persistence.Access;
 import javax.persistence.AccessType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.ManyToOne;
@@ -37,6 +38,7 @@ public class OrdenSiembraItem {
 	
 	private Double dosisHa = 0.0;
 	private String observaciones=null;
+	@Column( columnDefinition="DECIMAL(32,15)")
 	private Double cantidad=null;
 	
 	public OrdenSiembraItem() {

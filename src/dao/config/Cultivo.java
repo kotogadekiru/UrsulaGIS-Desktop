@@ -62,6 +62,7 @@ public class Cultivo implements Comparable<Cultivo>{
 	private Double rindeEsperado=new Double(0);
 	
 	private Boolean estival = true;
+	private Double semPorBolsa = 1.0;
 	
 //	private Double tasaCrecimientoPendiente=new Double(0);
 //	private Double tasaCrecimientoOrigen=new Double(0);
@@ -129,6 +130,7 @@ public class Cultivo implements Comparable<Cultivo>{
 		c.setAbsAgua(1000/12d);
 		c.setAporteMO(1000*(-1+c.getAbsN()/c.getExtN()));//kg por tn;  estimacion en base a la extraccion de n vs absorcion de n
 		c.setEstival(true);// se puede usar el porcentaje de los grados dias de la campania que el cultivo esta activo
+		c.setSemPorBolsa(80000.0);
 		return c;
 	}
 	

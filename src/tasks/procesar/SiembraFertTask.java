@@ -60,6 +60,19 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 
 
 		labor.setSemilla(siembra.getSemilla());//Cultivo(cultivo);
+		if(_esFertLinea) {
+			labor.setFertLinea(_fertilizacion.getFertilizanteProperty().getValue());
+			labor.setCantidadFertilizanteLinea(_fertilizacion.getCantidadInsumo());
+			
+			labor.setFertCostado(_siembra.getFertCostado());
+			labor.setCantidadFertilizanteCostado(_siembra.getCantidadFertilizanteCostado());
+		} else {
+			labor.setFertCostado(_fertilizacion.getFertilizanteProperty().getValue());
+			labor.setCantidadFertilizanteCostado(_fertilizacion.getCantidadInsumo());
+			
+			labor.setFertLinea(_siembra.getFertCostado());
+			labor.setCantidadFertilizanteLinea(_siembra.getCantidadFertilizanteCostado());
+		}
 		labor.setLayer(new LaborLayer());
 		labor.setEntreSurco(siembra.getEntreSurco());
 		labor.colAmount.set(SiembraLabor.COLUMNA_KG_SEMILLA);

@@ -2,6 +2,7 @@ package dao.siembra;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.ToDoubleFunction;
 import java.util.stream.Stream;
 
 import javax.persistence.Access;
@@ -18,6 +19,7 @@ import dao.Labor;
 import dao.LaborConfig;
 import dao.LaborItem;
 import dao.config.Configuracion;
+import dao.config.Fertilizante;
 import dao.config.Semilla;
 import dao.ordenCompra.ProductoLabor;
 import dao.utils.PropertyHelper;
@@ -68,7 +70,13 @@ public class SiembraLabor extends Labor<SiembraItem> {
 	
 	@ManyToOne
 	private Semilla semilla=null;
-
+	@ManyToOne
+	private Fertilizante fertLinea=null;
+	private Double cantidadFertilizanteLinea=new Double(0);
+	@ManyToOne
+	private Fertilizante fertCostado=null;
+	private Double cantidadFertilizanteCostado=new Double(0);
+	
 	private Double entreSurco = new Double(0.42);
 	private Double plantasPorMetro = new Double(300);
 	
@@ -198,6 +206,24 @@ public class SiembraLabor extends Labor<SiembraItem> {
 		return PropertyHelper.initDouble(SiembraLabor.COLUMNA_PRECIO_SEMILLA, "0", config.getConfigProperties()); 
 		//return initDoubleProperty(Margen.COSTO_TN_KEY,  "0", );
 	//	return initDoubleProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,"0",config.getConfigProperties());
+	}
+	
+
+	
+	public Double getCantLabor(ToDoubleFunction<SiembraItem> get) {
+		Double ret = new Double(0);
+		List<SiembraItem> items = this.cachedOutStoreQuery(this.getContorno().toGeometry().getEnvelopeInternal());
+		try {
+		ret = items.parallelStream().collect(
+				()->new Double(0),
+				(d,i)->d+=get.applyAsDouble(i),
+				(d1,d2)->d1+=d2 
+				);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		return ret;
+
 	}
 	
 	@Override

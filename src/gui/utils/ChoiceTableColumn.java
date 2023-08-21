@@ -59,7 +59,7 @@ public class ChoiceTableColumn<T,S extends Comparable<S>> extends TableColumn<T,
 			public int compare(S arg0, S arg1) {
 				try {
 					System.out.println("comparando "+arg0+" con "+arg1);
-					return arg0.compareTo(arg1);
+					return arg0!=null?arg0.compareTo(arg1):arg1==null?0:-1;
 				}catch(Exception e) {
 					e.printStackTrace();
 					return -1;

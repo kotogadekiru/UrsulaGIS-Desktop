@@ -12,25 +12,19 @@ import org.geotools.geometry.jts.ReferencedEnvelope;
 
 import com.vividsolutions.jts.densify.Densifier;
 import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.CoordinateFilter;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.IntersectionMatrix;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.operation.buffer.BufferParameters;
-import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
 import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 
 import dao.Poligono;
 import gov.nasa.worldwind.geom.Position;
-import gov.nasa.worldwind.util.measure.MeasureTool;
-import gui.Messages;
-import gui.PoligonLayerFactory;
 import tasks.procesar.ExtraerPoligonosDeLaborTask;
 
 public class GeometryHelper {
@@ -694,7 +688,12 @@ public class GeometryHelper {
 		}
 		return area;
 	}
-
+	public static GeometryCollection toGeometryCollection(List<Geometry> list) {
+		GeometryFactory fact = ProyectionConstants.getGeometryFactory();
+		Geometry[] array =list.toArray(new Geometry[list.size()]);
+		GeometryCollection collection = fact.createGeometryCollection(array );
+		return collection;
+	}
 	public static Geometry unirGeometrias(List<Geometry> aUnir) {
 		aUnir = aUnir.stream().map(g->{
 			Densifier densifier = new Densifier(g);
@@ -716,6 +715,48 @@ public class GeometryHelper {
 		//y despues hacer un dif contra el boundary buffer 0.25 para evitar que crezcan los items
 		//System.out.println("geometria densa unida "+union);
 		return union;		
+	}
+
+	public static Geometry removeSmallTriangles(Geometry g, double minLongLatArea) {
+		Geometry ret=null;
+		GeometryFactory fact = ProyectionConstants.getGeometryFactory();
+		Coordinate[] boundCoords = g.getCoordinates();
+		List<Coordinate> vertices = new ArrayList<Coordinate>();
+		vertices.add(boundCoords[0]);
+		boolean changed = false;
+
+			changed = false;
+			//double minTriangleHas = ProyectionConstants.A_HAS(minLongLatArea);
+			//System.out.println("minTriangleHas ="+minTriangleHas);
+			//System.out.println("bounds length "+boundCoords.length);
+		for(int i=1;i<boundCoords.length-1;i++) {	
+			Coordinate c0 = vertices.get(vertices.size()-1);//last
+			ProyectionConstants.setLatitudCalculo(c0.y);
+			Coordinate c1 = boundCoords[i];
+			Coordinate c2 = boundCoords[i+1];
+			Coordinate[] tCoords = {c0,c1,c2,c0};
+			try {
+				Geometry triangle = fact.createPolygon(tCoords);//.createPolygon({c0,c1,c2});
+				//double triangleArea = triangle.getArea();
+				//double triangleHas = ProyectionConstants.A_HAS(triangleArea);
+				//System.out.println("triangleHas ="+triangleHas);
+				if(triangle.getArea()>minLongLatArea) {
+					vertices.add(c1);
+				} else {
+					
+					changed=true;
+				}
+			}catch(Exception e) {
+				vertices.add(c1);
+				e.printStackTrace();
+			}
+		
+		}
+
+		vertices.add(vertices.get(0));//Cerrar el ciclo
+		ret = g.getFactory().createPolygon(vertices.toArray(new Coordinate[vertices.size()]));
+
+		return ret;
 	}
 
 

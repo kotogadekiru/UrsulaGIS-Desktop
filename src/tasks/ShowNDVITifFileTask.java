@@ -118,7 +118,7 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 	-With their substantial reflectance in the Near Infrared, plants have an NDVI value from 0.1 to nearly 1.0;
  	the higher the value, the greater the plant density 
 	 */
-//	private File file=null;
+	//	private File file=null;
 	private Ndvi ndvi=null;
 	private Poligono ownerPoli = null;
 	public ShowNDVITifFileTask(File f){		
@@ -129,7 +129,7 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 		consoleHandler.setLevel(Level.ALL);
 		log.addHandler(consoleHandler);
 	}
-	
+
 	//metodo que se invoca cuando se carga un archivo drag and drop o en importar NDVI
 	private Ndvi constructNdviFromFile(File f) {
 		String fileName = GetNdviForLaborTask4.extractNameFromFileName(f.getName());
@@ -138,23 +138,23 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 
 		//String fechaString = new String (fileName);
 
-	
-		
+
+
 		Ndvi ndvi = new Ndvi();
 		ndvi.setNombre(fileName);
 		//ndvi.setF(tiffFile.toFile());
 		ndvi.updateContent(f);
 		//ndvi.setContent((byte[])nameBytes[1]);
-	//	ndvi.setContorno(contornoP);
+		//	ndvi.setContorno(contornoP);
 
 		ndvi.setFecha(date);
 		//ndvi.setMeanNDVI(meanNDVI.doubleValue());
 		//ndvi.setPorcNubes(porcNubes.doubleValue());
 		return ndvi;
 	}
-	
 
-	
+
+
 	public ShowNDVITifFileTask(Ndvi _ndvi){
 		//file =f;
 		ndvi=_ndvi;
@@ -163,7 +163,7 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 		consoleHandler.setLevel(Level.ALL);
 		log.addHandler(consoleHandler);
 	}
-	
+
 
 	class RasterWraperApache{
 		public int width = Tiff.Undefined;
@@ -350,6 +350,54 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 		}
 	}
 
+	/**
+	 * Returns a new iterable populated with {@link GridPointAttributes} computed by invoking {@link
+	 * #createColorGradientAttributes(double, double, double, double, double)} for each double value in the speicfied
+	 * {@link BufferWrapper}. Values equivalent to the specified <code>missingDataSignal</code> are replaced with the
+	 * specified <code>minValue</code>.
+	 *
+	 * @param values            the buffer of values.
+	 * @param missingDataSignal the number indicating a specific value to ignore.
+	 * @param minValue          the minimum value.
+	 * @param maxValue          the maximum value.
+	 * @param minHue            the mimimum color hue, corresponding to the minimum value.
+	 * @param maxHue            the maximum color hue, corresponding to the maximum value.
+	 *
+	 * @return an iiterable GridPointAttributes defined by the specified buffer of values.
+	 */
+	public static Iterable<? extends AnalyticSurface.GridPointAttributes> createColorGradientValues(
+			BufferWrapper values, double missingDataSignal, double minValue, double maxValue, double minHue, double maxHue){
+		if (values == null)
+		{
+			String message = Logging.getMessage("nullValue.BufferIsNull");
+			Logging.logger().severe(message);
+			throw new IllegalArgumentException(message);
+		}
+
+		ArrayList<AnalyticSurface.GridPointAttributes> attributesList
+		= new ArrayList<AnalyticSurface.GridPointAttributes>();
+		Map<Double,GridPointAttributes> gpMap = new HashMap<>();
+		for (int i = 0; i < values.length(); i++) {
+			double value = values.getDouble(i);
+			if (Double.compare(value, missingDataSignal) == 0)  value = minValue;
+			GridPointAttributes gp=null;
+
+			if(gpMap.containsKey(value)) {
+				System.out.println("ndvi gpMapContains "+value);
+				gp = gpMap.get(value);
+			} else {
+				gp =AnalyticSurface.createColorGradientAttributes(value, minValue, maxValue, minHue, maxHue); 
+				gpMap.put(value, gp);
+			}
+
+			attributesList.add(gp);
+		}
+
+		return attributesList;
+	}
+	
+	
+
 	public int[] toArray(FileDirectoryEntry entry) {
 		ArrayList<Integer> list = (ArrayList<Integer>) entry.getValues();
 		int[] ints = new int[list.size()];
@@ -380,13 +428,13 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 	}
 
 	public Layer call() {	
-//		if(ndvi==null) {
-//			ndvi=new Ndvi();
-//			//ndvi.setF(this.file);
-//			ndvi.updateContent(this.file);
-//			
-//			System.out.println("loading ndvi from file");
-//		}
+		//		if(ndvi==null) {
+		//			ndvi=new Ndvi();
+		//			//ndvi.setF(this.file);
+		//			ndvi.updateContent(this.file);
+		//			
+		//			System.out.println("loading ndvi from file");
+		//		}
 		try{
 			System.out.println("mostrando el ndvi"+ndvi.getNombre());
 			RasterWraperApache wrapper = loadRaster(ndvi);
@@ -394,32 +442,32 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 				System.out.println("no se pudo cargar el wrapper");
 				return null;
 			}
-			
+
 			String fileName="";
 			String fechaString="";
 			//trato de leer la fecha desde el nombre del archivo 
-//			if(file!=null) {
-//				fileName = file.getName();
-//				fileName= fileName.replace(".tif", "");
-//				//COPERNICUSS220170328T140051_20170328T140141_T20HNH.nd.tif
-//				if(fileName.contains("COPERNICUSS2")){
-//					fileName=fileName.replace("COPERNICUSS2", "");
-//					fileName=fileName.substring(0, "20170328".length());//anio
-//					fileName=fileName.substring("201703".length(), fileName.length())//dia
-//							+"-"+fileName.substring("2017".length(), "201703".length())//mes
-//							+"-"+fileName.substring(0, "2017".length());//anio
-//
-//				} else if(fileName.contains("LANDSATLC08C01T1_TOALC08_XXXXXX_")){
-//					fileName=fileName.replace("LANDSATLC08C01T1_TOALC08_XXXXXX_", "");
-//					fileName=fileName.substring(0, "20170328".length());
-//					fileName=fileName.substring("201703".length(), fileName.length())
-//							+"-"+fileName.substring("2017".length(), "201703".length())
-//							+"-"+fileName.substring(0, "2017".length());
-//				}
-//				//en este punto fileName tiene la fecha en formato 2017-03-28 es decir dd-MM-yyyy
-//
-//				fechaString = new String (fileName);
-//			}
+			//			if(file!=null) {
+			//				fileName = file.getName();
+			//				fileName= fileName.replace(".tif", "");
+			//				//COPERNICUSS220170328T140051_20170328T140141_T20HNH.nd.tif
+			//				if(fileName.contains("COPERNICUSS2")){
+			//					fileName=fileName.replace("COPERNICUSS2", "");
+			//					fileName=fileName.substring(0, "20170328".length());//anio
+			//					fileName=fileName.substring("201703".length(), fileName.length())//dia
+			//							+"-"+fileName.substring("2017".length(), "201703".length())//mes
+			//							+"-"+fileName.substring(0, "2017".length());//anio
+			//
+			//				} else if(fileName.contains("LANDSATLC08C01T1_TOALC08_XXXXXX_")){
+			//					fileName=fileName.replace("LANDSATLC08C01T1_TOALC08_XXXXXX_", "");
+			//					fileName=fileName.substring(0, "20170328".length());
+			//					fileName=fileName.substring("201703".length(), fileName.length())
+			//							+"-"+fileName.substring("2017".length(), "201703".length())
+			//							+"-"+fileName.substring(0, "2017".length());
+			//				}
+			//				//en este punto fileName tiene la fecha en formato 2017-03-28 es decir dd-MM-yyyy
+			//
+			//				fechaString = new String (fileName);
+			//			}
 
 			//			if(ownerPoli !=null){
 			//				System.out.println("mosntrando un ndvi con owner poli"+ ownerPoli);
@@ -567,7 +615,7 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 			attr.setInteriorOpacity(1);
 			surface.setSurfaceAttributes(attr);
 
-			
+
 			NumberFormat legendLabelFormat=Messages.getNumberFormat();
 			final AnalyticSurfaceLegend legend = AnalyticSurfaceLegend.fromColorGradient(MIN_VALUE,MAX_VALUE,
 					HUE_MIN, HUE_MAX,
@@ -627,33 +675,33 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 			layer.setPickEnabled(false);
 			layer.addRenderable(surface);
 			layer.addRenderable(renderable);
-			
-//			if(ndvi==null){
-//				ndvi = new Ndvi();
-//				ndvi.setNombre(fileName);
-//				//ndvi.setF(file);	
-//				ndvi.updateContent(file);
-//				ndvi.setContorno(ownerPoli);
-//
-//				//04-01-2018
-//				//SimpleDateFormat format1 = new SimpleDateFormat("dd-MM-yyyy");
-//				//System.out.println("convirtiendo fechaString "+fechaString);
-//				//convirtiendo fechaString 04-01-2018
-//				LocalDate fecha = null;
-//				try{
-//					if(fechaString.length()<"2017-03-28".length()) {
-//						String ymd = fechaString.substring(0,"2017-03-28".length());
-//						System.out.println("formateando la fecha con string "+ymd);
-//						DateTimeFormatter format1 = DateTimeFormatter.ofPattern(YYYY_MM_DD);	
-//						//formateando la fecha con string 06-02-2020
-//						fecha = LocalDate.parse(ymd, format1);//.parse(fechaString);//java.text.ParseException: Unparseable date: "Jag 20 30-08-20175528033450897731504"
-//						ndvi.setFecha(fecha);
-//					}
-//				}catch(Exception e){
-//					e.printStackTrace();
-//					System.err.println("no se pudo cargar la fecha del ndvi para "+fechaString);
-//				}
-//			}
+
+			//			if(ndvi==null){
+			//				ndvi = new Ndvi();
+			//				ndvi.setNombre(fileName);
+			//				//ndvi.setF(file);	
+			//				ndvi.updateContent(file);
+			//				ndvi.setContorno(ownerPoli);
+			//
+			//				//04-01-2018
+			//				//SimpleDateFormat format1 = new SimpleDateFormat("dd-MM-yyyy");
+			//				//System.out.println("convirtiendo fechaString "+fechaString);
+			//				//convirtiendo fechaString 04-01-2018
+			//				LocalDate fecha = null;
+			//				try{
+			//					if(fechaString.length()<"2017-03-28".length()) {
+			//						String ymd = fechaString.substring(0,"2017-03-28".length());
+			//						System.out.println("formateando la fecha con string "+ymd);
+			//						DateTimeFormatter format1 = DateTimeFormatter.ofPattern(YYYY_MM_DD);	
+			//						//formateando la fecha con string 06-02-2020
+			//						fecha = LocalDate.parse(ymd, format1);//.parse(fechaString);//java.text.ParseException: Unparseable date: "Jag 20 30-08-20175528033450897731504"
+			//						ndvi.setFecha(fecha);
+			//					}
+			//				}catch(Exception e){
+			//					e.printStackTrace();
+			//					System.err.println("no se pudo cargar la fecha del ndvi para "+fechaString);
+			//				}
+			//			}
 			ndvi.setPorcNubes(new Double(porcNubes));
 			ndvi.setMeanNDVI(ndviProm);
 			ndvi.setPixelArea(pixelArea);//pixelArea);
@@ -679,280 +727,280 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 		return null;
 	}
 
-//	public Layer call_old() {	
-//		try{
-//			BufferWrapperRaster raster = ShowNDVITifFileTask.loadRasterFile(file);
-//			if (raster == null){
-//				return null;
-//			}
-//
-//			String fileName = file.getName();
-//			fileName= fileName.replace(".tif", "");
-//			//COPERNICUSS220170328T140051_20170328T140141_T20HNH.nd.tif
-//			if(fileName.contains("COPERNICUSS2")){
-//				fileName=fileName.replace("COPERNICUSS2", "");
-//				fileName=fileName.substring(0, "20170328".length());//anio
-//				fileName=fileName.substring("201703".length(), fileName.length())//dia
-//						+"-"+fileName.substring("2017".length(), "201703".length())//mes
-//						+"-"+fileName.substring(0, "2017".length());//anio
-//
-//			} else if(fileName.contains("LANDSATLC08C01T1_TOALC08_XXXXXX_")){
-//				fileName=fileName.replace("LANDSATLC08C01T1_TOALC08_XXXXXX_", "");
-//				fileName=fileName.substring(0, "20170328".length());
-//				fileName=fileName.substring("201703".length(), fileName.length())
-//						+"-"+fileName.substring("2017".length(), "201703".length())
-//						+"-"+fileName.substring(0, "2017".length());
-//			}
-//			//en este punto fileName tiene la fecha en formato 2017-03-28 es decir dd-MM-yyyy
-//
-//			String fechaString = new String (fileName);
-//
-//			if(ownerPoli !=null){
-//				fileName = ownerPoli.getNombre() +" "+ fileName;
-//			}
-//			if(ndvi!=null) {
-//				fileName = ndvi.getNombre();
-//			}
-//
-//			final ExportableAnalyticSurface surface = new ExportableAnalyticSurface();
-//			surface.setSector(raster.getSector());
-//			surface.setDimensions(raster.getWidth(), raster.getHeight());
-//
-//			//					surface.setExportImageName("ndviExportedImage");
-//			//					surface.setExportImagePath("/exportedImagePath");
-//			//					OutputStream outStream = null;					
-//			//					KMZDocumentBuilder kmzB = new KMZDocumentBuilder(outStream);
-//			//					kmzB.writeObject(surface);
-//			//					Object writer = writer = XMLOutputFactory.newInstance().createXMLStreamWriter(this.zipStream);
-//			//					surface.export(KMLConstants.KML_MIME_TYPE, writer);//mimeType, output);
-//
-//			double HUE_MIN = Clasificador.colors[0].getHue()/360d;//0d / 360d;
-//			double HUE_MAX = Clasificador.colors[Clasificador.colors.length-1].getHue()/360d;//240d / 360d;
-//			//TRANSPARENT_VALUE =raster.getTransparentValue();
-//			//	System.out.println("ndvi transparent value = "+transparentValue);
-//			//double transparentValue =extremes[0];
-//			//TRANSPARENT_VALUE=0;//para que pueda interpretar los valores clipeados como transparente
-//
-//			int width = raster.getWidth();
-//			int height = raster.getHeight();
-//			double dLat = raster.getSector().getDeltaLatDegrees();
-//			double dLon = raster.getSector().getDeltaLonDegrees();
-//
-//			Sector sector = raster.getSector();
-//			double latProm = (sector.getMaxLatitude().degrees+sector.getMinLatitude().degrees)/2;
-//			ProyectionConstants.setLatitudCalculo(latProm);
-//			double pixelArea = ProyectionConstants.A_HAS(((dLat*dLon)/(width*height)));//12... =~ 10
-//			//System.out.println("el area calculada del pixel es "+pixelArea);
-//
-//			//acoto los valores entre -2.2 y 2.2
-//			BufferWrapper buffer = raster.getBuffer();
-//			//log.setLevel(Level.ALL);
-//
-//			for(int i=0;i<buffer.length();i++){
-//				double value = buffer.getDouble(i);
-//				//log.info("agregando value "+value);
-//				//System.out.println("agregando value " +value);
-//				if(Double.isNaN(value) || Double.isInfinite(value)) {					
-//					//log.fine("agregando Nan a transparente");
-//					//System.out.println("agregando value a transparente" +value);
-//					value=TRANSPARENT_VALUE;
-//				} else {
-//					//	value =0.000001;
-//					//  value = Math.max(value, -2.2);
-//					//  value = Math.min(value, 2.2);
-//				}
-//				buffer.putDouble(i, value);
-//			}
-//
-//			@SuppressWarnings("unchecked")
-//			ArrayList<AnalyticSurface.GridPointAttributes> attributesList
-//			= (ArrayList<GridPointAttributes>) AnalyticSurface.createColorGradientValues(raster.getBuffer(), 55, MIN_VALUE, MAX_VALUE, HUE_MIN, HUE_MAX);
-//			if(attributesList.size()==0)return null;
-//
-//			GridPointAttributes cloud = AnalyticSurface.createGridPointAttributes(CLOUD_RENDER_VALUE,Color.white);
-//			GridPointAttributes water = AnalyticSurface.createGridPointAttributes(WATER_RENDER_VALUE,Color.CYAN);
-//
-//			IntegerProperty cloudCount = new SimpleIntegerProperty(0);
-//			IntegerProperty totalCount = new SimpleIntegerProperty(0);
-//			IntegerProperty cultivoCount = new SimpleIntegerProperty(0);
-//			DoubleProperty ndviSuma = new SimpleDoubleProperty(0);
-//			attributesList.replaceAll((gpa)->{
-//				double value = gpa.getValue();
-//				if(value == CLOUD_VALUE) {
-//
-//					cloudCount.set(cloudCount.getValue()+1);
-//					totalCount.set(totalCount.getValue()+1);
-//
-//					return cloud;
-//				} else if (value == WATER_VALUE){
-//					totalCount.set(totalCount.getValue()+1);
-//
-//					return water;
-//				} else {
-//					if(value >= ShowNDVITifFileTask.MIN_VALUE && value <= ShowNDVITifFileTask.MAX_VALUE ) {
-//						ndviSuma.set(ndviSuma.getValue()+value);
-//						cultivoCount.set(cultivoCount.getValue()+1);
-//						totalCount.set(totalCount.getValue()+1);
-//					}
-//
-//					//totalCount.add(1);
-//					return gpa;
-//				}
-//
-//			});
-//
-//			double porcNubes=cloudCount.doubleValue()/totalCount.doubleValue();
-//			double ndviProm=ndviSuma.doubleValue()/cultivoCount.doubleValue();
-//
-//			if(porcNubes>0.9) {
-//				System.out.print("ignorando layer por nublado");
-//				return null;
-//			}
-//			//			surface.setValues(AnalyticSurface.createColorGradientValues(
-//			//					raster.getBuffer(), transparentValue, MIN_VALUE, MAX_VALUE, HUE_MIN, HUE_MAX));
-//			surface.setValues(attributesList);
-//			// surface.setVerticalScale(5e3);
-//			surface.setVerticalScale(100);
-//			//surface.setAltitude(-10);
-//
-//
-//			AnalyticSurfaceAttributes attr = new AnalyticSurfaceAttributes();
-//			attr.setDrawOutline(false);
-//			attr.setDrawShadow(false);
-//			attr.setInteriorOpacity(1);
-//			surface.setSurfaceAttributes(attr);
-//
-//			Format legendLabelFormat = new DecimalFormat() ;
-//			final AnalyticSurfaceLegend legend = AnalyticSurfaceLegend.fromColorGradient(MIN_VALUE,MAX_VALUE,
-//					HUE_MIN, HUE_MAX,
-//					AnalyticSurfaceLegend.createDefaultColorGradientLabels(MIN_VALUE, MAX_VALUE, legendLabelFormat),
-//					AnalyticSurfaceLegend.createDefaultTitle(fileName));
-//			legend.setOpacity(1);
-//			legend.setScreenLocation(new Point(100, 400));
-//
-//
-//			LatLon ori = sector.getCentroid();
-//			Position pointPosition = Position.fromDegrees(ori.latitude.degrees, ori.longitude.degrees);			
-//			PointPlacemark pmStandard = new PointPlacemark(pointPosition);
-//			PointPlacemarkAttributes pointAttribute = new PointPlacemarkAttributes();
-//			pointAttribute.setImageColor(java.awt.Color.red);
-//			//		if(HiDPIHelper.isHiDPI()){
-//			//			pointAttribute.setLabelFont(java.awt.Font.decode("Verdana-Bold-50"));
-//			//		}
-//			pointAttribute.setLabelMaterial(Material.DARK_GRAY);
-//			pmStandard.setLabelText(fileName);
-//			pmStandard.setAttributes(pointAttribute);
-//
-//
-//			Renderable renderable =  new Renderable()	{
-//				public void render(DrawContext dc)
-//				{
-//					Extent extent = surface.getExtent(dc);
-//					if (!extent.intersects(dc.getView().getFrustumInModelCoordinates()))
-//						return;
-//
-//					if (WWMath.computeSizeInWindowCoordinates(dc, extent) < 300){
-//						pmStandard.render(dc);
-//						return;
-//					}
-//
-//					legend.render(dc);
-//				}
-//			};
-//			SurfaceImageLayer layer = new SurfaceImageLayer(){
-//				@Override
-//				public void setOpacity(double opacity){
-//					//System.out.println("setting opacity en SurfaceImageLayer"+opacity);
-//					AnalyticSurfaceAttributes attributes = surface.getSurfaceAttributes();
-//					attributes.setInteriorOpacity(opacity);
-//					surface.setSurfaceAttributes(attributes);
-//					legend.setOpacity(opacity);
-//
-//				}
-//
-//			};
-//
-//			DecimalFormat df = new DecimalFormat(Messages.getString("GenerarMuestreoDirigidoTask.5")); //$NON-NLS-1$
-//			//XXX quito la informacion de nublado porque me rompe el ordenamiento y evoluvion de ndvi
-//			layer.setName(fileName);//+" "+df.format(porcNubes*100)+"% "+Messages.getString("ShowNDVITifFileTask.nublado"));
-//			layer.setPickEnabled(false);
-//			layer.addRenderable(surface);
-//			layer.addRenderable(renderable);
-//			if(ndvi==null){
-//				ndvi = new Ndvi();
-//				ndvi.setNombre(fileName);
-//				//ndvi.setF(file);			
-//				ndvi.updateContent(file);
-//				ndvi.setContorno(ownerPoli);
-//
-//				//04-01-2018
-//				//SimpleDateFormat format1 = new SimpleDateFormat("dd-MM-yyyy");
-//				//System.out.println("convirtiendo fechaString "+fechaString);
-//				//convirtiendo fechaString 04-01-2018
-//				LocalDate fecha = null;
-//				try{
-//					if(fechaString.length()<"2017-03-28".length()) {
-//						String ymd = fechaString.substring(0,"2017-03-28".length());
-//						System.out.println("formateando la fecha con string "+ymd);
-//						DateTimeFormatter format1 = DateTimeFormatter.ofPattern(YYYY_MM_DD);	
-//						//formateando la fecha con string 06-02-2020
-//						fecha = LocalDate.parse(ymd, format1);//.parse(fechaString);//java.text.ParseException: Unparseable date: "Jag 20 30-08-20175528033450897731504"
-//						ndvi.setFecha(fecha);
-//					}
-//				}catch(Exception e){
-//					e.printStackTrace();
-//					System.err.println("no se pudo cargar la fecha del ndvi para "+fechaString);
-//				}
-//			}
-//			ndvi.setPorcNubes(new Double(porcNubes));
-//			ndvi.setMeanNDVI(ndviProm);
-//			ndvi.setPixelArea(pixelArea);//pixelArea);
-//			ndvi.setSurfaceLayer(surface);
-//			ndvi.setLayer(layer);
-//
-//
-//
-//			// creando un ndvi con fecha
-//			//System.out.println("creando un ndvi con fecha "+fecha);
-//			//creando un ndvi con fecha Thu Jan 04 00:00:00 ART 2018
-//
-//			layer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, ndvi);
-//			layer.setValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR, ndvi.getClass());
-//
-//			layer.setValue(ProcessMapTask.ZOOM_TO_KEY, pointPosition);		
-//
-//
-//			//	Sector s = raster.getSector();
-//			//	BufferWrapper buffer = raster.getBuffer();
-//			//			int nFilas =raster.getHeight();
-//			//			int nCols =raster.getWidth();//buffer.length()/raster.getWidth();
-//			//			int filaV=0,colV = 0;
-//			//			for(int col =0;col<nCols;col++){
-//			//			for(int fila =0;fila<nFilas;fila++){
-//			//				int index = fila*raster.getWidth()+col;
-//			//				double value = buffer.getDouble(index);
-//			//				//System.out.println("raster value for "+fila+","+col+" : "+value);
-//			//				if(value > 0.2 ){//si no hay dato lee 0.0
-//			//					filaV = fila;
-//			//					colV=col;
-//			//					break;
-//			//				}				
-//			//			}
-//			//			if(filaV>0)break;
-//			//			}
-//			//		//	System.out.println("fila= "+filaV);
-//			//			double latDelta = dLat*filaV/raster.getHeight();
-//			//			double lonDelta = lon*colV/raster.getWidth();
-//			//	System.out.println("latDelta= "+latDelta);
-//			//TODO en vez de usar sector usar el metodo de labor para encontrar un vertice
-//
-//			return layer;
-//
-//		} catch (Exception e)     {
-//			e.printStackTrace();
-//		}
-//		return null;
-//	}
+	//	public Layer call_old() {	
+	//		try{
+	//			BufferWrapperRaster raster = ShowNDVITifFileTask.loadRasterFile(file);
+	//			if (raster == null){
+	//				return null;
+	//			}
+	//
+	//			String fileName = file.getName();
+	//			fileName= fileName.replace(".tif", "");
+	//			//COPERNICUSS220170328T140051_20170328T140141_T20HNH.nd.tif
+	//			if(fileName.contains("COPERNICUSS2")){
+	//				fileName=fileName.replace("COPERNICUSS2", "");
+	//				fileName=fileName.substring(0, "20170328".length());//anio
+	//				fileName=fileName.substring("201703".length(), fileName.length())//dia
+	//						+"-"+fileName.substring("2017".length(), "201703".length())//mes
+	//						+"-"+fileName.substring(0, "2017".length());//anio
+	//
+	//			} else if(fileName.contains("LANDSATLC08C01T1_TOALC08_XXXXXX_")){
+	//				fileName=fileName.replace("LANDSATLC08C01T1_TOALC08_XXXXXX_", "");
+	//				fileName=fileName.substring(0, "20170328".length());
+	//				fileName=fileName.substring("201703".length(), fileName.length())
+	//						+"-"+fileName.substring("2017".length(), "201703".length())
+	//						+"-"+fileName.substring(0, "2017".length());
+	//			}
+	//			//en este punto fileName tiene la fecha en formato 2017-03-28 es decir dd-MM-yyyy
+	//
+	//			String fechaString = new String (fileName);
+	//
+	//			if(ownerPoli !=null){
+	//				fileName = ownerPoli.getNombre() +" "+ fileName;
+	//			}
+	//			if(ndvi!=null) {
+	//				fileName = ndvi.getNombre();
+	//			}
+	//
+	//			final ExportableAnalyticSurface surface = new ExportableAnalyticSurface();
+	//			surface.setSector(raster.getSector());
+	//			surface.setDimensions(raster.getWidth(), raster.getHeight());
+	//
+	//			//					surface.setExportImageName("ndviExportedImage");
+	//			//					surface.setExportImagePath("/exportedImagePath");
+	//			//					OutputStream outStream = null;					
+	//			//					KMZDocumentBuilder kmzB = new KMZDocumentBuilder(outStream);
+	//			//					kmzB.writeObject(surface);
+	//			//					Object writer = writer = XMLOutputFactory.newInstance().createXMLStreamWriter(this.zipStream);
+	//			//					surface.export(KMLConstants.KML_MIME_TYPE, writer);//mimeType, output);
+	//
+	//			double HUE_MIN = Clasificador.colors[0].getHue()/360d;//0d / 360d;
+	//			double HUE_MAX = Clasificador.colors[Clasificador.colors.length-1].getHue()/360d;//240d / 360d;
+	//			//TRANSPARENT_VALUE =raster.getTransparentValue();
+	//			//	System.out.println("ndvi transparent value = "+transparentValue);
+	//			//double transparentValue =extremes[0];
+	//			//TRANSPARENT_VALUE=0;//para que pueda interpretar los valores clipeados como transparente
+	//
+	//			int width = raster.getWidth();
+	//			int height = raster.getHeight();
+	//			double dLat = raster.getSector().getDeltaLatDegrees();
+	//			double dLon = raster.getSector().getDeltaLonDegrees();
+	//
+	//			Sector sector = raster.getSector();
+	//			double latProm = (sector.getMaxLatitude().degrees+sector.getMinLatitude().degrees)/2;
+	//			ProyectionConstants.setLatitudCalculo(latProm);
+	//			double pixelArea = ProyectionConstants.A_HAS(((dLat*dLon)/(width*height)));//12... =~ 10
+	//			//System.out.println("el area calculada del pixel es "+pixelArea);
+	//
+	//			//acoto los valores entre -2.2 y 2.2
+	//			BufferWrapper buffer = raster.getBuffer();
+	//			//log.setLevel(Level.ALL);
+	//
+	//			for(int i=0;i<buffer.length();i++){
+	//				double value = buffer.getDouble(i);
+	//				//log.info("agregando value "+value);
+	//				//System.out.println("agregando value " +value);
+	//				if(Double.isNaN(value) || Double.isInfinite(value)) {					
+	//					//log.fine("agregando Nan a transparente");
+	//					//System.out.println("agregando value a transparente" +value);
+	//					value=TRANSPARENT_VALUE;
+	//				} else {
+	//					//	value =0.000001;
+	//					//  value = Math.max(value, -2.2);
+	//					//  value = Math.min(value, 2.2);
+	//				}
+	//				buffer.putDouble(i, value);
+	//			}
+	//
+	//			@SuppressWarnings("unchecked")
+	//			ArrayList<AnalyticSurface.GridPointAttributes> attributesList
+	//			= (ArrayList<GridPointAttributes>) AnalyticSurface.createColorGradientValues(raster.getBuffer(), 55, MIN_VALUE, MAX_VALUE, HUE_MIN, HUE_MAX);
+	//			if(attributesList.size()==0)return null;
+	//
+	//			GridPointAttributes cloud = AnalyticSurface.createGridPointAttributes(CLOUD_RENDER_VALUE,Color.white);
+	//			GridPointAttributes water = AnalyticSurface.createGridPointAttributes(WATER_RENDER_VALUE,Color.CYAN);
+	//
+	//			IntegerProperty cloudCount = new SimpleIntegerProperty(0);
+	//			IntegerProperty totalCount = new SimpleIntegerProperty(0);
+	//			IntegerProperty cultivoCount = new SimpleIntegerProperty(0);
+	//			DoubleProperty ndviSuma = new SimpleDoubleProperty(0);
+	//			attributesList.replaceAll((gpa)->{
+	//				double value = gpa.getValue();
+	//				if(value == CLOUD_VALUE) {
+	//
+	//					cloudCount.set(cloudCount.getValue()+1);
+	//					totalCount.set(totalCount.getValue()+1);
+	//
+	//					return cloud;
+	//				} else if (value == WATER_VALUE){
+	//					totalCount.set(totalCount.getValue()+1);
+	//
+	//					return water;
+	//				} else {
+	//					if(value >= ShowNDVITifFileTask.MIN_VALUE && value <= ShowNDVITifFileTask.MAX_VALUE ) {
+	//						ndviSuma.set(ndviSuma.getValue()+value);
+	//						cultivoCount.set(cultivoCount.getValue()+1);
+	//						totalCount.set(totalCount.getValue()+1);
+	//					}
+	//
+	//					//totalCount.add(1);
+	//					return gpa;
+	//				}
+	//
+	//			});
+	//
+	//			double porcNubes=cloudCount.doubleValue()/totalCount.doubleValue();
+	//			double ndviProm=ndviSuma.doubleValue()/cultivoCount.doubleValue();
+	//
+	//			if(porcNubes>0.9) {
+	//				System.out.print("ignorando layer por nublado");
+	//				return null;
+	//			}
+	//			//			surface.setValues(AnalyticSurface.createColorGradientValues(
+	//			//					raster.getBuffer(), transparentValue, MIN_VALUE, MAX_VALUE, HUE_MIN, HUE_MAX));
+	//			surface.setValues(attributesList);
+	//			// surface.setVerticalScale(5e3);
+	//			surface.setVerticalScale(100);
+	//			//surface.setAltitude(-10);
+	//
+	//
+	//			AnalyticSurfaceAttributes attr = new AnalyticSurfaceAttributes();
+	//			attr.setDrawOutline(false);
+	//			attr.setDrawShadow(false);
+	//			attr.setInteriorOpacity(1);
+	//			surface.setSurfaceAttributes(attr);
+	//
+	//			Format legendLabelFormat = new DecimalFormat() ;
+	//			final AnalyticSurfaceLegend legend = AnalyticSurfaceLegend.fromColorGradient(MIN_VALUE,MAX_VALUE,
+	//					HUE_MIN, HUE_MAX,
+	//					AnalyticSurfaceLegend.createDefaultColorGradientLabels(MIN_VALUE, MAX_VALUE, legendLabelFormat),
+	//					AnalyticSurfaceLegend.createDefaultTitle(fileName));
+	//			legend.setOpacity(1);
+	//			legend.setScreenLocation(new Point(100, 400));
+	//
+	//
+	//			LatLon ori = sector.getCentroid();
+	//			Position pointPosition = Position.fromDegrees(ori.latitude.degrees, ori.longitude.degrees);			
+	//			PointPlacemark pmStandard = new PointPlacemark(pointPosition);
+	//			PointPlacemarkAttributes pointAttribute = new PointPlacemarkAttributes();
+	//			pointAttribute.setImageColor(java.awt.Color.red);
+	//			//		if(HiDPIHelper.isHiDPI()){
+	//			//			pointAttribute.setLabelFont(java.awt.Font.decode("Verdana-Bold-50"));
+	//			//		}
+	//			pointAttribute.setLabelMaterial(Material.DARK_GRAY);
+	//			pmStandard.setLabelText(fileName);
+	//			pmStandard.setAttributes(pointAttribute);
+	//
+	//
+	//			Renderable renderable =  new Renderable()	{
+	//				public void render(DrawContext dc)
+	//				{
+	//					Extent extent = surface.getExtent(dc);
+	//					if (!extent.intersects(dc.getView().getFrustumInModelCoordinates()))
+	//						return;
+	//
+	//					if (WWMath.computeSizeInWindowCoordinates(dc, extent) < 300){
+	//						pmStandard.render(dc);
+	//						return;
+	//					}
+	//
+	//					legend.render(dc);
+	//				}
+	//			};
+	//			SurfaceImageLayer layer = new SurfaceImageLayer(){
+	//				@Override
+	//				public void setOpacity(double opacity){
+	//					//System.out.println("setting opacity en SurfaceImageLayer"+opacity);
+	//					AnalyticSurfaceAttributes attributes = surface.getSurfaceAttributes();
+	//					attributes.setInteriorOpacity(opacity);
+	//					surface.setSurfaceAttributes(attributes);
+	//					legend.setOpacity(opacity);
+	//
+	//				}
+	//
+	//			};
+	//
+	//			DecimalFormat df = new DecimalFormat(Messages.getString("GenerarMuestreoDirigidoTask.5")); //$NON-NLS-1$
+	//			//XXX quito la informacion de nublado porque me rompe el ordenamiento y evoluvion de ndvi
+	//			layer.setName(fileName);//+" "+df.format(porcNubes*100)+"% "+Messages.getString("ShowNDVITifFileTask.nublado"));
+	//			layer.setPickEnabled(false);
+	//			layer.addRenderable(surface);
+	//			layer.addRenderable(renderable);
+	//			if(ndvi==null){
+	//				ndvi = new Ndvi();
+	//				ndvi.setNombre(fileName);
+	//				//ndvi.setF(file);			
+	//				ndvi.updateContent(file);
+	//				ndvi.setContorno(ownerPoli);
+	//
+	//				//04-01-2018
+	//				//SimpleDateFormat format1 = new SimpleDateFormat("dd-MM-yyyy");
+	//				//System.out.println("convirtiendo fechaString "+fechaString);
+	//				//convirtiendo fechaString 04-01-2018
+	//				LocalDate fecha = null;
+	//				try{
+	//					if(fechaString.length()<"2017-03-28".length()) {
+	//						String ymd = fechaString.substring(0,"2017-03-28".length());
+	//						System.out.println("formateando la fecha con string "+ymd);
+	//						DateTimeFormatter format1 = DateTimeFormatter.ofPattern(YYYY_MM_DD);	
+	//						//formateando la fecha con string 06-02-2020
+	//						fecha = LocalDate.parse(ymd, format1);//.parse(fechaString);//java.text.ParseException: Unparseable date: "Jag 20 30-08-20175528033450897731504"
+	//						ndvi.setFecha(fecha);
+	//					}
+	//				}catch(Exception e){
+	//					e.printStackTrace();
+	//					System.err.println("no se pudo cargar la fecha del ndvi para "+fechaString);
+	//				}
+	//			}
+	//			ndvi.setPorcNubes(new Double(porcNubes));
+	//			ndvi.setMeanNDVI(ndviProm);
+	//			ndvi.setPixelArea(pixelArea);//pixelArea);
+	//			ndvi.setSurfaceLayer(surface);
+	//			ndvi.setLayer(layer);
+	//
+	//
+	//
+	//			// creando un ndvi con fecha
+	//			//System.out.println("creando un ndvi con fecha "+fecha);
+	//			//creando un ndvi con fecha Thu Jan 04 00:00:00 ART 2018
+	//
+	//			layer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, ndvi);
+	//			layer.setValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR, ndvi.getClass());
+	//
+	//			layer.setValue(ProcessMapTask.ZOOM_TO_KEY, pointPosition);		
+	//
+	//
+	//			//	Sector s = raster.getSector();
+	//			//	BufferWrapper buffer = raster.getBuffer();
+	//			//			int nFilas =raster.getHeight();
+	//			//			int nCols =raster.getWidth();//buffer.length()/raster.getWidth();
+	//			//			int filaV=0,colV = 0;
+	//			//			for(int col =0;col<nCols;col++){
+	//			//			for(int fila =0;fila<nFilas;fila++){
+	//			//				int index = fila*raster.getWidth()+col;
+	//			//				double value = buffer.getDouble(index);
+	//			//				//System.out.println("raster value for "+fila+","+col+" : "+value);
+	//			//				if(value > 0.2 ){//si no hay dato lee 0.0
+	//			//					filaV = fila;
+	//			//					colV=col;
+	//			//					break;
+	//			//				}				
+	//			//			}
+	//			//			if(filaV>0)break;
+	//			//			}
+	//			//		//	System.out.println("fila= "+filaV);
+	//			//			double latDelta = dLat*filaV/raster.getHeight();
+	//			//			double lonDelta = lon*colV/raster.getWidth();
+	//			//	System.out.println("latDelta= "+latDelta);
+	//			//TODO en vez de usar sector usar el metodo de labor para encontrar un vertice
+	//
+	//			return layer;
+	//
+	//		} catch (Exception e)     {
+	//			e.printStackTrace();
+	//		}
+	//		return null;
+	//	}
 
 	public RasterWraperApache loadRaster(Ndvi target) throws IOException {
 		//System.out.println("loading raster target "+target.getName());

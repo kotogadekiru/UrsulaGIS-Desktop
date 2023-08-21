@@ -159,7 +159,7 @@ public class ProyectionConstants {
 		
 	}
 
-	public static Point getPoint(Point origen, double azimut,double metros){
+	public static synchronized Point getPoint(Point origen, double azimut,double metros){
 		azimut=azimut>180?azimut-360:azimut;
 		//Azimuth 231°24.0'E is out of range (±180°).
 		GeometryFactory fact =origen.getFactory();
@@ -168,7 +168,7 @@ public class ProyectionConstants {
 		GeodeticCalculator gc = getCalculator();	
 		gc.setStartingGeographicPoint(start);
 		gc.setDirection(azimut, metros);
-		Point2D dest2D=  gc.getDestinationGeographicPoint();
+		Point2D dest2D=  gc.getDestinationGeographicPoint();//java.lang.IllegalStateException: The direction has not been set.
 		calculatorPool.add(gc);
 		Point dest = fact.createPoint(new Coordinate(dest2D.getX(),dest2D.getY()));
 		return dest;

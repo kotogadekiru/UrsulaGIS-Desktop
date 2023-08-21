@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
@@ -131,15 +133,15 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		// To radians just change the method the class Position
 		// to fromRadians().
 
-		Color currentColor = null;
-		try{
-			currentColor = labor.getClasificador().getColorFor(dao);
-		}catch(Exception e){
-			e.printStackTrace();
-			currentColor = Color.WHITE;
-		}
-		java.awt.Color awtColor = new java.awt.Color((float) currentColor.getRed(),(float) currentColor.getGreen(),(float) currentColor.getBlue());
-		Material material = new Material(awtColor);
+//		Color currentColor = null;
+//		try{
+//			currentColor = labor.getClasificador().getAwtColorFor(dao.getAmount());
+//		}catch(Exception e){
+//			e.printStackTrace();
+//			currentColor = Color.WHITE;
+//		}
+//		java.awt.Color awtColor = new java.awt.Color((float) currentColor.getRed(),(float) currentColor.getGreen(),(float) currentColor.getBlue());
+		Material material = new Material(labor.getClasificador().getAwtColorFor(dao.getAmount()));
 
 		ShapeAttributes outerAttributes = renderablePolygon.getAttributes();
 		if(outerAttributes==null) {
@@ -555,7 +557,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		AnalyticSurface.GridPointAttributes transparent  =  AnalyticSurface.createGridPointAttributes(0, new java.awt.Color(0,0,0,0));
 
 		LinkedList<AnalyticSurface.GridPointAttributes> attributesList = new LinkedList<AnalyticSurface.GridPointAttributes>();
-
+		Map<String,GridPointAttributes> gpMap=new HashMap<String,GridPointAttributes>();
 		for(int index=0;index<maxIndex;index++){
 			GridPointAttributes newGridPoint  = transparent;
 			List<FC> indexItems = indexMap.getOrDefault(index, null);		
@@ -575,7 +577,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 			}
 			if(indexItems!=null && indexItems.size()>0){
 				//float r =0,g = 0,b=0,
-				float elev=0;
+				double elev=0;
 				double amount=0;
 				for(FC it : indexItems){
 					elev+= it.getElevacion()-minElev;
@@ -583,12 +585,21 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				}
 
 				int n = indexItems.size();
-				Color color = labor.getClasificador().getColorFor(amount/n);
-				float r=(float) color.getRed();//0.99607843
-				float g=(float) color.getGreen();
-				float b=(float) color.getBlue();
-				java.awt.Color rgbaColor = new java.awt.Color(r,g,b,1);//IllegalArgumentException - if r, g b or a are outside of the range 0.0 to 1.0, inclusive
+//				Color color = labor.getClasificador().getColorFor(amount/n);
+//				float r=(float) color.getRed();//0.99607843
+//				float g=(float) color.getGreen();
+//				float b=(float) color.getBlue();
+//				java.awt.Color rgbaColor = new java.awt.Color(r,g,b,1);//IllegalArgumentException - if r, g b or a are outside of the range 0.0 to 1.0, inclusive
+				String kpKey = getGPKey(elev/n,amount/n);
+				if(gpMap.containsKey(kpKey)) {
+					newGridPoint = gpMap.get(kpKey);
+				} else {
+				java.awt.Color rgbaColor = labor.getClasificador().getAwtColorFor(amount/n);//new java.awt.Color(r,g,b,1);//IllegalArgumentException - if r, g b or a are outside of the range 0.0 to 1.0, inclusive
+				
 				newGridPoint  =  AnalyticSurface.createGridPointAttributes(elev/n, rgbaColor);
+				gpMap.put(kpKey, newGridPoint);
+				}
+				//newGridPoint  =  AnalyticSurface.createGridPointAttributes(elev/n, labor.getClasificador().getAwtColorFor(amount/n));
 			}
 			//	System.out.println("agregando el elemento "+index);
 			attributesList.add(index,newGridPoint);
@@ -688,7 +699,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		int maxIndex =  width*height;
 
 		//System.out.println("width="+width+" height="+height+" maxIndex="+maxIndex);
-
+		Map<String,GridPointAttributes> gpMap=new HashMap<String,GridPointAttributes>();
 		AnalyticSurface.GridPointAttributes transparent  =  AnalyticSurface.createGridPointAttributes(0, new java.awt.Color(0,0,0,0));
 		LinkedList<AnalyticSurface.GridPointAttributes> attributesList = new LinkedList<AnalyticSurface.GridPointAttributes>();
 		for(int i = 0;i<maxIndex;i++){
@@ -724,7 +735,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 				if(fueaturesToAdd!=null && fueaturesToAdd.size()>0){
 					//float r =0,g = 0,b=0,
-					float elev=0;
+					double elev=0;
 					double amount=0;
 
 					for(FC it : fueaturesToAdd){
@@ -733,12 +744,20 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 					}
 
 					int n = fueaturesToAdd.size();
-					Color color = labor.getClasificador().getColorFor(amount/n);
-					float r=(float) color.getRed();//0.99607843
-					float g=(float) color.getGreen();
-					float b=(float) color.getBlue();
-					java.awt.Color rgbaColor = new java.awt.Color(r,g,b,1);//IllegalArgumentException - if r, g b or a are outside of the range 0.0 to 1.0, inclusive
+//					Color color = labor.getClasificador().getColorFor(amount/n);
+//					
+//					float r=(float) color.getRed();//0.99607843
+//					float g=(float) color.getGreen();
+//					float b=(float) color.getBlue();
+					String kpKey = getGPKey(elev/n,amount/n);
+					if(gpMap.containsKey(kpKey)) {
+						newGridPoint = gpMap.get(kpKey);
+					} else {
+					java.awt.Color rgbaColor = labor.getClasificador().getAwtColorFor(amount/n);//new java.awt.Color(r,g,b,1);//IllegalArgumentException - if r, g b or a are outside of the range 0.0 to 1.0, inclusive
+					
 					newGridPoint  =  AnalyticSurface.createGridPointAttributes(elev/n, rgbaColor);
+					gpMap.put(kpKey, newGridPoint);
+					}
 				} else {
 					//System.out.println("no hay features para fila,columna= "+fila+","+col);
 				}
@@ -808,7 +827,13 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 		return layer;
 	}
-
+	private String getGPKey(Double v,Double v2) {
+		String ret =null;
+		String sv = Messages.getNumberFormat().format(v);
+		String sv2 = Messages.getNumberFormat().format(v2);		
+		ret =sv+"-"+sv2;
+		return ret;
+	}
 	public static boolean readerHasNext(FeatureReader<SimpleFeatureType, SimpleFeature> reader) {
 		try{
 			return reader.hasNext();

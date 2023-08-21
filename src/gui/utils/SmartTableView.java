@@ -17,10 +17,8 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import javax.persistence.Entity;
-import javax.persistence.EntityTransaction;
 import javax.persistence.Transient;
 
 import org.controlsfx.control.table.TableFilter;
@@ -43,11 +41,10 @@ import dao.ordenCompra.Producto;
 import dao.utils.JPAStringProperty;
 import gui.JFXMain;
 import gui.Messages;
+
 import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -55,8 +52,8 @@ import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -76,7 +73,6 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import utils.DAH;
 import utils.ExcelHelper;
-import utils.JsonUtil;
 
 
 

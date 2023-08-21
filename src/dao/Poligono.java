@@ -26,6 +26,7 @@ import dao.config.Lote;
 
 import javax.persistence.AccessType;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 
 import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
@@ -116,6 +117,11 @@ public class Poligono implements Comparable<Poligono>{
 		positionsString=sb.toString();
 		//System.out.println(positionsString);
 		return positionsString;
+	}
+	
+	@Column( columnDefinition="DECIMAL(32,15)")
+	public double getArea() {
+		return this.area;
 	}
 	/**
 	 * metodo que toma un string conf formato {{{lat,long},{lat}}}
