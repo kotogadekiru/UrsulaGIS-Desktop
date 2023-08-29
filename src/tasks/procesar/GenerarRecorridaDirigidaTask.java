@@ -46,6 +46,7 @@ import gov.nasa.worldwind.render.PointPlacemark;
 import gov.nasa.worldwind.render.PointPlacemarkAttributes;
 import gov.nasa.worldwind.render.ShapeAttributes;
 import gov.nasa.worldwind.util.WWUtil;
+import gui.JFXMain;
 import gui.Messages;
 import gui.nww.LaborLayer;
 import javafx.concurrent.Task;
@@ -59,6 +60,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import tasks.ProcessMapTask;
+import tasks.ShowRecorridaDirigidaTask;
 import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
