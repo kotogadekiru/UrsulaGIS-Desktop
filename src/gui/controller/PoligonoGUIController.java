@@ -27,17 +27,21 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 
 import dao.Labor;
+import dao.LaborItem;
 import dao.Ndvi;
 import dao.Poligono;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.recorrida.Camino;
+import dao.recorrida.Muestra;
+import dao.recorrida.Recorrida;
 import dao.siembra.SiembraLabor;
 import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
 import dao.utils.PropertyHelper;
 import gov.nasa.worldwind.WorldWindow;
+import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.LayerList;
@@ -68,6 +72,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import tasks.GetNdviForLaborTask4;
+import tasks.ShowRecorridaDirigidaTask;
 import tasks.crear.CrearCosechaMapTask;
 import tasks.crear.CrearFertilizacionMapTask;
 import tasks.crear.CrearPulverizacionMapTask;
@@ -75,6 +80,7 @@ import tasks.crear.CrearSiembraMapTask;
 import tasks.crear.CrearSueloMapTask;
 import tasks.procesar.ExtraerPoligonosDeLaborTask;
 import tasks.procesar.SimplificarCaminoTask;
+import tasks.procesar.GenerarRecorridaDirigidaTask;
 import utils.DAH;
 import utils.FileHelper;
 import utils.GeometryHelper;
@@ -366,7 +372,36 @@ public class PoligonoGUIController {
 		List<LayerAction> poligonosP = new ArrayList<LayerAction>();
 		predicates.put(Camino.class, poligonosP);
 		
-		//TODO agregar aqui funcion para convertir camino a recorrida dirigida
+		//TODO agregar aqui funcion para convertir camino a recorrida dirigida ver GenerarRecorridaDirigidaTask
+		
+		poligonosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.convertirARecorrida"),(layer)->{
+
+			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			if(layerObject!=null && Camino.class.isAssignableFrom(layerObject.getClass())){
+				Camino c = (Camino)layerObject;
+				
+				Recorrida recorrida = new Recorrida();
+				recorrida.setNombre(c.getNombre());
+				
+				for(Position p:c.getPositions()){	
+					Angle lon= p.getLongitude();
+					Angle lat = p.getLatitude();
+					Muestra m = new Muestra();
+					m.setRecorrida(recorrida);
+					m.setNombre("A");
+					m.setLongitude(lon.getDegrees());
+					m.setLatitude(lat.getDegrees());
+					recorrida.getMuestras().add(m);
+				}
+
+				doShowRecorrida(recorrida);
+
+				this.getLayerPanel().update(this.getWwd());
+			}
+			return "converti a recorrida"; //$NON-NLS-1$
+			
+			
+		}));
 
 		poligonosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.editarLayer"),(layer)->{
 			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
@@ -1120,6 +1155,20 @@ public class PoligonoGUIController {
 		}
 		});
 	}
+	
+	public void doShowRecorrida(Recorrida recorrida) {
+		ShowRecorridaDirigidaTask umTask = new ShowRecorridaDirigidaTask(recorrida);
+		umTask.installProgressBar(progressBox);
+
+		umTask.setOnSucceeded(handler -> {
+			RenderableLayer ret = (RenderableLayer)handler.getSource().getValue();
+			insertBeforeCompass(getWwd(), ret);
+			this.getLayerPanel().update(this.getWwd());
+			umTask.uninstallProgressBar();
+			main.viewGoTo(ret);
+			playSound();
+		});//fin del OnSucceeded
+		JFXMain.executorPool.execute(umTask);	}
 	
 	public void showPoligonosActivos() {
 		List<Poligono> poligonos = DAH.getPoligonosActivos();

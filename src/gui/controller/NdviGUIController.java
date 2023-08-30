@@ -92,7 +92,7 @@ public class NdviGUIController {
 				NDVIChart sChart= new NDVIChart(this.getWwd());
 				sChart.doShowNDVIChart(false);
 				Stage histoStage = new Stage();
-				histoStage.setTitle(Messages.getString("JFXMain.show_ndvi_chart"));
+				histoStage.setTitle(Messages.getString("JFXMain.show_ndvi_title"));
 				histoStage.getIcons().add(new Image(JFXMain.ICON));
 				VBox.setVgrow(sChart, Priority.ALWAYS);
 				Scene scene = new Scene(sChart, 800,450);
@@ -109,7 +109,7 @@ public class NdviGUIController {
 				NDVIChart sChart= new NDVIChart(this.getWwd());
 				sChart.doShowNDVIChart(true);
 				Stage histoStage = new Stage();
-				histoStage.setTitle(Messages.getString("JFXMain.show_ndvi_acum_chart"));
+				histoStage.setTitle(Messages.getString("JFXMain.show_ndvi_acum_title"));
 				histoStage.getIcons().add(new Image(JFXMain.ICON));
 				VBox.setVgrow(sChart, Priority.ALWAYS);
 				Scene scene = new Scene(sChart, 800,450);

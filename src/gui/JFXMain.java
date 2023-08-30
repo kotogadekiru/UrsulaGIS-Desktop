@@ -314,7 +314,7 @@ public class JFXMain extends Application {
 		//				a.show();
 		//			});
 		//		}
-		//una vez que se establecio el tamaño inicial ese es el tamaño maximo
+		//una vez que se establecio el tamaÃ±o inicial ese es el tamaÃ±o maximo
 		//this.wwjPanel.setPreferredSize(canvasSize);
 		final SwingNode wwSwingNode = new SwingNode();
 		// SwingUtilities.invokeLater(()-> {			                	 
@@ -1112,19 +1112,7 @@ public class JFXMain extends Application {
 		configGUIController.doAsignarValoresRecorrida(recorrida);
 	}
 
-	public void doShowRecorrida(Recorrida recorrida) {
-		ShowRecorridaDirigidaTask umTask = new ShowRecorridaDirigidaTask(recorrida);
-		umTask.installProgressBar(progressBox);
-
-		umTask.setOnSucceeded(handler -> {
-			RenderableLayer ret = (RenderableLayer)handler.getSource().getValue();
-			insertBeforeCompass(getWwd(), ret);
-			this.getLayerPanel().update(this.getWwd());
-			umTask.uninstallProgressBar();
-			viewGoTo(ret);
-			playSound();
-		});//fin del OnSucceeded
-		JFXMain.executorPool.execute(umTask);	}
+	
 
 	protected void importImagery()  {
 		List<File>	files =FileHelper.chooseFiles("TIF","*.tif");  

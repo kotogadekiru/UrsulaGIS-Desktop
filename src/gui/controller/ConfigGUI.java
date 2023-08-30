@@ -964,7 +964,7 @@ public class ConfigGUI {
 			//			table.setOnDoubleClick(()->new Poligono());
 			table.setOnShowClick((recorrida)->{
 				//poli.setActivo(true);
-				main.doShowRecorrida(recorrida);
+				main.poligonoGUIController.doShowRecorrida(recorrida);
 			});
 
 			table.addSecondaryClickConsumer("Editar",(r)-> {
