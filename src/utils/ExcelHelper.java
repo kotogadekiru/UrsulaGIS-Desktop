@@ -446,20 +446,14 @@ public class ExcelHelper {
 
 
 			for(int i =0;i<datos.size();i++){
-				Number rinde = new Double(0);
 				Number superficie = datos.get(i).getYValue();
-				Number produccion = (Number) datos.get(i).getExtraValue();
-				if(superficie!=null
-						&&produccion!=null 
-						&& superficie.doubleValue() > 0 
-						&& produccion.doubleValue() > 0){				
-					rinde = produccion.doubleValue()/superficie.doubleValue();
-				}
+				Number ndvi = (Number) datos.get(i).getExtraValue();
+				
 				data.put(String.valueOf(i+1),
 						new Object[] {
 					datos.get(i).getXValue(),
 					superficie,
-					rinde
+					ndvi
 				});
 			}
 
