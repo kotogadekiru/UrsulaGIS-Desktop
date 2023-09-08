@@ -93,7 +93,7 @@ public class NDVIHistoChart extends VBox {
 		
 		VBox right = new VBox();
 		Button exportButton = new Button(Messages.getString("NDVIHistoChart.exportar")); //$NON-NLS-1$
-		exportButton.setOnAction(a->{doExportarExcell();});
+		exportButton.setOnAction(a->{doExportarExcel();});
 		right.getChildren().add(exportButton);
 		bottom.setCenter(left);
 		bottom.setRight(right);//getChildren().addAll(left,right);
@@ -105,7 +105,7 @@ public class NDVIHistoChart extends VBox {
 	}
 
 
-	private void doExportarExcell() {
+	private void doExportarExcel() {
 		ExcelHelper xHelper = new ExcelHelper();
 		xHelper.exportSeriesNdvi(series);
 	}
