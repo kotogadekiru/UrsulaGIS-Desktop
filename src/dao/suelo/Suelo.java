@@ -174,7 +174,7 @@ public class Suelo extends Labor<SueloItem>{
 	 * @param prof la profundidad de suelo a considerar la densidad
 	 * @return la cantidad de kg que representa la densidad en la profundidad de suelo determinada
 	 */
-	public double ppmToKg(double densidad, double ppm,double prof) {
+	public static double ppmToKg(double densidad, double ppm,double prof) {
 		double kgSueloHa = ProyectionConstants.METROS2_POR_HA*prof*densidad;
 		Double kgNHa= (Double)ppm*kgSueloHa/1000000;//divido por un millon
 		return kgNHa;
@@ -256,7 +256,7 @@ public class Suelo extends Labor<SueloItem>{
 	
 	// no dividir por el peso del pentoxido. todos los pesos son de kg de P
 	// FOSFORO
-	public double getKgPHa(SueloItem item) {
+	public static double getKgPHa(SueloItem item) {
 		//double kgSueloHa = ProyectionConstants.METROS2_POR_HA*0.2*this.getDensidad();
 		//Double kgNHa= (Double) item.getPpmP()*kgSueloHa*Fertilizante.porcP_PO4/1000000;
 		//la densidad se corrije al crear el elemento en el task

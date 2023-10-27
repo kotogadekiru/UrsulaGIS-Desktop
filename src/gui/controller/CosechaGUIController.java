@@ -5,7 +5,6 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,7 +20,6 @@ import dao.fertilizacion.FertilizacionLabor;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
-import dao.siembra.SiembraLabor;
 import dao.suelo.Suelo;
 import dao.utils.PropertyHelper;
 import gov.nasa.worldwind.WorldWindow;
@@ -32,38 +30,30 @@ import gui.HarvestSelectDialogController;
 import gui.JFXMain;
 import gui.Messages;
 import gui.PulverizacionConfigDialogController;
-import gui.SiembraConfigDialogController;
 import gui.nww.LaborLayer;
 import gui.nww.LayerAction;
 import gui.nww.LayerPanel;
-import javafx.collections.FXCollections;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import tasks.crear.ConvertirAFertilizacionTask;
 import tasks.crear.ConvertirAPulverizacionTask;
-import tasks.crear.ConvertirASiembraTask;
 import tasks.crear.ConvertirASueloTask;
 import tasks.importar.ProcessHarvestMapTask;
-import tasks.importar.ProcessSiembraMapTask;
 import tasks.procesar.CortarCosechaMapTask;
 import tasks.procesar.ExportarCosechaDePuntosTask;
-import tasks.procesar.ExportarPrescripcionSiembraTask;
 import tasks.procesar.GenerarRecorridaDirigidaTask;
 import tasks.procesar.GrillarCosechasMapTask;
 import tasks.procesar.RecomendFertNFromHarvestMapTask;
+import tasks.procesar.RecomendFertPAbsFromHarvestMapTask;
 import tasks.procesar.RecomendFertPFromHarvestMapTask;
-import tasks.procesar.SiembraFertTask;
 import tasks.procesar.UnirCosechasMapTask;
-import tasks.procesar.UnirSiembrasMapTask;
 import utils.FileHelper;
 
 public class CosechaGUIController {
@@ -164,9 +154,21 @@ public class CosechaGUIController {
 			if(layer==null){
 				return Messages.getString("JFXMain.recompendarFertP");  
 			} else{
-				doRecomendFertPFromHarvest((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+				doRecomendFertPRepFromHarvest((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 				return "Fertilizacion P Creada" + layer.getName(); 
 			}},Messages.getString("JFXMain.recompendarFertP")));
+		
+		/**
+		 * Accion permite crear una fertilizacion P para llegar al balance necesario para el cultivo
+		 */
+		String recPBalanceNombre=Messages.getString("JFXMain.recompendarFertP")+" Balance"; 
+		cosechasP.add(new LayerAction( (layer)->{
+			if(layer==null){
+				return  recPBalanceNombre;
+			} else{
+				doRecomendFertPAbsFromHarvest((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+				return "Fertilizacion P Creada" + layer.getName(); 
+			}},recPBalanceNombre));
 
 		/**
 		 * Accion permite crear una fertilizacion P para reponer lo extraido por la cosecha
@@ -521,10 +523,90 @@ public class CosechaGUIController {
 		});//fin del OnSucceeded
 		JFXMain.executorPool.execute(umTask);
 	}
+	
+	private void doRecomendFertPAbsFromHarvest(CosechaLabor cosecha) {
+
+		List<Suelo> suelosEnabled = main.getSuelosSeleccionados();
+		List<FertilizacionLabor> fertEnabled = main.getFertilizacionesSeleccionadas();
+
+		FertilizacionLabor fertPAbs = new FertilizacionLabor();
+		fertPAbs.setLayer(new LaborLayer());
+
+		//fertN.setNombre(cosecha.getNombre()+Messages.getString("JFXMain.299")); 
+		fertPAbs.setNombre(cosecha.getNombre()+Messages.getString("JFXMain.292")); 
+		Optional<FertilizacionLabor> fertConfigured= FertilizacionConfigDialogController.config(fertPAbs);
+		if(!fertConfigured.isPresent()){//
+			System.out.println(Messages.getString("JFXMain.300")); 
+			return;
+		}							
+
+		//Dialogo preguntar min y max a aplicar
+		Alert minMaxDialog = new Alert(AlertType.CONFIRMATION);
+		NumberFormat df=Messages.getNumberFormat();
+		TextField ppmObj = new TextField(df.format(0));
+		TextField min = new TextField(df.format(0));
+		TextField max = new TextField(df.format(0));
+
+		VBox vb = new VBox();
+		vb.getChildren().add(new HBox(new Label(Messages.getString("CosechaGUIController.ppmPObj")),ppmObj));
+		vb.getChildren().add(new HBox(new Label(Messages.getString("JFXMain.301")),min)); 
+		vb.getChildren().add(new HBox(new Label(Messages.getString("JFXMain.302")),max)); 
+
+		minMaxDialog.setGraphic(vb);
+		minMaxDialog.setTitle(Messages.getString("JFXMain.303")); 
+		minMaxDialog.setContentText(Messages.getString("JFXMain.304")); 
+		minMaxDialog.initOwner(JFXMain.stage);
+		Optional<ButtonType> res = minMaxDialog.showAndWait();
+		Double ppmObjD=null,minFert =null,maxFert=null; 
+		if(res.get().equals(ButtonType.OK)){
+			
+			try {
+				ppmObjD=df.parse(ppmObj.getText()).doubleValue();
+				if(ppmObjD==0)ppmObjD=null;
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			try {
+				minFert=df.parse(min.getText()).doubleValue();
+				if(minFert==0)minFert=null;
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			try {
+				maxFert=df.parse(max.getText()).doubleValue();
+				if(maxFert==0)maxFert=null;
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+		} else {
+			return;
+		}
+
+		RecomendFertPAbsFromHarvestMapTask umTask = 
+				new RecomendFertPAbsFromHarvestMapTask(
+						fertPAbs, cosecha,
+						suelosEnabled, fertEnabled);
+		umTask.setPpmPObj(ppmObjD);
+		umTask.setMinFert(minFert);
+		umTask.setMaxFert(maxFert);
+		umTask.installProgressBar(progressBox);
+
+		umTask.setOnSucceeded(handler -> {
+			FertilizacionLabor ret = (FertilizacionLabor)handler.getSource().getValue();
+			insertBeforeCompass(getWwd(), ret.getLayer());
+			this.getLayerPanel().update(this.getWwd());
+			umTask.uninstallProgressBar();
+			viewGoTo(ret);
+			System.out.println(Messages.getString("JFXMain.305")); 
+			playSound();
+		});//fin del OnSucceeded
+		JFXMain.executorPool.execute(umTask);
+	}
+	
 	//generar un layer de fertilizacion a partir de una cosecha
 	//el proceso consiste el levantar las geometrias de la cosecha y preguntarle la usuario
 	//que producto aplico y en que densidad por hectarea
-	private void doRecomendFertPFromHarvest(CosechaLabor value) {
+	private void doRecomendFertPRepFromHarvest(CosechaLabor value) {
 		FertilizacionLabor labor = new FertilizacionLabor();
 		labor.setLayer(new LaborLayer());
 

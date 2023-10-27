@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry excluding="tasks/old/" kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk-1.8">
 		<attributes>
 			<attribute name="module" value="true"/>
 		</attributes>
@@ -55,7 +55,6 @@
 	<classpathentry exported="true" kind="lib" path="libs/org.eclipse.persistence.jpa.modelgen_2.7.1.v20171221-bd47e8f.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/org.eclipse.persistence.jpars_2.7.1.v20171221-bd47e8f.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/javax.persistence_2.2.0.v201708071007.jar"/>
-	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/WorldWindJava"/>
 	<classpathentry exported="true" kind="lib" path="libs/tiff-2.0.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/xercesImpl.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/xml-apis.jar"/>
@@ -83,5 +82,6 @@
 	<classpathentry exported="true" kind="lib" path="libs/jogl-all.jar"/>
 	<classpathentry kind="lib" path="libs/pdfbox-app-2.0.27.jar"/>
 	<classpathentry kind="lib" path="libs/controlsfx-8.40.13.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/worldwind"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
