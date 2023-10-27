@@ -158,6 +158,18 @@ public class RecomendFertPAbsFromHarvestMapTask extends ProcessMapTask<Fertiliza
 		return kgPFert;
 	}
 
+//	def calcDosisCallBack():
+//	    deseado = float(E1.get().replace(",", "."))
+//	    actual = float(E2.get().replace(",", "."))
+//	    arcilla = float(Slider.get())
+//	    faltante = deseado - actual
+//	    Kg_Ha = faltante * ((108.08 + 0.91 * arcilla) / 30)
+//	    Kg_P205 = Kg_Ha * 2.29  # Coef. fijo
+//	    dosis = Kg_P205 / float(combo_dict.get((combo.get())) / 100)
+//	    print("{0:.2f}".format(dosis))
+//	    tkinter.messagebox.showinfo("Dosis a aplicar", "{0:.2f}".format(dosis) + " litros por ha")
+//	    
+	
 	private Double getPDisponibleSuelo(Geometry geometry) {
 		Double kgPSuelo = new Double(0);
 		//boolean estival = this.cosecha.getCultivo().isEstival();

@@ -161,7 +161,7 @@ public class CosechaGUIController {
 		/**
 		 * Accion permite crear una fertilizacion P para llegar al balance necesario para el cultivo
 		 */
-		String recPBalanceNombre=Messages.getString("JFXMain.recompendarFertP")+" Balance"; 
+		String recPBalanceNombre=Messages.getString("CosechaGUIController.calcPBalanceTitulo"); 
 		cosechasP.add(new LayerAction( (layer)->{
 			if(layer==null){
 				return  recPBalanceNombre;
