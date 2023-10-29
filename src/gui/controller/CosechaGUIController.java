@@ -531,8 +531,7 @@ public class CosechaGUIController {
 
 		FertilizacionLabor fertPAbs = new FertilizacionLabor();
 		fertPAbs.setLayer(new LaborLayer());
-
-		//fertN.setNombre(cosecha.getNombre()+Messages.getString("JFXMain.299")); 
+		
 		fertPAbs.setNombre(cosecha.getNombre()+Messages.getString("JFXMain.292")); 
 		Optional<FertilizacionLabor> fertConfigured= FertilizacionConfigDialogController.config(fertPAbs);
 		if(!fertConfigured.isPresent()){//
@@ -592,6 +591,10 @@ public class CosechaGUIController {
 		umTask.installProgressBar(progressBox);
 
 		umTask.setOnSucceeded(handler -> {
+			cosecha.getLayer().setEnabled(false);
+			suelosEnabled.stream().forEach(l->l.getLayer().setEnabled(false));
+			fertEnabled.stream().forEach(l->l.getLayer().setEnabled(false));
+			
 			FertilizacionLabor ret = (FertilizacionLabor)handler.getSource().getValue();
 			insertBeforeCompass(getWwd(), ret.getLayer());
 			this.getLayerPanel().update(this.getWwd());
@@ -606,11 +609,11 @@ public class CosechaGUIController {
 	//generar un layer de fertilizacion a partir de una cosecha
 	//el proceso consiste el levantar las geometrias de la cosecha y preguntarle la usuario
 	//que producto aplico y en que densidad por hectarea
-	private void doRecomendFertPRepFromHarvest(CosechaLabor value) {
+	private void doRecomendFertPRepFromHarvest(CosechaLabor cosecha) {
 		FertilizacionLabor labor = new FertilizacionLabor();
 		labor.setLayer(new LaborLayer());
 
-		labor.setNombre(value.getNombre()+Messages.getString("JFXMain.292")); 
+		labor.setNombre(cosecha.getNombre()+Messages.getString("JFXMain.292")); 
 		Optional<FertilizacionLabor> cosechaConfigured= FertilizacionConfigDialogController.config(labor);
 		if(!cosechaConfigured.isPresent()){//
 			System.out.println(Messages.getString("JFXMain.293")); 
@@ -650,12 +653,14 @@ public class CosechaGUIController {
 			return;
 		}
 
-		RecomendFertPFromHarvestMapTask umTask = new RecomendFertPFromHarvestMapTask(labor,value);
+		RecomendFertPFromHarvestMapTask umTask = new RecomendFertPFromHarvestMapTask(labor,cosecha);
 		umTask.setMinFert(minFert);
 		umTask.setMaxFert(maxFert);
 		umTask.installProgressBar(progressBox);
 
 		umTask.setOnSucceeded(handler -> {
+			cosecha.getLayer().setEnabled(false);
+			
 			FertilizacionLabor ret = (FertilizacionLabor)handler.getSource().getValue();
 			insertBeforeCompass(getWwd(), ret.getLayer());
 			this.getLayerPanel().update(this.getWwd());
