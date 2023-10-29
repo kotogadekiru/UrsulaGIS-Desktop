@@ -73,6 +73,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		cConfig.resumirGeometriasProperty().setValue(false);
 		
 		cConfig.correccionOutlayersProperty().set(false);	
+		cConfig.supMinimaProperty().set(0);
 		
 		labor.setNombre(Messages.getString("GrillarCosechasMapTask.0"));//este es el nombre que se muestra en el progressbar //$NON-NLS-1$
 	}
@@ -91,7 +92,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		long init = System.currentTimeMillis();
 		// TODO 1 obtener el bounds general que cubre a todas las cosechas
 		ReferencedEnvelope unionEnvelope = null;
-		double ancho = labor.getConfiguracion().getAnchoGrilla();
+		double ancho = this.ancho;//labor.getConfiguracion().getAnchoGrilla();
 		String nombre =null;
 		Cultivo cultivo =null;
 		for(CosechaLabor c:cosechas){

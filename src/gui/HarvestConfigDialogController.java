@@ -210,7 +210,10 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		List<String> cols = labor.getAvailableColumns();
 		StringBuilder message = new StringBuilder();
 		boolean isValid =true;
-
+		if(labor.cultivo== null) {
+			message.append(Messages.getString("HarvestConfigDialogController.faltaCultivo")); //$NON-NLS-1$
+			isValid=false;
+		}
 		if(cols.indexOf(comboRend.getValue())==-1){
 			message.append(Messages.getString("HarvestConfigDialogController.mensaje")); //$NON-NLS-1$
 			isValid=false;

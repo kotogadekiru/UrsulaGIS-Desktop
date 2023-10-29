@@ -1064,9 +1064,9 @@ public class PoligonoGUIController {
 		rindeDialog.setTitle(Messages.getString("JFXMain.268")); //$NON-NLS-1$
 		rindeDialog.setContentText(Messages.getString("JFXMain.269")); //$NON-NLS-1$
 		rindeDialog.initOwner(JFXMain.stage);
-		Optional<String> anchoOptional = rindeDialog.showAndWait();
-		if(!anchoOptional.isPresent())return;
-		Double rinde = PropertyHelper.parseDouble(anchoOptional.get()).doubleValue();//Double.valueOf(anchoOptional.get());
+		Optional<String> rindeOptional = rindeDialog.showAndWait();
+		if(!rindeOptional.isPresent())return;
+		Double rinde = PropertyHelper.parseDouble(rindeOptional.get()).doubleValue();//Double.valueOf(anchoOptional.get());
 
 		CrearCosechaMapTask umTask = new CrearCosechaMapTask(labor,polis,rinde);
 		umTask.installProgressBar(progressBox);

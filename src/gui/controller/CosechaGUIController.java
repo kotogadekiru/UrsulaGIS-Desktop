@@ -363,7 +363,7 @@ public class CosechaGUIController {
 
 		GrillarCosechasMapTask umTask = new GrillarCosechasMapTask(cosechasAUnir);
 		umTask.setRellenarHuecos(rellenarHuecos);
-		double anchoGrilla =PropertyHelper.parseDouble(anchoOptional.get()).doubleValue();
+		double anchoGrilla = PropertyHelper.parseDouble(anchoOptional.get()).doubleValue();
 		umTask.setAncho(anchoGrilla);
 		umTask.installProgressBar(progressBox);
 		umTask.setOnSucceeded(handler -> {
