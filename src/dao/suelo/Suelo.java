@@ -211,7 +211,7 @@ public class Suelo extends Labor<SueloItem>{
 	 * @param sueloItem
 	 * @return devuelve los kg de N elemento disponible mas los que se van a mineralizar durante la campania por materia organica
 	 */
-	public double getKgNHa(SueloItem item) {
+	public static double getKgNHa(SueloItem item) {
 		//double kgSueloHa0_20 = ProyectionConstants.METROS2_POR_HA*0.2*this.getDensidad();
 		//double kgNorganicoHa = item.getPpmMO()*kgSueloHa0_20*Fertilizante.porcN_MO*Fertilizante.porcMO_DISP_Campania*1000/100;//ver factor estacionalidad
 		

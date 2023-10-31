@@ -8,8 +8,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.time.LocalTime;
@@ -30,7 +28,6 @@ import java.util.stream.Stream;
 
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -70,7 +67,6 @@ import gov.nasa.worldwind.globes.Globe;
 import gov.nasa.worldwind.layers.CompassLayer;
 import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.LayerList;
-import gov.nasa.worldwind.layers.RenderableLayer;
 import gov.nasa.worldwind.layers.SurfaceImageLayer;
 import gov.nasa.worldwind.render.SurfaceImage;
 import gov.nasa.worldwind.terrain.ZeroElevationModel;
@@ -83,6 +79,7 @@ import gui.controller.NdviGUIController;
 import gui.controller.PoligonoGUIController;
 import gui.controller.PulverizacionGUIController;
 import gui.controller.SiembraGUIController;
+import gui.controller.SueloGUIController;
 import gui.nww.LaborLayer;
 import gui.nww.LayerAction;
 import gui.nww.LayerPanel;
@@ -129,19 +126,14 @@ import tasks.CompartirRecorridaTask;
 import tasks.ExportLaborMapTask;
 import tasks.GoogleGeocodingHelper;
 import tasks.ProcessMapTask;
-import tasks.ShowRecorridaDirigidaTask;
-import tasks.crear.ConvertirSueloACosechaTask;
 import tasks.crear.GenerarOrdenCompraTask;
 import tasks.importar.OpenMargenMapTask;
-import tasks.importar.OpenSoilMapTask;
 import tasks.importar.ProcessFertMapTask;
-import tasks.importar.ProcessHarvestMapTask;
 import tasks.procesar.CrearSiembraDesdeFertilizacionTask;
 import tasks.procesar.ExportarPrescripcionFertilizacionTask;
 import tasks.procesar.ExportarRecorridaTask;
 import tasks.procesar.ExtraerPoligonosDeLaborTask;
 import tasks.procesar.JuntarShapefilesTask;
-import tasks.procesar.ProcessBalanceDeNutrientes;
 import tasks.procesar.ProcessMarginMapTask;
 import tasks.procesar.UnirFertilizacionesMapTask;
 import utils.DAH;
@@ -181,6 +173,7 @@ public class JFXMain extends Application {
 	public PulverizacionGUIController pulverizacionGUIController = new PulverizacionGUIController(this);
 	public SiembraGUIController siembraGUIController = new SiembraGUIController(this);
 	public NdviGUIController ndviGUIController= new NdviGUIController(this);
+	public SueloGUIController sueloGUIController= new SueloGUIController(this);
 
 	@Override
 	public void start(Stage primaryStage) {
@@ -426,42 +419,16 @@ public class JFXMain extends Application {
 	//				}
 	//			}
 	//		});
-	//	}
-
-	private void addMenuesToMenuBar(MenuBar menuBar) {
-		/*Menu Importar*/
-		final Menu menuImportar = new Menu(Messages.getString("JFXMain.importar")); 
-		addMenuItem(Messages.getString("JFXMain.NDVI"),(a)->ndviGUIController.doOpenNDVITiffFiles(),menuImportar); 
-		addMenuItem(Messages.getString("JFXMain.imagen"),(a)->importImagery(),menuImportar); 
-		addMenuItem(Messages.getString("JFXMain.suelo"),(a)->doOpenSoilMap(null),menuImportar); 
-		addMenuItem(Messages.getString("JFXMain.margen"),(a)->doOpenMarginMap(),menuImportar); 
-		addMenuItem(Messages.getString("JFXMain.poligonos"),(a)->poligonoGUIController.doImportarPoligonos(null),menuImportar); 
-		/*Menu herramientas*/
-		final Menu menuHerramientas = new Menu(Messages.getString("JFXMain.herramientas")); 		
-		addMenuItem(Messages.getString("JFXMain.distancia"),(a)->poligonoGUIController.doMedirDistancia(),menuHerramientas); 
-		addMenuItem(Messages.getString("JFXMain.superficie"),(a)->poligonoGUIController.doCrearPoligono(),menuHerramientas); 
-		addMenuItem(Messages.getString("JFXMain.unirShapes"),(a)->doJuntarShapefiles(),menuHerramientas); 
-		addMenuItem(Messages.getString("JFXMain.rentabilidad"),(a)->doProcessMargin(),menuHerramientas); 
-		addMenuItem(Messages.getString("JFXMain.balanceNutrientes"),(a)->doProcesarBalanceNutrientes(),menuHerramientas); 
-		addMenuItem(Messages.getString("JFXMain.generarOrdenCompra"),(a)->doGenerarOrdenDeCompra(),menuHerramientas); 
-		addMenuItem(Messages.getString("JFXMain.goTo"),(a)->showGoToDialog(),menuHerramientas);
-		addMenuItem(Messages.getString("JFXMain.bulk_ndvi_download"),(a)->ndviGUIController.doBulkNDVIDownload(),menuHerramientas);
-		/*Menu Exportar*/
-		final Menu menuExportar = new Menu(Messages.getString("JFXMain.exportar"));		 
-		addMenuItem(Messages.getString("JFXMain.exportarPantallaMenuItem"),(a)->doSnapshot(),menuExportar);
-		/*Menu Configuracion*/
-		final Menu menuConfiguracion = configGUIController.contructConfigMenu();		
-		menuBar.getMenus().addAll(menuImportar,menuHerramientas, menuExportar,menuConfiguracion);
-	}
+	//	}	
+	
 	private MenuBar constructMenuBar() {	
 		MenuBar menuBar = new MenuBar();
-		addMenuesToMenuBar(menuBar);
-
+		configGUIController.addMenuesToMenuBar(menuBar);
 		menuBar.setPrefWidth(scene.getWidth());
 
 		Messages.registerLocaleChangeListener(loc->{
 			menuBar.getMenus().clear();
-			addMenuesToMenuBar(menuBar);
+			configGUIController.addMenuesToMenuBar(menuBar);
 		});
 
 		return menuBar;
@@ -474,12 +441,10 @@ public class JFXMain extends Application {
 	private void setAccionesTreePanel() {		
 		pulverizacionGUIController.addPulverizacionesRootNodeActions();
 		addFertilizacionesRootNodeActions();
-		//addSiembrasRootNodeActions();
 		siembraGUIController.addSiembrasRootNodeActions();
 		cosechaGUIController.addCosechasRootNodeActions();
 		poligonoGUIController.addPoligonosRootNodeActions();
 		ndviGUIController.addNdviRootNodeActions();
-		//addNdviRootNodeActions();
 
 		Map<Class<?>,List<LayerAction>> predicates = new HashMap<Class<?>,List<LayerAction>>();
 
@@ -492,11 +457,10 @@ public class JFXMain extends Application {
 		poligonoGUIController.addAccionesCaminos(predicates);
 
 		addAccionesRecorridas(predicates);
-		//addAccionesNdvi(predicates);
 		ndviGUIController.addAccionesNdvi(predicates);
 
 		addAccionesMargen(predicates);
-		addAccionesSuelos(predicates);		
+		sueloGUIController.addAccionesSuelos(predicates);		
 
 		addAccionesLabor(predicates);
 		addAccionesGenericas(predicates);
@@ -592,21 +556,6 @@ public class JFXMain extends Application {
 		margenesP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.editMargenAction"),(layer)->{	
 			doEditMargin((Margen) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 			return "margen editado" + layer.getName(); 
-		}));
-	}
-
-	private void addAccionesSuelos(Map<Class<?>, List<LayerAction>> predicates) {
-		List<LayerAction> suelosP = new ArrayList<LayerAction>();
-		predicates.put(Suelo.class, suelosP);
-		suelosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.editSoilAction"),(layer)->{	
-			doEditSuelo((Suelo) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-			return "suelo editado" + layer.getName(); 
-		}));
-
-		//TODO implementar estimar potencial de rendimiento desde suelo
-		suelosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.estimarPotencialRendimiento"),(layer)->{	
-			doEstimarPotencialRendimiento((Suelo) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-			return "potencial de rendimiento suelo estimado" + layer.getName(); 
 		}));
 	}
 
@@ -742,7 +691,7 @@ public class JFXMain extends Application {
 
 
 
-	private void enDesarrollo() {
+	public void enDesarrollo() {
 		Alert enDesarrollo = new Alert(AlertType.INFORMATION,Messages.getString("JFXMain.workInProgressAction")); 
 		enDesarrollo.showAndWait();
 	}
@@ -862,7 +811,7 @@ public class JFXMain extends Application {
 	 * metodo que toma las labores activas de siembra fertilizacion y pulverizacion y hace una lista con los insumos y cantidades para
 	 * cotizar precios online. Permite exporta a excel y cotizar precios online y guardar
 	 */
-	private void doGenerarOrdenDeCompra() {
+	public void doGenerarOrdenDeCompra() {
 		GenerarOrdenCompraTask gOCTask = new GenerarOrdenCompraTask(
 				getSiembrasSeleccionadas(),
 				getFertilizacionesSeleccionadas(),
@@ -953,24 +902,9 @@ public class JFXMain extends Application {
 		this.poligonoGUIController.showPoligonosActivos();
 
 		this.ndviGUIController.showNdviActivos();
-	}
+	}	
 
-
-
-	/**
-	 * Funcion util para vincular un metodo con un item en un menu
-	 * @param name nombre para mostrar en el menu
-	 * @param action metodo a vincular con el item
-	 * @param parent menu en el que se va a insertar el menuItem
-	 */
-	private static MenuItem addMenuItem(String name, EventHandler<ActionEvent> action, Menu parent){
-		MenuItem menuItemProductos = new MenuItem(name);
-		menuItemProductos.setOnAction(action);
-		parent.getItems().addAll(menuItemProductos);
-		return menuItemProductos;
-	}
-
-	private void showGoToDialog() {
+	public void showGoToDialog() {
 		TextInputDialog anchoDialog = new TextInputDialog(Messages.getString("JFXMain.goToExample")); 
 		anchoDialog.setTitle(Messages.getString("JFXMain.goToDialogTitle")); 
 		anchoDialog.setHeaderText(Messages.getString("JFXMain.goToDialogHeader")); 
@@ -1114,7 +1048,7 @@ public class JFXMain extends Application {
 
 	
 
-	protected void importImagery()  {
+	public void importImagery()  {
 		List<File>	files =FileHelper.chooseFiles("TIF","*.tif");  
 		files.forEach((file)->{
 			executorPool.execute(()->{	
@@ -1334,89 +1268,8 @@ public class JFXMain extends Application {
 		JFXMain.executorPool.execute(umTask);
 	}
 
-	//TODO tomar un suelo y una configuracion de cosecha 
-	//y crear un mapa de potencial de rendimiento segun el agua en el perfil
-	private void doEstimarPotencialRendimiento(Suelo suelo) {
-		this.enDesarrollo();//XXX remover enDesarrollo cuando este terminado
 
-		CosechaLabor labor = new CosechaLabor();
-		labor.setNombre(suelo.getNombre());
 
-		labor.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
-		LaborLayer layer = new LaborLayer();
-		labor.setLayer(layer);
-		Optional<CosechaLabor> cosechaConfigured= HarvestConfigDialogController.config(labor);
-		if(!cosechaConfigured.isPresent()){//
-			//System.out.println("el dialogo termino con cancel asi que no continuo con la cosecha"); 
-			labor.dispose();//libero los recursos reservados
-			return;
-		}					
-		Double mmLluvia = null;
-		try {
-			Double rindeEsperado = cosechaConfigured.get().getCultivo().getAbsAgua();
-			TextInputDialog rindePromDialog = new TextInputDialog(Messages.getNumberFormat().format(rindeEsperado));//Messages.getString("JFXMain.272")); 
-			rindePromDialog.setTitle(Messages.getString("LluviaCampania")); 
-			rindePromDialog.setContentText(Messages.getString("LluviaCampania")); 
-			rindePromDialog.initOwner(JFXMain.stage);
-			Optional<String> rPromOptional = rindePromDialog.showAndWait();
-			mmLluvia = PropertyHelper.parseDouble(rPromOptional.get()).doubleValue();//Double.valueOf(anchoOptional.get());
-		}catch(java.lang.NumberFormatException e) {
-
-			DecimalFormat format=PropertyHelper.getDoubleConverter();
-			DecimalFormatSymbols symbols=format.getDecimalFormatSymbols();
-			char sep=symbols.getDecimalSeparator();
-
-			Alert a = new Alert(Alert.AlertType.ERROR);
-			a.initOwner(JFXMain.stage);
-
-			a.setTitle(Messages.getString("JFXMain.275")); 
-			a.setHeaderText(Messages.getString("JFXMain.276")+sep+Messages.getString("JFXMain.277"));  
-			a.setContentText(e.getMessage());
-			a.show();
-			return;
-		}
-
-		ConvertirSueloACosechaTask umTask = new ConvertirSueloACosechaTask(labor,suelo,mmLluvia);
-		umTask.installProgressBar(progressBox);
-
-		umTask.setOnSucceeded(handler -> {
-			CosechaLabor ret = (CosechaLabor)handler.getSource().getValue();
-			insertBeforeCompass(getWwd(), ret.getLayer());
-			umTask.uninstallProgressBar();
-			suelo.getLayer().setEnabled(false);
-
-			ProcessHarvestMapTask pmtask = new ProcessHarvestMapTask(ret);
-			pmtask.installProgressBar(progressBox);
-			pmtask.setOnSucceeded(handler2 -> {
-				this.getLayerPanel().update(this.getWwd());
-				pmtask.uninstallProgressBar();
-
-				this.wwjPanel.repaint();
-				System.out.println(Messages.getString("JFXMain.279")); 
-				playSound();
-				viewGoTo(ret);
-			});
-			pmtask.run();
-		});//fin del OnSucceeded
-		JFXMain.executorPool.execute(umTask);		
-	}
-
-	private void doEditSuelo(Suelo cConfigured) {			
-		Optional<Suelo> cosechaConfigured= SueloConfigDialogController.config(cConfigured);
-		if(cosechaConfigured.isPresent()){
-			cConfigured = cosechaConfigured.get();
-			OpenSoilMapTask umTask = new OpenSoilMapTask(cConfigured);
-			umTask.installProgressBar(progressBox);
-
-			umTask.setOnSucceeded(handler -> {
-				this.getLayerPanel().update(this.getWwd());
-				umTask.uninstallProgressBar();
-				this.wwjPanel.repaint();
-				playSound();
-			});//fin del OnSucceeded
-			JFXMain.executorPool.execute(umTask);
-		}
-	}
 
 
 
@@ -1517,37 +1370,8 @@ public class JFXMain extends Application {
 	}
 
 
-	private void doOpenSoilMap(List<File> files) {
-		List<FileDataStore> stores = FileHelper.chooseShapeFileAndGetMultipleStores(files);
-		if (stores != null) {
-			for(FileDataStore store : stores){//abro cada store y lo dibujo en el harvestMap individualmente
-				Suelo labor = new Suelo(store);
-				labor.setLayer(new LaborLayer());
-				Optional<Suelo> cosechaConfigured= SueloConfigDialogController.config(labor);
-				if(!cosechaConfigured.isPresent()){//
-					System.out.println(Messages.getString("JFXMain.315")); 
-					continue;
-				}							
 
-				OpenSoilMapTask umTask = new OpenSoilMapTask(labor);
-				umTask.installProgressBar(progressBox);
-
-				umTask.setOnSucceeded(handler -> {
-					Suelo ret = (Suelo)handler.getSource().getValue();
-					insertBeforeCompass(getWwd(), ret.getLayer());
-					this.getLayerPanel().update(this.getWwd());
-					umTask.uninstallProgressBar();
-					viewGoTo(ret);
-
-					System.out.println(Messages.getString("JFXMain.316")); 
-					playSound();
-				});//fin del OnSucceeded
-				JFXMain.executorPool.execute(umTask);
-			}//fin del for stores
-		}//if stores != null
-	}
-
-	private void doOpenMarginMap() {
+	public void doOpenMarginMap() {
 		List<FileDataStore> stores = FileHelper.chooseShapeFileAndGetMultipleStores(null);
 		if (stores != null) {
 			for(FileDataStore store : stores){//abro cada store y lo dibujo en el harvestMap individualmente
@@ -1578,13 +1402,13 @@ public class JFXMain extends Application {
 	}
 
 
-	private void doJuntarShapefiles() {
+	public void doJuntarShapefiles() {
 		List<FileDataStore> stores = FileHelper.chooseShapeFileAndGetMultipleStores(null);
 		File shapeFile = FileHelper.getNewShapeFile("union");
 		executorPool.execute(()->JuntarShapefilesTask.process(stores,shapeFile));
 	}
 
-	private void doProcessMargin() {		
+	public void doProcessMargin() {		
 		System.out.println(Messages.getString("JFXMain.319")); 
 
 		Margen margen = new Margen();
@@ -1646,37 +1470,7 @@ public class JFXMain extends Application {
 		executorPool.execute(uMmTask);
 	}
 
-	private void doProcesarBalanceNutrientes() {		
-		System.out.println(Messages.getString("JFXMain.327")); 
-		//todo pasar el filtrado por visibles aca y pasar nuevas listas solo con las visibles
-		List<Suelo> suelosEnabled = getSuelosSeleccionados();
-		List<FertilizacionLabor> fertEnabled = getFertilizacionesSeleccionadas();		
-		List<CosechaLabor> cosechasEnabled = getCosechasSeleccionadas();//cosechas.stream().filter((l)->l.getLayer().isEnabled()).collect(Collectors.toList());
 
-		ProcessBalanceDeNutrientes balanceNutrientesTask = 
-				new ProcessBalanceDeNutrientes(suelosEnabled,
-						cosechasEnabled,
-						fertEnabled);
-
-		balanceNutrientesTask.installProgressBar(progressBox);
-
-		balanceNutrientesTask.setOnSucceeded(handler -> {
-			Suelo ret = (Suelo)handler.getSource().getValue();
-			balanceNutrientesTask.uninstallProgressBar();
-			suelosEnabled.stream().forEach(l->l.getLayer().setEnabled(false));
-			cosechasEnabled.stream().forEach(l->l.getLayer().setEnabled(false));
-			fertEnabled.stream().forEach(l->l.getLayer().setEnabled(false));
-
-			//this.suelos.add(ret);
-			insertBeforeCompass(getWwd(), ret.getLayer());
-			this.getLayerPanel().update(this.getWwd());
-
-			playSound();
-			viewGoTo(ret);
-			System.out.println(Messages.getString("JFXMain.328")); 
-		});
-		executorPool.execute(balanceNutrientesTask);
-	}
 
 	private void doExportLabor(Labor<?> laborToExport) {
 		String nombre = laborToExport.getNombre();
@@ -1732,7 +1526,7 @@ public class JFXMain extends Application {
 		SmartTableView.showLaborTable(labor);
 	}
 
-	private void doSnapshot(){
+	public void doSnapshot(){
 		SnapshotParameters params = new SnapshotParameters();
 		params.setFill(Color.TRANSPARENT);
 

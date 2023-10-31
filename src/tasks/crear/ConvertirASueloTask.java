@@ -8,15 +8,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.geotools.data.FeatureReader;
-import org.h2.expression.Function;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
 import com.google.gson.Gson;
-import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Polygon;
 
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
@@ -24,13 +20,15 @@ import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
 import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
-import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.nww.LaborLayer;
-import javafx.scene.paint.Color;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
 
+/**
+ * Task que toma una cosecha y una recorrida y crea un mapa de suelo
+ * el resultado tiene los ambientes de la cosecha y los datos de la recorrida
+ */
 public class ConvertirASueloTask extends ProcessMapTask<SueloItem,Suelo > {
 	CosechaLabor cosecha=null;
 	Recorrida recorrida=null; 
@@ -47,16 +45,9 @@ public class ConvertirASueloTask extends ProcessMapTask<SueloItem,Suelo > {
 	@Override
 	protected void doProcess() throws IOException {
 		labor.setContorno(cosecha.getContorno());
-		//crear Suelo
-	
-		
-		
-		//Map<String, List<Muestra>> muestraNombreMap = recorrida.getMuestras().stream().collect(Collectors.groupingBy(Muestra::getNombre));
-		
 		//crear un map de muestra segun su nombre
 		Map<String, List<Muestra>> mMap = recorrida.getMuestras().stream().collect(Collectors.groupingBy(Muestra::getNombre));
-		
-		//TODO recorrer los cosechaitem de la cosecha
+
 		List<CosechaItem> cItems = new ArrayList<CosechaItem>();
 		FeatureReader<SimpleFeatureType, SimpleFeature> reader =cosecha.outCollection.reader();
 		featureCount=cosecha.outCollection.size();
@@ -70,45 +61,40 @@ public class ConvertirASueloTask extends ProcessMapTask<SueloItem,Suelo > {
 		}
 		reader.close();
 		this.featureNumber=0;
-		cItems.parallelStream().forEach(ci->{
-			Integer categoria = cosecha.getClasificador().getCategoryFor(ci.getAmount());
-			//String catName = cosecha.getClasificador().getCategoryNameFor(catIndex);
-			
-			
-			//Integer categoria =cosecha.getClasificador().getCategoryFor(container.getAmount());
-			//Color color  = c.getClasificador().getColorForCategoria(categoria);
-
-			//int size = c.getClasificador().getNumClasses();
+		cItems.parallelStream().forEach(ci->{			
+			//XXX no tomo los puntos porque hay poligonos que no van a tener puntos
+			Integer categoria = cosecha.getClasificador().getCategoryFor(ci.getAmount());			
 			String catName = cosecha.getClasificador().getLetraCat(categoria);//""+Clasificador.abc[size-categoria-1];
 			
 			List<Muestra> muestrasK = mMap.get(catName); 
 			if(muestrasK!=null && muestrasK.size()>0) {
 				Muestra m = muestrasK.get(0);
+				Map<String, Number> props = m.getProps();
+//				String obs = m.getObservacion();
 
-				String obs = m.getObservacion();
+//				@SuppressWarnings("unchecked")
+//				Map<String,String> map = new Gson().fromJson(obs, Map.class);	 
 
-				@SuppressWarnings("unchecked")
-				Map<String,String> map = new Gson().fromJson(obs, Map.class);	 
-
-				LinkedHashMap<String, Number> props = new LinkedHashMap<String,Number>();
-				for(String k : map.keySet()) {
-					Object value = map.get(k);
-					if(String.class.isAssignableFrom(value.getClass())) {				
-						Double dValue = new Double(0);
-						try { dValue=new Double((String)value);
-						}catch(Exception e) {System.err.println("error tratando de parsear \""+value+"\" reemplazo por 0");}
-						props.put(k, dValue);//ojo number format exception
-					} else if(Number.class.isAssignableFrom(value.getClass())) {
-						props.put(k, (Number)value);
-					}			
-				}
+//				LinkedHashMap<String, Number> props = new LinkedHashMap<String,Number>();
+//				for(String k : map.keySet()) {
+//					Object value = map.get(k);
+//					if(String.class.isAssignableFrom(value.getClass())) {				
+//						Double dValue = new Double(0);
+//						try { dValue=new Double((String)value);
+//						}catch(Exception e) {
+//							System.err.println("error tratando de parsear \""+value+"\" reemplazo por 0");}
+//						props.put(k, dValue);//ojo number format exception
+//					} else if(Number.class.isAssignableFrom(value.getClass())) {
+//						props.put(k, (Number)value);
+//					}			
+//				}
 
 				Number ppmP = props.get(SueloItem.PPM_FOSFORO);
 				Number ppmN = props.get(SueloItem.PPM_N);
-				Number ppmMO = props.get(SueloItem.PPM_MO);
+				Number ppmMO = props.get(SueloItem.PC_MO);
 				
 				Number densidad = props.get(SueloItem.DENSIDAD);
-
+				Number elevacion = props.get(SueloItem.ELEVACION);
 				SueloItem si = new SueloItem();
 				synchronized(labor){
 					si.setId(labor.getNextID());
@@ -117,7 +103,7 @@ public class ConvertirASueloTask extends ProcessMapTask<SueloItem,Suelo > {
 				si.setPpmP(ppmP.doubleValue());
 				si.setPpmNO3(ppmN.doubleValue());
 				si.setPorcMO(ppmMO.doubleValue());
-
+				si.setElevacion(elevacion.doubleValue());
 				labor.setPropiedadesLabor(si);
 
 

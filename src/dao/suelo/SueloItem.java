@@ -26,11 +26,12 @@ public class SueloItem extends LaborItem { //suelo item no es labor item. le sob
 	public static final String PPM_FOSFORO = "PPM P";
 	public static final String PPM_POTASIO= "PPM K";
 	public static final String PPM_ASUFRE = "PPM S";
-	public static final String PPM_MO = "PPM MO";
+	public static final String PC_MO = "PC MO";
 	
 	public static final String PROF_NAPA= "Prof Napa";
 	public static final String AGUA_PERFIL= "Agua Perf";
 	public static final String DENSIDAD = "kg/m3";
+	public static final String ELEVACION ="Elevacion";
 	/**
 	 *  Arenosos de 1,65 g cm-3;
 	 *  Franco arenoso, 1,5 g cm-3;

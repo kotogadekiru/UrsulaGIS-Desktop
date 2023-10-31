@@ -84,26 +84,35 @@ public class CrearCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 	}
 
 	public static String buildTooltipText(CosechaItem cosechaItem, double area) {
-		NumberFormat df = Messages.getNumberFormat();//new DecimalFormat("0.00");//$NON-NLS-2$
-
-		String tooltipText = new String(Messages.getString("ProcessHarvestMapTask.23") //$NON-NLS-1$
-				+ df.format(cosechaItem.getAmount()) + Messages.getString("ProcessHarvestMapTask.24") //$NON-NLS-1$
-				//	+ "Area: "+ df.format(area * ProyectionConstants.METROS2_POR_HA)+ " m2\n" + 
-
-				);
-
-		tooltipText=tooltipText.concat(Messages.getString("ProcessHarvestMapTask.25")+df.format(cosechaItem.getElevacion() ) + Messages.getString("ProcessHarvestMapTask.26")); //$NON-NLS-1$ //$NON-NLS-2$
-
-		tooltipText=tooltipText.concat(Messages.getString("ProcessHarvestMapTask.27")+df.format(cosechaItem.getAncho() ) + Messages.getString("ProcessHarvestMapTask.28")); //$NON-NLS-1$ //$NON-NLS-2$
-		tooltipText=tooltipText.concat(Messages.getString("ProcessHarvestMapTask.29")+df.format(cosechaItem.getRumbo() ) + Messages.getString("ProcessHarvestMapTask.30")); //$NON-NLS-1$ //$NON-NLS-2$
-		tooltipText=tooltipText.concat(Messages.getString("ProcessHarvestMapTask.31")+cosechaItem.getId() + Messages.getString("ProcessHarvestMapTask.32")); //$NON-NLS-1$ //$NON-NLS-2$
+		NumberFormat df = Messages.getNumberFormat();
+		StringBuilder sb = new StringBuilder();
+		//rinde
+		sb.append(Messages.getString("ProcessHarvestMapTask.23")); 
+		sb.append(df.format(cosechaItem.getAmount())); 
+		sb.append(Messages.getString("ProcessHarvestMapTask.24"));
+		//ancho
+		sb.append(Messages.getString("ProcessHarvestMapTask.27")
+				+df.format(cosechaItem.getAncho() ) 
+				+ Messages.getString("ProcessHarvestMapTask.28")); 
+		//rumbo
+		sb.append(Messages.getString("ProcessHarvestMapTask.29")
+				+df.format(cosechaItem.getRumbo() ) 
+				+Messages.getString("ProcessHarvestMapTask.30")); 
+		//id
+		sb.append(Messages.getString("ProcessHarvestMapTask.31")
+				+cosechaItem.getId() 
+				+Messages.getString("ProcessHarvestMapTask.32")); 
+		//elevacion
+		sb.append(Messages.getString("ProcessHarvestMapTask.25")
+				+df.format(cosechaItem.getElevacion() ) 
+				+ Messages.getString("ProcessHarvestMapTask.26"));
+		//superficie
 		if(area<1){
-			tooltipText=tooltipText.concat( Messages.getString("ProcessHarvestMapTask.33")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("ProcessHarvestMapTask.34")); //$NON-NLS-1$ //$NON-NLS-2$
-			//	tooltipText=tooltipText.concat( "SupOrig: "+df.format(area2 ) + "m2\n");
+			sb.append( Messages.getString("ProcessHarvestMapTask.33")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("ProcessHarvestMapTask.34")); 
 		} else {
-			tooltipText=tooltipText.concat(Messages.getString("ProcessHarvestMapTask.35")+df.format(area ) + Messages.getString("ProcessHarvestMapTask.36")); //$NON-NLS-1$ //$NON-NLS-2$
+			sb.append(Messages.getString("ProcessHarvestMapTask.35")+df.format(area ) + Messages.getString("ProcessHarvestMapTask.36")); 
 		}
-		return tooltipText;
+		return sb.toString();
 	}
 
 	protected int getAmountMin() {

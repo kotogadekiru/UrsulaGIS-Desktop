@@ -1,6 +1,7 @@
 package dao.recorrida;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.persistence.Access;
@@ -79,13 +80,42 @@ public class Muestra {
 		map.put(SueloItem.PPM_N, "");
 		map.put(SueloItem.PPM_ASUFRE, "");
 		map.put(SueloItem.PPM_POTASIO, "");
-		map.put(SueloItem.PPM_MO, "");
+		map.put(SueloItem.PC_MO, "");
 		map.put(SueloItem.PROF_NAPA, "");
 		map.put(SueloItem.AGUA_PERFIL, "");
 		String densidadDefault =  Messages.getNumberFormat().format(SueloItem.DENSIDAD_SUELO_KG);
 		map.put(SueloItem.DENSIDAD,densidadDefault);
-
+		
+		map.put(SueloItem.ELEVACION,"");
+		
 		String observacion = new Gson().toJson(map);
 		this.setObservacion(observacion);		
+	}
+	
+	/**
+	 * metodo practico que convierte de obs a un map de numeros
+	 * @return
+	 */
+	@Transient
+	public Map<String,Number> getProps(){
+		String obs = this.getObservacion();
+
+		@SuppressWarnings("unchecked")
+		Map<String,String> map = new Gson().fromJson(obs, Map.class);	 
+
+		LinkedHashMap<String, Number> props = new LinkedHashMap<String,Number>();
+		for(String k : map.keySet()) {
+			Object value = map.get(k);
+			if(String.class.isAssignableFrom(value.getClass())) {				
+				Double dValue = new Double(0);
+				try { dValue=new Double((String)value);
+				}catch(Exception e) {
+					System.err.println("error tratando de parsear \""+value+"\" reemplazo por 0");}
+				props.put(k, dValue);//ojo number format exception
+			} else if(Number.class.isAssignableFrom(value.getClass())) {
+				props.put(k, (Number)value);
+			}			
+		}
+		return props;
 	}
 }

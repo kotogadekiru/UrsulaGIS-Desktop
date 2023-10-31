@@ -580,42 +580,53 @@ public class PoligonoGUIController {
 		LaborLayer layer = new LaborLayer();
 		labor.setLayer(layer);
 
-		//		Optional<Suelo> cosechaConfigured= SueloConfigDialogController.config(labor);
-		//		if(!cosechaConfigured.isPresent()){//
-		//			System.out.println("el dialogo termino con cancel asi que no continuo con la cosecha");
-		//			labor.dispose();//libero los recursos reservados
-		//			return;
-		//		}							
+		Recorrida recorrida = new Recorrida();
+		recorrida.setNombre(poli.getNombre());
+		List<Muestra> muestras = new ArrayList<Muestra>();
+		//TODO permitir crear una muetra para cada poligono
+		Muestra m = new Muestra();
+		m.initObservacionSuelo();
+		m.setNombre("A");
+		m.setRecorrida(recorrida);				
+		muestras.add(m);
+		
+		//si viene con recorridas seleccionadas permito editarlas?
+		recorrida.setMuestras(muestras);
+		main.configGUIController.doAsignarValoresRecorrida(recorrida);//esto guarda una recorrida nueva
+	
 
-		TextInputDialog ppmPDialog = new TextInputDialog(Messages.getString("JFXMain.228")); //$NON-NLS-1$
-		ppmPDialog.initOwner(JFXMain.stage);
-		ppmPDialog.setTitle(Messages.getString("JFXMain.229")); //$NON-NLS-1$
-		ppmPDialog.setContentText(Messages.getString("JFXMain.230")); //$NON-NLS-1$
-		Optional<String> ppmPOptional = ppmPDialog.showAndWait();
-		Double ppmP = PropertyHelper.parseDouble(ppmPOptional.get()).doubleValue();//Double.valueOf(ppmPOptional.get());
-
-		TextInputDialog ppmNDialog = new TextInputDialog(Messages.getString("JFXMain.231")); //$NON-NLS-1$
-		ppmNDialog.initOwner(JFXMain.stage);
-		ppmNDialog.setTitle(Messages.getString("JFXMain.232")); //$NON-NLS-1$
-		ppmNDialog.setContentText(Messages.getString("JFXMain.233")); //$NON-NLS-1$
-		Optional<String> ppmNOptional = ppmNDialog.showAndWait();
-		Double ppmN = PropertyHelper.parseDouble(ppmNOptional.get()).doubleValue();
-
-		TextInputDialog pMODialog = new TextInputDialog(Messages.getString("JFXMain.234")); //$NON-NLS-1$
-		pMODialog.initOwner(JFXMain.stage);
-		pMODialog.setTitle(Messages.getString("JFXMain.235")); //$NON-NLS-1$
-		pMODialog.setContentText(Messages.getString("JFXMain.236")); //$NON-NLS-1$
-		Optional<String> pMOOptional = pMODialog.showAndWait();
-		Double pMO = PropertyHelper.parseDouble(pMOOptional.get()).doubleValue();// Double.valueOf(pMOOptional.get());
-
-		TextInputDialog densidaDialog = new TextInputDialog(Messages.getNumberFormat().format(SueloItem.DENSIDAD_SUELO_KG)); //$NON-NLS-1$
-		densidaDialog.initOwner(JFXMain.stage);
-		densidaDialog.setTitle("Configure la densidad"); //$NON-NLS-1$
-		densidaDialog.setContentText(SueloItem.DENSIDAD); //$NON-NLS-1$
-		Optional<String> dOptional = densidaDialog.showAndWait();
-		Double densidad = PropertyHelper.parseDouble(dOptional.get()).doubleValue();// Double.valueOf(pMOOptional.get());
-		System.out.println("ingrese densidad "+densidad);
-		CrearSueloMapTask umTask = new CrearSueloMapTask(labor,poli,ppmP,ppmN,pMO,densidad);
+//		TextInputDialog ppmPDialog = new TextInputDialog(Messages.getString("JFXMain.228")); //$NON-NLS-1$
+//		ppmPDialog.initOwner(JFXMain.stage);
+//		ppmPDialog.setTitle(Messages.getString("JFXMain.229")); //$NON-NLS-1$
+//		ppmPDialog.setContentText(Messages.getString("JFXMain.230")); //$NON-NLS-1$
+//		Optional<String> ppmPOptional = ppmPDialog.showAndWait();
+//		Double ppmP = PropertyHelper.parseDouble(ppmPOptional.get()).doubleValue();//Double.valueOf(ppmPOptional.get());
+//
+//		TextInputDialog ppmNDialog = new TextInputDialog(Messages.getString("JFXMain.231")); //$NON-NLS-1$
+//		ppmNDialog.initOwner(JFXMain.stage);
+//		ppmNDialog.setTitle(Messages.getString("JFXMain.232")); //$NON-NLS-1$
+//		ppmNDialog.setContentText(Messages.getString("JFXMain.233")); //$NON-NLS-1$
+//		Optional<String> ppmNOptional = ppmNDialog.showAndWait();
+//		Double ppmN = PropertyHelper.parseDouble(ppmNOptional.get()).doubleValue();
+//
+//		TextInputDialog pMODialog = new TextInputDialog(Messages.getString("JFXMain.234")); //$NON-NLS-1$
+//		pMODialog.initOwner(JFXMain.stage);
+//		pMODialog.setTitle(Messages.getString("JFXMain.235")); //$NON-NLS-1$
+//		pMODialog.setContentText(Messages.getString("JFXMain.236")); //$NON-NLS-1$
+//		Optional<String> pMOOptional = pMODialog.showAndWait();
+//		Double pMO = PropertyHelper.parseDouble(pMOOptional.get()).doubleValue();// Double.valueOf(pMOOptional.get());
+//
+//		TextInputDialog densidaDialog = new TextInputDialog(Messages.getNumberFormat().format(SueloItem.DENSIDAD_SUELO_KG)); //$NON-NLS-1$
+//		densidaDialog.initOwner(JFXMain.stage);
+//		densidaDialog.setTitle("Configure la densidad"); //$NON-NLS-1$
+//		densidaDialog.setContentText(SueloItem.DENSIDAD); //$NON-NLS-1$
+//		Optional<String> dOptional = densidaDialog.showAndWait();
+//		Double densidad = PropertyHelper.parseDouble(dOptional.get()).doubleValue();// Double.valueOf(pMOOptional.get());
+//		System.out.println("ingrese densidad "+densidad);
+//		
+//		CrearSueloMapTask umTask = new CrearSueloMapTask(labor,poli,ppmP,ppmN,pMO,densidad);
+		
+		CrearSueloMapTask umTask = new CrearSueloMapTask(labor,poli,recorrida);
 		umTask.installProgressBar(progressBox);
 
 		umTask.setOnSucceeded(handler -> {

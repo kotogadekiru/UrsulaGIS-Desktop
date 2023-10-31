@@ -64,6 +64,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
@@ -107,37 +108,63 @@ public class ConfigGUI {
 		String localizedBuidDate =  dft.format(compileDate);
 		//Esta aplicacion fue compilada el 11 de Febrero de 2020.
 		return Messages.getString("JFXMain.info1")+localizedBuidDate //TODO crear una dateTimeFomrater y localizar el formato segun el locale Elegido
-				+Messages.getString("JFXMain.info2") //$NON-NLS-1$ version compilada el 
-				+Messages.getString("JFXMain.inf3") //$NON-NLS-1$
-				+Messages.getString("JFXMain.info3") //$NON-NLS-1$
-				+Messages.getString("JFXMain.info4"); //$NON-NLS-1$
+				+Messages.getString("JFXMain.info2") // version compilada el 
+				+Messages.getString("JFXMain.inf3") //
+				+Messages.getString("JFXMain.info3") //
+				+Messages.getString("JFXMain.info4"); //
 	}
 
+	public void addMenuesToMenuBar(MenuBar menuBar) {
+		/*Menu Importar*/
+		final Menu menuImportar = new Menu(Messages.getString("JFXMain.importar")); 
+		addMenuItem(Messages.getString("JFXMain.NDVI"),(a)->main.ndviGUIController.doOpenNDVITiffFiles(),menuImportar); 
+		addMenuItem(Messages.getString("JFXMain.imagen"),(a)->main.importImagery(),menuImportar); 
+		addMenuItem(Messages.getString("JFXMain.suelo"),(a)->main.sueloGUIController.doOpenSoilMap(null),menuImportar); 
+		addMenuItem(Messages.getString("JFXMain.margen"),(a)->main.doOpenMarginMap(),menuImportar); 
+		addMenuItem(Messages.getString("JFXMain.poligonos"),(a)->main.poligonoGUIController.doImportarPoligonos(null),menuImportar); 
+		/*Menu herramientas*/
+		final Menu menuHerramientas = new Menu(Messages.getString("JFXMain.herramientas")); 		
+		addMenuItem(Messages.getString("JFXMain.distancia"),(a)->main.poligonoGUIController.doMedirDistancia(),menuHerramientas); 
+		addMenuItem(Messages.getString("JFXMain.superficie"),(a)->main.poligonoGUIController.doCrearPoligono(),menuHerramientas); 
+		addMenuItem(Messages.getString("JFXMain.unirShapes"),(a)->main.doJuntarShapefiles(),menuHerramientas); 
+		addMenuItem(Messages.getString("JFXMain.rentabilidad"),(a)->main.doProcessMargin(),menuHerramientas); 
+		addMenuItem(Messages.getString("JFXMain.balanceNutrientes"),(a)->main.sueloGUIController.doProcesarBalanceNutrientes(),menuHerramientas); 
+		addMenuItem(Messages.getString("JFXMain.generarOrdenCompra"),(a)->main.doGenerarOrdenDeCompra(),menuHerramientas); 
+		addMenuItem(Messages.getString("JFXMain.goTo"),(a)->main.showGoToDialog(),menuHerramientas);
+		addMenuItem(Messages.getString("JFXMain.bulk_ndvi_download"),(a)->main.ndviGUIController.doBulkNDVIDownload(),menuHerramientas);
+		/*Menu Exportar*/
+		final Menu menuExportar = new Menu(Messages.getString("JFXMain.exportar"));		 
+		addMenuItem(Messages.getString("JFXMain.exportarPantallaMenuItem"),(a)->main.doSnapshot(),menuExportar);
+		/*Menu Configuracion*/
+		final Menu menuConfiguracion = contructConfigMenu();		
+		menuBar.getMenus().addAll(menuImportar,menuHerramientas, menuExportar,menuConfiguracion);
+	}
+	
 	public Menu contructConfigMenu() {
 		/*Menu Configuracion*/
-		final Menu menuConfiguracion = new Menu(Messages.getString("JFXMain.configuracionMenu")); //$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.cultivosMenuItem"),(a)->doConfigCultivo(),menuConfiguracion); //$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.fertilizantesMenuItem"),(a)->doConfigFertilizantes(),menuConfiguracion); //$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.agroquimicosMenuItem"),(a)->doConfigAgroquimicos(),menuConfiguracion); //$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.configSemillasMenuItem"),(a)->doConfigSemillas(),menuConfiguracion); //$NON-NLS-1$
-	//	addMenuItem(Messages.getString("JFXMain.Caldo"),(a)->doConfigCaldos(),menuConfiguracion); //$NON-NLS-1$
+		final Menu menuConfiguracion = new Menu(Messages.getString("JFXMain.configuracionMenu")); //
+		addMenuItem(Messages.getString("JFXMain.cultivosMenuItem"),(a)->doConfigCultivo(),menuConfiguracion); //
+		addMenuItem(Messages.getString("JFXMain.fertilizantesMenuItem"),(a)->doConfigFertilizantes(),menuConfiguracion); //
+		addMenuItem(Messages.getString("JFXMain.agroquimicosMenuItem"),(a)->doConfigAgroquimicos(),menuConfiguracion); //
+		addMenuItem(Messages.getString("JFXMain.configSemillasMenuItem"),(a)->doConfigSemillas(),menuConfiguracion); //
+	//	addMenuItem(Messages.getString("JFXMain.Caldo"),(a)->doConfigCaldos(),menuConfiguracion); //
 
 
-		addMenuItem(Messages.getString("JFXMain.configEmpresaMI"),(a)->doConfigEmpresa(),menuConfiguracion); //$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.configEstablecimientoMI"),(a)->doConfigEstablecimiento(),menuConfiguracion); //$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.configLoteMi"),(a)->doConfigLote(),menuConfiguracion); //$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.configCampaniaMI"),(a)->doConfigCampania(),menuConfiguracion); //$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.configAsignacionMI"),(a)->doConfigAsignacion(),menuConfiguracion); //$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.configPoligonosMI"),(a)->doConfigPoligonos(),menuConfiguracion); //$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.configNDVIMI"),(a)->doShowNdviTable(),menuConfiguracion); //$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.configRecorridaMI"),(a)->doShowRecorridaTable(),menuConfiguracion); //$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.OrdenCompra"),(a)->doShowOrdenesCompra(),menuConfiguracion); //$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.362"),(a)->doShowLaboresTable(),menuConfiguracion); //$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.configPulverizacionMI"),(a)->doShowOrdenesPulverizacionTable(),menuConfiguracion); //$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.configSiembraMI"),(a)->doShowOrdenesSiembraTable(),menuConfiguracion); //$NON-NLS-1$
+		addMenuItem(Messages.getString("JFXMain.configEmpresaMI"),(a)->doConfigEmpresa(),menuConfiguracion); //
+		addMenuItem(Messages.getString("JFXMain.configEstablecimientoMI"),(a)->doConfigEstablecimiento(),menuConfiguracion); //
+		addMenuItem(Messages.getString("JFXMain.configLoteMi"),(a)->doConfigLote(),menuConfiguracion); //
+		addMenuItem(Messages.getString("JFXMain.configCampaniaMI"),(a)->doConfigCampania(),menuConfiguracion); //
+		addMenuItem(Messages.getString("JFXMain.configAsignacionMI"),(a)->doConfigAsignacion(),menuConfiguracion); //
+		addMenuItem(Messages.getString("JFXMain.configPoligonosMI"),(a)->doConfigPoligonos(),menuConfiguracion); //
+		addMenuItem(Messages.getString("JFXMain.configNDVIMI"),(a)->doShowNdviTable(),menuConfiguracion); //
+		addMenuItem(Messages.getString("JFXMain.configRecorridaMI"),(a)->doShowRecorridaTable(),menuConfiguracion); //
+		addMenuItem(Messages.getString("JFXMain.OrdenCompra"),(a)->doShowOrdenesCompra(),menuConfiguracion); //
+		addMenuItem(Messages.getString("JFXMain.362"),(a)->doShowLaboresTable(),menuConfiguracion); //
+		addMenuItem(Messages.getString("JFXMain.configPulverizacionMI"),(a)->doShowOrdenesPulverizacionTable(),menuConfiguracion); //
+		addMenuItem(Messages.getString("JFXMain.configSiembraMI"),(a)->doShowOrdenesSiembraTable(),menuConfiguracion); //
 		
-		addMenuItem(Messages.getString("JFXMain.configIdiomaMI"),(a)->doChangeLocale(),menuConfiguracion); //$NON-NLS-1$
-		addMenuItem(Messages.getString("JFXMain.configHelpMI"),(a)->doShowAcercaDe(),menuConfiguracion); //$NON-NLS-1$\
+		addMenuItem(Messages.getString("JFXMain.configIdiomaMI"),(a)->doChangeLocale(),menuConfiguracion); //
+		addMenuItem(Messages.getString("JFXMain.configHelpMI"),(a)->doShowAcercaDe(),menuConfiguracion); //\
 		
 		MenuItem actualizarMI=addMenuItem(Messages.getString("JFXMain.configUpdate"),null,menuConfiguracion); 
 		actualizarMI.setOnAction((a)->doUpdate());
@@ -166,20 +193,20 @@ public class ConfigGUI {
 	 */
 	public void doShowAcercaDe() {
 		Alert acercaDe = new Alert(AlertType.INFORMATION);
-		acercaDe.titleProperty().set(Messages.getString("JFXMain.363")+JFXMain.TITLE_VERSION); //$NON-NLS-1$
+		acercaDe.titleProperty().set(Messages.getString("JFXMain.363")+JFXMain.TITLE_VERSION); //
 		acercaDe.initOwner(JFXMain.stage);
 		//acercaDe.setHeaderText(this.TITLE_VERSION+"\n"+this.BUILD_INFO+"\nVisitar www.ursulagis.com");
 		//acercaDe.contentTextProperty().set();
-		String content =   "<b>"+JFXMain.TITLE_VERSION+"</b><br>" //$NON-NLS-1$ //$NON-NLS-2$
+		String content =   "<b>"+JFXMain.TITLE_VERSION+"</b><br>" // //$NON-NLS-2$
 				+ ConfigGUI.getBuildInfo()
-				+ "<br><b>" +Messages.getString("JFXMain.visitarUrsulaGIS.com")+"</b>"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				+ "<br><b>" +Messages.getString("JFXMain.visitarUrsulaGIS.com")+"</b>"; // //$NON-NLS-2$ //$NON-NLS-3$
 
 		WebView webView = new WebView();
-		webView.getEngine().loadContent("<html>"+content+"</html>"); //$NON-NLS-1$ //$NON-NLS-2$
+		webView.getEngine().loadContent("<html>"+content+"</html>"); // //$NON-NLS-2$
 
 
 		//   webView.setPrefSize(150, 60);
-		//acercaDe.setHeaderText(""); //$NON-NLS-1$
+		//acercaDe.setHeaderText(""); //
 		//acercaDe.setGraphic(null);
 
 		acercaDe.getDialogPane().setContent(webView);;
@@ -206,12 +233,12 @@ public class ConfigGUI {
 							)
 					);
 			table.setEditable(true);
-			table.setOnDoubleClick(()->new Cultivo(Messages.getString("JFXMain.372"))); //$NON-NLS-1$
+			table.setOnDoubleClick(()->new Cultivo(Messages.getString("JFXMain.372"))); //
 
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("JFXMain.373")); //$NON-NLS-1$
+			tablaStage.setTitle(Messages.getString("JFXMain.373")); //
 			tablaStage.setScene(scene);
 			tablaStage.show();	 
 		});
@@ -241,13 +268,13 @@ public class ConfigGUI {
 					);//,dataLotes);
 			table.setEditable(true);
 			table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
-			table.setOnDoubleClick(()->new Fertilizante(Messages.getString("JFXMain.374"))); //$NON-NLS-1$
+			table.setOnDoubleClick(()->new Fertilizante(Messages.getString("JFXMain.374"))); //
 			table.setEliminarAction(
 					list->{
 						Platform.runLater(()->{		
 							try {
 								System.out.println("removing fertilizantes "+list.size());
-								List<Object> objs = new ArrayList(list);
+								List<Object> objs = new ArrayList<>(list);
 								DAH.removeAll(objs);
 								DAH.commitTransaction();
 							}catch(Exception e) {
@@ -262,7 +289,7 @@ public class ConfigGUI {
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("JFXMain.375")); //$NON-NLS-1$
+			tablaStage.setTitle(Messages.getString("JFXMain.375")); //
 			tablaStage.setScene(scene);
 			tablaStage.show();	 
 		});
@@ -306,13 +333,13 @@ public class ConfigGUI {
 			);
 	
 
-			table.setOnDoubleClick(()->new Agroquimico(Messages.getString("JFXMain.376"))); //$NON-NLS-1$
+			table.setOnDoubleClick(()->new Agroquimico(Messages.getString("JFXMain.376"))); //
 
 
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("JFXMain.377")); //$NON-NLS-1$
+			tablaStage.setTitle(Messages.getString("JFXMain.377")); //
 			tablaStage.setScene(scene);
 			tablaStage.show();	 
 		});
@@ -326,18 +353,18 @@ public class ConfigGUI {
 							DAH.getAllCampanias()							
 							);
 			if(data.size()==0){
-				data.add(new Campania(Messages.getString("JFXMain.378")));//TODO obtener el anio actual y armar 16/17 //$NON-NLS-1$
+				data.add(new Campania(Messages.getString("JFXMain.378")));//TODO obtener el anio actual y armar 16/17 //
 			}
 			SmartTableView<Campania> table = new SmartTableView<Campania>(data,
 					Arrays.asList("Id"),
 					Arrays.asList("Nombre","Inicio","Fin")
 					);//,data);
 			table.setEditable(true);
-			table.setOnDoubleClick(()->new Campania(Messages.getString("JFXMain.379"))); //$NON-NLS-1$
+			table.setOnDoubleClick(()->new Campania(Messages.getString("JFXMain.379"))); //
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("JFXMain.380")); //$NON-NLS-1$
+			tablaStage.setTitle(Messages.getString("JFXMain.380")); //
 			tablaStage.setScene(scene);
 			tablaStage.show();	 
 
@@ -407,7 +434,7 @@ public class ConfigGUI {
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("JFXMain.381")); //$NON-NLS-1$
+			tablaStage.setTitle(Messages.getString("JFXMain.381")); //
 			tablaStage.setScene(scene);
 
 			tablaStage.onHiddenProperty().addListener((o,old,n)->{
@@ -516,7 +543,7 @@ public class ConfigGUI {
 		Scene scene = new Scene(bp, 400, 300);
 		Stage tablaStage = new Stage();
 		tablaStage.getIcons().add(new Image(JFXMain.ICON));
-		tablaStage.setTitle(Messages.getString("Recorrida.asignarValores")); //$NON-NLS-1$
+		tablaStage.setTitle(Messages.getString("Recorrida.asignarValores")); //
 		tablaStage.setScene(scene);
 
 		accept.setOnAction((e)->{tablaStage.close();});
@@ -632,7 +659,7 @@ public class ConfigGUI {
 		Scene scene = new Scene(tabla, 800, 600);
 		Stage tablaStage = new Stage();
 		tablaStage.getIcons().add(new Image(JFXMain.ICON));
-		tablaStage.setTitle(Messages.getString("Recorrida.asignarValores")); //$NON-NLS-1$
+		tablaStage.setTitle(Messages.getString("Recorrida.asignarValores")); //
 		tablaStage.setScene(scene);
 
 		tablaStage.showAndWait();	 
@@ -726,7 +753,7 @@ public class ConfigGUI {
 			Scene scene = new Scene(v, 400, 300);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("JFXMain.OrdenCompra")); //$NON-NLS-1$
+			tablaStage.setTitle(Messages.getString("JFXMain.OrdenCompra")); //
 			tablaStage.setScene(scene);
 			tablaStage.heightProperty().addListener((obj,old,nu)->{
 				v.setPrefHeight(nu.doubleValue());
@@ -784,7 +811,7 @@ public class ConfigGUI {
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("JFXMain.OrdenCompra")); //$NON-NLS-1$
+			tablaStage.setTitle(Messages.getString("JFXMain.OrdenCompra")); //
 			tablaStage.setScene(scene);
 
 			//			tablaStage.onHiddenProperty().addListener((o,old,n)->{
@@ -820,7 +847,7 @@ public class ConfigGUI {
 		//			Scene scene = new Scene(table, 800, 600);
 		//			Stage tablaStage = new Stage();
 		//			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-		//			tablaStage.setTitle(Messages.getString("JFXMain.configRecorridaMI")); //$NON-NLS-1$
+		//			tablaStage.setTitle(Messages.getString("JFXMain.configRecorridaMI")); //
 		//			tablaStage.setScene(scene);
 		//
 		//			tablaStage.onHiddenProperty().addListener((o,old,n)->{
@@ -880,7 +907,7 @@ public class ConfigGUI {
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("JFXMain.configSiembraMI")); //$NON-NLS-1$
+			tablaStage.setTitle(Messages.getString("JFXMain.configSiembraMI")); //
 			tablaStage.setScene(scene);
 
 			tablaStage.onHiddenProperty().addListener((o,old,n)->{
@@ -939,7 +966,7 @@ public class ConfigGUI {
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("JFXMain.configPulverizacionMI")); //$NON-NLS-1$
+			tablaStage.setTitle(Messages.getString("JFXMain.configPulverizacionMI")); //
 			tablaStage.setScene(scene);
 
 			tablaStage.onHiddenProperty().addListener((o,old,n)->{
@@ -974,7 +1001,7 @@ public class ConfigGUI {
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("JFXMain.configRecorridaMI")); //$NON-NLS-1$
+			tablaStage.setTitle(Messages.getString("JFXMain.configRecorridaMI")); //
 			tablaStage.setScene(scene);
 
 			tablaStage.onHiddenProperty().addListener((o,old,n)->{
@@ -1028,7 +1055,7 @@ public class ConfigGUI {
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("JFXMain.configRecorridaMI")); //$NON-NLS-1$
+			tablaStage.setTitle(Messages.getString("JFXMain.configRecorridaMI")); //
 			tablaStage.setScene(scene);
 
 			tablaStage.onHiddenProperty().addListener((o,old,n)->{
@@ -1067,7 +1094,7 @@ public class ConfigGUI {
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("JFXMain.382")); //$NON-NLS-1$
+			tablaStage.setTitle(Messages.getString("JFXMain.382")); //
 			tablaStage.setScene(scene);
 
 			tablaStage.onHiddenProperty().addListener((o,old,n)->{
@@ -1094,9 +1121,9 @@ public class ConfigGUI {
 		Locale actual = Messages.getLocale();
 
 		ChoiceDialog<String> dialog = new ChoiceDialog<>(capitalizeLocale.apply(actual), displayLocales.keySet());
-		dialog.setTitle(Messages.getString("JFXMain.383")); //$NON-NLS-1$
-		dialog.setHeaderText(Messages.getString("JFXMain.384")); //$NON-NLS-1$
-		dialog.setContentText(Messages.getString("JFXMain.385")); //$NON-NLS-1$
+		dialog.setTitle(Messages.getString("JFXMain.383")); //
+		dialog.setHeaderText(Messages.getString("JFXMain.384")); //
+		dialog.setContentText(Messages.getString("JFXMain.385")); //
 		dialog.initOwner(JFXMain.stage);
 
 		Optional<String> result = dialog.showAndWait();
@@ -1124,12 +1151,12 @@ public class ConfigGUI {
 					Arrays.asList("Id"),     //rejected
 					Arrays.asList("Nombre","Contorno","Empresa","SuperficieTotal","SuperficieAgricola","SuperficieGanadera","SuperficieDesperdicio"));//order
 			table.setEditable(true);
-			table.setOnDoubleClick(()->new Establecimiento(Messages.getString("JFXMain.386"))); //$NON-NLS-1$
+			table.setOnDoubleClick(()->new Establecimiento(Messages.getString("JFXMain.386"))); //
 
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("JFXMain.387")); //$NON-NLS-1$
+			tablaStage.setTitle(Messages.getString("JFXMain.387")); //
 			tablaStage.setScene(scene);
 			tablaStage.show();	 
 
@@ -1150,12 +1177,12 @@ public class ConfigGUI {
 					Arrays.asList("Id"),                 //rejected
 					Arrays.asList("Nombre","Contorno"));//order
 			table.setEditable(true);
-			table.setOnDoubleClick(()->new Lote(Messages.getString("JFXMain.388"))); //$NON-NLS-1$
+			table.setOnDoubleClick(()->new Lote(Messages.getString("JFXMain.388"))); //
 
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("JFXMain.389")); //$NON-NLS-1$
+			tablaStage.setTitle(Messages.getString("JFXMain.389")); //
 			tablaStage.setScene(scene);
 			tablaStage.show();	 
 
@@ -1175,12 +1202,12 @@ public class ConfigGUI {
 					Arrays.asList("Id"),                 //rejected
 					Arrays.asList("Lote","Campania","Cultivo","Contorno"));//order
 			table.setEditable(true);
-			table.setOnDoubleClick(()->new Asignacion()); //$NON-NLS-1$
+			table.setOnDoubleClick(()->new Asignacion()); //
 
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("JFXMain.configAsignacionMI")); //$NON-NLS-1$
+			tablaStage.setTitle(Messages.getString("JFXMain.configAsignacionMI")); //
 			tablaStage.setScene(scene);
 			tablaStage.show();	 
 
@@ -1194,18 +1221,18 @@ public class ConfigGUI {
 							DAH.getAllEmpresas()
 							);
 			if(data.size()<1){
-				data.add(new Empresa(Messages.getString("JFXMain.390"))); //$NON-NLS-1$
+				data.add(new Empresa(Messages.getString("JFXMain.390"))); //
 			}
 			SmartTableView<Empresa> table = new SmartTableView<Empresa>(data,
 					Arrays.asList("Id"),     //rejected
 					Arrays.asList("Nombre"));//order
 			table.setEditable(true);
-			table.setOnDoubleClick(()->new Empresa(Messages.getString("JFXMain.391"))); //$NON-NLS-1$
+			table.setOnDoubleClick(()->new Empresa(Messages.getString("JFXMain.391"))); //
 
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("JFXMain.392")); //$NON-NLS-1$
+			tablaStage.setTitle(Messages.getString("JFXMain.392")); //
 			tablaStage.setScene(scene);
 			tablaStage.show();	 
 
@@ -1227,15 +1254,14 @@ public class ConfigGUI {
 					Arrays.asList("Nombre","Cultivo","PesoDeMill","PG"));//order
 	
 			table.setEditable(true);
-			table.setOnDoubleClick(()->new Semilla(Messages.getString("JFXMain.393"),DAH.getAllCultivos().get(0))); //$NON-NLS-1$
+			table.setOnDoubleClick(()->new Semilla(Messages.getString("JFXMain.393"),DAH.getAllCultivos().get(0))); //
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("JFXMain.394")); //$NON-NLS-1$
+			tablaStage.setTitle(Messages.getString("JFXMain.394"));
 			tablaStage.setScene(scene);
 			tablaStage.show();	 
 		});
-
 	}
 	
 	/**
