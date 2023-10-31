@@ -48,11 +48,15 @@ import dao.ordenCompra.OrdenCompra;
 import dao.ordenCompra.Producto;
 import dao.ordenCompra.ProductoLabor;
 import dao.recorrida.Recorrida;
+import gui.JFXMain;
+import sun.security.krb5.Config;
 
 public class DAH {
 	private static final String APPDATA = "APPDATA";
 	private static final String OBJECTDB_DB_URSULAGIS_ODB = "$ursulaGIS.odb";
-	private static final String H2_URSULAGIS_DB = "ursulaGIS.h2;AUTO_SERVER=TRUE";//mv.db
+	private static final String H2_URSULAGIS_DB = "ursulaGIS.h2";//mv.db
+	private static final String AUTO_SERVE=";AUTO_SERVER=TRUE";
+	public static final String PROJECT_URL_KEY="DAH.PROJECT_URL_KEY";
 	//private static final String OBJECTDB_DB_MONITORES_H2 = "$ursulaGIS.odb";
 	//	private static final String SQLLITE_PU = "UrsulaGIS";
 	/**
@@ -111,11 +115,16 @@ public class DAH {
   <property name="eclipselink.ddl-generation" value="drop-and-create-tables" />
   <property name="eclipselink.ddl-generation.output-mode" value="database" />
 			 */
-			String currentUsersHomeDir =System.getenv(APPDATA);
-			String ursulaGISFolder = currentUsersHomeDir + File.separator + Configuracion.URSULA_GIS_APPDATA_FOLDER;
-			//en ursulaGISFolder estan todos los tif temporales. borrarlos antes de cerrar el programa
-			String  db_url = ursulaGISFolder + File.separator + H2_URSULAGIS_DB;		
-
+			
+			String db_url = JFXMain.config.getPropertyOrDefault(PROJECT_URL_KEY, "NOT_SET");
+			if("NOT_SET".equals(db_url)) {
+				String currentUsersHomeDir =System.getenv(APPDATA);
+				String ursulaGISFolder = currentUsersHomeDir + File.separator + Configuracion.URSULA_GIS_APPDATA_FOLDER;
+				//en ursulaGISFolder estan todos los tif temporales. borrarlos antes de cerrar el programa
+				db_url = ursulaGISFolder + File.separator + H2_URSULAGIS_DB;		
+			}
+			db_url+=AUTO_SERVE;
+			System.out.println("loading project "+db_url);
 			File sqliteDBFile=new File(db_url);
 			if(!sqliteDBFile.exists()){
 				System.out.println("need to migrate from ObjectDB");

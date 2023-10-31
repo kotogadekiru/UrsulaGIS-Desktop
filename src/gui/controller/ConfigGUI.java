@@ -2,6 +2,7 @@ package gui.controller;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
@@ -32,6 +33,7 @@ import dao.Poligono;
 import dao.config.Agroquimico;
 import dao.config.Asignacion;
 import dao.config.Campania;
+import dao.config.Configuracion;
 import dao.config.Cultivo;
 import dao.config.Empresa;
 import dao.config.Establecimiento;
@@ -84,6 +86,7 @@ import tasks.CotizarOdenDeCompraOnlineTask;
 import tasks.UpdateTask;
 import utils.DAH;
 import utils.ExcelHelper;
+import utils.FileHelper;
 
 public class ConfigGUI {
 	private static final String DD_MM_YYYY = "dd/MM/yyyy";
@@ -139,7 +142,7 @@ public class ConfigGUI {
 		final Menu menuConfiguracion = contructConfigMenu();		
 		menuBar.getMenus().addAll(menuImportar,menuHerramientas, menuExportar,menuConfiguracion);
 	}
-	
+
 	public Menu contructConfigMenu() {
 		/*Menu Configuracion*/
 		final Menu menuConfiguracion = new Menu(Messages.getString("JFXMain.configuracionMenu")); //
@@ -147,7 +150,7 @@ public class ConfigGUI {
 		addMenuItem(Messages.getString("JFXMain.fertilizantesMenuItem"),(a)->doConfigFertilizantes(),menuConfiguracion); //
 		addMenuItem(Messages.getString("JFXMain.agroquimicosMenuItem"),(a)->doConfigAgroquimicos(),menuConfiguracion); //
 		addMenuItem(Messages.getString("JFXMain.configSemillasMenuItem"),(a)->doConfigSemillas(),menuConfiguracion); //
-	//	addMenuItem(Messages.getString("JFXMain.Caldo"),(a)->doConfigCaldos(),menuConfiguracion); //
+		//	addMenuItem(Messages.getString("JFXMain.Caldo"),(a)->doConfigCaldos(),menuConfiguracion); //
 
 
 		addMenuItem(Messages.getString("JFXMain.configEmpresaMI"),(a)->doConfigEmpresa(),menuConfiguracion); //
@@ -162,10 +165,12 @@ public class ConfigGUI {
 		addMenuItem(Messages.getString("JFXMain.362"),(a)->doShowLaboresTable(),menuConfiguracion); //
 		addMenuItem(Messages.getString("JFXMain.configPulverizacionMI"),(a)->doShowOrdenesPulverizacionTable(),menuConfiguracion); //
 		addMenuItem(Messages.getString("JFXMain.configSiembraMI"),(a)->doShowOrdenesSiembraTable(),menuConfiguracion); //
-		
-		addMenuItem(Messages.getString("JFXMain.configIdiomaMI"),(a)->doChangeLocale(),menuConfiguracion); //
-		addMenuItem(Messages.getString("JFXMain.configHelpMI"),(a)->doShowAcercaDe(),menuConfiguracion); //\
-		
+
+		addMenuItem(Messages.getString("JFXMain.configIdiomaMI"),(a)->doChangeLocale(),menuConfiguracion); 
+		addMenuItem(Messages.getString("JFXMain.configHelpMI"),(a)->doShowAcercaDe(),menuConfiguracion);
+
+		addMenuItem("Cambiar Proyecto",(a)->doSelectDB(),menuConfiguracion);	
+
 		MenuItem actualizarMI=addMenuItem(Messages.getString("JFXMain.configUpdate"),null,menuConfiguracion); 
 		actualizarMI.setOnAction((a)->doUpdate());
 		actualizarMI.setVisible(false);
@@ -187,7 +192,38 @@ public class ConfigGUI {
 		});
 		return menuConfiguracion;
 	}	
-	
+
+	/**
+	 * metodo que permite crear una base de datos en una ubicacion deseada
+	 * @return
+	 */
+
+
+	private String doSelectDB() {	
+		Configuracion c = JFXMain.config;
+		
+		String proyectoActual = c.getPropertyOrDefault(DAH.PROJECT_URL_KEY, null);
+		File f = FileHelper.chooseFile(proyectoActual, "*.h2");
+		if(f!=null && !f.exists()) {
+			try {
+				f.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		if(f!=null && f.exists()) {
+			c.setProperty(DAH.PROJECT_URL_KEY, f.getAbsolutePath());
+			c.save();
+		}
+		Alert alert = new Alert(
+				AlertType.INFORMATION,
+				"Debe Reiniciar para que se efectuen los cambios"); 
+		alert.initOwner(JFXMain.stage);
+		alert.showAndWait();
+		// TODO Auto-generated method stub
+		return "nuevo proyecto seleccionado. debe reiniciar";
+	}
+
 	/**
 	 * 
 	 */
@@ -315,11 +351,11 @@ public class ConfigGUI {
 				List<Object> toRemove = new ArrayList<Object>();
 				System.out.println("agregando a toRemove "+list);
 				toRemove.addAll(list);
-			//JFXMain.executorPool.execute(()->{
+				//JFXMain.executorPool.execute(()->{
 				try {
 					DAH.beginTransaction();
 
-					
+
 					System.out.println("items en toRemove "+toRemove);
 					DAH.removeAll(toRemove);
 					DAH.commitTransaction();
@@ -328,10 +364,10 @@ public class ConfigGUI {
 					System.out.println("no se pudo borrar");
 					e.printStackTrace();
 				}
-			//	});
+				//	});
 			}
-			);
-	
+					);
+
 
 			table.setOnDoubleClick(()->new Agroquimico(Messages.getString("JFXMain.376"))); //
 
@@ -386,31 +422,31 @@ public class ConfigGUI {
 			table.setEliminarAction(list->{
 				//JFXMain.executorPool.execute(()->{
 				try {
-				//decidir que hacer con los ndvi. borralos o dejarlos huerfanos
-				DAH.beginTransaction();
-				list.stream().forEach(p->{
-					p.setLote(null);
-					List<Ndvi> ndviPoli = DAH.getNdvi(p);
-					ndviPoli.stream().forEach(n->{
-						n.setContorno(null);
-						DAH.save(n);
-						System.out.println("quitando poligono de "+n);
+					//decidir que hacer con los ndvi. borralos o dejarlos huerfanos
+					DAH.beginTransaction();
+					list.stream().forEach(p->{
+						p.setLote(null);
+						List<Ndvi> ndviPoli = DAH.getNdvi(p);
+						ndviPoli.stream().forEach(n->{
+							n.setContorno(null);
+							DAH.save(n);
+							System.out.println("quitando poligono de "+n);
+						});
+						System.out.println("eliminando "+p);
+
 					});
-					System.out.println("eliminando "+p);
-					
-				});
-				List<Object> toRemove = new ArrayList<Object>();
-				toRemove.addAll(list);
-				DAH.removeAll(toRemove);
-				DAH.commitTransaction();
+					List<Object> toRemove = new ArrayList<Object>();
+					toRemove.addAll(list);
+					DAH.removeAll(toRemove);
+					DAH.commitTransaction();
 				}catch(Exception e) {
-					
+
 					System.out.println("no se pudo borrar");
 					e.printStackTrace();					
 				}
-			//});
-				}
-			);
+				//});
+			}
+					);
 			table.getSelectionModel().setSelectionMode(
 					SelectionMode.MULTIPLE
 					);
@@ -418,7 +454,7 @@ public class ConfigGUI {
 			PoligonoGUIController controller =  new PoligonoGUIController(main);
 			table.setOnShowClick((poli)->{
 				poli.setActivo(true);
-				
+
 				controller.showPoligonos(Collections.singletonList(poli));
 				if(poli.getPositions().size()>0) {
 					Position pos =poli.getPositions().get(0);
@@ -428,7 +464,7 @@ public class ConfigGUI {
 					});
 				}
 			});
-			
+
 
 
 			Scene scene = new Scene(table, 800, 600);
@@ -591,7 +627,7 @@ public class ConfigGUI {
 						//dValue=new Double((String)value);
 					}catch(Exception e) {
 						System.err.println("error tratando de parsear \""+value+"\" reemplazo por 0");
-						}
+					}
 					props.put(k, dValue);//ojo number format exception
 				} else if(Number.class.isAssignableFrom(value.getClass())) {
 					props.put(k, (Number)value);
@@ -703,17 +739,17 @@ public class ConfigGUI {
 			VBox.setVgrow(table, Priority.ALWAYS);
 			v.getChildren().add(table);
 			HBox hBoxTotal = new HBox();
-			
+
 			/*You use a container if you need add many nodes in CustomTextField*/
 			//HBox box=new HBox();
 			//box.getChildren().add(myLabel);
-//			TextField total=new TextField();
-//			total.setEditable(false);
+			//			TextField total=new TextField();
+			//			total.setEditable(false);
 			Label importeTotalLabel = new Label("Importe total: "+Messages.getNumberFormat().format(oc.calcImporteTotal()));
 			importeTotalLabel.setPadding(new Insets(5,5,5,5));//ar,d,ab,izq
 			hBoxTotal.getChildren().add(importeTotalLabel);		
 			v.getChildren().add(hBoxTotal);
-			
+
 			HBox h = new HBox();
 
 			Button guardarB = new Button(Messages.getString("JFXMain.saveAction"));//TODO traducir
@@ -859,7 +895,7 @@ public class ConfigGUI {
 		//		});	
 
 	}
-	
+
 	public void doShowOrdenesSiembraTable() {
 		Platform.runLater(()->{
 			List<OrdenSiembra> ordenes = DAH.getAllOrdenesSiembra();
@@ -918,7 +954,7 @@ public class ConfigGUI {
 			tablaStage.show();	 
 		});	
 	}
-	
+
 	public void doShowOrdenesPulverizacionTable() {
 		Platform.runLater(()->{
 			List<OrdenPulverizacion> ordenes = DAH.getAllOrdenesPulverizacion();
@@ -1252,7 +1288,7 @@ public class ConfigGUI {
 			SmartTableView<Semilla> table = new SmartTableView<Semilla>(dataLotes,
 					Arrays.asList("Id"),     //rejected
 					Arrays.asList("Nombre","Cultivo","PesoDeMill","PG"));//order
-	
+
 			table.setEditable(true);
 			table.setOnDoubleClick(()->new Semilla(Messages.getString("JFXMain.393"),DAH.getAllCultivos().get(0))); //
 			Scene scene = new Scene(table, 800, 600);
@@ -1263,7 +1299,7 @@ public class ConfigGUI {
 			tablaStage.show();	 
 		});
 	}
-	
+
 	/**
 	 * Funcion util para vincular un metodo con un item en un menu
 	 * @param name nombre para mostrar en el menu

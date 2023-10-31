@@ -1642,7 +1642,6 @@ public class JFXMain extends Application {
 				event.consume();
 			}
 		});
-
 	}
 
 	public static void main(String[] args) {

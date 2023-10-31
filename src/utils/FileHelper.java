@@ -42,7 +42,7 @@ public class FileHelper {
 		});
 		return shpFiles;
 	}
-	
+
 	public static File selectPropertiesFile(Path path){
 		List<File> shpFiles =selectAllFiles(path);
 
@@ -64,7 +64,7 @@ public class FileHelper {
 		}
 		return tempDirWithPrefix;
 	}
-	
+
 	public static  List<File> selectAllFiles(Path uploadedShpFilePath) {
 		List<File> shpFiles = new LinkedList<File>();
 		try(Stream<Path> paths = Files.walk(uploadedShpFilePath)) {
@@ -79,7 +79,7 @@ public class FileHelper {
 		}
 		return shpFiles;
 	}
-	
+
 	public static ShapefileDataStore createShapefileDataStore(File shapeFile,	SimpleFeatureType type) {
 		Map<String, Serializable> params = new HashMap<String, Serializable>();
 		try {
@@ -103,7 +103,7 @@ public class FileHelper {
 		}
 		return newDataStore;
 	}
-	
+
 	/**
 	 * 
 	 * @param f1 filter Title "JPG"
@@ -113,7 +113,7 @@ public class FileHelper {
 		System.out.println(Messages.getString("JFXMain.403")); //$NON-NLS-1$
 		List<File> files =null;
 		FileChooser fileChooser = new FileChooser();
-		
+
 		fileChooser.setTitle(Messages.getString("JFXMain.404")); //$NON-NLS-1$
 		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(f1, f2));
 
@@ -164,7 +164,7 @@ public class FileHelper {
 		System.out.println(Messages.getString("JFXMain.412")); //$NON-NLS-1$
 		return files;
 	}
-	
+
 	public static List<FileDataStore> chooseShapeFileAndGetMultipleStores(List<File> files) {
 		if(files==null){
 			//	List<File> 
@@ -194,14 +194,14 @@ public class FileHelper {
 	}
 
 
-//	/**
-//	 * 
-//	 * @param f1 filter Title "JPG"
-//	 * @param f2 filter regex "*.jpg"
-//	 */
-//	private List<File> chooseFiles(String f1,String f2) {
-//		return FileHelper.chooseFiles(f1, f2);
-//	}
+	//	/**
+	//	 * 
+	//	 * @param f1 filter Title "JPG"
+	//	 * @param f2 filter regex "*.jpg"
+	//	 */
+	//	private List<File> chooseFiles(String f1,String f2) {
+	//		return FileHelper.chooseFiles(f1, f2);
+	//	}
 
 	/**
 	 * este metodo se usa para crear archivos shp al momento de exportar mapas
@@ -214,7 +214,7 @@ public class FileHelper {
 		fileChooser.getExtensionFilters().add(
 				new FileChooser.ExtensionFilter(Messages.getString("JFXMain.414"), Messages.getString("JFXMain.415"))); //$NON-NLS-1$ //$NON-NLS-2$
 
-		
+
 		File lastFile = null;
 		//Configuracion config =Configuracion.getInstance();
 		Configuracion config = JFXMain.config;
@@ -233,13 +233,14 @@ public class FileHelper {
 			nombre = lastFile.getName();
 		}
 		fileChooser.setInitialFileName(nombre);
-		config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
-		config.save();
 
 		//if(file!=null)	fileChooser.setInitialDirectory(file.getParentFile());
 
 		File file = fileChooser.showSaveDialog(JFXMain.stage);
-
+		if(file!=null) {
+			config.setProperty(Configuracion.LAST_FILE, file.getAbsolutePath());
+			config.save();
+		}
 		System.out.println(Messages.getString("JFXMain.416")+file); //$NON-NLS-1$
 
 		return file;
@@ -275,25 +276,27 @@ public class FileHelper {
 			nombre = lastFile.getName();
 		}
 		fileChooser.setInitialFileName(nombre);
-		config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
-		config.save();
+
 
 		//if(file!=null)	fileChooser.setInitialDirectory(file.getParentFile());
 
 		File file = fileChooser.showSaveDialog(JFXMain.stage);
-
+		if(file!=null) {
+			config.setProperty(Configuracion.LAST_FILE, file.getAbsolutePath());
+			config.save();
+		}
 		System.out.println(Messages.getString("JFXMain.420")+file); //$NON-NLS-1$
 
 		return file;
 	}
-	
+
 	/**
 	 * este metodo se usa para crear archivos tiff al momento de exportar mapas
 	 * @param nombre es el nombre del archivo que se desea crear
 	 * @return el archivo creado en la carpeta seleccionada por el usuario
 	 */
 	public static File getNewFile(String nombre,String ext) {
-		FileChooser fileChooser = new FileChooser();
+		FileChooser fileChooser = new FileChooser();		
 		fileChooser.setTitle(Messages.getString("JFXMain.417")); //$NON-NLS-1$
 		fileChooser.getExtensionFilters().add(
 				new FileChooser.ExtensionFilter(ext.toUpperCase(), ext)); //$NON-NLS-1$ //$NON-NLS-2$
@@ -315,13 +318,52 @@ public class FileHelper {
 			nombre = lastFile.getName();
 		}
 		fileChooser.setInitialFileName(nombre);
-		config.setProperty(Configuracion.LAST_FILE, lastFile.getAbsolutePath());
-		config.save();
+
 
 		//if(file!=null)	fileChooser.setInitialDirectory(file.getParentFile());
 
 		File file = fileChooser.showSaveDialog(JFXMain.stage);
+		//File file = fileChooser.showOpenDialog(JFXMain.stage);
+		if(file!=null) {
+			config.setProperty(Configuracion.LAST_FILE, file.getAbsolutePath());
+			config.save();
+		}
+		System.out.println(Messages.getString("JFXMain.420")+file); //$NON-NLS-1$
 
+		return file;
+	}
+
+	/**
+	 * este metodo se usa para crear archivos tiff al momento de exportar mapas
+	 * @param nombre es el nombre del archivo que se desea crear
+	 * @return el archivo creado en la carpeta seleccionada por el usuario
+	 */
+	public static File chooseFile(String path,String ext) {
+		FileChooser fileChooser = new FileChooser();		
+		fileChooser.setTitle(Messages.getString("JFXMain.417")); //$NON-NLS-1$
+		fileChooser.getExtensionFilters().add(
+				new FileChooser.ExtensionFilter(ext.toUpperCase(), ext)); //$NON-NLS-1$ //$NON-NLS-2$
+		File lastFile = new File(path);
+		System.out.println("proyecto actual "+lastFile);
+		Configuracion config = JFXMain.config;
+		if(lastFile==null||!lastFile.exists()) {			
+			String lastFileName = config.getPropertyOrDefault(Configuracion.LAST_FILE,null);
+			System.out.println("lasfFile era "+lastFileName);
+			if(lastFileName != null){
+				lastFile = new File(lastFileName);
+			}
+			if(lastFile ==null || ! lastFile.exists()) {
+				lastFile=File.listRoots()[0];
+			} 
+		}
+		fileChooser.setInitialDirectory(lastFile.getParentFile());	
+		//fileChooser.setInitialFileName(nombre);
+
+		File file = fileChooser.showOpenDialog(JFXMain.stage);
+		if(file!=null) {
+			config.setProperty(Configuracion.LAST_FILE, file.getAbsolutePath());
+			config.save();
+		}
 		System.out.println(Messages.getString("JFXMain.420")+file); //$NON-NLS-1$
 
 		return file;
@@ -331,7 +373,7 @@ public class FileHelper {
 		String filePath = dir.toString() + File.separator + fileName;
 		return new File(filePath);
 	}
-	
+
 	public static File zipLaborToTmpDir(Labor<?> labor) {
 		//1 crear un directorio temporal
 		Path dir = FileHelper.createTempDir("toUpload");
@@ -358,6 +400,6 @@ public class FileHelper {
 			e.printStackTrace();
 		}
 		return byteArray;
-		
+
 	}
 }
