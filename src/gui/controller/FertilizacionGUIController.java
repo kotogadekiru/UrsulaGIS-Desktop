@@ -49,7 +49,7 @@ public class FertilizacionGUIController extends AbstractGUIController {
 			doUnirFertilizaciones();
 			return "unidas";	
 		},2));
-		layerPanel.addAccionesClase(rootNodeP,FertilizacionLabor.class);
+		getLayerPanel().addAccionesClase(rootNodeP,FertilizacionLabor.class);
 	}
 	
 	public void addAccionesFertilizacion(Map<Class<?>, List<LayerAction>> predicates) {

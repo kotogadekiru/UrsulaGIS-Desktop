@@ -23,7 +23,7 @@ public abstract class AbstractGUIController {
 		this.progressBox=main.progressBox;
 		this.executorPool=JFXMain.executorPool;
 		this.wwjPanel=main.wwjPanel;
-		this.layerPanel=main.getLayerPanel();
+		
 	}
 	
 	public void insertBeforeCompass(WorldWindow wwd, LaborLayer layer) {
