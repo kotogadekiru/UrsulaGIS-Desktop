@@ -357,14 +357,13 @@ public class FileHelper {
 			} 
 		}
 		fileChooser.setInitialDirectory(lastFile.getParentFile());	
-		//fileChooser.setInitialFileName(nombre);
 
 		File file = fileChooser.showOpenDialog(JFXMain.stage);
 		if(file!=null) {
 			config.setProperty(Configuracion.LAST_FILE, file.getAbsolutePath());
 			config.save();
 		}
-		System.out.println(Messages.getString("JFXMain.420")+file); //$NON-NLS-1$
+		System.out.println(Messages.getString("archivo seleccionado para guardar")+file); 
 
 		return file;
 	}

@@ -24,6 +24,7 @@ import dao.suelo.Suelo;
 import dao.utils.PropertyHelper;
 import gov.nasa.worldwind.WorldWindow;
 import gov.nasa.worldwind.layers.RenderableLayer;
+import gui.AmountVsElevacionChart;
 import gui.FertilizacionConfigDialogController;
 import gui.HarvestConfigDialogController;
 import gui.HarvestSelectDialogController;
@@ -33,8 +34,11 @@ import gui.PulverizacionConfigDialogController;
 import gui.nww.LaborLayer;
 import gui.nww.LayerAction;
 import gui.nww.LayerPanel;
+import javafx.concurrent.Task;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.image.Image;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -42,6 +46,7 @@ import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import tasks.crear.ConvertirAFertilizacionTask;
 import tasks.crear.ConvertirAPulverizacionTask;
 import tasks.crear.ConvertirASueloTask;
@@ -127,7 +132,7 @@ public class CosechaGUIController {
 		 * Accion que muesta el la relacion entre el rinde y la elevacion
 		 */
 		cosechasP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.showHeightVsAmountChart"),(layer)->{
-			main.showAmountVsElevacionChart((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+			showAmountVsElevacionChart((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 			return "grafico mostrado " + layer.getName(); 
 		}));
 
@@ -257,6 +262,62 @@ public class CosechaGUIController {
 		}//if stores != null
 	}
 
+	
+	public void showAmountVsElevacionChart(Labor<?> cosechaLabor) {
+		TextInputDialog anchoDialog = new TextInputDialog("20"); 
+		anchoDialog.setTitle(Messages.getString("JFXMain.heightVsAmountDialogTitle")); 
+		anchoDialog.setContentText(Messages.getString("JFXMain.heightVsAmountDialogMaxGroupsText")); 
+		anchoDialog.initOwner(JFXMain.stage);
+		Optional<String> oGrupos = anchoDialog.showAndWait();
+		int grupos=Integer.parseInt(oGrupos.get());
+		Labor<?>[] cosechasAux = new Labor[]{cosechaLabor};
+		if(cosechaLabor==null){
+			Optional<CosechaLabor> optional = HarvestSelectDialogController.select(main.getCosechasSeleccionadas());
+			if(!optional.isPresent()){
+				return;
+			}else{
+				cosechasAux[0] =optional.get();
+			}
+		}
+
+		Task<AmountVsElevacionChart> pfMapTask = new Task<AmountVsElevacionChart>(){
+			@Override
+			protected AmountVsElevacionChart call() throws Exception {
+				try{
+					AmountVsElevacionChart histoChart = new AmountVsElevacionChart(cosechasAux[0],grupos);
+					return histoChart;
+				}catch(Throwable t){
+					t.printStackTrace();
+					System.out.println("no hay ninguna labor para mostrar"); 
+					System.out.print(t.getMessage());
+					return null;
+				}
+			}			
+		};
+
+		pfMapTask.setOnSucceeded(handler -> {
+			AmountVsElevacionChart	histoChart = (AmountVsElevacionChart) handler.getSource().getValue();	
+			if(histoChart!=null){
+				Stage histoStage = new Stage();
+				histoStage.setTitle(Messages.getString("JFXMain.heightVsAmountChartTitle")); 
+				histoStage.getIcons().add(new Image(JFXMain.ICON));
+
+				Scene scene = new Scene(histoChart, 800,450);
+				histoStage.setScene(scene);
+				System.out.println("termine de crear el grafico rinde vs altura"); 
+				histoStage.initOwner(JFXMain.stage);
+				histoStage.show();
+				System.out.println("histoChart.show();"); 
+			}else{
+				Alert error = new Alert(AlertType.ERROR);
+				error.setTitle(Messages.getString("JFXMain.heightVsAmountErrorTitle")); 
+				error.setContentText(Messages.getString("JFXMain.heightVsAmountErrorText")); 
+				error.show();
+			}
+		});
+		executorPool.execute(pfMapTask);
+	}
+	
 	// junta 2 o mas cosechas en una 
 	private void doUnirCosechas(CosechaLabor cosechaLabor) {
 		List<CosechaLabor> cosechasAUnir = new ArrayList<CosechaLabor>();

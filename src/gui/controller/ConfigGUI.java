@@ -18,6 +18,8 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.geotools.data.FileDataStore;
+
 import com.google.gson.Gson;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
@@ -41,13 +43,19 @@ import dao.config.Fertilizante;
 import dao.config.Lote;
 import dao.config.Semilla;
 import dao.cosecha.CosechaLabor;
+import dao.fertilizacion.FertilizacionLabor;
+import dao.margen.Margen;
 import dao.ordenCompra.OrdenCompra;
 import dao.ordenCompra.OrdenCompraItem;
+import dao.pulverizacion.PulverizacionLabor;
 import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
+import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.geom.Position;
 import gui.JFXMain;
+import gui.MargenConfigDialogController;
 import gui.Messages;
+import gui.nww.LaborLayer;
 import gui.utils.DoubleTableColumn;
 import gui.utils.SmartTableView;
 import javafx.application.Platform;
@@ -83,17 +91,21 @@ import javafx.scene.layout.VBox;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import tasks.CotizarOdenDeCompraOnlineTask;
+import tasks.GoogleGeocodingHelper;
 import tasks.UpdateTask;
+import tasks.crear.GenerarOrdenCompraTask;
+import tasks.importar.OpenMargenMapTask;
+import tasks.procesar.ProcessMarginMapTask;
 import utils.DAH;
 import utils.ExcelHelper;
 import utils.FileHelper;
 
-public class ConfigGUI {
+public class ConfigGUI extends AbstractGUIController{
 	private static final String DD_MM_YYYY = "dd/MM/yyyy";
-	JFXMain main=null;
+	
 
 	public ConfigGUI(JFXMain _main) {
-		this.main=_main;		
+		super(_main);		
 	}
 
 	public static String getBuildInfo() {
@@ -123,17 +135,17 @@ public class ConfigGUI {
 		addMenuItem(Messages.getString("JFXMain.NDVI"),(a)->main.ndviGUIController.doOpenNDVITiffFiles(),menuImportar); 
 		addMenuItem(Messages.getString("JFXMain.imagen"),(a)->main.importImagery(),menuImportar); 
 		addMenuItem(Messages.getString("JFXMain.suelo"),(a)->main.sueloGUIController.doOpenSoilMap(null),menuImportar); 
-		addMenuItem(Messages.getString("JFXMain.margen"),(a)->main.doOpenMarginMap(),menuImportar); 
+		addMenuItem(Messages.getString("JFXMain.margen"),(a)->doOpenMarginMap(),menuImportar); 
 		addMenuItem(Messages.getString("JFXMain.poligonos"),(a)->main.poligonoGUIController.doImportarPoligonos(null),menuImportar); 
 		/*Menu herramientas*/
 		final Menu menuHerramientas = new Menu(Messages.getString("JFXMain.herramientas")); 		
 		addMenuItem(Messages.getString("JFXMain.distancia"),(a)->main.poligonoGUIController.doMedirDistancia(),menuHerramientas); 
 		addMenuItem(Messages.getString("JFXMain.superficie"),(a)->main.poligonoGUIController.doCrearPoligono(),menuHerramientas); 
 		addMenuItem(Messages.getString("JFXMain.unirShapes"),(a)->main.doJuntarShapefiles(),menuHerramientas); 
-		addMenuItem(Messages.getString("JFXMain.rentabilidad"),(a)->main.doProcessMargin(),menuHerramientas); 
+		addMenuItem(Messages.getString("JFXMain.rentabilidad"),(a)->doProcessMargin(),menuHerramientas); 
 		addMenuItem(Messages.getString("JFXMain.balanceNutrientes"),(a)->main.sueloGUIController.doProcesarBalanceNutrientes(),menuHerramientas); 
-		addMenuItem(Messages.getString("JFXMain.generarOrdenCompra"),(a)->main.doGenerarOrdenDeCompra(),menuHerramientas); 
-		addMenuItem(Messages.getString("JFXMain.goTo"),(a)->main.showGoToDialog(),menuHerramientas);
+		addMenuItem(Messages.getString("JFXMain.generarOrdenCompra"),(a)->doGenerarOrdenDeCompra(),menuHerramientas); 
+		addMenuItem(Messages.getString("JFXMain.goTo"),(a)->showGoToDialog(),menuHerramientas);
 		addMenuItem(Messages.getString("JFXMain.bulk_ndvi_download"),(a)->main.ndviGUIController.doBulkNDVIDownload(),menuHerramientas);
 		/*Menu Exportar*/
 		final Menu menuExportar = new Menu(Messages.getString("JFXMain.exportar"));		 
@@ -168,8 +180,8 @@ public class ConfigGUI {
 
 		addMenuItem(Messages.getString("JFXMain.configIdiomaMI"),(a)->doChangeLocale(),menuConfiguracion); 
 		addMenuItem(Messages.getString("JFXMain.configHelpMI"),(a)->doShowAcercaDe(),menuConfiguracion);
-
-		addMenuItem("Cambiar Proyecto",(a)->doSelectDB(),menuConfiguracion);	
+		
+		addMenuItem(Messages.getString("ConfigGUI.changeProject"),(a)->doSelectDB(),menuConfiguracion);	
 
 		MenuItem actualizarMI=addMenuItem(Messages.getString("JFXMain.configUpdate"),null,menuConfiguracion); 
 		actualizarMI.setOnAction((a)->doUpdate());
@@ -192,13 +204,121 @@ public class ConfigGUI {
 		});
 		return menuConfiguracion;
 	}	
+	
+	/**
+	 * metodo que toma las labores activas de siembra fertilizacion y pulverizacion y hace una lista con los insumos y cantidades para
+	 * cotizar precios online. Permite exporta a excel y cotizar precios online y guardar
+	 */
+	public void doGenerarOrdenDeCompra() {
+		GenerarOrdenCompraTask gOCTask = new GenerarOrdenCompraTask(
+				main.getSiembrasSeleccionadas(),
+				main.getFertilizacionesSeleccionadas(),
+				main.getPulverizacionesSeleccionadas());
+		gOCTask.installProgressBar(progressBox);
+		gOCTask.setOnSucceeded(handler -> {
+			OrdenCompra ret = (OrdenCompra)handler.getSource().getValue();
+			gOCTask.uninstallProgressBar();
+			playSound();
+			doShowOrdenCompraItems(ret);
+			System.out.println("SiembraFertTask succeded"); 
+		});
+		executorPool.execute(gOCTask);
+	}
 
+	
+	public void doProcessMargin() {		
+		System.out.println(Messages.getString("JFXMain.319")); 
+
+		Margen margen = new Margen();
+		margen.setLayer(new LaborLayer());
+
+		//todo pasar el filtrado por visibles aca y pasar nuevas listas solo con las visibles
+		List<PulverizacionLabor> pulvEnabled =  main.getPulverizacionesSeleccionadas();//pulverizaciones.stream().filter((l)->l.getLayer().isEnabled()).collect(Collectors.toList());
+		List<FertilizacionLabor> fertEnabled = main.getFertilizacionesSeleccionadas();//fertilizaciones.stream().filter((l)->l.getLayer().isEnabled()).collect(Collectors.toList());
+		List<SiembraLabor> siemEnabled =  main.getSiembrasSeleccionadas();//t());
+		List<CosechaLabor> cosechasEnabled =  main.getCosechasSeleccionadas();//cosechas.stream().filter((l)->l.getLayer().isEnabled()).collect(Collectors.toList());
+
+		margen.setFertilizaciones(fertEnabled);
+		margen.setPulverizaciones(pulvEnabled);
+		margen.setSiembras(siemEnabled);
+		margen.setCosechas(cosechasEnabled);
+
+		StringBuilder sb = new StringBuilder();
+		sb.append(Messages.getString("JFXMain.320")); 
+		cosechasEnabled.forEach((c)->sb.append(c.getNombre()+Messages.getString("JFXMain.321"))); 
+		margen.setNombre(sb.toString());
+
+		Optional<Margen> margenConfigured= MargenConfigDialogController.config(margen);
+		if(!margenConfigured.isPresent()){//
+			System.out.println(Messages.getString("JFXMain.322")); 
+			return;
+		}							
+
+		ProcessMarginMapTask uMmTask = new ProcessMarginMapTask(margen);
+
+		uMmTask.installProgressBar(progressBox);
+		uMmTask.setOnSucceeded(handler -> {
+			Margen ret = (Margen)handler.getSource().getValue();
+			uMmTask.uninstallProgressBar();			
+			insertBeforeCompass(getWwd(), ret.getLayer());
+			this.getLayerPanel().update(this.getWwd());
+			playSound();
+			viewGoTo(ret);
+			System.out.println(Messages.getString("JFXMain.323")); 
+		});
+		executorPool.execute(uMmTask);
+	}
+	
+	public void doOpenMarginMap() {
+		List<FileDataStore> stores = FileHelper.chooseShapeFileAndGetMultipleStores(null);
+		if (stores != null) {
+			for(FileDataStore store : stores){//abro cada store y lo dibujo en el harvestMap individualmente
+				Margen labor = new Margen(store);
+				labor.setLayer(new LaborLayer());
+				Optional<Margen> cosechaConfigured= MargenConfigDialogController.config(labor);
+				if(!cosechaConfigured.isPresent()){//
+					System.out.println(Messages.getString("JFXMain.317")); 
+					continue;
+				}							
+
+				OpenMargenMapTask umTask = new OpenMargenMapTask(labor);
+				umTask.installProgressBar(progressBox);
+
+				//	testLayer();
+				umTask.setOnSucceeded(handler -> {
+					Margen ret = (Margen)handler.getSource().getValue();
+					insertBeforeCompass(getWwd(), ret.getLayer());
+					this.getLayerPanel().update(this.getWwd());
+					umTask.uninstallProgressBar();
+					viewGoTo(ret);
+					System.out.println(Messages.getString("JFXMain.318")); 
+					playSound();
+				});//fin del OnSucceeded
+				JFXMain.executorPool.execute(umTask);
+			}//fin del for stores
+		}//if stores != null
+	}
+
+	public void showGoToDialog() {
+		TextInputDialog anchoDialog = new TextInputDialog(Messages.getString("JFXMain.goToExample")); 
+		anchoDialog.setTitle(Messages.getString("JFXMain.goToDialogTitle")); 
+		anchoDialog.setHeaderText(Messages.getString("JFXMain.goToDialogHeader")); 
+		anchoDialog.initOwner(JFXMain.stage);
+		Optional<String> anchoOptional = anchoDialog.showAndWait();
+		if(anchoOptional.isPresent()){
+			Position pos = GoogleGeocodingHelper.obtenerPositionDirect(anchoOptional.get());
+			if(pos!=null){
+				main.viewGoTo(pos);
+			}				
+		} else{
+			return;
+		}
+	}
+	
 	/**
 	 * metodo que permite crear una base de datos en una ubicacion deseada
 	 * @return
 	 */
-
-
 	private String doSelectDB() {	
 		Configuracion c = JFXMain.config;
 		
