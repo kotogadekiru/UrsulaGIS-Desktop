@@ -49,6 +49,17 @@ public class RecorridaGUIController extends AbstractGUIController {
 			return "guarde recorrida"; 
 		}));
 
+		//Tomar una recorrida y un poligono y convertir a mapa de suelo interpolando los datos con krigging
+		recorridasP.add(LayerAction.constructPredicate(Messages.getString("RecorridaGUIController.interpolarASuelo"),(layer)->{
+			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			if(layerObject!=null && Recorrida.class.isAssignableFrom(layerObject.getClass())){
+				//mostrar un dialogo para editar el nombre del poligono
+				Recorrida recorrida =(Recorrida)layerObject;
+				doInterpolarRecorrida(recorrida);
+			}
+			return "interpole recorrida"; 
+		}));	
+		
 		//Compartir Recorrida
 		recorridasP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.compartir"),(layer)->{
 			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
@@ -81,6 +92,11 @@ public class RecorridaGUIController extends AbstractGUIController {
 			doExportRecorrida((Recorrida) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 			return "recorrida Exportada" + layer.getName(); 
 		}));
+	}
+
+	private void doInterpolarRecorrida(Recorrida recorrida) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	/**
@@ -126,5 +142,10 @@ public class RecorridaGUIController extends AbstractGUIController {
 			task.uninstallProgressBar();
 		});
 		executorPool.execute(task);
+	}
+
+	public Object doOpenRecorridaMap(Object object) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

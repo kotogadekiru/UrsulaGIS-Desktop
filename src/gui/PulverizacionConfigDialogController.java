@@ -241,8 +241,11 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 						labor.getItems()
 						);
 		SmartTableView<CaldoItem> table = new SmartTableView<CaldoItem>(data,
-				Arrays.asList("Id"),//rejected
-				Arrays.asList("Producto","DosisHa","Observaciones")//order
+				Arrays.asList("Id","UnidadStock"),//rejected
+				Arrays.asList("Producto","DosisHa",
+						"UnidadDosis","Observaciones"),//order
+				Arrays.asList("Producto","Dosis",
+						"Unidad","Observaciones")//Names
 				);
 		table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
 		table.setEliminarAction(

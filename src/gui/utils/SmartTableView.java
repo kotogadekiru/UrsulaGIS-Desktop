@@ -95,7 +95,8 @@ public class SmartTableView<T> extends TableView<T> {
 	//"filterpanel.none.button"
 	//"filterpanel.all.button"
 	//"filterpanel.resetall.button"
-	public SmartTableView(ObservableList<T> data,List<String> rejectedColumns,List<String> order){
+	public SmartTableView(ObservableList<T> data,
+			List<String> rejectedColumns,List<String> order){
 		super(data);
 		this.rejectedColumns.addAll(rejectedColumns);
 		this.orderColumns.addAll(order);
@@ -103,7 +104,8 @@ public class SmartTableView<T> extends TableView<T> {
 
 	}
 
-	public SmartTableView(ObservableList<T> data,List<String> rejectedColumns,List<String> order,List<String> names){
+	public SmartTableView(ObservableList<T> data,
+			List<String> rejectedColumns,List<String> order,List<String> names){
 		super(data);
 		this.rejectedColumns.addAll(rejectedColumns);
 		this.orderColumns.addAll(order);

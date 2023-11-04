@@ -30,8 +30,18 @@ public class CaldoItem {
 	//@ManyToOne//(cascade= {CascadeType.DETACH})
 	private Agroquimico producto =null;
 	
+	private String unidadDosis= new String();
+	private String unidadStock = new String();
+	
 	private Double dosisHa = 0.0;
 	private String observaciones =  null;
+	
+	public void setProducto(Agroquimico producto) {
+		this.producto=producto;
+		this.unidadDosis=producto.getUnidadDosis();
+		this.unidadStock=producto.getUnidadStock();
+	}
+	
 	@Override
 	public String toString() {
 		return "CaldoItem:{"+producto+", "+dosisHa+", "+observaciones+"}";

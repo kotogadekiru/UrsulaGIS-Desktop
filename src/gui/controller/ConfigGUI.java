@@ -135,6 +135,7 @@ public class ConfigGUI extends AbstractGUIController{
 		addMenuItem(Messages.getString("JFXMain.NDVI"),(a)->main.ndviGUIController.doOpenNDVITiffFiles(),menuImportar); 
 		addMenuItem(Messages.getString("JFXMain.imagen"),(a)->main.importImagery(),menuImportar); 
 		addMenuItem(Messages.getString("JFXMain.suelo"),(a)->main.sueloGUIController.doOpenSoilMap(null),menuImportar); 
+		addMenuItem(Messages.getString("RecorridaGUIController.recorrida"),(a)->main.recorridaGUIController.doOpenRecorridaMap(null),menuImportar);
 		addMenuItem(Messages.getString("JFXMain.margen"),(a)->doOpenMarginMap(),menuImportar); 
 		addMenuItem(Messages.getString("JFXMain.poligonos"),(a)->main.poligonoGUIController.doImportarPoligonos(null),menuImportar); 
 		/*Menu herramientas*/
