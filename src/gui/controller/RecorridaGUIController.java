@@ -5,13 +5,23 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
+import org.geotools.data.FileDataStore;
 
 import dao.Labor;
+import dao.fertilizacion.FertilizacionLabor;
 import dao.recorrida.Recorrida;
+import gov.nasa.worldwind.layers.RenderableLayer;
+import gui.FertilizacionConfigDialogController;
 import gui.JFXMain;
 import gui.Messages;
+import gui.nww.LaborLayer;
 import gui.nww.LayerAction;
 import tasks.CompartirRecorridaTask;
+import tasks.ShowRecorridaDirigidaTask;
+import tasks.importar.ImportarRecorridaTask;
+import tasks.importar.ProcessFertMapTask;
 import tasks.procesar.ExportarRecorridaTask;
 import utils.DAH;
 import utils.FileHelper;
@@ -94,10 +104,58 @@ public class RecorridaGUIController extends AbstractGUIController {
 		}));
 	}
 
+	
 	private void doInterpolarRecorrida(Recorrida recorrida) {
+		main.enDesarrollo();
 		// TODO Auto-generated method stub
 		
 	}
+	
+	public void doShowRecorrida(Recorrida recorrida) {
+		ShowRecorridaDirigidaTask umTask = new ShowRecorridaDirigidaTask(recorrida);
+		umTask.installProgressBar(progressBox);
+
+		umTask.setOnSucceeded(handler -> {
+			RenderableLayer ret = (RenderableLayer)handler.getSource().getValue();
+			JFXMain.insertBeforeCompass(getWwd(), ret);
+			this.getLayerPanel().update(this.getWwd());
+			umTask.uninstallProgressBar();
+			main.viewGoTo(ret);
+			playSound();
+		});//fin del OnSucceeded
+		JFXMain.executorPool.execute(umTask);	
+		}
+	
+	/**
+	 * accion ejecutada al presionar el boton openFile Despliega un file
+	 * selector e invoca la tarea que muestra el file en pantalla
+	 */
+	public void doOpenRecorridaMap(List<File> files) {
+		List<FileDataStore> stores =FileHelper.chooseShapeFileAndGetMultipleStores(files);
+		if (stores != null) {
+			for(FileDataStore store : stores){//abro cada store y lo dibujo en el harvestMap individualmente
+				Recorrida labor = new Recorrida(store);
+				
+//				Optional<Recorrida> configured= RecorridaConfigDialogController.config(labor);
+//				if(!configured.isPresent()){//
+//					System.out.println(Messages.getString("JFXMain.308")); 
+//					continue;
+//				}							
+
+				ImportarRecorridaTask umTask = new ImportarRecorridaTask(labor,store);
+				umTask.installProgressBar(progressBox);
+
+				umTask.setOnSucceeded(handler -> {
+					Recorrida ret = (Recorrida)handler.getSource().getValue();
+					doShowRecorrida(ret);
+					umTask.uninstallProgressBar();
+				});//fin del OnSucceeded
+				JFXMain.executorPool.execute(umTask);
+			}//fin del for stores
+		}//if stores != null
+	}
+	
+
 
 	/**
 	 *  updload recorrida to server and show url to access
@@ -144,8 +202,5 @@ public class RecorridaGUIController extends AbstractGUIController {
 		executorPool.execute(task);
 	}
 
-	public Object doOpenRecorridaMap(Object object) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+
 }

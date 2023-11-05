@@ -187,7 +187,12 @@ public class ConfigGUI extends AbstractGUIController{
 		MenuItem actualizarMI=addMenuItem(Messages.getString("JFXMain.configUpdate"),null,menuConfiguracion); 
 		actualizarMI.setOnAction((a)->doUpdate());
 		actualizarMI.setVisible(false);
+		checkIfactualizarMIEnabled(menuConfiguracion, actualizarMI);
+		
+		return menuConfiguracion;
+	}
 
+	public void checkIfactualizarMIEnabled(final Menu menuConfiguracion, MenuItem actualizarMI) {
 		JFXMain.executorPool.submit(()->{
 			if(UpdateTask.isUpdateAvailable()){
 				actualizarMI.setVisible(true);
@@ -203,7 +208,6 @@ public class ConfigGUI extends AbstractGUIController{
 						+ "fx-text-fill: white;"); 
 			}
 		});
-		return menuConfiguracion;
 	}	
 	
 	/**
@@ -1139,19 +1143,22 @@ public class ConfigGUI extends AbstractGUIController{
 		Platform.runLater(()->{
 			final ObservableList<Recorrida> data = FXCollections.observableArrayList(recorridas);
 
+			
 			SmartTableView<Recorrida> table = new SmartTableView<Recorrida>(data,
 					Arrays.asList("Id","Posicion"),
 					Arrays.asList("Nombre","Observacion","Latitude","Longitude")
+					//TODO agregar la lista de nombres traducidos para mostrar
+					//,Arrays.asList(Messages.getString("Recorrida.Nombre",,,)
 					);
 			table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
 			table.setEditable(true);
 			//			table.setOnDoubleClick(()->new Poligono());
 			table.setOnShowClick((recorrida)->{
 				//poli.setActivo(true);
-				main.poligonoGUIController.doShowRecorrida(recorrida);
+				main.recorridaGUIController.doShowRecorrida(recorrida);
 			});
 
-			table.addSecondaryClickConsumer("Editar",(r)-> {
+			table.addSecondaryClickConsumer(Messages.getString("Editar"),(r)-> {
 				doShowMuestrasTable(r.getMuestras());
 			});
 
@@ -1178,6 +1185,8 @@ public class ConfigGUI extends AbstractGUIController{
 			SmartTableView<Muestra> table = new SmartTableView<Muestra>(data,
 					Arrays.asList("Id","Posicion"),
 					Arrays.asList("Nombre","Latitude","Longitude")
+					//TODO agregar la lista de nombres traducidos para mostrar
+					//,Arrays.asList(Messages.getString("Recorrida.Nombre",,,)
 					);
 			table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
 			table.setEliminarAction(
@@ -1197,17 +1206,6 @@ public class ConfigGUI extends AbstractGUIController{
 					}
 					);
 			table.setEditable(true);
-			//			table.setOnDoubleClick(()->new Poligono());
-			//			table.setOnShowClick((recorrida)->{
-			//				//poli.setActivo(true);
-			//				main.doShowRecorrida(recorrida);
-			//			});
-			//			
-			//			table.addSecondaryClickConsumer("editarRecorrida",(r)->
-			//			{
-			//				
-			//				
-			//			});
 
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
@@ -1217,14 +1215,10 @@ public class ConfigGUI extends AbstractGUIController{
 
 			tablaStage.onHiddenProperty().addListener((o,old,n)->{
 				main.getLayerPanel().update(main.getWwd());
-				//getWwd().redraw();
 			});
-
 			tablaStage.show();	 
-		});	
-
+		});
 	}
-
 
 	public void doShowNdviTable() {
 		Platform.runLater(()->{

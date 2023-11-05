@@ -394,7 +394,7 @@ public class PoligonoGUIController {
 					recorrida.getMuestras().add(m);
 				}
 
-				doShowRecorrida(recorrida);
+				main.recorridaGUIController.doShowRecorrida(recorrida);
 
 				this.getLayerPanel().update(this.getWwd());
 			}
@@ -1167,19 +1167,7 @@ public class PoligonoGUIController {
 		});
 	}
 	
-	public void doShowRecorrida(Recorrida recorrida) {
-		ShowRecorridaDirigidaTask umTask = new ShowRecorridaDirigidaTask(recorrida);
-		umTask.installProgressBar(progressBox);
 
-		umTask.setOnSucceeded(handler -> {
-			RenderableLayer ret = (RenderableLayer)handler.getSource().getValue();
-			insertBeforeCompass(getWwd(), ret);
-			this.getLayerPanel().update(this.getWwd());
-			umTask.uninstallProgressBar();
-			main.viewGoTo(ret);
-			playSound();
-		});//fin del OnSucceeded
-		JFXMain.executorPool.execute(umTask);	}
 	
 	public void showPoligonosActivos() {
 		List<Poligono> poligonos = DAH.getPoligonosActivos();

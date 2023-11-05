@@ -86,14 +86,9 @@ public class ShowRecorridaDirigidaTask extends Task<RenderableLayer> {
 	 *Proceso que genera una lista de puntos al azar dentro de cada zona de acuerdo a la frecuencia minima especificada
 	 */
 	@Override
-	public RenderableLayer call()  {
-		
-		
-		RenderableLayer layer = new RenderableLayer();
-		
-		GenerarRecorridaDirigidaTask.renderRecorrida(layer,recorrida);
-	
-		
+	public RenderableLayer call()  {		
+		RenderableLayer layer = new RenderableLayer();		
+		GenerarRecorridaDirigidaTask.renderRecorrida(layer,recorrida);		
 		return layer;
 	}
 

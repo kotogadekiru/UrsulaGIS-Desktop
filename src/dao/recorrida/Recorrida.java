@@ -1,5 +1,6 @@
 package dao.recorrida;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,14 +15,14 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 
-import dao.Labor;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
+import org.geotools.data.DataUtilities;
+import org.geotools.data.FileDataStore;
+import org.geotools.data.ServiceInfo;
+import org.opengis.feature.simple.SimpleFeatureType;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 /**
  * clase que representa una observacion
@@ -79,6 +80,26 @@ public class Recorrida {
 //			}
 //			
 //		});
+	}
+	
+	public Recorrida(FileDataStore store) {
+		if(store !=null){
+			ServiceInfo info = store.getInfo();
+			System.out.println("labor inStore.info = "+info );
+			try {
+				SimpleFeatureType schema = store.getSchema();
+				System.out.println("Prescription Type: "+DataUtilities.spec(schema));
+				System.out.println(schema);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			//	if(nombreProperty.getValue() == null){
+			//nombreProperty.set(inStore.getInfo().getTitle().replaceAll("%20", " "));
+			setNombre(store.getInfo().getTitle().replaceAll("%20", " "));
+
+			//}
+		}
 	}
 	
 	

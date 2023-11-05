@@ -43,8 +43,9 @@ public class ExportarRecorridaTask extends ProgresibleTask<File>{
 		super();
 		this.laborToExport=laborToExport;
 		this.outFile=shapeFile;
+	
+		this.taskName= "Exportando "+laborToExport.getNombre();
 		super.updateTitle(taskName);
-		this.taskName= laborToExport.getNombre();
 	}
 
 	public void run(Recorrida recorrida,File shapeFile) {

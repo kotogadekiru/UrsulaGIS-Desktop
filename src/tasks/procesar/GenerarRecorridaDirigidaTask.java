@@ -308,6 +308,7 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 				pointAttribute.setScale(0.6);
 				pointAttribute.setImageColor(awtColor);
 				pmStandard.setAttributes(pointAttribute);
+				
 
 				if(pmStandard!=null)layer.addRenderable(pmStandard);//extPoly.render(dc);
 			});
