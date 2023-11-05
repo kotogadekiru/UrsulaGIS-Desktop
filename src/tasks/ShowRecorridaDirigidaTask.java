@@ -1,42 +1,7 @@
 package tasks;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
-
-import org.geotools.data.FeatureReader;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
-
-import com.google.gson.Gson;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
-
-import dao.Clasificador;
-import dao.Labor;
-import dao.LaborItem;
-import dao.recorrida.Camino;
-import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
-import dao.suelo.SueloItem;
-import gov.nasa.worldwind.WorldWind;
-import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.layers.RenderableLayer;
-import gov.nasa.worldwind.render.BasicShapeAttributes;
-import gov.nasa.worldwind.render.Material;
-import gov.nasa.worldwind.render.Path;
-import gov.nasa.worldwind.render.PointPlacemark;
-import gov.nasa.worldwind.render.PointPlacemarkAttributes;
-import gov.nasa.worldwind.render.ShapeAttributes;
-import gui.Messages;
 import javafx.concurrent.Task;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -47,9 +12,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import tasks.procesar.GenerarRecorridaDirigidaTask;
-import tasks.procesar.SimplificarCaminoTask;
-import utils.GeometryHelper;
-import utils.ProyectionConstants;
 
 public class ShowRecorridaDirigidaTask extends Task<RenderableLayer> {
 

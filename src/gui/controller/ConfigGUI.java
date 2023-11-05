@@ -1157,8 +1157,8 @@ public class ConfigGUI extends AbstractGUIController{
 				//poli.setActivo(true);
 				main.recorridaGUIController.doShowRecorrida(recorrida);
 			});
-
-			table.addSecondaryClickConsumer(Messages.getString("Editar"),(r)-> {
+			
+			table.addSecondaryClickConsumer(Messages.getString("JFXMain.editarLayer"),(r)-> {
 				doShowMuestrasTable(r.getMuestras());
 			});
 
