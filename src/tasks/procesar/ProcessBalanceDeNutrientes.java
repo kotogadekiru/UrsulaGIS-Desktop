@@ -442,8 +442,8 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 	//XXX tener en cuenta que ppm es una unidad de concentracion y no creo que se puedad sumar directamente. 
 	//habria que pasar a gramos o promediar por la superficie total
 	private Double getKgSuelo(Geometry geomQuery) {
-		Double kgPSuelo = new Double(0);
-		kgPSuelo=	suelos.parallelStream().flatMapToDouble(suelo->{
+		Double kgSuelo = new Double(0);
+		kgSuelo = suelos.parallelStream().flatMapToDouble(suelo->{
 			List<SueloItem> items = suelo.cachedOutStoreQuery(geomQuery.getEnvelopeInternal());
 			//System.out.println("obteniendo el peso del suelo de "+items.size()+" items");
 			return items.parallelStream().flatMapToDouble(item->{
@@ -461,11 +461,11 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 				}				
 				return DoubleStream.of( dens * hasInterseccion);				
 			});
-		}).sum();
-		if(kgPSuelo==0) {
-			kgPSuelo=SueloItem.DENSIDAD_SUELO_KG*ProyectionConstants.A_HAS(geomQuery.getArea());
+		}).average().getAsDouble();
+		if(kgSuelo==0) {
+			kgSuelo=SueloItem.DENSIDAD_SUELO_KG*ProyectionConstants.A_HAS(geomQuery.getArea());
 		}
-		return kgPSuelo;
+		return kgSuelo;
 	} 
 	//busco todos los items de los mapas de suelo
 	//calculo cuantas ppm aporta al cultivo,
@@ -478,7 +478,7 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 		kgPSuelo=	suelos.parallelStream().flatMapToDouble(suelo->{
 			List<SueloItem> items = suelo.cachedOutStoreQuery(geometry.getEnvelopeInternal());
 			return items.parallelStream().flatMapToDouble(item->{
-				Double kgPHa= suelo.getKgPHa(item);// (Double) item.getPpmP()*suelo.getDensidad()/2;//TODO multiplicar por la densidad del suelo
+				Double kgPHa= Suelo.getKgPHa(item);// (Double) item.getPpmP()*suelo.getDensidad()/2;//TODO multiplicar por la densidad del suelo
 				Geometry geom = item.getGeometry();				
 
 				Double area = 0.0;
