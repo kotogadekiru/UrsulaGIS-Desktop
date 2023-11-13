@@ -43,6 +43,7 @@ import dao.siembra.SiembraLabor;
 import gui.Messages;
 import tasks.ProgresibleTask;
 import utils.FileHelper;
+import utils.GeometryHelper;
 import utils.PolygonValidator;
 import utils.ProyectionConstants;
 
@@ -118,12 +119,17 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 		for(LaborItem i:items) {//(it.hasNext()){
 			FertilizacionItem fi=(FertilizacionItem) i;
 			Geometry itemGeometry=fi.getGeometry();
+			
 			List<Polygon> flatPolygons = PolygonValidator.geometryToFlatPolygons(itemGeometry);
 			
 			for(Polygon p : flatPolygons){
 				if(p.getNumGeometries()>50) {
 					//quedarse con las 50 mas grandes
 				}
+			
+				//p=(Polygon)GeometryHelper.removeSmallTriangles(p, (0.00005)/ProyectionConstants.A_HAS());	
+				p=(Polygon)GeometryHelper.douglassPeuckerSimplify(p);
+				
 				fb.add(p);
 				Double dosisHa = fi.getDosistHa();
 
