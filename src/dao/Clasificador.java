@@ -364,7 +364,8 @@ public class Clasificador {
 		//				.stream().mapToDouble( FeatureContainer::getAmount)
 		//				.average().getAsDouble();//no such value???
 
-		Double desvioEstandar =new Double(0);
+		Double desvioEstandar =Double.MAX_VALUE; 
+				//new Double(0);
 		if(elementosItem.size()>0){
 
 			double desvios = new Double(0);
@@ -389,8 +390,8 @@ public class Clasificador {
 			}
 		} else if(numLimites==1){
 			histograma[0]=average;
-		}
-
+		}		
+	
 		this.initialized=true;
 		return histograma;
 	}
@@ -535,7 +536,8 @@ public class Clasificador {
 			while (ocReader.hasNext()) {
 				LaborItem i = labor.constructFeatureContainerStandar(ocReader.next(),false);
 				items.add(i);
-				valores.add(i.getAmount());
+				
+				valores.add(round(i.getAmount(),5));
 			}
 			ocReader.close();
 			if(valores.size()<=getNumClasses()) {
@@ -561,11 +563,11 @@ public class Clasificador {
 		labor.setOutCollection(newOutcollection);
 
 	}
-
-
-
-
-
+	
+	public static double round(double n, int decimals) {
+	    return Math.floor(n * Math.pow(10, decimals)) / Math.pow(10, decimals);
+	}
+	
 	//	public Clasificador clone(){
 	//		Clasificador cn = new Clasificador();
 	//		cn.setClasesClasificadorProperty(new SimpleIntegerProperty(this.getClasesClasificadorProperty().get()));
