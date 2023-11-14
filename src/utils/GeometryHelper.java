@@ -22,6 +22,8 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.operation.buffer.BufferParameters;
 import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
+import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
+import com.vividsolutions.jts.util.GeometricShapeFactory;
 
 import dao.Poligono;
 import gov.nasa.worldwind.geom.Position;
@@ -363,9 +365,30 @@ public class GeometryHelper {
 		return new Coordinate(c1.x+deltaX*t,c1.y+deltaY*t);
 	}
 
+	public static Geometry createCircle(Point c,Point c2) {	
+		Double radius = ProyectionConstants.getDistancia(c, c2);
+		return createCircle (c,radius);
+	}
+	
 	public static Geometry createCircle(Point c,double radius) {
-		radius = ProyectionConstants.metersToLongLat(radius);
-		return c.buffer(radius);
+		System.out.println("creando un circulo con radio "+radius);
+		double latRadius = ProyectionConstants.metersToLat()*radius;
+		
+		double fact = ProyectionConstants.metersToLat()/ProyectionConstants.metersToLong();
+
+		 GeometricShapeFactory shapeFactory = new GeometricShapeFactory();
+		    shapeFactory.setNumPoints(64); // adjustable
+		    shapeFactory.setCentre(c.getCoordinate());
+		    // Length in meters of 1° of latitude = always 111.32 km
+		    shapeFactory.setHeight(2*latRadius);//diameterInMeters/111320d);
+		
+		    double longRadius = latRadius/fact;
+		    // Length in meters of 1° of longitude = 40075 km * cos( latitude ) / 360
+		    shapeFactory.setWidth(2*longRadius);//diameterInMeters / (40075000 * Math.cos(Math.toRadians(latitude)) / 360));
+
+		    Polygon circle = shapeFactory.createEllipse();
+		
+		return circle;//c.buffer(radius);//esto me genera una elipse
 	}
 	
 	public static Polygon constructPolygon(ReferencedEnvelope e) {
@@ -464,8 +487,8 @@ public class GeometryHelper {
 			positions.add(Position.fromDegrees(c.y, c.x));
 
 		}
-		p.setPositions(positions);
-
+		p.setPositions(positions);		
+		p.setArea(GeometryHelper.getHas(g));
 		return p;
 	}
 
@@ -569,8 +592,8 @@ public class GeometryHelper {
 	}
 	/**
 	 * metodo que recorre todas las geometrias haciendo las intersecciones de todos con todos.
-	 * @param aIntersectar
-	 * @return
+	 * @param aIntersectar: Lista de geometrias a intersectar 
+	 * @return el Set de las partes de las geometrias intersectadas
 	 */
 	public static Set<Geometry> obtenerIntersecciones(List<Geometry> aIntersectar){
 		//	import org.locationtech.jts.densify.Densifier;
@@ -702,9 +725,10 @@ public class GeometryHelper {
 			return  g;			
 		}).collect(Collectors.toList());
 		
-		GeometryFactory fact = ProyectionConstants.getGeometryFactory();		
-		Geometry[] geomArray = aUnir.toArray(new Geometry[aUnir.size()]);//put into an array
-		GeometryCollection collection = fact.createGeometryCollection(geomArray);//create a collection
+//		GeometryFactory fact = ProyectionConstants.getGeometryFactory();		
+//		Geometry[] geomArray = aUnir.toArray(new Geometry[aUnir.size()]);//put into an array
+//		GeometryCollection collection = fact.createGeometryCollection(geomArray);//create a collection
+		GeometryCollection collection = toGeometryCollection(aUnir);
 		Double buffer = ProyectionConstants.metersToLongLat(0.25);
 		Geometry union =collection.buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection
 		Geometry boundary = union.getBoundary().buffer(buffer,1,BufferParameters.CAP_FLAT);
@@ -757,6 +781,40 @@ public class GeometryHelper {
 		ret = g.getFactory().createPolygon(vertices.toArray(new Coordinate[vertices.size()]));
 
 		return ret;
+	}
+	
+	/**
+	 * The Douglas-Peucker algorithm uses a point-to-edge distance tolerance. 
+	 * The algorithm starts with a crude simplification that is the single edge joining the 
+	 * first and last vertices of the original polyline. 
+	 * It then computes the distance of all intermediate vertices to that edge.
+	 * The vertex that is furthest away from that edge,
+	 * and that has a computed distance that is larger than a specified tolerance,
+	 * will be marked as a key and added to the simplification.
+	 * This process will recurse for each edge in the current simplification, 
+	 * until all vertices of the original polyline are within tolerance of the
+	 * simplification results.
+	 * @param g
+	 * @return simplified geometry
+	 */
+	public static Geometry douglassPeuckerSimplify(Geometry g) {
+		//org.locationtech.jts.simplify.
+		//DouglasPeuckerSimplifier simp;
+		return DouglasPeuckerSimplifier.simplify(g, 0.000001);
+
+	}
+	
+	/**
+	 * 
+	 * @param g geometria a simplificar
+	 * @param tolerance distancia en grados
+	 * @return geometria simplificada
+	 */
+	public static Geometry douglassPeuckerSimplify(Geometry g,double tolerance) {
+		//org.locationtech.jts.simplify.
+		//DouglasPeuckerSimplifier simp;
+		return DouglasPeuckerSimplifier.simplify(g, tolerance);
+
 	}
 
 

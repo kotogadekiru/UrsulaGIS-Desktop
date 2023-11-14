@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -86,40 +87,23 @@ import utils.FileHelper;
 import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
-public class PoligonoGUIController {
-	JFXMain main=null;
-	Pane progressBox=null;
-	private ExecutorService executorPool=null;
+public class PoligonoGUIController extends AbstractGUIController{
+
+	//private ExecutorService executorPool=null;
 
 	public PoligonoGUIController(JFXMain _main) {
-		this.main=_main;	
-		this.progressBox=main.getProgressBox();
-		this.executorPool = JFXMain.executorPool;
-	}
-	private LayerPanel getLayerPanel() {
-		return main.getLayerPanel();
+		super(_main);
+		
+		//this.progressBox=main.getProgressBox();
+		//this.executorPool = JFXMain.executorPool;
 	}
 
-	private WorldWindow getWwd() {
-		return main.getWwd();
-	}
-	
-	private void viewGoTo(Labor<?> labor) {
-		main.viewGoTo(labor);
-		
-	}
-	private void viewGoTo(Position pos) {
-		main.viewGoTo(pos);		
-	}
+
 //	private void insertBeforeCompass(WorldWindow wwd, LaborLayer layer) {
 //		JFXMain.insertBeforeCompass(wwd, layer);		
 //	}
-	private void insertBeforeCompass(WorldWindow wwd, RenderableLayer applicationLayer) {
-		JFXMain.insertBeforeCompass(wwd, applicationLayer);		
-	}
-	private void playSound() {
-		main.playSound();		
-	}
+
+
 	
 //	public List<Poligono> getPoligonosActivos() {
 //		List<Poligono> geometriasActivas = new ArrayList<Poligono>();
@@ -158,6 +142,8 @@ public class PoligonoGUIController {
 			return "superficie";	
 		},Messages.getString("JFXMain.superficie")));
 
+
+		
 		//unir
 		rootNodeP.add(new LayerAction(Messages.getString("JFXMain.unirPoligonos"),(layer)->{
 			doUnirPoligonos();
@@ -378,46 +364,26 @@ public class PoligonoGUIController {
 
 			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 			if(layerObject!=null && Camino.class.isAssignableFrom(layerObject.getClass())){
-				Camino c = (Camino)layerObject;
-				
-				Recorrida recorrida = new Recorrida();
-				recorrida.setNombre(c.getNombre());
-				
-				for(Position p:c.getPositions()){	
-					Angle lon= p.getLongitude();
-					Angle lat = p.getLatitude();
-					Muestra m = new Muestra();
-					m.setRecorrida(recorrida);
-					m.setNombre("A");
-					m.setLongitude(lon.getDegrees());
-					m.setLatitude(lat.getDegrees());
-					recorrida.getMuestras().add(m);
-				}
-
-				main.recorridaGUIController.doShowRecorrida(recorrida);
-
-				this.getLayerPanel().update(this.getWwd());
+				doConvertirARecorrida(layerObject);
 			}
-			return "converti a recorrida"; //$NON-NLS-1$
-			
-			
+			return "converti a recorrida"; //$NON-NLS-1$			
 		}));
+		
+		poligonosP.add(LayerAction.constructPredicate("Convertir a Circulo",
+				(layer)->{
+			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			if(layerObject!=null && Camino.class.isAssignableFrom(layerObject.getClass())){
+				doCrearCirculo(layerObject);
+			}
+			return "converti a circulo"; //$NON-NLS-1$			
+		}));
+		
+
 
 		poligonosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.editarLayer"),(layer)->{
 			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 			if(layerObject!=null && Camino.class.isAssignableFrom(layerObject.getClass())){
-				//mostrar un dialogo para editar el nombre del poligono
-				Camino p =(Camino)layerObject;
-				TextInputDialog nombreDialog = new TextInputDialog(p.getNombre());
-				nombreDialog.initOwner(JFXMain.stage);
-				nombreDialog.setTitle(Messages.getString("JFXMain.editarLayerDialogTitle")); //$NON-NLS-1$
-				nombreDialog.setContentText(Messages.getString("JFXMain.editarLayerPoligonName")); //$NON-NLS-1$
-
-				Optional<String> nombreOptional = nombreDialog.showAndWait();
-				if(nombreOptional.isPresent()){
-					p.setNombre(nombreOptional.get());
-					this.getLayerPanel().update(this.getWwd());
-				}
+				doEditarCamino(layerObject);
 			}
 			return "edite camino"; //$NON-NLS-1$
 		}));
@@ -425,26 +391,65 @@ public class PoligonoGUIController {
 		poligonosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.acortarCamino"),(layer)->{
 			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 			if(layerObject!=null && Camino.class.isAssignableFrom(layerObject.getClass())){
-				layer.setEnabled(false);
-				//mostrar un dialogo para editar el nombre del poligono
-				Camino camino =(Camino)layerObject;
-				Camino cNuevo = new Camino();
-				cNuevo.setPositionsString(camino.getPositionsString());
-				JFXMain.executorPool.submit(()->{
-					SimplificarCaminoTask t = new SimplificarCaminoTask(cNuevo);
-					t.run();				
-					MeasureTool measureTool = PathLayerFactory.createCaminoLayer(cNuevo, this.getWwd(), this.getLayerPanel());
-					measureTool.setArmed(false);
-					Platform.runLater(()->{
-						insertBeforeCompass(this.getWwd(), measureTool.getApplicationLayer());
-						this.getLayerPanel().update(this.getWwd());
-					});					
-				});
-
-
+				doAcortarCamino(layer, layerObject);
 			}
 			return "acorte camino"; //$NON-NLS-1$
 		}));
+	}
+
+	public void doAcortarCamino(Layer layer, Object layerObject) {
+		layer.setEnabled(false);
+		//mostrar un dialogo para editar el nombre del poligono
+		Camino camino =(Camino)layerObject;
+		Camino cNuevo = new Camino();
+		cNuevo.setPositionsString(camino.getPositionsString());
+		JFXMain.executorPool.submit(()->{
+			SimplificarCaminoTask t = new SimplificarCaminoTask(cNuevo);
+			t.run();				
+			MeasureTool measureTool = PathLayerFactory.createCaminoLayer(cNuevo, this.getWwd(), this.getLayerPanel());
+			measureTool.setArmed(false);
+			Platform.runLater(()->{
+				insertBeforeCompass(this.getWwd(), measureTool.getApplicationLayer());
+				this.getLayerPanel().update(this.getWwd());
+			});					
+		});
+	}
+
+	public void doEditarCamino(Object layerObject) {
+		//mostrar un dialogo para editar el nombre del poligono
+		Camino p =(Camino)layerObject;
+		TextInputDialog nombreDialog = new TextInputDialog(p.getNombre());
+		nombreDialog.initOwner(JFXMain.stage);
+		nombreDialog.setTitle(Messages.getString("JFXMain.editarLayerDialogTitle")); //$NON-NLS-1$
+		nombreDialog.setContentText(Messages.getString("JFXMain.editarLayerPoligonName")); //$NON-NLS-1$
+
+		Optional<String> nombreOptional = nombreDialog.showAndWait();
+		if(nombreOptional.isPresent()){
+			p.setNombre(nombreOptional.get());
+			this.getLayerPanel().update(this.getWwd());
+		}
+	}
+
+	public void doConvertirARecorrida(Object layerObject) {
+		Camino c = (Camino)layerObject;
+		
+		Recorrida recorrida = new Recorrida();
+		recorrida.setNombre(c.getNombre());
+		
+		for(Position p:c.getPositions()){	
+			Angle lon= p.getLongitude();
+			Angle lat = p.getLatitude();
+			Muestra m = new Muestra();
+			m.setRecorrida(recorrida);
+			m.setNombre("A");
+			m.setLongitude(lon.getDegrees());
+			m.setLatitude(lat.getDegrees());
+			recorrida.getMuestras().add(m);
+		}
+
+		main.recorridaGUIController.doShowRecorrida(recorrida);
+
+		this.getLayerPanel().update(this.getWwd());
 	}
 
 	public void doEditarPoligono(Object layerObject) {
@@ -774,6 +779,7 @@ public class PoligonoGUIController {
 		//TODO remover un punto si el area que forma el triangulo con sus vecinos es suficientemente pequenia
 		g=GeometryHelper.removeSmallTriangles(g, (0.005)/ProyectionConstants.A_HAS());
 		
+		g=GeometryHelper.douglassPeuckerSimplify(g,ProyectionConstants.metersToLongLat(5));
 		//g=GeometryHelper.removeClosePoints(g, ProyectionConstants.metersToLongLat(2));
 		//g=GeometryHelper.removeSinglePoints(g, ProyectionConstants.metersToLongLat(2));
 		//g=GeometryHelper.reduceAlignedPoints(g, 0.2);
@@ -814,6 +820,18 @@ public class PoligonoGUIController {
 		//p.setPositions(interpolated);
 	}
 	
+	public void doCrearCirculo(Object layerObject) {
+		Camino c = (Camino)layerObject;
+		List<Position> positions = c.getPositions();
+		if(positions.size()>1) {
+			Point center = GeometryHelper.constructPoint(positions.get(0));
+			Point radius = GeometryHelper.constructPoint(positions.get(1));
+			Geometry cirGeom = GeometryHelper.createCircle(center, radius);
+			Poligono circPol= GeometryHelper.constructPoligono(cirGeom);
+			this.showPoligonos(Arrays.asList(circPol));
+		}
+	}
+
 	
 	public void doCrearPoligono(){
 		Poligono poli = new Poligono();
