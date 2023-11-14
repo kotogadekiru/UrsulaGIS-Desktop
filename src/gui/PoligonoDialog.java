@@ -10,7 +10,6 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
@@ -30,8 +29,6 @@ public class PoligonoDialog extends Dialog<Poligono>{
 		
 		this.poligono=_pol;
 		this.initOwner(JFXMain.stage);
-//		Stage stage = ((Stage)this.getDialogPane().getScene().getWindow());
-//		stage.getIcons().add(new Image(JFXMain.ICON));
 
 		this.getDialogPane().getButtonTypes().add(ButtonType.OK);
 		this.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
@@ -78,15 +75,12 @@ public class PoligonoDialog extends Dialog<Poligono>{
 		this.getDialogPane().setContent(vb);
 		this.initModality(Modality.NONE);		
 		this.getDialogPane().setPrefWidth(100); // <-- solution
-		this.setWidth(100);
-		
-	
-		
+		this.setWidth(100);		
 
 		final Button btOk = (Button) this.getDialogPane().lookupButton(ButtonType.OK);
 		btOk.addEventFilter(ActionEvent.ACTION, event -> {
 			if (!validarDialog()) {
-				System.out.println("la configuracion es incorrecta"); //$NON-NLS-1$
+				System.out.println("la configuracion es incorrecta");
 				event.consume();
 			}
 		});
@@ -95,7 +89,7 @@ public class PoligonoDialog extends Dialog<Poligono>{
 			if(ButtonType.OK.equals(e)){				
 				poligono.setLote(cb.getSelectionModel().selectedItemProperty().get());
 				poligono.setNombre(nombreTF.textProperty().get());
-					//TODO asignar variables a poligono
+					//asignar variables a poligono
 				return poligono;
 
 			}else{

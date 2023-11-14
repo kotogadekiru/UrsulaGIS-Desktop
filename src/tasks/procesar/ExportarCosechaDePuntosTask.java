@@ -42,7 +42,7 @@ public class ExportarCosechaDePuntosTask {
 		ShapefileDataStore newDataStore = FileHelper.createShapefileDataStore(shapeFile,type);
 
 		SimpleFeatureIterator it = laborToExport.outCollection.features();
-		DefaultFeatureCollection pointFeatureCollection =  new DefaultFeatureCollection(Messages.getString("JFXMain.356"),type); //$NON-NLS-1$
+		DefaultFeatureCollection pointFeatureCollection =  new DefaultFeatureCollection("internal",type); //$NON-NLS-1$
 		SimpleFeatureBuilder fb = new SimpleFeatureBuilder(type);
 		
 		while(it.hasNext()){
