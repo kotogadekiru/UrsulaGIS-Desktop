@@ -28,6 +28,7 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.eclipse.persistence.config.TargetServer;
 
+import api.OrdenFertilizacion;
 import api.OrdenPulverizacion;
 import api.OrdenSiembra;
 import dao.Labor;
@@ -594,6 +595,12 @@ public class DAH {
 		return results;
 	}
 
+	public static List<OrdenFertilizacion> getAllOrdenesFertilizacion() {
+		TypedQuery<OrdenFertilizacion> query = em().createNamedQuery(
+				OrdenFertilizacion.FIND_ALL, OrdenFertilizacion.class);
+		List<OrdenFertilizacion> results = (List<OrdenFertilizacion> ) query.getResultList();
+		return results;
+	}
 	public static List<OrdenSiembra> getAllOrdenesSiembra() {
 		TypedQuery<OrdenSiembra> query = em().createNamedQuery(
 				OrdenSiembra.FIND_ALL, OrdenSiembra.class);
