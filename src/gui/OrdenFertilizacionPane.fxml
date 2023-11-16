@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.Group?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.effect.Shadow?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.paint.Color?>
+<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.text.Font?>
+
+<VBox fx:id="content" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.OrdenFertilizacionPaneController">
+   <children>
+      <AnchorPane fx:id="apContent" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="545.0" prefWidth="953.0" VBox.vgrow="ALWAYS">
+         <children>
+            <VBox layoutX="741.0" layoutY="34.0" spacing="5.0">
+               <children>
+                  <Label text="%OrdenFert.nro">
+                     <padding>
+                        <Insets right="5.0" />
+                     </padding>
+                  </Label>
+                  <TextField fx:id="tfNroOrden" prefHeight="25.0" prefWidth="148.0" />
+                  <Label text="%OrdenFert.fecha">
+                     <padding>
+                        <Insets right="5.0" />
+                     </padding>
+                  </Label>
+                  <DatePicker fx:id="dPfecha" prefHeight="25.0" prefWidth="149.0" />
+               </children>
+            </VBox>
+            <VBox layoutX="46.0" layoutY="84.0" prefHeight="42.0" prefWidth="441.0" spacing="5.0">
+               <children>
+                  <Label text="%OrdenFert.Ing">
+                     <padding>
+                        <Insets right="5.0" />
+                     </padding>
+                  </Label>
+                  <TextField fx:id="tfIng" prefHeight="14.0" prefWidth="456.0" />
+               </children>
+            </VBox>
+            <Group layoutX="22.0" layoutY="142.0">
+               <children>
+                  <Rectangle arcHeight="50.0" arcWidth="50.0" fill="#369eff67" height="235.0" stroke="BLACK" strokeLineCap="ROUND" strokeMiterLimit="50.0" strokeType="INSIDE" strokeWidth="0.0" width="497.0">
+                     <effect>
+                        <Shadow>
+                           <color>
+                              <Color red="0.25" green="0.699999988079071" blue="1.0" opacity="0.5400000214576721" />
+                           </color>
+                        </Shadow>
+                     </effect>
+                  </Rectangle>
+                  <VBox layoutX="22.0" layoutY="12.0" prefHeight="148.0" prefWidth="441.0" spacing="5.0">
+                     <children>
+                        <Label text="%OrdenFert.productor">
+                           <padding>
+                              <Insets right="5.0" />
+                           </padding>
+                        </Label>
+                        <TextField fx:id="tfProductor" prefHeight="25.0" prefWidth="276.0" />
+                        <Label text="%OrdenFert.establecimiento">
+                           <padding>
+                              <Insets right="5.0" />
+                           </padding>
+                        </Label>
+                        <TextField fx:id="tfEstablecimiento" prefHeight="25.0" prefWidth="279.0" />
+                        <Label text="%OrdenFert.contratista">
+                           <padding>
+                              <Insets right="5.0" />
+                           </padding>
+                        </Label>
+                        <TextField fx:id="tfContratista" prefHeight="25.0" prefWidth="305.0" />
+                        <Label text="%OrdenFert.cultivo">
+                           <padding>
+                              <Insets right="5.0" />
+                           </padding>
+                        </Label>
+                        <TextField fx:id="tfCultivo" prefHeight="25.0" prefWidth="305.0" />
+                     </children>
+                  </VBox>
+               </children>
+            </Group>
+            <Label fx:id="lblNombre" alignment="TOP_LEFT" layoutX="49.0" layoutY="46.0" prefHeight="25.0" prefWidth="588.0" text="Nombre Orden">
+               <padding>
+                  <Insets right="5.0" />
+               </padding>
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <VBox layoutX="543.0" layoutY="147.0" prefHeight="224.0" prefWidth="382.0" spacing="5.0">
+               <children>
+                  <Label text="%OrdenFert.observaciones">
+                     <padding>
+                        <Insets right="5.0" />
+                     </padding>
+                  </Label>
+                  <TextArea fx:id="taObservaciones" prefHeight="202.0" prefWidth="382.0" />
+               </children>
+            </VBox>
+            <BorderPane fx:id="bpItems" layoutX="28.0" layoutY="395.0" prefHeight="130.0" prefWidth="898.0">
+               <padding>
+                  <Insets right="5.0" />
+               </padding>
+            </BorderPane>
+         </children>
+      </AnchorPane>
+   </children>
+</VBox>
