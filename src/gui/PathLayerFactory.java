@@ -69,20 +69,24 @@ public class PathLayerFactory {
 					((Component) wwd).setCursor(Cursor.getDefaultCursor());
 				}
 			}
-			//event released as position moved, position added or position removed
+			//event released as position moved, position added or position removed			
 			else if(event.getPropertyName().equals(MeasureTool.EVENT_POSITION_REPLACE) ||
 					event.getPropertyName().equals(MeasureTool.EVENT_POSITION_ADD) ||
 					event.getPropertyName().equals(MeasureTool.EVENT_POSITION_REMOVE)){
 
 				
 				double length =  measureTool.getLength();//esto lo hace despues de cada cuadro. no puedo volver a medir el area
-				if(valueProperty.get()!=length && length > 0 && Math.abs(camino.getLongitud()-length)>2){//solo actualizo si la diferencia es mayor a 2m
+				if(valueProperty.get()!=length && length > 0 
+						&& Math.abs(camino.getLongitud()-length)>2){//solo actualizo si la diferencia es mayor a 2m
 				//	DecimalFormat dc = new DecimalFormat("0.00"); //$NON-NLS-1$
 				//	dc.setGroupingSize(3);
 				//	dc.setGroupingUsed(true);
 				//	String formated = dc.format(length)+Messages.getString("JFXMain.metrosAbrevSufix"); //$NON-NLS-1$
 				//	t.textProperty().set(formated);
-					camino.setPositions( (List<Position>) measureTool.getPositions());
+					//System.out.println(event.getPropertyName()+" pos size"+measureTool.getPositions().size());
+					camino.getPositions().clear();
+					camino.getPositions().addAll((List<Position>) measureTool.getPositions());
+					//if(camino.getPositions().size()>2)	camino.getPositions().remove(1);//quito el primero que pone por duplicado
 					camino.setLongitud(length);	
 					camino.setNombre(camino.getNombre());//asigna el nombre al layer
 					//surfaceLayer.setName(camino.getNombre()+" "+formated); //$NON-NLS-1$

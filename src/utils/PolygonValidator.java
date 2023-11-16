@@ -63,6 +63,7 @@ public class PolygonValidator {
 	 * @param geom
 	 * @return a valid geometry or null if not posible
 	 */
+	@SuppressWarnings("unchecked")
 	public static Geometry validate(Geometry geom){
 		try {
 			if(geom instanceof Polygon){

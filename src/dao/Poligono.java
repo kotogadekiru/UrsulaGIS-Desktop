@@ -236,7 +236,7 @@ public class Poligono implements Comparable<Poligono>{
 
 	public Geometry toGeometry(){
 		try {
-			GeometryFactory fact = new GeometryFactory();
+			GeometryFactory fact = ProyectionConstants.getGeometryFactory();// GeometryFactory();
 			List<? extends Position> positions = this.getPositions();
 			Coordinate[] coordinates = new Coordinate[positions.size()];
 			for(int i=0;i<positions.size();i++){

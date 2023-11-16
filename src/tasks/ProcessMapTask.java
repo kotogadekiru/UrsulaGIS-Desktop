@@ -1266,7 +1266,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		it.close();		
 
 		try{						
-			Geometry buffered = CascadedPolygonUnion.union(geometriesCat);
+			Geometry buffered = GeometryHelper.unirGeometrias(geometriesCat);// CascadedPolygonUnion.union(geometriesCat);
 			//sino le pongo buffer al resumir geometrias me quedan rectangulos medianos
 			//				buffered = buffered.buffer(
 			//						ProyectionConstants.metersToLongLat(0.25),

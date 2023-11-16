@@ -255,16 +255,19 @@ public abstract class LaborItem implements Comparable<Object>{
 					specialElements[i];
 		}
 		
-		
+		SimpleFeature feature =null;
 		synchronized(featureBuilder){
 			try{
-				featureBuilder.addAll(completeElements);
+				//featureBuilder.addAll(completeElements);
+				//feature = featureBuilder.buildFeature("\\."+this.getId().intValue());
+				feature = featureBuilder.buildFeature("\\."+this.getId().intValue(),
+						completeElements);
 			}catch(Exception e){
 				e.printStackTrace();
 			}
 
 			//System.out.println("construyendo el simplefeature para el id:"+this.getId());//construuendo el simplefeature para el id:0.0
-			SimpleFeature feature = featureBuilder.buildFeature("\\."+this.getId().intValue());
+			 
 			return feature;
 		}
 

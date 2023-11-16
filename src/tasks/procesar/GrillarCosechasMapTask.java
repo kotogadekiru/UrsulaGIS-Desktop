@@ -241,7 +241,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 
 	/**
 	 * 
-	 * @param cosechasPoly lista de cosechasitems que se intersectan con el poligono de entrada
+	 * @param cosechasPoly lista de cosechasItems que se intersectan con el poligono de entrada
 	 * @param poly ; el poligono a partir del cual se crea el cosecha Item promedio
 	 * @return SimpleFeature de tipo CosechaItemStandar que represente a cosechasPoly 
 	 */
@@ -251,7 +251,9 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		}
 		
 		List<Geometry> intersections = new ArrayList<Geometry>();
-		// sumar todas las supferficies, y calcular el promedio ponderado de cada una de las variables por la superficie superpuesta
+		// sumar todas las supferficies,
+		//y calcular el promedio ponderado de
+		// cada una de las variables por la superficie superpuesta
 		Geometry union = null;
 		double areaPoly = 0;
 		Map<CosechaItem,Double> areasIntersecciones = new HashMap<CosechaItem,Double>();
@@ -324,10 +326,10 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 //				coord.z=elev;
 //			}
 
-			GeometryFactory fact = intersections.get(0).getFactory();
-			Geometry[] geomArray = new Geometry[intersections.size()];
-			GeometryCollection colectionCat = fact.createGeometryCollection(intersections.toArray(geomArray));
-			
+//			GeometryFactory fact = intersections.get(0).getFactory();
+//			Geometry[] geomArray = new Geometry[intersections.size()];
+//			GeometryCollection colectionCat = fact.createGeometryCollection(intersections.toArray(geomArray));
+			GeometryCollection colectionCat = GeometryHelper.toGeometryCollection(intersections);
 			if(!rellenarHuecos) {
 			try{
 				union = colectionCat.convexHull();//esto hace que no se cubra el area entre polygonos a menos que la grilla sea mas grande que el area

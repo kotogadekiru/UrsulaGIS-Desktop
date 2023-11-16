@@ -22,4 +22,15 @@
 			<location>C:/Users/quero/workspaceHackaton2015/geotools-18.1</location>
 		</link>
 	</linkedResources>
+	<filteredResources>
+		<filter>
+			<id>1699975693842</id>
+			<name></name>
+			<type>30</type>
+			<matcher>
+				<id>org.eclipse.core.resources.regexFilterMatcher</id>
+				<arguments>node_modules|\.git|__CREATED_BY_JAVA_LANGUAGE_SERVER__</arguments>
+			</matcher>
+		</filter>
+	</filteredResources>
 </projectDescription>

@@ -83,12 +83,69 @@ public class PoligonLayerFactory {
 //				dc.setGroupingSize(3);
 //				dc.setGroupingUsed(true);					
 				double area =  measureTool.getArea()/ProyectionConstants.METROS2_POR_HA;//esto lo hace despues de cada cuadro. no puedo volver a medir el area
-				if(valueProperty.get()!=area && area > 0){
+			
+//					String formated = dc.format(area)+" Ha";
+//					t.textProperty().set(formated);
+					
+					poli.getPositions().clear();
+					poli.getPositions().addAll((List<Position>) measureTool.getPositions());
+					
+					//poli.setPositions( (List<Position>) measureTool.getPositions());
+					poli.setArea(area);	
+					//poli.setLayer(surfaceLayer);
+					//surfaceLayer.setName(poli.getNombre()+" "+formated);
+					if( valueProperty.get()!=area && area > 0){
+					surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, poli);
+					valueProperty.setValue(area);
+					layerPanel.update(wwd);				//XXX esto hace que se re calcule todo el arbol varias veces?? si pero esta ok.
+				}                	                  
+			}
+		});	
+		//measureTool.setArmed(false);//XXX trato de evitar que measure tool se coma toda la memoria
+		return measureTool;
+	}
+	
+	@SuppressWarnings("unchecked")
+	static public MeasureTool createCircleMeasureTool(Poligono poli, WorldWindow wwd,LayerPanel layerPanel){
+		RenderableLayer surfaceLayer = new RenderableLayer();
+
+		poli.setLayer(surfaceLayer);
+		surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, poli);
+		surfaceLayer.setValue(Labor.LABOR_LAYER_CLASS_IDENTIFICATOR, poli.getClass());
+		MeasureTool measureTool = createMeasureTool(wwd, surfaceLayer);
+		surfaceLayer.setValue(MEASURE_TOOL, measureTool);
+		List<Position> positions = poli.getPositions();
+
+		measureTool.setPositions((ArrayList<? extends Position>) positions);
+	
+				
+		DoubleProperty valueProperty= new SimpleDoubleProperty();
+		valueProperty.setValue( poli.getArea());
+
+		measureTool.addPropertyChangeListener((event)->{
+			// Add, remove or change positions
+			if(event.getPropertyName().equals(MeasureTool.EVENT_ARMED)){
+				if (measureTool.isArmed()) {
+					((Component) wwd).setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+				} else {                    //al cerrar el alert se hace un setArmed(false);
+					((Component) wwd).setCursor(Cursor.getDefaultCursor());
+				}
+			}
+			//event released as position moved, position added or position removed
+			else if(event.getPropertyName().equals(MeasureTool.EVENT_POSITION_REPLACE) ||
+					event.getPropertyName().equals(MeasureTool.EVENT_POSITION_ADD) ||
+					event.getPropertyName().equals(MeasureTool.EVENT_POSITION_REMOVE)){//&& measureTool.isArmed()
+//				DecimalFormat dc = new DecimalFormat("0.00");
+//				dc.setGroupingSize(3);
+//				dc.setGroupingUsed(true);					
+				double area =  measureTool.getArea()/ProyectionConstants.METROS2_POR_HA;//esto lo hace despues de cada cuadro. no puedo volver a medir el area
+			
 //					String formated = dc.format(area)+" Ha";
 //					t.textProperty().set(formated);
 
 					poli.setPositions( (List<Position>) measureTool.getPositions());
 					poli.setArea(area);	
+					if(valueProperty.get()!=area && area > 0){
 					//poli.setLayer(surfaceLayer);
 					//surfaceLayer.setName(poli.getNombre()+" "+formated);
 					surfaceLayer.setValue(Labor.LABOR_LAYER_IDENTIFICATOR, poli);
@@ -97,7 +154,7 @@ public class PoligonLayerFactory {
 				}                	                  
 			}
 		});	
-		//measureTool.setArmed(false);//XXX trato de evitar que measure tool se coma toda la memoria
+		
 		return measureTool;
 	}
 	

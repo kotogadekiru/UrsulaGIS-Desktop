@@ -1,10 +1,13 @@
 package gui.controller;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 import dao.Labor;
 import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.WorldWindow;
+import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.layers.RenderableLayer;
 import gui.JFXMain;
 import gui.nww.LaborLayer;
 import gui.nww.LayerPanel;
@@ -14,7 +17,7 @@ import javafx.scene.layout.Pane;
 public abstract class AbstractGUIController {
 	public JFXMain main=null;
 	public Pane progressBox;
-	public Executor executorPool;
+	public ExecutorService executorPool;
 	public WWPanel wwjPanel;
 	public LayerPanel layerPanel;
 
@@ -25,7 +28,9 @@ public abstract class AbstractGUIController {
 		this.wwjPanel=main.wwjPanel;
 		
 	}
-	
+	public void insertBeforeCompass(WorldWindow wwd, RenderableLayer applicationLayer) {
+		JFXMain.insertBeforeCompass(wwd, applicationLayer);		
+	}
 	public void insertBeforeCompass(WorldWindow wwd, LaborLayer layer) {
 		JFXMain.insertBeforeCompass(wwd, layer);		
 	}
@@ -40,6 +45,9 @@ public abstract class AbstractGUIController {
 
 	public void viewGoTo(Labor<?> ret) {
 		main.viewGoTo(ret);		
+	}
+	public void viewGoTo(Position pos) {
+		main.viewGoTo(pos);		
 	}
 
 	public void playSound() {
