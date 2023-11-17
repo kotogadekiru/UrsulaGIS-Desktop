@@ -39,16 +39,16 @@ public class Fertilizante extends Producto implements Comparable<Fertilizante>{
 	public static Map<String,Fertilizante> getFertilizantesDefault(){
 		Map<String,Fertilizante> fertilizantes = new HashMap<String,Fertilizante>();
 		//Nitrogenados
-fertilizantes.put("Amon韆co anhidro",new Fertilizante("Amon韆co anhidro",82,0.0,0.0,0.0));//ok
+fertilizantes.put("Amon铆aco anhidro",new Fertilizante("Amon铆aco anhidro",82,0.0,0.0,0.0));//ok
 fertilizantes.put("Nitrato de amonio",new Fertilizante("Nitrato de amonio",35,0.0,0.0,0.0));//ok
 fertilizantes.put("Sulfato de amonio",new Fertilizante("Sulfato de amonio",20.5,0.0,0.0,24.0));//ok
 fertilizantes.put("UAN",new Fertilizante("UAN",31,0.0,0.0,0.0));//ok
 fertilizantes.put("Urea",new Fertilizante("Urea",46,0.0,0.0,0.0));//ok
 		//Fosfatados
 //acido fosforico
-fertilizantes.put("Fosfato diam髇ico",new Fertilizante("Fosfato diam髇ico",18,20,0.0,0));//ok
-fertilizantes.put("Fosfato monoam髇ico",new Fertilizante("Fosfato monoam髇ico",11,23,0.0,0));//ok
-fertilizantes.put("Fosfato monopot醩ico",new Fertilizante("Fosfato monopot醩ico",0,23,29,0));//ok
+fertilizantes.put("Fosfato diam贸nico",new Fertilizante("Fosfato diam贸nico",18,20,0.0,0));//ok
+fertilizantes.put("Fosfato monoam贸nico",new Fertilizante("Fosfato monoam贸nico",11,23,0.0,0));//ok
+fertilizantes.put("Fosfato monopot谩sico",new Fertilizante("Fosfato monopot谩sico",0,23,29,0));//ok
 fertilizantes.put("Superfosfato simple",new Fertilizante("Superfosfato simple",0.0,9,0.0,12));//ok
 fertilizantes.put("Superfosfato triple",new Fertilizante("Superfosfato triple",0.0,20,0.0,0.0));//ok
 		//Potasicos
