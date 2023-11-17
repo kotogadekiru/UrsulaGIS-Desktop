@@ -27,6 +27,7 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
+import api.OrdenFertilizacion;
 import api.OrdenPulverizacion;
 import api.OrdenSiembra;
 import dao.Labor;
@@ -1139,6 +1140,67 @@ public class ConfigGUI extends AbstractGUIController{
 		});	
 	}
 
+	
+	public void doShowOrdenesFertilizacionTable() {
+		Platform.runLater(()->{
+			List<OrdenFertilizacion> ordenes = DAH.getAllOrdenesFertilizacion();
+			final ObservableList<OrdenFertilizacion> data = FXCollections.observableArrayList(ordenes);
+
+			SmartTableView<OrdenFertilizacion> table = new SmartTableView<OrdenFertilizacion>(data,
+					Arrays.asList("Id","PoligonoString","Uuid","Url","OrdenShpZipUrl","Owner","Items"),
+					Arrays.asList("NumeroOrden",
+							"Fecha",
+							"Nombre",
+							"Description",
+							"Productor",
+							"Establecimiento",
+							"NombreIngeniero",
+							"Contratista",
+							"Cultivo",
+							"Estado","Superficie"							
+							),
+					Arrays.asList("Numero",
+							"Fecha",
+							"Nombre",
+							"Descripcion",
+							"Productor",
+							"Establecimiento",
+							"Ingeniero",
+							"Contratista",
+							"Cultivo",
+							"Estado","Superficie"							
+							)
+					);
+			table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
+			table.setEditable(true);
+			//			table.setOnDoubleClick(()->new Poligono());
+			table.setOnShowClick((op)->{
+				showQR(op.url);
+				//TODO descargar el archivo e importarlo
+				//poli.setActivo(true);
+				//main.doShowRecorrida(recorrida);
+			});
+
+			table.addSecondaryClickConsumer("Editar",(r)-> {
+				//doShowMuestrasTable(r.getMuestras());
+			});
+
+			Scene scene = new Scene(table, 800, 600);
+			Stage tablaStage = new Stage();
+			tablaStage.getIcons().add(new Image(JFXMain.ICON));
+			tablaStage.setTitle(Messages.getString("JFXMain.configPulverizacionMI")); //
+			tablaStage.setScene(scene);
+
+			tablaStage.onHiddenProperty().addListener((o,old,n)->{
+				main.getLayerPanel().update(main.getWwd());
+				//getWwd().redraw();
+			});
+
+			tablaStage.show();	 
+		});	
+	}
+
+	
 	public void doShowRecorridaTable(List<Recorrida> recorridas) {
 		Platform.runLater(()->{
 			final ObservableList<Recorrida> data = FXCollections.observableArrayList(recorridas);

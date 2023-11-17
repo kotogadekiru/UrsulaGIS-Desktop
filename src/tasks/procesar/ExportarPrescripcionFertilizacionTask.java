@@ -60,6 +60,7 @@ import utils.ProyectionConstants;
 public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>{
 	private FertilizacionLabor laborToExport=null;
 	private File outFile=null;
+	public boolean guardarConfig=true;
 	
 	public ExportarPrescripcionFertilizacionTask(FertilizacionLabor laborToExport,File shapeFile) {
 		super();
@@ -589,12 +590,11 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 	}
 
 
-	@Override
-	protected File call() throws Exception {
-		this.run(this.laborToExport,this.outFile);
-		return outFile;
+	public File call() {
+		//	try {
+			this.run(this.laborToExport,this.outFile);
+			return outFile;
 	}
-
 //	public void exe(FertilizacionLabor laborToExport,File shapeFile)  {
 //		SimpleFeatureType type = null;
 //		String typeDescriptor = "*the_geom:"+Polygon.class.getCanonicalName()+":srid=4326,"
