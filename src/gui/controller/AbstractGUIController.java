@@ -7,6 +7,7 @@ import dao.Labor;
 import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.WorldWindow;
 import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import gui.JFXMain;
 import gui.nww.LaborLayer;
@@ -34,6 +35,10 @@ public abstract class AbstractGUIController {
 	public void insertBeforeCompass(WorldWindow wwd, LaborLayer layer) {
 		JFXMain.insertBeforeCompass(wwd, layer);		
 	}
+	
+	public void insertBeforeCompass(WorldWindow wwd, Layer layer) {
+		JFXMain.insertBeforeCompass(wwd, layer);		
+	}
 
 	public LayerPanel getLayerPanel() {		
 		return main.getLayerPanel();
@@ -43,6 +48,11 @@ public abstract class AbstractGUIController {
 		return main.getWwd();
 	}
 
+	
+	public void viewGoTo(Layer ndviLayer) {
+		main.viewGoTo(ndviLayer);		
+	}
+	
 	public void viewGoTo(Labor<?> ret) {
 		main.viewGoTo(ret);		
 	}

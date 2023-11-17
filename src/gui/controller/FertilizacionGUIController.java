@@ -11,8 +11,11 @@ import java.util.Optional;
 
 import org.geotools.data.FileDataStore;
 
+import api.OrdenFertilizacion;
+import api.OrdenPulverizacion;
 import dao.Labor;
 import dao.fertilizacion.FertilizacionLabor;
+import dao.pulverizacion.PulverizacionLabor;
 import dao.siembra.SiembraLabor;
 import gui.FertilizacionConfigDialogController;
 import gui.JFXMain;
@@ -27,10 +30,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import tasks.CompartirFertilizacionLaborTask;
+import tasks.CompartirPulverizacionLaborTask;
 import tasks.importar.ProcessFertMapTask;
 import tasks.procesar.CrearSiembraDesdeFertilizacionTask;
 import tasks.procesar.ExportarPrescripcionFertilizacionTask;
 import tasks.procesar.UnirFertilizacionesMapTask;
+import utils.DAH;
 import utils.FileHelper;
 
 public class FertilizacionGUIController extends AbstractGUIController {
@@ -75,6 +81,15 @@ public class FertilizacionGUIController extends AbstractGUIController {
 			doGenerarSiembraDesdeFertilizacion((FertilizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 			return "labor siembraFertilziada Exportada" + layer.getName(); 
 		}));
+		
+		/**
+		 *Accion que permite compartir prescripcion de una pulverizacion
+		 */
+		fertilizacionesP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.compartirFertilizacionAction"),(layer)->{		
+			doCompartirFertilizacion((FertilizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+			return "fertilizacion compartida" + layer.getName(); //$NON-NLS-1$
+		}));
+		
 	}
 	
 	private void doEditFertilizacion(FertilizacionLabor cConfigured ) {
@@ -203,6 +218,29 @@ public class FertilizacionGUIController extends AbstractGUIController {
 		});
 		executorPool.execute(ept);		
 	}
+	
+	/**
+	 *  updload recorrida to server and show url to access
+	 * @param recorrida
+	 */
+	public void doCompartirFertilizacion(FertilizacionLabor value) {
+		OrdenFertilizacion op = CompartirFertilizacionLaborTask.constructOrdenFertilizacion(value);
+		if(op==null)return;
+		DAH.save(op);
+		CompartirFertilizacionLaborTask task = new CompartirFertilizacionLaborTask(value,op);			
+			task.installProgressBar(main.progressBox);
+			task.setOnSucceeded(handler -> {
+				String ret = (String)handler.getSource().getValue();
+
+				if(ret!=null) {
+					main.configGUIController.showQR(ret);
+				}
+				task.uninstallProgressBar();			
+			});
+			System.out.println("ejecutando Compartir Fertilizacion");
+			JFXMain.executorPool.submit(task);		
+	}
+	
 	/**
 	 * accion ejecutada al presionar el boton openFile Despliega un file
 	 * selector e invoca la tarea que muestra el file en pantalla

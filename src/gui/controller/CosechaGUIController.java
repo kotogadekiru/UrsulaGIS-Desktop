@@ -61,15 +61,11 @@ import tasks.procesar.RecomendFertPFromHarvestMapTask;
 import tasks.procesar.UnirCosechasMapTask;
 import utils.FileHelper;
 
-public class CosechaGUIController {
-	private JFXMain main=null;
-	private Pane progressBox;
-	private Executor executorPool;
+public class CosechaGUIController extends AbstractGUIController {
+
 
 	public CosechaGUIController(JFXMain _main) {
-		this.main=_main;		
-		this.progressBox=main.progressBox;
-		this.executorPool=JFXMain.executorPool;
+		super(_main);
 	}
 
 	public void addCosechasRootNodeActions() {
@@ -846,24 +842,24 @@ public class CosechaGUIController {
 
 	/* metodos de conveniencia para el refactor
 	 */
-	private void insertBeforeCompass(WorldWindow wwd, LaborLayer layer) {
-		JFXMain.insertBeforeCompass(wwd, layer);		
-	}
-
-	private LayerPanel getLayerPanel() {		
-		return main.getLayerPanel();
-	}
-
-	private WorldWindow getWwd() {		
-		return main.getWwd();
-	}
-
-	private void viewGoTo(Labor<?> ret) {
-		main.viewGoTo(ret);		
-	}
-
-	private void playSound() {
-		main.playSound();
-
-	}
+//	private void insertBeforeCompass(WorldWindow wwd, LaborLayer layer) {
+//		JFXMain.insertBeforeCompass(wwd, layer);		
+//	}
+//
+//	private LayerPanel getLayerPanel() {		
+//		return main.getLayerPanel();
+//	}
+//
+//	private WorldWindow getWwd() {		
+//		return main.getWwd();
+//	}
+//
+//	private void viewGoTo(Labor<?> ret) {
+//		main.viewGoTo(ret);		
+//	}
+//
+//	private void playSound() {
+//		main.playSound();
+//
+//	}
 }

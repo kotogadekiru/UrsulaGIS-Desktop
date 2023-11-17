@@ -702,6 +702,11 @@ public class JFXMain extends Application {
 	public List<PulverizacionLabor> getPulverizacionesSeleccionadas() {
 		return (List<PulverizacionLabor>) getObjectFromEnabledLayersOfClass(PulverizacionLabor.class);
 	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Ndvi> getNdviSeleccionados() {
+		return (List<Ndvi>) getObjectFromEnabledLayersOfClass(Ndvi.class);
+	}
 
 	@SuppressWarnings("unchecked")
 	public List<SiembraLabor> getSiembrasSeleccionadas() {

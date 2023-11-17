@@ -178,6 +178,7 @@ public class ConfigGUI extends AbstractGUIController{
 		addMenuItem(Messages.getString("JFXMain.OrdenCompra"),(a)->doShowOrdenesCompra(),menuConfiguracion); //
 		addMenuItem(Messages.getString("JFXMain.362"),(a)->doShowLaboresTable(),menuConfiguracion); //
 		addMenuItem(Messages.getString("JFXMain.configPulverizacionMI"),(a)->doShowOrdenesPulverizacionTable(),menuConfiguracion); //
+		addMenuItem(Messages.getString("JFXMain.configFertilizacionMI"),(a)->doShowOrdenesFertilizacionTable(),menuConfiguracion); //
 		addMenuItem(Messages.getString("JFXMain.configSiembraMI"),(a)->doShowOrdenesSiembraTable(),menuConfiguracion); //
 
 		addMenuItem(Messages.getString("JFXMain.configIdiomaMI"),(a)->doChangeLocale(),menuConfiguracion); 
@@ -1188,7 +1189,7 @@ public class ConfigGUI extends AbstractGUIController{
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
-			tablaStage.setTitle(Messages.getString("JFXMain.configPulverizacionMI")); //
+			tablaStage.setTitle(Messages.getString("JFXMain.configFertilizacionMI")); //
 			tablaStage.setScene(scene);
 
 			tablaStage.onHiddenProperty().addListener((o,old,n)->{

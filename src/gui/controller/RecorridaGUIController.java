@@ -10,6 +10,7 @@ import java.util.Optional;
 import org.geotools.data.FileDataStore;
 
 import dao.Labor;
+import dao.Ndvi;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.recorrida.Recorrida;
 import gov.nasa.worldwind.layers.RenderableLayer;
@@ -30,7 +31,7 @@ public class RecorridaGUIController extends AbstractGUIController {
 	public RecorridaGUIController(JFXMain _main) {
 		super(_main);
 	}
-	
+
 	public void addAccionesRecorridas(Map<Class<?>, List<LayerAction>> predicates) {
 		List<LayerAction> recorridasP = new ArrayList<LayerAction>();
 		predicates.put(Recorrida.class, recorridasP);
@@ -69,7 +70,7 @@ public class RecorridaGUIController extends AbstractGUIController {
 			}
 			return "interpole recorrida"; 
 		}));	
-		
+
 		//Compartir Recorrida
 		recorridasP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.compartir"),(layer)->{
 			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
@@ -104,13 +105,19 @@ public class RecorridaGUIController extends AbstractGUIController {
 		}));
 	}
 
-	
+
+	/**
+	 * metodo que toma las muestras de una recorrida y interpola los puntos en 
+	 * una grilla contenida dentro de un poligono seleccionado
+	 * @param recorrida
+	 */
 	private void doInterpolarRecorrida(Recorrida recorrida) {
 		main.enDesarrollo();
+		List<Ndvi> seleccionados = main.getNdviSeleccionados();
 		// TODO Auto-generated method stub
-		
+
 	}
-	
+
 	public void doShowRecorrida(Recorrida recorrida) {
 		ShowRecorridaDirigidaTask umTask = new ShowRecorridaDirigidaTask(recorrida);
 		umTask.installProgressBar(progressBox);
@@ -124,8 +131,8 @@ public class RecorridaGUIController extends AbstractGUIController {
 			playSound();
 		});//fin del OnSucceeded
 		JFXMain.executorPool.execute(umTask);	
-		}
-	
+	}
+
 	/**
 	 * accion ejecutada al presionar el boton openFile Despliega un file
 	 * selector e invoca la tarea que muestra el file en pantalla
@@ -135,12 +142,12 @@ public class RecorridaGUIController extends AbstractGUIController {
 		if (stores != null) {
 			for(FileDataStore store : stores){//abro cada store y lo dibujo en el harvestMap individualmente
 				Recorrida labor = new Recorrida(store);
-				
-//				Optional<Recorrida> configured= RecorridaConfigDialogController.config(labor);
-//				if(!configured.isPresent()){//
-//					System.out.println(Messages.getString("JFXMain.308")); 
-//					continue;
-//				}							
+
+				//				Optional<Recorrida> configured= RecorridaConfigDialogController.config(labor);
+				//				if(!configured.isPresent()){//
+				//					System.out.println(Messages.getString("JFXMain.308")); 
+				//					continue;
+				//				}							
 
 				ImportarRecorridaTask umTask = new ImportarRecorridaTask(labor,store);
 				umTask.installProgressBar(progressBox);
@@ -154,7 +161,7 @@ public class RecorridaGUIController extends AbstractGUIController {
 			}//fin del for stores
 		}//if stores != null
 	}
-	
+
 
 
 	/**
@@ -189,7 +196,7 @@ public class RecorridaGUIController extends AbstractGUIController {
 	public void doAsignarValoresRecorrida(Recorrida recorrida) {
 		main.configGUIController.doAsignarValoresRecorrida(recorrida);
 	}	
-	
+
 	public void doExportRecorrida(Recorrida recorrida) {
 		String nombre = recorrida.getNombre();
 		File shapeFile = FileHelper.getNewShapeFile(nombre);

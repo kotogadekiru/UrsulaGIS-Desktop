@@ -5,6 +5,8 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.stream.DoubleStream;
 
@@ -159,9 +161,8 @@ public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> 
 		labor.constructClasificador();
 		runLater(this.getItemsList());
 		updateProgress(0, featureCount);
-
-
 	}
+	
 private SueloItem createSueloForPoly(Geometry geomQuery) {	
 	
 		Double areaQuery =GeometryHelper.getHas(geomQuery);//ProyectionConstants.A_HAS( geomQuery.getArea());
@@ -439,29 +440,35 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 	//calculo cuantas ppm aporta al cultivo,
 	//las sumo
 	//y devuelve la suma de las ppm existentes en el suelo para esa geometria
-	//XXX tener en cuenta que ppm es una unidad de concentracion y no creo que se puedad sumar directamente. 
 	//habria que pasar a gramos o promediar por la superficie total
 	private Double getKgSuelo(Geometry geomQuery) {
 		Double kgSuelo = new Double(0);
-		kgSuelo = suelos.parallelStream().flatMapToDouble(suelo->{
+		Double kgSueloOP = suelos.parallelStream().flatMapToDouble(suelo->{
 			List<SueloItem> items = suelo.cachedOutStoreQuery(geomQuery.getEnvelopeInternal());
 			//System.out.println("obteniendo el peso del suelo de "+items.size()+" items");
-			return items.parallelStream().flatMapToDouble(item->{
-				Double dens= item.getDensAp();// (Double) item.getPpmP()*suelo.getDensidad()/2;//TODO multiplicar por la densidad del suelo
+			double kgSueloMap = items.parallelStream().flatMapToDouble(item->{
+				Double dens= item.getDensAp();
 				Geometry geomItem = item.getGeometry();				
 
 				Double hasInterseccion = 0.0;
 				try {
 					//XXX posible punto de error/ exceso de demora/ inneficicencia
-					Geometry inteseccionGeom = GeometryHelper.getIntersection(geomQuery, geomItem);//geometry.intersection(geom);// Computes a
+					Geometry inteseccionGeom = GeometryHelper.getIntersection(geomQuery, geomItem);
 					hasInterseccion=GeometryHelper.getHas(inteseccionGeom);
-					// Geometry
 				} catch (Exception e) {
 					e.printStackTrace();
 				}				
 				return DoubleStream.of( dens * hasInterseccion);				
-			});
-		}).average().getAsDouble();
+			}
+			).sum();//sumo dentro de un mismo suelo
+			return DoubleStream.of(kgSueloMap);			
+		}).filter(kg->kg>0).sum();//promedio entre 2 suelos distintos
+//		if(kgSueloOP.isPresent()) {
+			//kgSuelo =kgSueloOP.getAsDouble();
+			kgSuelo = kgSueloOP;
+//		}else {
+//			System.out.println("average not present");
+//		}
 		if(kgSuelo==0) {
 			kgSuelo=SueloItem.DENSIDAD_SUELO_KG*ProyectionConstants.A_HAS(geomQuery.getArea());
 		}

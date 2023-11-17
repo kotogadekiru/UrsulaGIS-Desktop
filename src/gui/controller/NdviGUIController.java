@@ -66,15 +66,11 @@ import tasks.importar.ProcessHarvestMapTask;
 import utils.DAH;
 import utils.FileHelper;
 
-public class NdviGUIController {
-	private JFXMain main=null;
-	private Pane progressBox;
-	private ExecutorService executorPool;
+public class NdviGUIController extends AbstractGUIController{
+
 
 	public NdviGUIController(JFXMain _main) {
-		this.main=_main;		
-		this.progressBox=main.progressBox;
-		this.executorPool=JFXMain.executorPool;
+		super(_main);
 	}
 
 	public void addNdviRootNodeActions() {
@@ -86,38 +82,15 @@ public class NdviGUIController {
 			return "mostre la evolucion del ndvi";
 		}));
 
-		rootNodeNDVI.add(LayerAction.constructPredicate(Messages.getString("JFXMain.show_ndvi_chart"),
+		rootNodeNDVI.add(LayerAction.constructPredicate(
+				Messages.getString("JFXMain.show_ndvi_chart"),
 				(layer)->{ 
-			Platform.runLater(()->{
-				NDVIChart sChart= new NDVIChart(this.getWwd());
-				sChart.doShowNDVIChart(false);
-				Stage histoStage = new Stage();
-				histoStage.setTitle(Messages.getString("JFXMain.show_ndvi_title"));
-				histoStage.getIcons().add(new Image(JFXMain.ICON));
-				VBox.setVgrow(sChart, Priority.ALWAYS);
-				Scene scene = new Scene(sChart, 800,450);
-				histoStage.setScene(scene);
-				histoStage.initOwner(JFXMain.stage);
-				histoStage.show();
-			});
-			return "mostre el grafico del ndvi";
+			return doShowNdviChart();
 		}));
 
 		rootNodeNDVI.add(LayerAction.constructPredicate(Messages.getString("JFXMain.show_ndvi_acum_chart"),
 				(layer)->{
-			Platform.runLater(()->{
-				NDVIChart sChart= new NDVIChart(this.getWwd());
-				sChart.doShowNDVIChart(true);
-				Stage histoStage = new Stage();
-				histoStage.setTitle(Messages.getString("JFXMain.show_ndvi_acum_title"));
-				histoStage.getIcons().add(new Image(JFXMain.ICON));
-				VBox.setVgrow(sChart, Priority.ALWAYS);
-				Scene scene = new Scene(sChart, 800,450);
-				histoStage.setScene(scene);
-				histoStage.initOwner(JFXMain.stage);
-				histoStage.show();
-			});
-			return "mostre el grafico del ndvi";
+			return doShowNdviAcumChart();
 		}));
 
 
@@ -151,6 +124,38 @@ public class NdviGUIController {
 					return "Guarde los poligonos"; 
 				}));
 		getLayerPanel().addAccionesClase(rootNodeNDVI,Ndvi.class);
+	}
+
+	public String doShowNdviAcumChart() {
+		Platform.runLater(()->{
+			NDVIChart sChart= new NDVIChart(this.getWwd());
+			sChart.doShowNDVIChart(true);
+			Stage histoStage = new Stage();
+			histoStage.setTitle(Messages.getString("JFXMain.show_ndvi_acum_title"));
+			histoStage.getIcons().add(new Image(JFXMain.ICON));
+			VBox.setVgrow(sChart, Priority.ALWAYS);
+			Scene scene = new Scene(sChart, 800,450);
+			histoStage.setScene(scene);
+			histoStage.initOwner(JFXMain.stage);
+			histoStage.show();
+		});
+		return "mostre el grafico del ndvi";
+	}
+
+	public String doShowNdviChart() {
+		Platform.runLater(()->{
+			NDVIChart sChart= new NDVIChart(this.getWwd());
+			sChart.doShowNDVIChart(false);
+			Stage histoStage = new Stage();
+			histoStage.setTitle(Messages.getString("JFXMain.show_ndvi_title"));
+			histoStage.getIcons().add(new Image(JFXMain.ICON));
+			VBox.setVgrow(sChart, Priority.ALWAYS);
+			Scene scene = new Scene(sChart, 800,450);
+			histoStage.setScene(scene);
+			histoStage.initOwner(JFXMain.stage);
+			histoStage.show();
+		});
+		return "mostre el grafico del ndvi";
 	}
 	
 	
@@ -641,27 +646,24 @@ public class NdviGUIController {
 	}
 	
 //metodos de conveniencia para el refactor
-	private void insertBeforeCompass(WorldWindow wwd, Layer layer) {
-		JFXMain.insertBeforeCompass(wwd, layer);		
-	}
 
-	private LayerPanel getLayerPanel() {		
-		return main.getLayerPanel();
-	}
 
-	private WorldWindow getWwd() {		
-		return main.getWwd();
-	}
+//	private LayerPanel getLayerPanel() {		
+//		return main.getLayerPanel();
+//	}
+//
+//	private WorldWindow getWwd() {		
+//		return main.getWwd();
+//	}
+//	
+//	private void viewGoTo(Position position) {
+//		main.viewGoTo(position);
+//	}
 	
-	private void viewGoTo(Position position) {
-		main.viewGoTo(position);
-	}
-	private void viewGoTo(Layer ndviLayer) {
-		main.viewGoTo(ndviLayer);
-		
-	}
-	private void playSound() {
-		main.playSound();
-		
-	}
+
+	
+//	private void playSound() {
+//		main.playSound();
+//		
+//	}
 }
