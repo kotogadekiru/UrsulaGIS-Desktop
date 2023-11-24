@@ -179,7 +179,7 @@ public class CompartirFertilizacionLaborTask extends Task<String> {
 				Double has =fl.getCantidadLabor();				
 				
 				//Esto no se si es correcto 
-				i.setProducto(fl.getProductoLabor());
+				i.setProducto(fl.getFertilizanteProperty().getValue());
 				
 				i.setCantidad(fl.getCantidadInsumo());				
 				if(has>0) {
