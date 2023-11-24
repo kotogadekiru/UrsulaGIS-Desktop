@@ -92,9 +92,9 @@ public class SiembraGUIController {
 		}));
 		
 		/**
-		 *Accion que permite compartir prescripcion de una pulverizacion
+		 *Accion que permite compartir prescripcion de una siembra
 		 */
-		siembrasP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.compartirPulverizacionAction"),(layer)->{		
+		siembrasP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.compartir"),(layer)->{		
 			doCompartirSiembra((SiembraLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 			return "siembra compartida" + layer.getName(); //$NON-NLS-1$
 		}));
