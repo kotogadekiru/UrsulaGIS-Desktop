@@ -67,7 +67,7 @@ public class PulverizacionGUIController {
 		/**
 		 *Accion que permite compartir prescripcion de una pulverizacion
 		 */
-		pulverizacionesP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.compartirPulverizacionAction"),(layer)->{		
+		pulverizacionesP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.compartir"),(layer)->{		
 			doCompartirPulverizacion((PulverizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 			return "pulverizacion compartida" + layer.getName(); //$NON-NLS-1$
 		}));

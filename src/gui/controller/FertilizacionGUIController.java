@@ -83,9 +83,9 @@ public class FertilizacionGUIController extends AbstractGUIController {
 		}));
 		
 		/**
-		 *Accion que permite compartir prescripcion de una pulverizacion
+		 *Accion que permite compartir prescripcion de una fertilizacion
 		 */
-		fertilizacionesP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.compartirFertilizacionAction"),(layer)->{		
+		fertilizacionesP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.compartir"),(layer)->{		
 			doCompartirFertilizacion((FertilizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 			return "fertilizacion compartida" + layer.getName(); //$NON-NLS-1$
 		}));
