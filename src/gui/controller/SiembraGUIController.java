@@ -54,22 +54,22 @@ public class SiembraGUIController {
 
 	public void addSiembrasRootNodeActions() {
 		List<LayerAction> rootNodeP = new ArrayList<LayerAction>();
-		rootNodeP.add(new LayerAction((layer)->{
+		rootNodeP.add(new LayerAction((layer) -> {
 			this.doOpenSiembraMap(null);
-			return "opened";	
-		},Messages.getString("JFXMain.importar")));
+			return "opened";
+		}, Messages.getString("JFXMain.importar")));
 
-		rootNodeP.add(new LayerAction(Messages.getString("JFXMain.unir"),(layer)->{
+		rootNodeP.add(new LayerAction(Messages.getString("JFXMain.unir"), (layer) -> {
 			this.doUnirSiembras(null);
-			return "joined";	
-		},2));
+			return "joined";
+		}, 2));
 
-		rootNodeP.add(new LayerAction(Messages.getString("JFXMain.generarSiembraFert"),(layer)->{
+		rootNodeP.add(new LayerAction(Messages.getString("JFXMain.generarSiembraFert"), (layer) -> {
 			this.doGenerarSiembraFertilizada();
-			return "generated";	
-		},1));
+			return "generated";
+		}, 1));
 
-		main.getLayerPanel().addAccionesClase(rootNodeP,SiembraLabor.class);
+		main.getLayerPanel().addAccionesClase(rootNodeP, SiembraLabor.class);
 	}
 	
 	public void addAccionesSiembras(Map<Class<?>, List<LayerAction>> predicates) {
@@ -159,6 +159,35 @@ public class SiembraGUIController {
 	}
 	
 	private void doGenerarSiembraFertilizada() {
+		
+		// Chequeo si existe una fertilizacion para poder hacer la siembra fertilizada
+		try {
+			main.getFertilizacionesSeleccionadas().get(0);
+		}
+		
+		catch(Exception e) {
+			Alert noFertAlert = new Alert(Alert.AlertType.INFORMATION);
+			noFertAlert.initOwner(JFXMain.stage);
+			noFertAlert.setTitle("No hay ninguna fertilizacion seleccionada");
+			noFertAlert.setContentText("Seleccione una fertilizacion o cree una nueva para continuar");
+			noFertAlert.show();
+			return;
+		}
+		
+		// Chequeo si hay siembra seleccionada para poder hacer la siembra fertilizada
+		try {
+			main.getSiembrasSeleccionadas().get(0);
+		}
+		
+		catch(Exception e) {
+			Alert noSiemAlert = new Alert(Alert.AlertType.INFORMATION);
+			noSiemAlert.initOwner(JFXMain.stage);
+			noSiemAlert.setTitle("No hay ninguna siembra seleccionada");
+			noSiemAlert.setContentText("Seleccione una siembra para continuar");
+			noSiemAlert.show();
+			return;
+		}
+		
 		SiembraLabor siembraEnabled = main.getSiembrasSeleccionadas().get(0);
 		FertilizacionLabor fertEnabled = main.getFertilizacionesSeleccionadas().get(0);
 
