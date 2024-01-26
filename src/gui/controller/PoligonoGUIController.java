@@ -69,6 +69,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -546,35 +547,48 @@ public class PoligonoGUIController extends AbstractGUIController{
 		labor.setLayer(layer);
 
 		//TODO modificar el dialog controler para poder ingresar el caldo
-		Optional<PulverizacionLabor> cosechaConfigured= PulverizacionConfigDialogController.config(labor);
-		if(!cosechaConfigured.isPresent()){//
+		Optional<PulverizacionLabor> pulvConfigured= PulverizacionConfigDialogController.config(labor);
+		if(!pulvConfigured.isPresent()){//
 			System.out.println(Messages.getString("JFXMain.249")); //$NON-NLS-1$
 			labor.dispose();//libero los recursos reservados
 			return;
 		}							
-
-		TextInputDialog anchoDialog = new TextInputDialog(Messages.getString("JFXMain.250")); //$NON-NLS-1$
-		anchoDialog.setTitle(Messages.getString("JFXMain.251")); //$NON-NLS-1$
-		anchoDialog.setContentText(Messages.getString("JFXMain.252")); //$NON-NLS-1$
-		anchoDialog.initOwner(JFXMain.stage);
-
-		Optional<String> anchoOptional = anchoDialog.showAndWait();
-		Double rinde = PropertyHelper.parseDouble(anchoOptional.get()).doubleValue();//Double.valueOf(anchoOptional.get());
-		CrearPulverizacionMapTask umTask = new CrearPulverizacionMapTask(labor,poli,rinde);
-		umTask.installProgressBar(progressBox);
-
-		umTask.setOnSucceeded(handler -> {
-			PulverizacionLabor ret = (PulverizacionLabor)handler.getSource().getValue();
-			//pulverizaciones.add(ret);
-			insertBeforeCompass(getWwd(), ret.getLayer());
-			this.getLayerPanel().update(this.getWwd());
-			poli.getLayer().setEnabled(false);
-			viewGoTo(ret);
-			umTask.uninstallProgressBar();
-			System.out.println(Messages.getString("JFXMain.253")); //$NON-NLS-1$
-			playSound();
-		});//fin del OnSucceeded
-		JFXMain.executorPool.execute(umTask);		
+		// Validacion de input correcto de dosis
+		boolean inputIsValid = false;
+		
+		while(!inputIsValid) {
+			TextInputDialog dosisDialog = new TextInputDialog(Messages.getString("JFXMain.250")); //$NON-NLS-1$
+			dosisDialog.setTitle(Messages.getString("JFXMain.251")); //$NON-NLS-1$
+			dosisDialog.setContentText(Messages.getString("JFXMain.252")); //$NON-NLS-1$
+			dosisDialog.initOwner(JFXMain.stage);
+	
+			Optional<String> dosisOptional = dosisDialog.showAndWait();
+			try {
+				Double dosis = Double.parseDouble(dosisOptional.get());
+				System.out.println(dosis);
+				
+				CrearPulverizacionMapTask umTask = new CrearPulverizacionMapTask(labor,poli,dosis);
+				umTask.installProgressBar(progressBox);
+				
+				umTask.setOnSucceeded(handler -> {
+					PulverizacionLabor ret = (PulverizacionLabor)handler.getSource().getValue();
+					//pulverizaciones.add(ret);
+					insertBeforeCompass(getWwd(), ret.getLayer());
+					this.getLayerPanel().update(this.getWwd());
+					poli.getLayer().setEnabled(false);
+					viewGoTo(ret);
+					umTask.uninstallProgressBar();
+					System.out.println(Messages.getString("JFXMain.253")); //$NON-NLS-1$
+					playSound();
+				});//fin del OnSucceeded
+				JFXMain.executorPool.execute(umTask);
+				inputIsValid = true;
+			}
+			catch (NumberFormatException e) {
+				Alert inputFieldAlert = new Alert(AlertType.INFORMATION,Messages.getString("Ingrese un numero válido")); 
+				inputFieldAlert.showAndWait();
+			}
+		}
 	}
 
 		
