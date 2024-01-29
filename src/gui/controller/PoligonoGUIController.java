@@ -576,7 +576,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 				}
 			}
 			catch (NumberFormatException e) {
-				Alert inputFieldAlert = new Alert(AlertType.INFORMATION,Messages.getString("Ingrese un numero válido")); 
+				Alert inputFieldAlert = new Alert(AlertType.INFORMATION,Messages.getString("JFXMain.IngreseNumValido")); 
 				inputFieldAlert.showAndWait();
 			}
 		}
