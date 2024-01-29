@@ -556,7 +556,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 		
 		// Validacion de input correcto de dosis
 		boolean inputIsValid = false;
-		Double rinde = 0.0;
+		Double dosis = 0.0;
 		
 		while(!inputIsValid) {
 			TextInputDialog dosisDialog = new TextInputDialog(Messages.getString("JFXMain.250")); //$NON-NLS-1$
@@ -567,9 +567,9 @@ public class PoligonoGUIController extends AbstractGUIController{
 			Optional<String> dosisOptional = dosisDialog.showAndWait();
 			// Validavion que sea un Double 
 			try {
-				rinde = Double.parseDouble(dosisOptional.get().replace(',', '.'));
+				dosis = Double.parseDouble(dosisOptional.get().replace(',', '.'));
 				// y mayor a 0
-				if (rinde >= 0.0)
+				if (dosis >= 0.0)
 					inputIsValid = true;
 				else {
 					throw new NumberFormatException();
@@ -581,7 +581,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 			}
 		}
 		
-		CrearPulverizacionMapTask umTask = new CrearPulverizacionMapTask(labor,poli,rinde);
+		CrearPulverizacionMapTask umTask = new CrearPulverizacionMapTask(labor,poli,dosis);
 		umTask.installProgressBar(progressBox);
 
 		umTask.setOnSucceeded(handler -> {
