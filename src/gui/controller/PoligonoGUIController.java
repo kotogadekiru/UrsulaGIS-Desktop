@@ -553,8 +553,10 @@ public class PoligonoGUIController extends AbstractGUIController{
 			labor.dispose();//libero los recursos reservados
 			return;
 		}							
+		
 		// Validacion de input correcto de dosis
 		boolean inputIsValid = false;
+		Double rinde = 0.0;
 		
 		while(!inputIsValid) {
 			TextInputDialog dosisDialog = new TextInputDialog(Messages.getString("JFXMain.250")); //$NON-NLS-1$
@@ -563,32 +565,37 @@ public class PoligonoGUIController extends AbstractGUIController{
 			dosisDialog.initOwner(JFXMain.stage);
 	
 			Optional<String> dosisOptional = dosisDialog.showAndWait();
+			// Validavion que sea un Double 
 			try {
-				Double dosis = Double.parseDouble(dosisOptional.get());
-				System.out.println(dosis);
-				
-				CrearPulverizacionMapTask umTask = new CrearPulverizacionMapTask(labor,poli,dosis);
-				umTask.installProgressBar(progressBox);
-				
-				umTask.setOnSucceeded(handler -> {
-					PulverizacionLabor ret = (PulverizacionLabor)handler.getSource().getValue();
-					//pulverizaciones.add(ret);
-					insertBeforeCompass(getWwd(), ret.getLayer());
-					this.getLayerPanel().update(this.getWwd());
-					poli.getLayer().setEnabled(false);
-					viewGoTo(ret);
-					umTask.uninstallProgressBar();
-					System.out.println(Messages.getString("JFXMain.253")); //$NON-NLS-1$
-					playSound();
-				});//fin del OnSucceeded
-				JFXMain.executorPool.execute(umTask);
-				inputIsValid = true;
+				rinde = Double.parseDouble(dosisOptional.get().replace(',', '.'));
+				// y mayor a 0
+				if (rinde >= 0.0)
+					inputIsValid = true;
+				else {
+					throw new NumberFormatException();
+				}
 			}
 			catch (NumberFormatException e) {
 				Alert inputFieldAlert = new Alert(AlertType.INFORMATION,Messages.getString("Ingrese un numero válido")); 
 				inputFieldAlert.showAndWait();
 			}
 		}
+		
+		CrearPulverizacionMapTask umTask = new CrearPulverizacionMapTask(labor,poli,rinde);
+		umTask.installProgressBar(progressBox);
+
+		umTask.setOnSucceeded(handler -> {
+			PulverizacionLabor ret = (PulverizacionLabor)handler.getSource().getValue();
+			//pulverizaciones.add(ret);
+			insertBeforeCompass(getWwd(), ret.getLayer());
+			this.getLayerPanel().update(this.getWwd());
+			poli.getLayer().setEnabled(false);
+			viewGoTo(ret);
+			umTask.uninstallProgressBar();
+			System.out.println(Messages.getString("JFXMain.253")); //$NON-NLS-1$
+			playSound();
+		});//fin del OnSucceeded
+		JFXMain.executorPool.execute(umTask);		
 	}
 
 		
