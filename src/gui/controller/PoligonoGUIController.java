@@ -580,12 +580,12 @@ public class PoligonoGUIController extends AbstractGUIController{
 		boolean inputIsValid = false;
 		Double dosis = 0.0;
 		
+		TextInputDialog dosisDialog = new TextInputDialog(Messages.getString("JFXMain.250")); //$NON-NLS-1$
+		dosisDialog.setTitle(Messages.getString("JFXMain.251")); //$NON-NLS-1$
+		dosisDialog.setContentText(Messages.getString("JFXMain.252")); //$NON-NLS-1$
+		dosisDialog.initOwner(JFXMain.stage);
+		
 		while(!inputIsValid) {
-			TextInputDialog dosisDialog = new TextInputDialog(Messages.getString("JFXMain.250")); //$NON-NLS-1$
-			dosisDialog.setTitle(Messages.getString("JFXMain.251")); //$NON-NLS-1$
-			dosisDialog.setContentText(Messages.getString("JFXMain.252")); //$NON-NLS-1$
-			dosisDialog.initOwner(JFXMain.stage);
-	
 			Optional<String> dosisOptional = dosisDialog.showAndWait();
 			// Validavion que sea un Double 
 			try {
