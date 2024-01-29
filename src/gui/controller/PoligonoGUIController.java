@@ -1108,16 +1108,34 @@ public class PoligonoGUIController extends AbstractGUIController{
 			return;
 		}		
 		Double rindeEsperado = cosechaConfigured.get().getCultivo().getRindeEsperado();
-		TextInputDialog rindeDialog = new TextInputDialog(Messages.getNumberFormat().format(rindeEsperado));//Messages.getString("JFXMain.272")); 
 			
-		//TextInputDialog rindeDialog = new TextInputDialog(Messages.getString("JFXMain.267")); //$NON-NLS-1$
-		rindeDialog.setTitle(Messages.getString("JFXMain.268")); //$NON-NLS-1$
-		rindeDialog.setContentText(Messages.getString("JFXMain.269")); //$NON-NLS-1$
-		rindeDialog.initOwner(JFXMain.stage);
-		Optional<String> rindeOptional = rindeDialog.showAndWait();
-		if(!rindeOptional.isPresent())return;
-		Double rinde = PropertyHelper.parseDouble(rindeOptional.get()).doubleValue();//Double.valueOf(anchoOptional.get());
-
+		// Validacion de input correcto de dosis
+		boolean inputIsValid = false;
+		Double rinde = 0.0;
+		
+		while(!inputIsValid) {
+			TextInputDialog rindeDialog = new TextInputDialog(Messages.getNumberFormat().format(rindeEsperado)); //$NON-NLS-1$
+			rindeDialog.setTitle(Messages.getString("JFXMain.251")); //$NON-NLS-1$
+			rindeDialog.setContentText(Messages.getString("JFXMain.252")); //$NON-NLS-1$
+			rindeDialog.initOwner(JFXMain.stage);
+	
+			Optional<String> rindeOptional = rindeDialog.showAndWait();
+			// Validavion que sea un Double 
+			try {
+				rinde = Double.parseDouble(rindeOptional.get().replace(',', '.'));
+				// y mayor a 0
+				if (rinde >= 0.0)
+					inputIsValid = true;
+				else {
+					throw new NumberFormatException();
+				}
+			}
+			catch (NumberFormatException e) {
+				Alert inputFieldAlert = new Alert(AlertType.INFORMATION,Messages.getString("Ingrese un numero válido")); 
+				inputFieldAlert.showAndWait();
+			}
+		}
+		
 		CrearCosechaMapTask umTask = new CrearCosechaMapTask(labor,polis,rinde);
 		umTask.installProgressBar(progressBox);
 
