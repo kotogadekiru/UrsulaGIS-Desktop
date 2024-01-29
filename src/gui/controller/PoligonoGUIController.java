@@ -536,13 +536,34 @@ public class PoligonoGUIController extends AbstractGUIController{
 			return;
 		}							
 
-		TextInputDialog anchoDialog = new TextInputDialog(Messages.getString("JFXMain.262")); //$NON-NLS-1$
-		anchoDialog.setTitle(Messages.getString("JFXMain.263")); //$NON-NLS-1$
-		anchoDialog.setContentText(Messages.getString("JFXMain.264")); //$NON-NLS-1$
-		Optional<String> anchoOptional = anchoDialog.showAndWait();
-		Double rinde = PropertyHelper.parseDouble(anchoOptional.get()).doubleValue();//Double.valueOf(anchoOptional.get());
-
-		CrearFertilizacionMapTask umTask = new CrearFertilizacionMapTask(labor,polis,rinde);
+		// Validacion de input correcto de dosis
+		boolean inputIsValid = false;
+		Double dosis = 0.0;
+		
+		TextInputDialog dosisDialog = new TextInputDialog(Messages.getString("JFXMain.250")); //$NON-NLS-1$
+		dosisDialog.setTitle(Messages.getString("JFXMain.251")); //$NON-NLS-1$
+		dosisDialog.setContentText(Messages.getString("JFXMain.252")); //$NON-NLS-1$
+		dosisDialog.initOwner(JFXMain.stage);
+		
+		while(!inputIsValid) {
+			Optional<String> dosisOptional = dosisDialog.showAndWait();
+			// Validavion que sea un Double 
+			try {
+				dosis = Double.parseDouble(dosisOptional.get().replace(',', '.'));
+				// y mayor a 0
+				if (dosis >= 0.0)
+					inputIsValid = true;
+				else {
+					throw new NumberFormatException();
+				}
+			}
+			catch (NumberFormatException e) {
+				Alert inputFieldAlert = new Alert(AlertType.INFORMATION,Messages.getString("JFXMain.IngreseNumValido")); 
+				inputFieldAlert.showAndWait();
+			}
+		}
+		
+		CrearFertilizacionMapTask umTask = new CrearFertilizacionMapTask(labor,polis,dosis);
 		umTask.installProgressBar(progressBox);
 
 		umTask.setOnSucceeded(handler -> {
@@ -1153,7 +1174,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 				}
 			}
 			catch (NumberFormatException e) {
-				Alert inputFieldAlert = new Alert(AlertType.INFORMATION,Messages.getString("Ingrese un numero válido")); 
+				Alert inputFieldAlert = new Alert(AlertType.INFORMATION,Messages.getString("JFXMain.IngreseNumValido")); 
 				inputFieldAlert.showAndWait();
 			}
 		}
