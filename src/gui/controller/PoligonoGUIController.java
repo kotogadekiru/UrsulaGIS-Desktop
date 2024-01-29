@@ -477,13 +477,35 @@ public class PoligonoGUIController extends AbstractGUIController{
 			return;
 		}							
 
-		TextInputDialog anchoDialog = new TextInputDialog(Messages.getString("JFXMain.257")); //$NON-NLS-1$
-		anchoDialog.setTitle(Messages.getString("JFXMain.258")); //$NON-NLS-1$
-		anchoDialog.setContentText(Messages.getString("JFXMain.259")); //$NON-NLS-1$
-		Optional<String> anchoOptional = anchoDialog.showAndWait();
-		Double rinde = PropertyHelper.parseDouble(anchoOptional.get()).doubleValue();//Double.valueOf(anchoOptional.get());
-
-		CrearSiembraMapTask umTask = new CrearSiembraMapTask(labor,polis,rinde);
+		// Validacion de input correcto de dosis
+		boolean inputIsValid = false;
+		Double dosis = 0.0;
+		
+		TextInputDialog dosisDialog = new TextInputDialog(Messages.getString("JFXMain.250")); //$NON-NLS-1$
+		dosisDialog.setTitle(Messages.getString("JFXMain.251")); //$NON-NLS-1$
+		dosisDialog.setContentText(Messages.getString("JFXMain.252")); //$NON-NLS-1$
+		dosisDialog.initOwner(JFXMain.stage);
+		
+		while(!inputIsValid) {
+	
+			Optional<String> dosisOptional = dosisDialog.showAndWait();
+			// Validavion que sea un Double 
+			try {
+				dosis = Double.parseDouble(dosisOptional.get().replace(',', '.'));
+				// y mayor a 0
+				if (dosis >= 0.0)
+					inputIsValid = true;
+				else {
+					throw new NumberFormatException();
+				}
+			}
+			catch (NumberFormatException e) {
+				Alert inputFieldAlert = new Alert(AlertType.INFORMATION,Messages.getString("JFXMain.IngreseNumValido")); 
+				inputFieldAlert.showAndWait();
+			}
+		}
+		
+		CrearSiembraMapTask umTask = new CrearSiembraMapTask(labor,polis,dosis);
 		umTask.installProgressBar(main.getProgressBox());
 
 		umTask.setOnSucceeded(handler -> {
@@ -1113,12 +1135,12 @@ public class PoligonoGUIController extends AbstractGUIController{
 		boolean inputIsValid = false;
 		Double rinde = 0.0;
 		
+		TextInputDialog rindeDialog = new TextInputDialog(Messages.getNumberFormat().format(rindeEsperado)); //$NON-NLS-1$
+		rindeDialog.setTitle(Messages.getString("JFXMain.251")); //$NON-NLS-1$
+		rindeDialog.setContentText(Messages.getString("JFXMain.252")); //$NON-NLS-1$
+		rindeDialog.initOwner(JFXMain.stage);
+		
 		while(!inputIsValid) {
-			TextInputDialog rindeDialog = new TextInputDialog(Messages.getNumberFormat().format(rindeEsperado)); //$NON-NLS-1$
-			rindeDialog.setTitle(Messages.getString("JFXMain.251")); //$NON-NLS-1$
-			rindeDialog.setContentText(Messages.getString("JFXMain.252")); //$NON-NLS-1$
-			rindeDialog.initOwner(JFXMain.stage);
-	
 			Optional<String> rindeOptional = rindeDialog.showAndWait();
 			// Validavion que sea un Double 
 			try {
