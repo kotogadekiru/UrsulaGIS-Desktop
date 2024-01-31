@@ -55,6 +55,7 @@ public class Agroquimico extends Producto implements Comparable<Agroquimico>{
 	
 	public Agroquimico(String _nombre) {
 		nombre=_nombre;
+		activo=true;
 	}
 
 	@Override
