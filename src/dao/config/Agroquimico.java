@@ -9,6 +9,7 @@ import javax.persistence.Entity;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
+import dao.Poligono;
 import dao.ordenCompra.Producto;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -20,10 +21,14 @@ import lombok.Setter;
 @NamedQueries({
 	@NamedQuery(name=Agroquimico.FIND_ALL, query="SELECT o FROM Agroquimico o ORDER BY lower(o.nombre)") ,
 	@NamedQuery(name=Agroquimico.FIND_NAME, query="SELECT o FROM Agroquimico o where o.nombre = :name") ,
+	@NamedQuery(name=Agroquimico.FIND_ACTIVOS, query="SELECT o FROM Agroquimico o where o.activo = true ORDER BY lower(o.nombre)") ,
 }) 
 public class Agroquimico extends Producto implements Comparable<Agroquimico>{
 	public static final String FIND_ALL="Agroquimico.findAll";
 	public static final String FIND_NAME="Agroquimico.findName";
+	public static final String FIND_ACTIVOS = "Agroquimico.findActivos";
+	
+	private boolean activo = false;
 	
 	public static Map<String,Agroquimico> getAgroquimicosDefault(){
 		HashMap<String,Agroquimico> agroquimicos = new HashMap<String,Agroquimico>();
@@ -50,6 +55,7 @@ public class Agroquimico extends Producto implements Comparable<Agroquimico>{
 	
 	public Agroquimico(String _nombre) {
 		nombre=_nombre;
+		activo=true;
 	}
 
 	@Override

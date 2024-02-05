@@ -901,7 +901,7 @@ public class SmartTableView<T> extends TableView<T> {
 
 	private void getAgroquimicoColumn(Class<?> clazz, Method method, String name, Class<?> fieldType,String setMethodName) {
 		String propName = name.replace("Property", "");
-		ChoiceTableColumn<T, Agroquimico> dColumn = new ChoiceTableColumn<T,Agroquimico>(propName,DAH.getAllAgroquimicos(),
+		ChoiceTableColumn<T, Agroquimico> dColumn = new ChoiceTableColumn<T,Agroquimico>(propName,DAH.getAgroquimicosActivos(),
 				(p)->{try {
 					return ((Agroquimico) method.invoke(p, (Object[])null));
 				} catch (Exception e) {

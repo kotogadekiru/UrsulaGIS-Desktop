@@ -557,6 +557,14 @@ public class DAH {
 	}
 
 
+	public static List<Agroquimico> getAgroquimicosActivos() {
+		TypedQuery<Agroquimico> query =
+				em().createNamedQuery(Agroquimico.FIND_ACTIVOS, Agroquimico.class);
+		List<Agroquimico> results = query.getResultList();
+		return results;
+		}
+	
+	
 	public static List<Semilla> getAllSemillas() {
 		TypedQuery<Semilla> query = em().createNamedQuery(
 				Semilla.FIND_ALL, Semilla.class);

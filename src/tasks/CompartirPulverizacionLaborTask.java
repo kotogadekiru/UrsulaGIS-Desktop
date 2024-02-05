@@ -178,7 +178,13 @@ public class CompartirPulverizacionLaborTask extends Task<String> {
 					OrdenPulverizacionItem i = new OrdenPulverizacionItem();
 					i.setDosisHa(item.getDosisHa());
 					i.setProducto(item.getProducto());
-					i.setCantidad(i.getDosisHa()*pl.getCantidadInsumo());
+					// Seteo cantidad a 1 por si no se cargo el insumo bien
+					if(i.getDosisHa()*pl.getCantidadInsumo() < 1) {
+						i.setCantidad(1.0);
+					}
+					else {
+						i.setCantidad(i.getDosisHa()*pl.getCantidadInsumo());
+					}
 					//System.out.println("seteando cantidad item "+i.getCantidad());
 					i.setObservaciones(item.getObservaciones());
 					//System.out.println("seteando observaciones item "+item.getObservaciones());
