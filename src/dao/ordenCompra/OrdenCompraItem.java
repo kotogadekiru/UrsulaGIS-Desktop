@@ -1,16 +1,11 @@
 package dao.ordenCompra;
 
-import java.math.BigDecimal;
-
 import javax.persistence.Access;
 import javax.persistence.AccessType;
-import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.ManyToOne;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -41,9 +36,14 @@ public class OrdenCompraItem {
 	private Producto producto =null;
 	
 	private Double cantidad = 0.0;
+	@Column(name = "oc_item_precio20", nullable = true, precision=20, scale = 2)
 	private Double precio = 0.0;
-	private BigDecimal importe = BigDecimal.valueOf(0.0);
-	
+
+	//@Column(precision=30, scale=2)
+	//private BigDecimal importe = BigDecimal.valueOf(0.0);
+	//@Column(precision=20, scale=2)
+	@Column(name = "oc_item_importe20", nullable = true, precision=20, scale = 2)
+	private Double importe =0.0;
 	public OrdenCompraItem() {
 		
 	}
@@ -53,8 +53,20 @@ public class OrdenCompraItem {
 		this.cantidad=cantidad2;
 	}
 	
-	public BigDecimal calcImporte() {
-		this.importe = BigDecimal.valueOf(cantidad*precio);
-		return this.importe;
+	public void setCantidad(Double newCant) {
+		this.cantidad=newCant;
+		calcImporte();
+	}
+	
+	public void setPrecio(Double newPrecio) {
+		this.precio=newPrecio;
+		calcImporte();
+	}
+	
+	public void calcImporte() {
+		
+		this.importe =cantidad*precio; //BigDecimal.valueOf(cantidad*precio).round(mc);
+		//return this.importe;
+		this.ordenCompra.calcImporteTotal();
 	}
 }

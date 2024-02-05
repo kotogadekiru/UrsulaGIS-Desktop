@@ -1166,7 +1166,6 @@ public class PoligonoGUIController extends AbstractGUIController{
 					task.uninstallProgressBar();
 				});
 
-				System.out.println(Messages.getString("JFXMain.217")); //$NON-NLS-1$
 				executorPool.submit(task);
 			}
 		}

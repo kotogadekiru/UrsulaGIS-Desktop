@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -39,10 +40,13 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import dao.Ndvi;
 import dao.Poligono;
+import dao.config.Agroquimico;
 import dao.config.Configuracion;
 import dao.ordenCompra.OrdenCompra;
 import dao.ordenCompra.OrdenCompraItem;
+import dao.pulverizacion.PulverizacionLabor;
 import gui.JFXMain;
+import gui.Messages;
 import gui.utils.DateConverter;
 
 
@@ -93,7 +97,107 @@ public class ExcelHelper {
 		return file;
 	}
 	
+	public void readAgroquimicosFile() {
+		try {
+			InputStream excelStream = PulverizacionLabor.class.getClassLoader()
+					.getResourceAsStream("./dao/pulverizacion/agroquimicos.xlsx");
+			if(excelStream==null) System.out.println("stream es null");
+//			FileInputStream file = new FileInputStream(new File(
+//					"/dao/pulverizacion/agroquimicos.xlsx"));
 
+			// Create Workbook instance holding reference to .xlsx file
+			XSSFWorkbook workbook = new XSSFWorkbook(excelStream);
+			// workbook.getSheet("nombreDeLaHoja");
+
+			// Get first/desired sheet from the workbook
+			XSSFSheet sheet = workbook.getSheetAt(0);
+
+			// Iterate through each rows one by one
+			Iterator<Row> rowIterator = sheet.iterator();
+//			Row row5 = sheet.getRow(5);
+//			row5.getCell(0);
+
+			for (int i =0;rowIterator.hasNext();i++) {
+				Row row = rowIterator.next();
+				if(i==0)continue;//salteo las cabederas
+				
+				// For each row, iterate through all the columns
+				Iterator<Cell> cellIterator = row.cellIterator();
+				Agroquimico a = new Agroquimico();				
+				
+				a.setUnidadDosis("lts");
+				a.setUnidadStock("lts");
+				//0) N° registro 
+											
+				a.setNumRegistro(getStringValueFromCell(row.getCell(0)));
+				
+				//1) Marca
+				
+				a.setNombre(getStringValueFromCell(row.getCell(1)));
+				//2) Empresa
+				
+				a.setEmpresa(getStringValueFromCell(row.getCell(2)));
+				//3) Activos
+				
+				a.setActivos(getStringValueFromCell(row.getCell(3)));
+				//4) Banda tox				
+				a.setBandaToxicologica(getStringValueFromCell(row.getCell(4)));
+				System.out.println("reg:"+a.getNumRegistro()+" "
+						+"nombre:"+a.getNombre()+" "
+						+"empresa:"+a.getEmpresa()+" "
+						+"activos:"+a.getActivos()+" "
+						+"banda:"+a.getBandaToxicologica()+" ");
+				
+				Agroquimico r = DAH.finAgroquimico(a.getNumRegistro());
+				if(r!=null) {
+					System.out.println("existe, no lo guardo");
+				} else {
+					DAH.save(a);
+					System.out.println("no existe, lo guardo");
+				}
+		
+//				while (cellIterator.hasNext()) {
+//					Cell cell = cellIterator.next();
+//					// Check the cell type and format accordingly
+//					switch (cell.getCellType()) {
+//					case Cell.CELL_TYPE_NUMERIC:
+//						System.out.print(cell.getNumericCellValue() + "num");
+//						break;
+//					case Cell.CELL_TYPE_STRING:
+//						System.out.print(cell.getStringCellValue() + "string");
+//						break;
+//					}
+//				}
+//				System.out.println("");
+			}
+			excelStream.close();
+			workbook.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public String getStringValueFromCell(Cell cell) {
+		if(cell==null)return "";
+		switch (cell.getCellType()) {
+		case Cell.CELL_TYPE_NUMERIC:
+			double reg = cell.getNumericCellValue();
+			return Messages.getNumberFormat().format(reg);//39.936,00 deberia ser 39936
+			//System.out.print(cell.getNumericCellValue() + "num");
+			//break;
+		case Cell.CELL_TYPE_STRING:
+			return cell.getStringCellValue();
+//			System.out.print(cell.getStringCellValue() + "string");
+//			break;
+		default:
+			return "";
+		}
+	}
+
+	public static void main(String[] args) {
+		ExcelHelper h = new ExcelHelper();
+		h.readAgroquimicosFile();
+	}
 
 	public void readExcelFile() {
 
@@ -549,7 +653,7 @@ public class ExcelHelper {
 				String productoNombre = item.getProducto().getNombre();
 				Number cantidad = item.getCantidad();
 				Number precio = item.getPrecio();
-				Number importe = item.calcImporte();
+				Number importe = item.getImporte();
 				
 				data.put(String.valueOf(i+1),
 						new Object[] {
@@ -564,7 +668,7 @@ public class ExcelHelper {
 					"Total",
 					"",
 					"",
-					oc.calcImporteTotal()
+					oc.getImporteTotal()
 			});
 			
 			// Iterate over data and write to sheet

@@ -13,6 +13,11 @@ import java.util.function.ToDoubleFunction;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+import org.geotools.data.simple.SimpleFeatureIterator;
+import org.opengis.feature.simple.SimpleFeature;
+
+import com.vividsolutions.jts.geom.Geometry;
+
 import dao.Labor;
 import dao.LaborItem;
 import dao.config.Cultivo;
@@ -93,11 +98,23 @@ public class GenerarOrdenCompraTask  extends Task<OrdenCompra>{
 		this.fertilizaciones.forEach(l->{
 			description.append(l.getNombre());
 			Producto producto =l.getFertilizanteProperty().getValue();
-
-			Double cantidadItem = l.getCantidadInsumo();
-			putItem(prodCantidadMap, producto, cantidadItem,l.getPrecioInsumo());
-			putItem(prodCantidadMap, l.getProductoLabor(), l.getCantidadLabor(),l.getPrecioLabor());
+			
+			double insumoTotal=0;
+			double laborTotal=0;
+			SimpleFeatureIterator it = l.outCollection.features();
+			while(it.hasNext()){
+				SimpleFeature f = it.next();
+				Double rinde = LaborItem.getDoubleFromObj(f.getAttribute(l.colAmount.get()));//labor.colAmount.get()
+				Geometry geometry = (Geometry) f.getDefaultGeometry();
+				Double area = geometry.getArea() * ProyectionConstants.A_HAS();			
+				insumoTotal+=rinde*area;
+				laborTotal+=area;
+			}
+			it.close();			
+			putItem(prodCantidadMap, producto, insumoTotal,l.getPrecioInsumo());
+			putItem(prodCantidadMap, l.getProductoLabor(), laborTotal,l.getPrecioLabor());
 		});
+		
 		this.pulverizaciones.forEach(l->{
 			description.append(l.getNombre());
 			//Producto producto =l.getAgroquimico().getValue();
@@ -127,15 +144,12 @@ public class GenerarOrdenCompraTask  extends Task<OrdenCompra>{
 		return oc;
 	}
 
-
-
-
 	private void putItem(Map<Producto, OrdenCompraItem> items, Producto producto, Double cantidad, Double precio) {
 		if(cantidad==0)return;
 		if(items.containsKey(producto)) {
 			OrdenCompraItem existente = items.get(producto);
 			Double nuevaCantidad = existente.getCantidad()+cantidad;
-			Double nuevoPrecio = nuevaCantidad>0?(existente.calcImporte().doubleValue()+precio*cantidad)
+			Double nuevoPrecio = nuevaCantidad>0?(existente.getImporte()+precio*cantidad)
 					/(nuevaCantidad):0;
 			existente.setPrecio(nuevoPrecio);
 			existente.setCantidad(nuevaCantidad);

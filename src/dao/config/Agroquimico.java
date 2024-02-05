@@ -22,13 +22,17 @@ import lombok.Setter;
 	@NamedQuery(name=Agroquimico.FIND_ALL, query="SELECT o FROM Agroquimico o ORDER BY lower(o.nombre)") ,
 	@NamedQuery(name=Agroquimico.FIND_NAME, query="SELECT o FROM Agroquimico o where o.nombre = :name") ,
 	@NamedQuery(name=Agroquimico.FIND_ACTIVOS, query="SELECT o FROM Agroquimico o where o.activo = true ORDER BY lower(o.nombre)") ,
+	@NamedQuery(name=Agroquimico.FIND_NUM_REG, query="SELECT o FROM Agroquimico o where o.numRegistro = :numReg") ,
+
 }) 
 public class Agroquimico extends Producto implements Comparable<Agroquimico>{
 	public static final String FIND_ALL="Agroquimico.findAll";
 	public static final String FIND_NAME="Agroquimico.findName";
-	public static final String FIND_ACTIVOS = "Agroquimico.findActivos";
+
+	public static final String FIND_ACTIVOS = "Agroquimico.findActivos";	
 	
-	private boolean activo = false;
+	public static final String FIND_NUM_REG="Agroquimico.findNumReg";
+
 	
 	public static Map<String,Agroquimico> getAgroquimicosDefault(){
 		HashMap<String,Agroquimico> agroquimicos = new HashMap<String,Agroquimico>();
@@ -48,6 +52,13 @@ public class Agroquimico extends Producto implements Comparable<Agroquimico>{
 		agroquimicos.put("Haloxifop 90% (Galant max)(lts)",new Agroquimico("Haloxifop 90% (Galant max)(lts)"));	
 		return agroquimicos;
 	}	
+	
+	private boolean activo = false;
+	private String numRegistro=null;
+	private String empresa=null;
+	private String activos=null;
+
+	private String bandaToxicologica=null;
 	
 	public Agroquimico() {
 	}

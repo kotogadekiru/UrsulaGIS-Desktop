@@ -49,20 +49,23 @@ public class OrdenCompra extends AbstractBaseEntity {
 	@OneToMany(cascade=CascadeType.ALL, mappedBy="ordenCompra",orphanRemoval=true)
 	private List<OrdenCompraItem> items=new ArrayList<OrdenCompraItem>();
 	
-	//@Column(precision=30, scale=6)
-	private BigDecimal importeTotal=new BigDecimal(0.0);
+	//@Column(precision=30, scale=2)
+	
+	@Column(name = "oc_importe20", nullable = true, precision=20, scale = 2)
+	private Double importeTotal=0.0;//new BigDecimal(0.0);
 	
 	public void setItems(List<OrdenCompraItem> _items) {
 		this.items=_items;
 	}
 //	
-	public BigDecimal calcImporteTotal() {
+	public void calcImporteTotal() {
 		if(items!=null && items.size()>0) {
-			this.importeTotal=BigDecimal.valueOf(items.stream().mapToDouble(i->i.calcImporte().doubleValue()).sum()); 
+			this.importeTotal = items.stream().mapToDouble(i->i.getImporte()).sum();
+			//this.importeTotalD=BigDecimal.valueOf(); 
 		} else {
-			this.importeTotal = new BigDecimal(0.0);
+			this.importeTotal = 0.0;//new BigDecimal(0.0);
 		}
 		//System.out.println("devolviendo importe total "+this.importeTotal2);
-		return importeTotal;
+		//return importeTotal;
 	}
 }
