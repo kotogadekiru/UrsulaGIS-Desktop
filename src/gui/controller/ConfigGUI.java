@@ -579,11 +579,12 @@ public class ConfigGUI extends AbstractGUIController{
 					SelectionMode.MULTIPLE
 					);
 			table.setOnDoubleClick(()->new Poligono());
-			PoligonoGUIController controller =  new PoligonoGUIController(main);
+		
+			//PoligonoGUIController controller =  new PoligonoGUIController(main);
 			table.setOnShowClick((poli)->{
 				poli.setActivo(true);
-
-				controller.showPoligonos(Collections.singletonList(poli));
+				main.poligonoGUIController.showPoligonos(Collections.singletonList(poli));
+				//controller.showPoligonos(Collections.singletonList(poli));
 				if(poli.getPositions().size()>0) {
 					Position pos =poli.getPositions().get(0);
 					main.viewGoTo(pos);
