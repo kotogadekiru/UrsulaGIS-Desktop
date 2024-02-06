@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -48,6 +49,7 @@ import dao.fertilizacion.FertilizacionLabor;
 import dao.margen.Margen;
 import dao.ordenCompra.OrdenCompra;
 import dao.ordenCompra.OrdenCompraItem;
+import dao.pulverizacion.CaldoItem;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
@@ -60,6 +62,9 @@ import gui.nww.LaborLayer;
 import gui.utils.DoubleTableColumn;
 import gui.utils.SmartTableView;
 import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.DoublePropertyBase;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -447,8 +452,6 @@ public class ConfigGUI extends AbstractGUIController{
 						});
 					}
 					);
-
-
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
 			tablaStage.getIcons().add(new Image(JFXMain.ICON));
@@ -456,7 +459,6 @@ public class ConfigGUI extends AbstractGUIController{
 			tablaStage.setScene(scene);
 			tablaStage.show();	 
 		});
-
 	}
 
 	public static void doConfigAgroquimicos() {
@@ -465,10 +467,9 @@ public class ConfigGUI extends AbstractGUIController{
 					FXCollections.observableArrayList(
 							DAH.getAllAgroquimicos()
 							);
-
 			SmartTableView<Agroquimico> table = new SmartTableView<Agroquimico>(dataLotes,
 					Arrays.asList("Id"),     //rejected
-					Arrays.asList("Nombre"));//order
+					Arrays.asList("Activo","NumRegistro","Nombre","Empresa","Activos","BandaToxicologica"));//order
 			table.setEditable(true);
 			table.getSelectionModel().setSelectionMode(
 					SelectionMode.MULTIPLE
@@ -578,11 +579,12 @@ public class ConfigGUI extends AbstractGUIController{
 					SelectionMode.MULTIPLE
 					);
 			table.setOnDoubleClick(()->new Poligono());
-			PoligonoGUIController controller =  new PoligonoGUIController(main);
+		
+			//PoligonoGUIController controller =  new PoligonoGUIController(main);
 			table.setOnShowClick((poli)->{
 				poli.setActivo(true);
-
-				controller.showPoligonos(Collections.singletonList(poli));
+				main.poligonoGUIController.showPoligonos(Collections.singletonList(poli));
+				//controller.showPoligonos(Collections.singletonList(poli));
 				if(poli.getPositions().size()>0) {
 					Position pos =poli.getPositions().get(0);
 					main.viewGoTo(pos);
@@ -851,7 +853,7 @@ public class ConfigGUI extends AbstractGUIController{
 							);
 
 			SmartTableView<OrdenCompraItem> table = new SmartTableView<OrdenCompraItem>(data,
-					Arrays.asList("Id","Importe2"),//rejected
+					Arrays.asList("Id"),//rejected
 					Arrays.asList("Producto","Cantidad","Precio","Importe")//order
 					);
 			table.setEditable(true);
@@ -872,7 +874,17 @@ public class ConfigGUI extends AbstractGUIController{
 			//box.getChildren().add(myLabel);
 			//			TextField total=new TextField();
 			//			total.setEditable(false);
-			Label importeTotalLabel = new Label("Importe total: "+Messages.getNumberFormat().format(oc.calcImporteTotal()));
+			Double total = oc.getImporteTotal();
+			if(total == null) {
+				System.out.println("total es null");
+				total=0.0;
+				}
+			DoubleProperty dp = new SimpleDoubleProperty();
+			dp.set(total);
+		
+			String totalString = Messages.getNumberFormat().format(total);
+			Label importeTotalLabel = new Label("Importe total: "+totalString);			
+		//TODO actualizar el importe total cuando se cambia el precio o la cantidad
 			importeTotalLabel.setPadding(new Insets(5,5,5,5));//ar,d,ab,izq
 			hBoxTotal.getChildren().add(importeTotalLabel);		
 			v.getChildren().add(hBoxTotal);
@@ -1182,9 +1194,10 @@ public class ConfigGUI extends AbstractGUIController{
 				//main.doShowRecorrida(recorrida);
 			});
 
-			table.addSecondaryClickConsumer("Editar",(r)-> {
-				//doShowMuestrasTable(r.getMuestras());
-			});
+			//FIXME cambiar Editar por un mensaje con traduccion
+//			table.addSecondaryClickConsumer("Editar",(r)-> {
+//				//doShowMuestrasTable(r.getMuestras());
+//			});
 
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();

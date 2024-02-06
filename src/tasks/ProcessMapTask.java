@@ -1239,7 +1239,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				//			}).thenRun(
 				//					()->{
 				if(labor.getContorno()==null) {
-					extractContorno();
+					extractContorno();//FIXME consume mucha memoria si son muchos puntos
 				}
 				System.out.println("corriendo analyticSurfaceLayerHD");
 				RenderableLayer analyticSurfaceLayerHD = createAnalyticSurfaceFromQuery(highRes);//30

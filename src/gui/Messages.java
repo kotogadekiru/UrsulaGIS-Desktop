@@ -1,5 +1,7 @@
 package gui;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +49,7 @@ public class Messages {
 		nf=NumberFormat.getInstance(locale);
 		nf.setGroupingUsed(true);
 		nf.setMaximumFractionDigits(2);
+		
 	}
 
 
@@ -60,6 +63,7 @@ public class Messages {
 	
 	public static void setLocale(Locale loc) {
 		locale=loc;
+		
 		
 		RESOURCE_BUNDLE_CONTAINER.set(BUNDLE_NAME, locale);
 		conf.loadProperties();
@@ -104,12 +108,19 @@ public class Messages {
 	public static NumberFormat getNumberFormat() {
 		return nf;
 	}
+	
+	public static char getDecimalSeparator() {
+		DecimalFormat format = (DecimalFormat) DecimalFormat.getInstance(Messages.getLocale());
+		DecimalFormatSymbols symbols = format.getDecimalFormatSymbols();
+		char sep=symbols.getDecimalSeparator();
+		return sep;
+	}
 }
 
  
 
 
-/* ejemplo de como cargar un bundre en menoria
+/* ejemplo de como cargar un bundle en menoria
 import java.util.ListResourceBundle;
 
 public class MyResources extends ListResourceBundle {

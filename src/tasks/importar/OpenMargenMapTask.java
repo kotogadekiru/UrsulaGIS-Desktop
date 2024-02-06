@@ -90,10 +90,7 @@ public class OpenMargenMapTask extends ProcessMapTask<MargenItem,Margen> {
 
 	}
 
-	
-	protected ExtrudedPolygon getPathTooltip( Geometry poly,MargenItem renta,ExtrudedPolygon  renderablePolygon) {
-		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-
+	public static String buildTooltipText(MargenItem renta,double area) {
 		NumberFormat df = Messages.getNumberFormat();
 
 		String tooltipText = new String(
@@ -112,6 +109,12 @@ public class OpenMargenMapTask extends ProcessMapTask<MargenItem,Margen> {
 		} else {
 			tooltipText=tooltipText.concat(Messages.getString("OpenMargenMapTask.19")+df.format(area ) + Messages.getString("OpenMargenMapTask.20")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
+		return tooltipText;
+	}
+	protected ExtrudedPolygon getPathTooltip( Geometry poly,MargenItem renta,ExtrudedPolygon  renderablePolygon) {
+		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+
+		String tooltipText= buildTooltipText(renta,area);
 		return super.getExtrudedPolygonFromGeom(poly, renta,tooltipText,renderablePolygon);
 	//	super.getRenderPolygonFromGeom(poly, renta,tooltipText);
 	}

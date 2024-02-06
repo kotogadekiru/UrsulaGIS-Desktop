@@ -83,6 +83,8 @@ import tasks.crear.CrearFertilizacionMapTask;
 import tasks.crear.CrearPulverizacionMapTask;
 import tasks.crear.CrearSiembraMapTask;
 import tasks.crear.CrearSueloMapTask;
+import tasks.procesar.CortarCosechaMapTask;
+import tasks.procesar.CortarLaborMapTask;
 import tasks.procesar.ExtraerPoligonosDeLaborTask;
 import tasks.procesar.SimplificarCaminoTask;
 import tasks.procesar.GenerarRecorridaDirigidaTask;
@@ -953,6 +955,27 @@ public class PoligonoGUIController extends AbstractGUIController{
 		});
 	}
 	
+	public void doCortarLaborPorPoligono(Labor<?> laborACortar) {
+		List<Poligono> geometriasActivas = getEnabledPoligonos();
+
+		geometriasActivas.stream().forEach((geom)->{
+			CortarLaborMapTask umTask = new CortarLaborMapTask(laborACortar,Collections.singletonList(geom));
+			umTask.installProgressBar(progressBox);
+			umTask.setOnSucceeded(handler -> {
+				Labor<?> ret = (Labor<?>)handler.getSource().getValue();
+				if(ret.getLayer()!=null){	
+					laborACortar.getLayer().setEnabled(false);
+					insertBeforeCompass(getWwd(), ret.getLayer());
+					this.getLayerPanel().update(this.getWwd());
+				}
+				umTask.uninstallProgressBar();
+				viewGoTo(ret);
+				System.out.println(Messages.getString("JFXMain.286")); 
+				playSound();
+			});//fin del OnSucceeded
+			JFXMain.executorPool.execute(umTask);
+		});
+	}
 
 	/**
 	 * metodo que toma los poligonos seleccionados y los une si se intersectan
@@ -1283,7 +1306,6 @@ public class PoligonoGUIController extends AbstractGUIController{
 					task.uninstallProgressBar();
 				});
 
-				System.out.println(Messages.getString("JFXMain.217")); //$NON-NLS-1$
 				executorPool.submit(task);
 			}
 		}

@@ -89,9 +89,8 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		updateProgress(0, featureCount);
 
 	}
-
 	
-	public static String buildTooltipText(Suelo s, SueloItem si,double area) {
+	public static String buildTooltipText(SueloItem si,double area) {
 		//DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
 		NumberFormat df = Messages.getNumberFormat();//new DecimalFormat("#,###.##");//$NON-NLS-2$
 
@@ -126,6 +125,12 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		String tooltipText = sb.toString();
 		return tooltipText;
 	}
+	
+
+	
+	public static String buildTooltipText(Suelo s, SueloItem si,double area) {		
+		return buildTooltipText(si,area);
+	}
 
 	@Override
 	public  ExtrudedPolygon  getPathTooltip( Geometry poly,SueloItem si,ExtrudedPolygon  renderablePolygon) {
@@ -136,7 +141,7 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 //		CrearSueloMapTask.nitrogeno=Nitrogeno
 //		CrearSueloMapTask.sup=Sup
 		
-		String tooltipText = buildTooltipText(this.labor,si,area);
+		String tooltipText = buildTooltipText(si,area);
 		
 //		String tooltipText = new String(
 //				Messages.getString("CrearSueloMapTask.fosforo")+": " +df.format(si.getPpmP()) +Messages.getString("OpenSoilMapTask.2")

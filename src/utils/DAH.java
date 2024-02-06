@@ -53,6 +53,8 @@ import gui.JFXMain;
 import sun.security.krb5.Config;
 
 public class DAH {
+	private static final String NO = "NO";
+	private static final String DAH_AGROQUIMICOS_INICIALIZADOS = "DAH.AgroquimicosInicializados";
 	private static final String APPDATA = "APPDATA";
 	private static final String OBJECTDB_DB_URSULAGIS_ODB = "$ursulaGIS.odb";
 	private static final String H2_URSULAGIS_DB = "ursulaGIS.h2";//mv.db
@@ -236,6 +238,9 @@ public class DAH {
 		if(DAH.transaction == null){
 			//	DAH.transaction = em.getTransaction();
 			try{
+				if(em.getTransaction().isActive()) {
+					em.getTransaction().rollback();
+				}
 				em.getTransaction().begin();		
 				if(em.contains(entidad)) {
 					em.merge(entidad);
@@ -246,6 +251,7 @@ public class DAH {
 				}
 				em.getTransaction().commit();
 			}catch(javax.persistence.RollbackException rbe){
+				
 				em.getTransaction().begin();		
 				em.merge(entidad);
 				em.getTransaction().commit();			
@@ -540,14 +546,23 @@ public class DAH {
 				Agroquimico.FIND_ALL, Agroquimico.class);
 		List<Agroquimico> results = query.getResultList();
 		if(results.size()==0){
-			results = new ArrayList<Agroquimico>();
+			Configuracion conf = Configuracion.getInstance();
+			String ini = conf.getPropertyOrDefault(DAH_AGROQUIMICOS_INICIALIZADOS, NO);
+			if(NO.equals(ini)) {
+			//results = new ArrayList<Agroquimico>();
 			System.out.println("guardando los agroquimicos default");
 			DAH.beginTransaction();
-			for(Agroquimico d:Agroquimico.getAgroquimicosDefault().values()) {
-				DAH.save(d);	
-				results.add(d);
-			}
+			ExcelHelper h = new ExcelHelper();
+			h.readAgroquimicosFile();
+//			for(Agroquimico d:Agroquimico.getAgroquimicosDefault().values()) {
+//				DAH.save(d);	
+//				results.add(d);
+//			}
 			DAH.commitTransaction();
+			results = getAllAgroquimicos();
+			conf.setProperty(DAH_AGROQUIMICOS_INICIALIZADOS, "SI");
+			conf.save();
+			}
 		}
 		
 //		List<Agroquimico> results = new ArrayList<Agroquimico>();
@@ -557,6 +572,14 @@ public class DAH {
 	}
 
 
+	public static List<Agroquimico> getAgroquimicosActivos() {
+		TypedQuery<Agroquimico> query =
+				em().createNamedQuery(Agroquimico.FIND_ACTIVOS, Agroquimico.class);
+		List<Agroquimico> results = query.getResultList();
+		return results;
+		}
+	
+	
 	public static List<Semilla> getAllSemillas() {
 		TypedQuery<Semilla> query = em().createNamedQuery(
 				Semilla.FIND_ALL, Semilla.class);
@@ -640,6 +663,18 @@ public class DAH {
 				Fertilizante.FIND_NAME, Fertilizante.class);
 		query.setParameter("name", nombre);
 		Fertilizante result = null;
+		if(query.getResultList().size()>0){
+			result = query.getResultList().get(0);//getFirstResult();
+			//System.out.println("buscando "+nombre+" encontre "+result);
+		}  
+		return result;	
+	}
+
+	public static Agroquimico finAgroquimico(String numRegistro) {
+		TypedQuery<Agroquimico> query = em().createNamedQuery(
+				Agroquimico.FIND_NUM_REG, Agroquimico.class);
+		query.setParameter("numReg", numRegistro);
+		Agroquimico result = null;
 		if(query.getResultList().size()>0){
 			result = query.getResultList().get(0);//getFirstResult();
 			//System.out.println("buscando "+nombre+" encontre "+result);
