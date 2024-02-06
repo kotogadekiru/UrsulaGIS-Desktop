@@ -2,6 +2,9 @@ package gui.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -491,15 +494,23 @@ public class PoligonoGUIController extends AbstractGUIController{
 			Optional<String> dosisOptional = dosisDialog.showAndWait();
 			// Validavion que sea un Double 
 			try {
-				dosis = Double.parseDouble(dosisOptional.get().replace(',', '.'));
+				DecimalFormat format = (DecimalFormat) DecimalFormat.getInstance(Messages.getLocale());
+				DecimalFormatSymbols symbols = format.getDecimalFormatSymbols();
+				char sep =symbols.getDecimalSeparator();
+				
+				Number number = format.parse(dosisOptional.get());
+				dosis = number.doubleValue();
+				
 				// y mayor a 0
-				if (dosis >= 0.0)
+				if (dosis >= 0.0) {
+					System.out.println("Con locale: " + Messages.getLocale() + " el rinde es: " + dosis);
 					inputIsValid = true;
+				}
 				else {
-					throw new NumberFormatException();
+					throw new ParseException(null, sep);
 				}
 			}
-			catch (NumberFormatException e) {
+			catch (ParseException e) {
 				Alert inputFieldAlert = new Alert(AlertType.INFORMATION,Messages.getString("JFXMain.IngreseNumValido")); 
 				inputFieldAlert.showAndWait();
 			}
@@ -549,15 +560,23 @@ public class PoligonoGUIController extends AbstractGUIController{
 			Optional<String> dosisOptional = dosisDialog.showAndWait();
 			// Validavion que sea un Double 
 			try {
-				dosis = Double.parseDouble(dosisOptional.get().replace(',', '.'));
+				DecimalFormat format = (DecimalFormat) DecimalFormat.getInstance(Messages.getLocale());
+				DecimalFormatSymbols symbols = format.getDecimalFormatSymbols();
+				char sep =symbols.getDecimalSeparator();
+				
+				Number number = format.parse(dosisOptional.get());
+				dosis = number.doubleValue();
+				
 				// y mayor a 0
-				if (dosis >= 0.0)
+				if (dosis >= 0.0) {
+					System.out.println("Con locale: " + Messages.getLocale() + " el rinde es: " + dosis);
 					inputIsValid = true;
+				}
 				else {
-					throw new NumberFormatException();
+					throw new ParseException(null, sep);
 				}
 			}
-			catch (NumberFormatException e) {
+			catch (ParseException e) {
 				Alert inputFieldAlert = new Alert(AlertType.INFORMATION,Messages.getString("JFXMain.IngreseNumValido")); 
 				inputFieldAlert.showAndWait();
 			}
@@ -610,15 +629,23 @@ public class PoligonoGUIController extends AbstractGUIController{
 			Optional<String> dosisOptional = dosisDialog.showAndWait();
 			// Validavion que sea un Double 
 			try {
-				dosis = Double.parseDouble(dosisOptional.get().replace(',', '.'));
+				DecimalFormat format = (DecimalFormat) DecimalFormat.getInstance(Messages.getLocale());
+				DecimalFormatSymbols symbols = format.getDecimalFormatSymbols();
+				char sep =symbols.getDecimalSeparator();
+				
+				Number number = format.parse(dosisOptional.get());
+				dosis = number.doubleValue();
+				
 				// y mayor a 0
-				if (dosis >= 0.0)
+				if (dosis >= 0.0) {
+					System.out.println("Con locale: " + Messages.getLocale() + " el rinde es: " + dosis);
 					inputIsValid = true;
+				}
 				else {
-					throw new NumberFormatException();
+					throw new ParseException(null, sep);
 				}
 			}
-			catch (NumberFormatException e) {
+			catch (ParseException e) {
 				Alert inputFieldAlert = new Alert(AlertType.INFORMATION,Messages.getString("JFXMain.IngreseNumValido")); 
 				inputFieldAlert.showAndWait();
 			}
@@ -1163,17 +1190,25 @@ public class PoligonoGUIController extends AbstractGUIController{
 		
 		while(!inputIsValid) {
 			Optional<String> rindeOptional = rindeDialog.showAndWait();
-			// Validavion que sea un Double 
+			// Validacion que sea un Double 
 			try {
-				rinde = Double.parseDouble(rindeOptional.get().replace(',', '.'));
+				DecimalFormat format = (DecimalFormat) DecimalFormat.getInstance(Messages.getLocale());
+				DecimalFormatSymbols symbols = format.getDecimalFormatSymbols();
+				char sep =symbols.getDecimalSeparator();
+				
+				Number number = format.parse(rindeOptional.get());
+				rinde = number.doubleValue();
+				
 				// y mayor a 0
-				if (rinde >= 0.0)
+				if (rinde >= 0.0) {
+					System.out.println("Con locale: " + Messages.getLocale() + " el rinde es: " + rinde);
 					inputIsValid = true;
+				}
 				else {
-					throw new NumberFormatException();
+					throw new ParseException(null, sep);
 				}
 			}
-			catch (NumberFormatException e) {
+			catch (ParseException e) {
 				Alert inputFieldAlert = new Alert(AlertType.INFORMATION,Messages.getString("JFXMain.IngreseNumValido")); 
 				inputFieldAlert.showAndWait();
 			}
