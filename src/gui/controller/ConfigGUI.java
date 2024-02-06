@@ -1194,9 +1194,10 @@ public class ConfigGUI extends AbstractGUIController{
 				//main.doShowRecorrida(recorrida);
 			});
 
-			table.addSecondaryClickConsumer("Editar",(r)-> {
-				//doShowMuestrasTable(r.getMuestras());
-			});
+			//FIXME cambiar Editar por un mensaje con traduccion
+//			table.addSecondaryClickConsumer("Editar",(r)-> {
+//				//doShowMuestrasTable(r.getMuestras());
+//			});
 
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();

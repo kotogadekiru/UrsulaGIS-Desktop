@@ -538,6 +538,15 @@ public class JFXMain extends Application {
 			doExtraerPoligonos((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 			return "poligonos Extraidos " + layer.getName(); 
 		}));
+		
+		/**
+		 * Accion que permite cortar una labor por el poligono/s seleccionado
+		 */
+		laboresP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.cortarCosechaAction"),(layer)->{			
+			poligonoGUIController.doCortarLaborPorPoligono((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+			return "labor cortada" + layer.getName(); 
+ 
+		}));
 
 		/**
 		 * Accion permite exportar la labor como shp

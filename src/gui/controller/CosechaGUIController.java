@@ -117,12 +117,12 @@ public class CosechaGUIController extends AbstractGUIController {
 		}));
 
 		/**
-		 * Accion que permite pasar una cortar la cosecha por poligono
+		 * Accion que permite cortar la cosecha por poligono
 		 */
-		cosechasP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.cortarCosechaAction"),(layer)->{
-			doCortarCosecha((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-			return "cosecha cortada" + layer.getName(); 
-		}));
+//		cosechasP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.cortarCosechaAction"),(layer)->{
+//			doCortarCosecha((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+//			return "cosecha cortada" + layer.getName(); 
+//		}));
 
 		/**
 		 * Accion que muesta el la relacion entre el rinde y la elevacion
