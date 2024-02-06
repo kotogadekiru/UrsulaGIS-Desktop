@@ -1215,9 +1215,8 @@ public class PoligonoGUIController extends AbstractGUIController{
 			Optional<String> rindeOptional = rindeDialog.showAndWait();
 			// Validacion que sea un Double 
 			try {
-				DecimalFormat format = (DecimalFormat) DecimalFormat.getInstance(Messages.getLocale());
-				DecimalFormatSymbols symbols = format.getDecimalFormatSymbols();
-				char sep =symbols.getDecimalSeparator();
+				DecimalFormat format = (DecimalFormat) Messages.getNumberFormat();;
+				char sep = Messages.getDecimalSeparator();
 				
 				Number number = format.parse(rindeOptional.get());
 				rinde = number.doubleValue();
