@@ -550,7 +550,11 @@ public class PoligonoGUIController extends AbstractGUIController{
 			return;
 		}							
 
-		Double dosis = NumberInputDialog.showAndWait("Dosis");
+		
+		Double dosis = NumberInputDialog.showAndWait("Aca pone la dosis");
+		if (dosis.isNaN()) {
+			return;
+		}
 		
 		CrearFertilizacionMapTask umTask = new CrearFertilizacionMapTask(labor,polis,dosis);
 		umTask.installProgressBar(progressBox);
