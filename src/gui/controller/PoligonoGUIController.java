@@ -65,6 +65,7 @@ import gui.nww.LaborLayer;
 import gui.nww.LayerAction;
 import gui.nww.LayerPanel;
 import gui.utils.DateConverter;
+import gui.utils.NumberInputDialog;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -549,40 +550,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 			return;
 		}							
 
-		// Validacion de input correcto de dosis
-		boolean inputIsValid = false;
-		Double dosis = 0.0;
-		
-		TextInputDialog dosisDialog = new TextInputDialog(Messages.getString("JFXMain.250")); //$NON-NLS-1$
-		dosisDialog.setTitle(Messages.getString("JFXMain.251")); //$NON-NLS-1$
-		dosisDialog.setContentText(Messages.getString("JFXMain.252")); //$NON-NLS-1$
-		dosisDialog.initOwner(JFXMain.stage);
-		
-		while(!inputIsValid) {
-			Optional<String> dosisOptional = dosisDialog.showAndWait();
-			// Validavion que sea un Double 
-			try {
-				DecimalFormat format = (DecimalFormat) DecimalFormat.getInstance(Messages.getLocale());
-				DecimalFormatSymbols symbols = format.getDecimalFormatSymbols();
-				char sep =symbols.getDecimalSeparator();
-				
-				Number number = format.parse(dosisOptional.get());
-				dosis = number.doubleValue();
-				
-				// y mayor a 0
-				if (dosis >= 0.0) {
-					System.out.println("Con locale: " + Messages.getLocale() + " el rinde es: " + dosis);
-					inputIsValid = true;
-				}
-				else {
-					throw new ParseException(null, sep);
-				}
-			}
-			catch (ParseException e) {
-				Alert inputFieldAlert = new Alert(AlertType.INFORMATION,Messages.getString("JFXMain.IngreseNumValido")); 
-				inputFieldAlert.showAndWait();
-			}
-		}
+		Double dosis = NumberInputDialog.showAndWait("Dosis");
 		
 		CrearFertilizacionMapTask umTask = new CrearFertilizacionMapTask(labor,polis,dosis);
 		umTask.installProgressBar(progressBox);
