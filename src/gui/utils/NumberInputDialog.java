@@ -9,7 +9,9 @@ import gui.JFXMain;
 import gui.Messages;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.Tooltip;
 
 public class NumberInputDialog {
     private static Double value = 0.0;
@@ -21,7 +23,11 @@ public class NumberInputDialog {
 		dialog.setTitle(Messages.getString("JFXMain.251"));
 		dialog.setContentText(Messages.getString("JFXMain.252"));
 		dialog.initOwner(JFXMain.stage);
-		dialog.getDialogPane().setMinWidth(300);
+		
+		// Tooltip
+		TextField textField = (TextField) dialog.getEditor();
+        Tooltip tooltip = new Tooltip(Messages.getString("JFXMain.DosisTooltip"));
+        textField.setTooltip(tooltip);
 		
 		while(!inputIsValid) {
 			Optional<String> result = dialog.showAndWait();
