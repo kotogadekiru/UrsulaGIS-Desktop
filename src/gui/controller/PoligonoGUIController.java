@@ -550,7 +550,6 @@ public class PoligonoGUIController extends AbstractGUIController{
 			return;
 		}							
 
-		
 		Double dosis = NumberInputDialog.showAndWait("Aca pone la dosis");
 		if (dosis.isNaN()) {
 			return;
@@ -1174,38 +1173,9 @@ public class PoligonoGUIController extends AbstractGUIController{
 		}		
 		Double rindeEsperado = cosechaConfigured.get().getCultivo().getRindeEsperado();
 			
-		// Validacion de input correcto de dosis
-		boolean inputIsValid = false;
-		Double rinde = 0.0;
-		
-		TextInputDialog rindeDialog = new TextInputDialog(Messages.getNumberFormat().format(rindeEsperado)); //$NON-NLS-1$
-		rindeDialog.setTitle(Messages.getString("JFXMain.251")); //$NON-NLS-1$
-		rindeDialog.setContentText(Messages.getString("JFXMain.252")); //$NON-NLS-1$
-		rindeDialog.initOwner(JFXMain.stage);
-		
-		while(!inputIsValid) {
-			Optional<String> rindeOptional = rindeDialog.showAndWait();
-			// Validacion que sea un Double 
-			try {
-				DecimalFormat format = (DecimalFormat) Messages.getNumberFormat();;
-				char sep = Messages.getDecimalSeparator();
-				
-				Number number = format.parse(rindeOptional.get());
-				rinde = number.doubleValue();
-				
-				// y mayor a 0
-				if (rinde >= 0.0) {
-					System.out.println("Con locale: " + Messages.getLocale() + " el rinde es: " + rinde);
-					inputIsValid = true;
-				}
-				else {
-					throw new ParseException(null, sep);
-				}
-			}
-			catch (ParseException e) {
-				Alert inputFieldAlert = new Alert(AlertType.INFORMATION,Messages.getString("JFXMain.IngreseNumValido")); 
-				inputFieldAlert.showAndWait();
-			}
+		Double rinde = NumberInputDialog.showAndWait(Messages.getNumberFormat().format(rindeEsperado));
+		if (rinde.isNaN()) {
+			return;
 		}
 		
 		CrearCosechaMapTask umTask = new CrearCosechaMapTask(labor,polis,rinde);
