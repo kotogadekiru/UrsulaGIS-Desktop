@@ -21,6 +21,7 @@ public class NumberInputDialog {
 		dialog.setTitle(Messages.getString("JFXMain.251"));
 		dialog.setContentText(Messages.getString("JFXMain.252"));
 		dialog.initOwner(JFXMain.stage);
+		dialog.getDialogPane().setMinWidth(300);
 		
 		while(!inputIsValid) {
 			Optional<String> result = dialog.showAndWait();
