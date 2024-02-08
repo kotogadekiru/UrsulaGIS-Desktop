@@ -520,14 +520,14 @@ public class ConfigGUI extends AbstractGUIController{
 //		System.out.println("agregando a toToggleActivate "+r);
 //		toToggleActivate.add(r);
 		try {
-			System.out.println("Toggleando activo " + r);
+			// System.out.println("Toggleando activo " + r);
 			DAH.beginTransaction();
 			r.toggleActivo();
 			DAH.commitTransaction();
-			System.out.println("termine de activar/desactivar " + r);
+			// System.out.println("termine de activar/desactivar " + r);
 		}
 		catch(Exception e) {					
-			System.out.println("no se pudo cambiar el estado del item " + r);
+			// System.out.println("no se pudo cambiar el estado del item " + r);
 			DAH.rollbackTransaction();
 			e.printStackTrace();
 		}
