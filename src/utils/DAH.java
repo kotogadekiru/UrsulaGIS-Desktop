@@ -682,7 +682,7 @@ public class DAH {
 		return result;	
 	}
 
-	public static void activateAgroquimicos(List<Agroquimico> listAgroquimicos) {
+	public static void toggleAgroquimicos(List<Agroquimico> listAgroquimicos) {
 		EntityManager em = em();
 		if(DAH.transaction == null){
 			//	DAH.transaction = em.getTransaction();

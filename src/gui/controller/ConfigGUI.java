@@ -509,7 +509,7 @@ public class ConfigGUI extends AbstractGUIController{
 					DAH.beginTransaction();
 
 					System.out.println("items en toToggleActivate " + toToggleActivate);
-					DAH.activateAgroquimicos(list);
+					DAH.toggleAgroquimicos(list);
 					DAH.commitTransaction();
 					System.out.println("termine de activar/desactivar " + toToggleActivate);
 				}catch(Exception e) {					

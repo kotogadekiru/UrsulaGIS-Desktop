@@ -81,7 +81,7 @@ public class SmartTableView<T> extends TableView<T> {
 	private Consumer<T> onShowClick=null;
 
 	private Consumer<List<T>> eliminarAction = list->DAH.removeAll((List<Object>) list);
-	private Consumer<List<T>> activarAction  = list->DAH.activateAgroquimicos((List<Agroquimico>) list);
+	private Consumer<List<T>> activarAction  = list->DAH.toggleAgroquimicos((List<Agroquimico>) list);
 	private Map<MenuItem,Consumer<T>> consumerMap=new HashMap<>();
 	private List<String> rejectedColumns=new ArrayList<>();
 	private List<String> orderColumns=new ArrayList<>();
