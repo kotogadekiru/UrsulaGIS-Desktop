@@ -206,7 +206,9 @@ public class SmartTableView<T> extends TableView<T> {
 					consumerMap.keySet().stream().forEach(mi->{
 						contextMenu.getItems().add(mi);
 						mi.setOnAction((ev)->{
-							Platform.runLater(()->	rowData.forEach(consumerMap.get(mi)));
+							Platform.runLater(() ->	{rowData.forEach(consumerMap.get(mi));
+													refresh();
+							});
 						});
 					});
 
