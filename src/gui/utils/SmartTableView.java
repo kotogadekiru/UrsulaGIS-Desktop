@@ -81,11 +81,13 @@ public class SmartTableView<T> extends TableView<T> {
 	private Consumer<T> onShowClick=null;
 
 	private Consumer<List<T>> eliminarAction = list->DAH.removeAll((List<Object>) list);
+	private Consumer<List<T>> activarAction  = list->DAH.activateAgroquimicos((List<Agroquimico>) list);
 	private Map<MenuItem,Consumer<T>> consumerMap=new HashMap<>();
 	private List<String> rejectedColumns=new ArrayList<>();
 	private List<String> orderColumns=new ArrayList<>();
 	private  Map<String,String>  namesColumnsMap=null;
 	private boolean permiteEliminar=true;
+	private boolean permiteActivar=true;
 	
 	//	public HBox filters = new HBox();
 	//	private FilteredList<T> filteredData=null;
@@ -179,6 +181,8 @@ public class SmartTableView<T> extends TableView<T> {
 		ContextMenu contextMenu = new ContextMenu();
 		MenuItem mostrarItem = new MenuItem(Messages.getString("SmartTableView.Cargar"));//"Cargar"
 		MenuItem eliminarItem = new MenuItem(Messages.getString("SmartTableView.Eliminar"));//Eliminar
+		MenuItem activarItem = new MenuItem(Messages.getString("SmartTableView.Activar"));//Activar
+		
 
 		//Map<MenuItem,Consumer<T>> mIMap = new HashMap<MenuItem,Consumer<T>>();
 		this.needsLayoutProperty()
@@ -193,8 +197,8 @@ public class SmartTableView<T> extends TableView<T> {
 			if(rowData != null && rowData.size()>0 ){
 				if(onShowClick!=null) contextMenu.getItems().add(mostrarItem);
 				if(permiteEliminar)   contextMenu.getItems().add(eliminarItem);
-
-
+				if(permiteActivar)   contextMenu.getItems().add(activarItem);
+				
 				if ( MouseButton.PRIMARY.equals(event.getButton()) && event.getClickCount() == 2) {
 					if(onDoubleClick!=null){
 						data.add(onDoubleClick.get());
@@ -241,7 +245,28 @@ public class SmartTableView<T> extends TableView<T> {
 								eliminarFailAlert.show();
 							}							
 						}
-					});			
+					});		
+					
+					activarItem.setOnAction((aev)->{						
+						try{								
+							this.activarAction.accept((List<T>) rowData);							
+//								data.removeAll(rowData);
+//								if(data.size()==0){
+//									data.add(onDoubleClick.get());
+//								}
+							refresh();
+						}catch(Exception e){
+							Alert eliminarFailAlert = new Alert(AlertType.ERROR);
+							((Stage) eliminarFailAlert.getDialogPane().getScene().getWindow()).
+							getIcons().add(new Image(JFXMain.ICON));
+							eliminarFailAlert.setTitle(Messages.getString("SmartTableView.BorrarRegistro"));//"Borrar registro");
+							eliminarFailAlert.setHeaderText(Messages.getString("SmartTableView.BorrarRegistroError"));//"No se pudo borrar el registro");
+							eliminarFailAlert.setContentText(e.getMessage());
+							eliminarFailAlert.show();
+						}							
+						
+					});		
+					
 				}
 			}
 		});
@@ -1332,6 +1357,11 @@ public class SmartTableView<T> extends TableView<T> {
 	public void setPermiteEliminar(boolean b) {
 		this.permiteEliminar=b;
 	}
+	
+	public void setPermiteActivar(boolean b) {
+		this.permiteActivar=b;
+	}
+	
 	/**
 	 * @return the onDoubleClick
 	 */
@@ -1355,6 +1385,13 @@ public class SmartTableView<T> extends TableView<T> {
 		this.eliminarAction = eliminarAction;
 	}
 
+	/**
+	 * @param activarAction Consumer que se ocupa de activar o desactivar un item. 
+	 */
+	public void setActivarAction(Consumer<List<T>> activarAction) {
+		this.activarAction = activarAction;
+	}
+	
 	public void refresh() { 
 		//Wierd JavaFX bug 
 		ObservableList<T> data = this.getItems();
