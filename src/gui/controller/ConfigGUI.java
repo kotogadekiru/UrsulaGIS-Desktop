@@ -19,6 +19,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+
 import org.geotools.data.FileDataStore;
 
 import com.google.gson.Gson;
@@ -55,6 +57,7 @@ import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
 import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.layers.rpf.RPFFileIndex.Table;
 import gui.JFXMain;
 import gui.MargenConfigDialogController;
 import gui.Messages;
@@ -475,51 +478,31 @@ public class ConfigGUI extends AbstractGUIController{
 					SelectionMode.MULTIPLE
 					);
 			table.setEliminarAction(list->{
-				System.out.println("eliminadno agroquimicos "+list);
+				//System.out.println("eliminando agroquimicos "+list);
 				List<Object> toRemove = new ArrayList<Object>();
-				System.out.println("agregando a toRemove "+list);
+				//System.out.println("agregando a toRemove "+list);
 				toRemove.addAll(list);
 				//JFXMain.executorPool.execute(()->{
 				try {
 					DAH.beginTransaction();
 
-
-					System.out.println("items en toRemove "+toRemove);
+					//System.out.println("items en toRemove "+toRemove);
 					DAH.removeAll(toRemove);
 					DAH.commitTransaction();
-					System.out.println("termine de eliminar "+toRemove);
+					//System.out.println("termine de eliminar "+toRemove);
 				}catch(Exception e) {					
-					System.out.println("no se pudo borrar");
+					//System.out.println("no se pudo borrar");
+					DAH.rollbackTransaction();
 					e.printStackTrace();
 				}
-				//	});
-			}
-					);
+			});
 
 
 			table.setOnDoubleClick(()->new Agroquimico(Messages.getString("JFXMain.376"))); //
 
-			table.setActivarAction(list->{
-				System.out.println("Activando agroquimicos "+list);
-				List<Object> toToggleActivate = new ArrayList<Object>();
-				System.out.println("agregando a toToggleActivate "+list);
-				toToggleActivate.addAll(list);
-				//JFXMain.executorPool.execute(()->{
-				try {
-					DAH.beginTransaction();
-
-					System.out.println("items en toToggleActivate " + toToggleActivate);
-					DAH.toggleAgroquimicos(list);
-					DAH.commitTransaction();
-					System.out.println("termine de activar/desactivar " + toToggleActivate);
-				}catch(Exception e) {					
-					System.out.println("no se pudo cambiar el estado del item");
-					e.printStackTrace();
-				}
-				//	});
-			}
-					);
-
+			table.addSecondaryClickConsumer(Messages.getString("SmartTableView.Activar"),(r)-> {
+				doToggleAgroquimico(r);
+			});
 
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
@@ -531,6 +514,25 @@ public class ConfigGUI extends AbstractGUIController{
 
 	}
 
+	public static void doToggleAgroquimico(Agroquimico r) {
+//		System.out.println("Activando agroquimicos "+r);
+//		List<Object> toToggleActivate = new ArrayList<Object>();
+//		System.out.println("agregando a toToggleActivate "+r);
+//		toToggleActivate.add(r);
+		try {
+			System.out.println("Toggleando activo " + r);
+			DAH.beginTransaction();
+			r.toggleActivo();
+			DAH.commitTransaction();
+			System.out.println("termine de activar/desactivar " + r);
+		}
+		catch(Exception e) {					
+			System.out.println("no se pudo cambiar el estado del item " + r);
+			DAH.rollbackTransaction();
+			e.printStackTrace();
+		}
+	}
+	
 	public static void doConfigCampania() {
 		Platform.runLater(()->{
 			final ObservableList<Campania> data =
