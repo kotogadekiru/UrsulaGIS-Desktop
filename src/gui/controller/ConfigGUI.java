@@ -499,6 +499,27 @@ public class ConfigGUI extends AbstractGUIController{
 
 			table.setOnDoubleClick(()->new Agroquimico(Messages.getString("JFXMain.376"))); //
 
+			table.setActivarAction(list->{
+				System.out.println("Activando agroquimicos "+list);
+				List<Object> toToggleActivate = new ArrayList<Object>();
+				System.out.println("agregando a toToggleActivate "+list);
+				toToggleActivate.addAll(list);
+				//JFXMain.executorPool.execute(()->{
+				try {
+					DAH.beginTransaction();
+
+					System.out.println("items en toToggleActivate " + toToggleActivate);
+					DAH.activateAgroquimicos(list);
+					DAH.commitTransaction();
+					System.out.println("termine de activar/desactivar " + toToggleActivate);
+				}catch(Exception e) {					
+					System.out.println("no se pudo cambiar el estado del item");
+					e.printStackTrace();
+				}
+				//	});
+			}
+					);
+
 
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
