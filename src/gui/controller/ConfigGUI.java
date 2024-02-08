@@ -15,11 +15,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import javax.persistence.EntityManager;
 
 import org.geotools.data.FileDataStore;
 
@@ -51,13 +48,11 @@ import dao.fertilizacion.FertilizacionLabor;
 import dao.margen.Margen;
 import dao.ordenCompra.OrdenCompra;
 import dao.ordenCompra.OrdenCompraItem;
-import dao.pulverizacion.CaldoItem;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
 import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.geom.Position;
-import gov.nasa.worldwind.layers.rpf.RPFFileIndex.Table;
 import gui.JFXMain;
 import gui.MargenConfigDialogController;
 import gui.Messages;
@@ -66,7 +61,6 @@ import gui.utils.DoubleTableColumn;
 import gui.utils.SmartTableView;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.DoublePropertyBase;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
