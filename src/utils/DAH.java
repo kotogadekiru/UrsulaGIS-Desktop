@@ -681,6 +681,21 @@ public class DAH {
 		}  
 		return result;	
 	}
+
+	public static void activateAgroquimicos(List<Agroquimico> listAgroquimicos) {
+		EntityManager em = em();
+		if(DAH.transaction == null){
+			//	DAH.transaction = em.getTransaction();
+			em.getTransaction().begin();		
+			listAgroquimicos.forEach(each->each.toggleActivo());
+			//em.remove(entidad);			
+			em.getTransaction().commit();
+		} else{
+			listAgroquimicos.forEach(each->each.toggleActivo());
+
+			//em.remove(entidad);	
+		}
+	}
 	
 	//	public static void main(String[] args) throws Exception {
 	//	       // Open a database connection
