@@ -127,7 +127,7 @@ public class ExcelHelper {
 				
 				a.setUnidadDosis("lts");
 				a.setUnidadStock("lts");
-				//0) N° registro 
+				//0) Nï¿½ registro 
 											
 				a.setNumRegistro(getStringValueFromCell(row.getCell(0)));
 				
@@ -148,7 +148,7 @@ public class ExcelHelper {
 						+"activos:"+a.getActivos()+" "
 						+"banda:"+a.getBandaToxicologica()+" ");
 				
-				Agroquimico r = DAH.finAgroquimico(a.getNumRegistro());
+				Agroquimico r = DAH.findAgroquimico(a.getNumRegistro());
 				if(r!=null) {
 					System.out.println("existe, no lo guardo");
 				} else {
