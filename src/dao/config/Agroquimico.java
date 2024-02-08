@@ -78,4 +78,8 @@ public class Agroquimico extends Producto implements Comparable<Agroquimico>{
 	public int compareTo(Agroquimico p) {
 		return super.compareTo(p);	
 	}
+	
+	public void toggleActivo() {
+		this.activo = !this.activo;
+	}
 }
