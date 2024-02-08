@@ -2,6 +2,9 @@ package gui.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -62,6 +65,7 @@ import gui.nww.LaborLayer;
 import gui.nww.LayerAction;
 import gui.nww.LayerPanel;
 import gui.utils.DateConverter;
+import gui.utils.NumberInputDialog;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -69,6 +73,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -478,13 +483,12 @@ public class PoligonoGUIController extends AbstractGUIController{
 			return;
 		}							
 
-		TextInputDialog anchoDialog = new TextInputDialog(Messages.getString("JFXMain.257")); //$NON-NLS-1$
-		anchoDialog.setTitle(Messages.getString("JFXMain.258")); //$NON-NLS-1$
-		anchoDialog.setContentText(Messages.getString("JFXMain.259")); //$NON-NLS-1$
-		Optional<String> anchoOptional = anchoDialog.showAndWait();
-		Double rinde = PropertyHelper.parseDouble(anchoOptional.get()).doubleValue();//Double.valueOf(anchoOptional.get());
-
-		CrearSiembraMapTask umTask = new CrearSiembraMapTask(labor,polis,rinde);
+		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.250"));
+		if (dosis.isNaN()) {
+			return;
+		}
+		
+		CrearSiembraMapTask umTask = new CrearSiembraMapTask(labor,polis,dosis);
 		umTask.installProgressBar(main.getProgressBox());
 
 		umTask.setOnSucceeded(handler -> {
@@ -515,13 +519,12 @@ public class PoligonoGUIController extends AbstractGUIController{
 			return;
 		}							
 
-		TextInputDialog anchoDialog = new TextInputDialog(Messages.getString("JFXMain.262")); //$NON-NLS-1$
-		anchoDialog.setTitle(Messages.getString("JFXMain.263")); //$NON-NLS-1$
-		anchoDialog.setContentText(Messages.getString("JFXMain.264")); //$NON-NLS-1$
-		Optional<String> anchoOptional = anchoDialog.showAndWait();
-		Double rinde = PropertyHelper.parseDouble(anchoOptional.get()).doubleValue();//Double.valueOf(anchoOptional.get());
-
-		CrearFertilizacionMapTask umTask = new CrearFertilizacionMapTask(labor,polis,rinde);
+		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.250"));
+		if (dosis.isNaN()) {
+			return;
+		}
+		
+		CrearFertilizacionMapTask umTask = new CrearFertilizacionMapTask(labor,polis,dosis);
 		umTask.installProgressBar(progressBox);
 
 		umTask.setOnSucceeded(handler -> {
@@ -548,21 +551,19 @@ public class PoligonoGUIController extends AbstractGUIController{
 		labor.setLayer(layer);
 
 		//TODO modificar el dialog controler para poder ingresar el caldo
-		Optional<PulverizacionLabor> cosechaConfigured= PulverizacionConfigDialogController.config(labor);
-		if(!cosechaConfigured.isPresent()){//
+		Optional<PulverizacionLabor> pulvConfigured= PulverizacionConfigDialogController.config(labor);
+		if(!pulvConfigured.isPresent()){//
 			System.out.println(Messages.getString("JFXMain.249")); //$NON-NLS-1$
 			labor.dispose();//libero los recursos reservados
 			return;
 		}							
-
-		TextInputDialog anchoDialog = new TextInputDialog(Messages.getString("JFXMain.250")); //$NON-NLS-1$
-		anchoDialog.setTitle(Messages.getString("JFXMain.251")); //$NON-NLS-1$
-		anchoDialog.setContentText(Messages.getString("JFXMain.252")); //$NON-NLS-1$
-		anchoDialog.initOwner(JFXMain.stage);
-
-		Optional<String> anchoOptional = anchoDialog.showAndWait();
-		Double rinde = PropertyHelper.parseDouble(anchoOptional.get()).doubleValue();//Double.valueOf(anchoOptional.get());
-		CrearPulverizacionMapTask umTask = new CrearPulverizacionMapTask(labor,poli,rinde);
+		
+		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.250"));
+		if (dosis.isNaN()) {
+			return;
+		}
+		
+		CrearPulverizacionMapTask umTask = new CrearPulverizacionMapTask(labor,poli,dosis);
 		umTask.installProgressBar(progressBox);
 
 		umTask.setOnSucceeded(handler -> {
@@ -1110,16 +1111,12 @@ public class PoligonoGUIController extends AbstractGUIController{
 			return;
 		}		
 		Double rindeEsperado = cosechaConfigured.get().getCultivo().getRindeEsperado();
-		TextInputDialog rindeDialog = new TextInputDialog(Messages.getNumberFormat().format(rindeEsperado));//Messages.getString("JFXMain.272")); 
 			
-		//TextInputDialog rindeDialog = new TextInputDialog(Messages.getString("JFXMain.267")); //$NON-NLS-1$
-		rindeDialog.setTitle(Messages.getString("JFXMain.268")); //$NON-NLS-1$
-		rindeDialog.setContentText(Messages.getString("JFXMain.269")); //$NON-NLS-1$
-		rindeDialog.initOwner(JFXMain.stage);
-		Optional<String> rindeOptional = rindeDialog.showAndWait();
-		if(!rindeOptional.isPresent())return;
-		Double rinde = PropertyHelper.parseDouble(rindeOptional.get()).doubleValue();//Double.valueOf(anchoOptional.get());
-
+		Double rinde = NumberInputDialog.showAndWait(Messages.getNumberFormat().format(rindeEsperado));
+		if (rinde.isNaN()) {
+			return;
+		}
+		
 		CrearCosechaMapTask umTask = new CrearCosechaMapTask(labor,polis,rinde);
 		umTask.installProgressBar(progressBox);
 
