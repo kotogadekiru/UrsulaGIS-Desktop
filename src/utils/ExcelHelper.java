@@ -149,11 +149,12 @@ public class ExcelHelper {
 						+"banda:"+a.getBandaToxicologica()+" ");
 				
 				Agroquimico r = DAH.findAgroquimico(a.getNumRegistro());
-				if(r!=null) {
-					System.out.println("existe, no lo guardo");
-				} else {
+				if(r==null) {
 					DAH.save(a);
-					System.out.println("no existe, lo guardo");
+					//System.out.println("no existe, lo guardo");
+				} else {
+					//System.out.println("existe, no lo guardo");
+					continue;
 				}
 		
 //				while (cellIterator.hasNext()) {
