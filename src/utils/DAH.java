@@ -670,7 +670,7 @@ public class DAH {
 		return result;	
 	}
 
-	public static Agroquimico finAgroquimico(String numRegistro) {
+	public static Agroquimico findAgroquimico(String numRegistro) {
 		TypedQuery<Agroquimico> query = em().createNamedQuery(
 				Agroquimico.FIND_NUM_REG, Agroquimico.class);
 		query.setParameter("numReg", numRegistro);
@@ -681,6 +681,7 @@ public class DAH {
 		}  
 		return result;	
 	}
+
 	
 	//	public static void main(String[] args) throws Exception {
 	//	       // Open a database connection

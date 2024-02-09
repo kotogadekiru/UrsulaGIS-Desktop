@@ -179,6 +179,8 @@ public class SmartTableView<T> extends TableView<T> {
 		ContextMenu contextMenu = new ContextMenu();
 		MenuItem mostrarItem = new MenuItem(Messages.getString("SmartTableView.Cargar"));//"Cargar"
 		MenuItem eliminarItem = new MenuItem(Messages.getString("SmartTableView.Eliminar"));//Eliminar
+		MenuItem activarItem = new MenuItem(Messages.getString("SmartTableView.Activar"));//Activar
+		
 
 		//Map<MenuItem,Consumer<T>> mIMap = new HashMap<MenuItem,Consumer<T>>();
 		this.needsLayoutProperty()
@@ -193,8 +195,7 @@ public class SmartTableView<T> extends TableView<T> {
 			if(rowData != null && rowData.size()>0 ){
 				if(onShowClick!=null) contextMenu.getItems().add(mostrarItem);
 				if(permiteEliminar)   contextMenu.getItems().add(eliminarItem);
-
-
+				
 				if ( MouseButton.PRIMARY.equals(event.getButton()) && event.getClickCount() == 2) {
 					if(onDoubleClick!=null){
 						data.add(onDoubleClick.get());
@@ -205,7 +206,9 @@ public class SmartTableView<T> extends TableView<T> {
 					consumerMap.keySet().stream().forEach(mi->{
 						contextMenu.getItems().add(mi);
 						mi.setOnAction((ev)->{
-							Platform.runLater(()->	rowData.forEach(consumerMap.get(mi)));
+							Platform.runLater(() ->	{rowData.forEach(consumerMap.get(mi));
+													refresh();
+							});
 						});
 					});
 
@@ -241,7 +244,7 @@ public class SmartTableView<T> extends TableView<T> {
 								eliminarFailAlert.show();
 							}							
 						}
-					});			
+					});		
 				}
 			}
 		});
@@ -1332,6 +1335,8 @@ public class SmartTableView<T> extends TableView<T> {
 	public void setPermiteEliminar(boolean b) {
 		this.permiteEliminar=b;
 	}
+	
+	
 	/**
 	 * @return the onDoubleClick
 	 */
@@ -1355,6 +1360,7 @@ public class SmartTableView<T> extends TableView<T> {
 		this.eliminarAction = eliminarAction;
 	}
 
+	
 	public void refresh() { 
 		//Wierd JavaFX bug 
 		ObservableList<T> data = this.getItems();

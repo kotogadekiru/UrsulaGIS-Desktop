@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -49,7 +48,6 @@ import dao.fertilizacion.FertilizacionLabor;
 import dao.margen.Margen;
 import dao.ordenCompra.OrdenCompra;
 import dao.ordenCompra.OrdenCompraItem;
-import dao.pulverizacion.CaldoItem;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
@@ -63,7 +61,6 @@ import gui.utils.DoubleTableColumn;
 import gui.utils.SmartTableView;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.DoublePropertyBase;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -475,30 +472,31 @@ public class ConfigGUI extends AbstractGUIController{
 					SelectionMode.MULTIPLE
 					);
 			table.setEliminarAction(list->{
-				System.out.println("eliminadno agroquimicos "+list);
+				//System.out.println("eliminando agroquimicos "+list);
 				List<Object> toRemove = new ArrayList<Object>();
-				System.out.println("agregando a toRemove "+list);
+				//System.out.println("agregando a toRemove "+list);
 				toRemove.addAll(list);
 				//JFXMain.executorPool.execute(()->{
 				try {
 					DAH.beginTransaction();
 
-
-					System.out.println("items en toRemove "+toRemove);
+					//System.out.println("items en toRemove "+toRemove);
 					DAH.removeAll(toRemove);
 					DAH.commitTransaction();
-					System.out.println("termine de eliminar "+toRemove);
+					//System.out.println("termine de eliminar "+toRemove);
 				}catch(Exception e) {					
-					System.out.println("no se pudo borrar");
+					//System.out.println("no se pudo borrar");
+					DAH.rollbackTransaction();
 					e.printStackTrace();
 				}
-				//	});
-			}
-					);
+			});
 
 
 			table.setOnDoubleClick(()->new Agroquimico(Messages.getString("JFXMain.376"))); //
 
+			table.addSecondaryClickConsumer(Messages.getString("SmartTableView.Activar"),(r)-> {
+				doToggleAgroquimico(r);
+			});
 
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
@@ -510,6 +508,25 @@ public class ConfigGUI extends AbstractGUIController{
 
 	}
 
+	public static void doToggleAgroquimico(Agroquimico r) {
+//		System.out.println("Activando agroquimicos "+r);
+//		List<Object> toToggleActivate = new ArrayList<Object>();
+//		System.out.println("agregando a toToggleActivate "+r);
+//		toToggleActivate.add(r);
+		try {
+			// System.out.println("Toggleando activo " + r);
+			DAH.beginTransaction();
+			r.toggleActivo();
+			DAH.commitTransaction();
+			// System.out.println("termine de activar/desactivar " + r);
+		}
+		catch(Exception e) {					
+			// System.out.println("no se pudo cambiar el estado del item " + r);
+			DAH.rollbackTransaction();
+			e.printStackTrace();
+		}
+	}
+	
 	public static void doConfigCampania() {
 		Platform.runLater(()->{
 			final ObservableList<Campania> data =
