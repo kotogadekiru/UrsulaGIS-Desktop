@@ -244,9 +244,9 @@ public class DAH {
 				em.getTransaction().begin();		
 				if(em.contains(entidad)) {
 					em.merge(entidad);
-					System.out.println("merging entidad "+entidad);
+					//System.out.println("merging entidad "+entidad);
 				}else {
-					System.out.println("persistiendo entidad "+entidad);
+					//System.out.println("persistiendo entidad "+entidad);
 					em.persist(entidad);			
 				}
 				em.getTransaction().commit();
@@ -261,9 +261,9 @@ public class DAH {
 		} else{
 			if(em.contains(entidad)) {
 				em.merge(entidad);
-				System.out.println("merging entidad "+entidad);
+				//System.out.println("merging entidad "+entidad);
 			}else {
-				System.out.println("persistiendo entidad "+entidad);
+				//System.out.println("persistiendo entidad "+entidad);
 				em.persist(entidad);			
 			}
 		}

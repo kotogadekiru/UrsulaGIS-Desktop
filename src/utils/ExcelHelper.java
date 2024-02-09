@@ -142,11 +142,11 @@ public class ExcelHelper {
 				a.setActivos(getStringValueFromCell(row.getCell(3)));
 				//4) Banda tox				
 				a.setBandaToxicologica(getStringValueFromCell(row.getCell(4)));
-				System.out.println("reg:"+a.getNumRegistro()+" "
-						+"nombre:"+a.getNombre()+" "
-						+"empresa:"+a.getEmpresa()+" "
-						+"activos:"+a.getActivos()+" "
-						+"banda:"+a.getBandaToxicologica()+" ");
+//				System.out.println("reg:"+a.getNumRegistro()+" "
+//						+"nombre:"+a.getNombre()+" "
+//						+"empresa:"+a.getEmpresa()+" "
+//						+"activos:"+a.getActivos()+" "
+//						+"banda:"+a.getBandaToxicologica()+" ");
 				
 				Agroquimico r = DAH.findAgroquimico(a.getNumRegistro());
 				if(r==null) {
