@@ -642,7 +642,7 @@ public class DAH {
 		TypedQuery<Producto> query = em().createNamedQuery(
 				Producto.FIND_NAME, Producto.class);
 		query.setParameter("name", productoNombre);
-		Producto results = query.getSingleResult();
+		Producto results = query.getSingleResult();//Exception Description: Missing class indicator field from database row [ArrayRecord(PRODUCTO.DTYPE => null)].
 		return results;		
 	}
 

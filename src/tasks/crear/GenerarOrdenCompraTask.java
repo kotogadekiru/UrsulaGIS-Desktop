@@ -59,6 +59,7 @@ public class GenerarOrdenCompraTask  extends Task<OrdenCompra>{
 		this.pulverizaciones=_pulverizaciones;
 	}
 	public OrdenCompra call()  {
+		try {
 		//TODO agregar contorno a ordenCompra
 		Map<Producto,OrdenCompraItem> prodCantidadMap = new HashMap<Producto,OrdenCompraItem>();
 		StringBuilder description = new StringBuilder();
@@ -142,6 +143,10 @@ public class GenerarOrdenCompraTask  extends Task<OrdenCompra>{
 		oc.getItems().stream().forEach((item)->item.setOrdenCompra(oc));
 
 		return oc;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	private void putItem(Map<Producto, OrdenCompraItem> items, Producto producto, Double cantidad, Double precio) {

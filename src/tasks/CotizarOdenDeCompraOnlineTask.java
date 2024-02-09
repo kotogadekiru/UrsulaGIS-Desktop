@@ -115,7 +115,7 @@ public class CotizarOdenDeCompraOnlineTask extends Task<String> {
 					String dbUrl = dbOrdenCompra.getUrl();
 					this.ordenCompra.setUrl(dbUrl);
 					DAH.save(this.ordenCompra);
-					String urlGoto =dbUrl;// "https://www.ursulagis.com/api/orden_compra/"+id+"/";
+					String urlGoto =dbUrl;// "https://www.ursulagis.com/api/orden_compra/id/"+id+"/";
 					return urlGoto;
 				}
 				return "status Success but data null";

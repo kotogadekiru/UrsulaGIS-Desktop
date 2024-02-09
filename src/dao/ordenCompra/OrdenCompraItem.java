@@ -67,6 +67,8 @@ public class OrdenCompraItem {
 		
 		this.importe =cantidad*precio; //BigDecimal.valueOf(cantidad*precio).round(mc);
 		//return this.importe;
-		this.ordenCompra.calcImporteTotal();
+		if(ordenCompra!=null) {
+			this.ordenCompra.calcImporteTotal();
+		}
 	}
 }

@@ -933,6 +933,13 @@ public class ConfigGUI extends AbstractGUIController{
 
 				oc.setMail(mail);
 				CotizarOdenDeCompraOnlineTask cotTask= new CotizarOdenDeCompraOnlineTask(oc); 
+				cotTask.setOnSucceeded((wse)->{
+					String url=oc.getUrl();
+					if(url==null) {
+						url= "https://www.ursulagis.com/api/orden_compra/uuid/"+oc.getUuid()+"/";
+					}
+					showQR(url);	
+				});
 
 				JFXMain.executorPool.execute(cotTask);
 				// enviar orden de compra a la nube. preguntar mail de contacto y subir la orden de compra a la nube
@@ -975,7 +982,8 @@ public class ConfigGUI extends AbstractGUIController{
 			table.setEditable(true);
 			table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
 			table.setOnShowClick((oc)->{
-				this.doShowOrdenCompraItems(oc);
+				this.doShowOrdenCompraItems(oc);				
+					
 			});
 
 			table.setEliminarAction(

@@ -9,7 +9,6 @@ import javax.persistence.Entity;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
-import dao.Poligono;
 import dao.ordenCompra.Producto;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -52,6 +51,8 @@ public class Agroquimico extends Producto implements Comparable<Agroquimico>{
 		agroquimicos.put("Haloxifop 90% (Galant max)(lts)",new Agroquimico("Haloxifop 90% (Galant max)(lts)"));	
 		return agroquimicos;
 	}	
+	private String unidadDosis = new String();
+	private String unidadStock = new String(); 
 	
 	private boolean activo = false;
 	private String numRegistro=null;

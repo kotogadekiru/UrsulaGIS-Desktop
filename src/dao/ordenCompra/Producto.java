@@ -28,8 +28,7 @@ public abstract class Producto {
 	@Id @GeneratedValue
 	private Long id=null;
 	protected String nombre = new String();
-	protected String unidadDosis = new String();
-	protected String unidadStock = new String();
+
 	
 	public Producto() {		
 	}
