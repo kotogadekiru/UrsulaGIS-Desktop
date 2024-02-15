@@ -891,6 +891,8 @@ public class ConfigGUI extends AbstractGUIController{
 			//box.getChildren().add(myLabel);
 			//			TextField total=new TextField();
 			//			total.setEditable(false);
+			
+			oc.calcImporteTotal();
 			Double total = oc.getImporteTotal();
 			if(total == null) {
 				System.out.println("total es null");
