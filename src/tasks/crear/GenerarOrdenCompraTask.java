@@ -153,6 +153,7 @@ public class GenerarOrdenCompraTask  extends Task<OrdenCompra>{
 		if(cantidad==0)return;
 		if(items.containsKey(producto)) {
 			OrdenCompraItem existente = items.get(producto);
+			existente.calcImporte();
 			Double nuevaCantidad = existente.getCantidad()+cantidad;
 			Double nuevoPrecio = nuevaCantidad>0?(existente.getImporte()+precio*cantidad)
 					/(nuevaCantidad):0;
