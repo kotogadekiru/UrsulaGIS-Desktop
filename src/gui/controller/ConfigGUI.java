@@ -3,6 +3,7 @@ package gui.controller;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
@@ -901,7 +902,11 @@ public class ConfigGUI extends AbstractGUIController{
 			DoubleProperty dp = new SimpleDoubleProperty();
 			dp.set(total);
 		
-			String totalString = Messages.getNumberFormat().format(total);
+			NumberFormat numberFormat = Messages.getNumberFormat();
+	        // Dejar 2 decimales nada mas
+	        numberFormat.setMaximumFractionDigits(2);
+
+			String totalString = numberFormat.format(total);
 			Label importeTotalLabel = new Label("Importe total: "+totalString);			
 		//TODO actualizar el importe total cuando se cambia el precio o la cantidad
 			importeTotalLabel.setPadding(new Insets(5,5,5,5));//ar,d,ab,izq
