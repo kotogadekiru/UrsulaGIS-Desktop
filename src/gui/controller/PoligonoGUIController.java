@@ -483,7 +483,10 @@ public class PoligonoGUIController extends AbstractGUIController{
 			return;
 		}							
 
-		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.250"));
+		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.siembraNumTitle"), 
+													Messages.getString("JFXMain.siembraNumContent"), 
+													Messages.getString("JFXMain.siembraNumPrompt"), 
+													Messages.getString("JFXMain.SeparatorWarningTooltip"));
 		if (dosis.isNaN()) {
 			return;
 		}
