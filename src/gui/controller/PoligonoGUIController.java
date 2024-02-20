@@ -522,7 +522,10 @@ public class PoligonoGUIController extends AbstractGUIController{
 			return;
 		}							
 
-		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.250"));
+		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.fertNumTitle"), 
+													Messages.getString("JFXMain.fertNumContent"), 
+													Messages.getString("JFXMain.fertNumPrompt"), 
+													Messages.getString("JFXMain.SeparatorWarningTooltip"));
 		if (dosis.isNaN()) {
 			return;
 		}
@@ -561,7 +564,10 @@ public class PoligonoGUIController extends AbstractGUIController{
 			return;
 		}							
 		
-		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.250"));
+		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.pulvNumTitle"), 
+													Messages.getString("JFXMain.pulvNumContent"), 
+													Messages.getString("JFXMain.pulvNumPrompt"), 
+													Messages.getString("JFXMain.SeparatorWarningTooltip"));
 		if (dosis.isNaN()) {
 			return;
 		}
