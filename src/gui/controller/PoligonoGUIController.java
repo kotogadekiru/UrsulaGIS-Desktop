@@ -1112,7 +1112,10 @@ public class PoligonoGUIController extends AbstractGUIController{
 		}		
 		Double rindeEsperado = cosechaConfigured.get().getCultivo().getRindeEsperado();
 			
-		Double rinde = NumberInputDialog.showAndWait(Messages.getNumberFormat().format(rindeEsperado));
+		Double rinde = NumberInputDialog.showAndWait(Messages.getString("JFXMain.cosechaNumTitle"), 
+													Messages.getString("JFXMain.cosechaNumContent"), 
+													Messages.getNumberFormat().format(rindeEsperado), 
+													Messages.getString("JFXMain.SeparatorWarningTooltip"));
 		if (rinde.isNaN()) {
 			return;
 		}
