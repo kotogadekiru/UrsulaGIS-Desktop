@@ -64,7 +64,7 @@
                                  </opaqueInsets>
                               </Label>
                               <TextField id="textPrecioGrano" fx:id="textPrecioFert" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-                              <Label text="Costo Lab. Fert por Ha" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                              <Label text="%FertilizacionConfigDialog.costoLabHaLabel" GridPane.columnIndex="2" GridPane.rowIndex="2" />
                               <TextField id="textCostoCosechaHa" fx:id="textCostoLaborHa" GridPane.columnIndex="3" GridPane.rowIndex="2" />
                               <Label text="%FertilizacionConfigDialog.fertilizanteLabel" GridPane.columnIndex="2" GridPane.rowIndex="3" />
                               <ComboBox id="comboCultivo" fx:id="comboFertilizante" prefWidth="150.0" promptText="Fertilizante" GridPane.columnIndex="3" GridPane.rowIndex="3" />
