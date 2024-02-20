@@ -483,7 +483,10 @@ public class PoligonoGUIController extends AbstractGUIController{
 			return;
 		}							
 
-		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.250"));
+		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.siembraNumTitle"), 
+													Messages.getString("JFXMain.siembraNumContent"), 
+													Messages.getString("JFXMain.siembraNumPrompt"), 
+													Messages.getString("JFXMain.SeparatorWarningTooltip"));
 		if (dosis.isNaN()) {
 			return;
 		}
@@ -519,7 +522,10 @@ public class PoligonoGUIController extends AbstractGUIController{
 			return;
 		}							
 
-		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.250"));
+		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.fertNumTitle"), 
+													Messages.getString("JFXMain.fertNumContent"), 
+													Messages.getString("JFXMain.fertNumPrompt"), 
+													Messages.getString("JFXMain.SeparatorWarningTooltip"));
 		if (dosis.isNaN()) {
 			return;
 		}
@@ -558,7 +564,10 @@ public class PoligonoGUIController extends AbstractGUIController{
 			return;
 		}							
 		
-		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.250"));
+		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.pulvNumTitle"), 
+													Messages.getString("JFXMain.pulvNumContent"), 
+													Messages.getString("JFXMain.pulvNumPrompt"), 
+													Messages.getString("JFXMain.SeparatorWarningTooltip"));
 		if (dosis.isNaN()) {
 			return;
 		}
@@ -1112,7 +1121,10 @@ public class PoligonoGUIController extends AbstractGUIController{
 		}		
 		Double rindeEsperado = cosechaConfigured.get().getCultivo().getRindeEsperado();
 			
-		Double rinde = NumberInputDialog.showAndWait(Messages.getNumberFormat().format(rindeEsperado));
+		Double rinde = NumberInputDialog.showAndWait(Messages.getString("JFXMain.cosechaNumTitle"), 
+													Messages.getString("JFXMain.cosechaNumContent"), 
+													Messages.getNumberFormat().format(rindeEsperado), 
+													Messages.getString("JFXMain.SeparatorWarningTooltip"));
 		if (rinde.isNaN()) {
 			return;
 		}
