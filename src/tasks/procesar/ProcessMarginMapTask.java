@@ -1,13 +1,10 @@
 package tasks.procesar;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.geometry.BoundingBox;
@@ -17,15 +14,9 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.PrecisionModel;
-import com.vividsolutions.jts.index.quadtree.Quadtree;
-import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
-import com.vividsolutions.jts.precision.SimpleGeometryPrecisionReducer;
 
-import dao.LaborItem;
 import dao.Labor;
-import dao.cosecha.CosechaConfig;
-import dao.cosecha.CosechaItem;
+import dao.LaborItem;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.margen.Margen;

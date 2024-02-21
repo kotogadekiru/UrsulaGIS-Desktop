@@ -504,7 +504,7 @@ public class JFXMain extends Application {
 		/**
 		 *Accion que permite resumir por categoria un mapa de rentabilidad
 		 */
-		margenesP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.resumeMargenAction"),(layer)->{	
+		margenesP.add(LayerAction.constructPredicate(Messages.getString("ResumirMargenMapTask.resumirAction"),(layer)->{	
 			configGUIController.doResumirMargin((Margen) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 			return "margen resumido" + layer.getName(); 
 		}));

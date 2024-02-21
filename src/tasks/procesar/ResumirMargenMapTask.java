@@ -33,7 +33,7 @@ public class ResumirMargenMapTask extends ProcessMapTask<MargenItem,Margen> {
 		margen.setLayer(new LaborLayer());
 		this.labor=margen;
 		aResumir=_aResumir;
-		labor.setNombre(aResumir.getNombre()+" resumido");
+		labor.setNombre(aResumir.getNombre()+Messages.getString("ResumirMargenMapTask.resumido"));
 		labor.setContorno(aResumir.getContorno());
 		labor.getCostoFijoHaProperty().setValue(aResumir.getCostoFijoHaProperty().getValue());
 		labor.getCostoFleteProperty().setValue(aResumir.getCostoFleteProperty().getValue());
