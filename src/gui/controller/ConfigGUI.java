@@ -100,6 +100,7 @@ import tasks.UpdateTask;
 import tasks.crear.GenerarOrdenCompraTask;
 import tasks.importar.OpenMargenMapTask;
 import tasks.procesar.ProcessMarginMapTask;
+import tasks.procesar.ResumirMargenMapTask;
 import utils.DAH;
 import utils.ExcelHelper;
 import utils.FileHelper;
@@ -192,7 +193,7 @@ public class ConfigGUI extends AbstractGUIController{
 		MenuItem actualizarMI=addMenuItem(Messages.getString("JFXMain.configUpdate"),null,menuConfiguracion); 
 		actualizarMI.setOnAction((a)->doUpdate());
 		actualizarMI.setVisible(false);
-		checkIfactualizarMIEnabled(menuConfiguracion, actualizarMI);
+		//checkIfactualizarMIEnabled(menuConfiguracion, actualizarMI);
 		
 		return menuConfiguracion;
 	}
@@ -233,6 +234,22 @@ public class ConfigGUI extends AbstractGUIController{
 			System.out.println("SiembraFertTask succeded"); 
 		});
 		executorPool.execute(gOCTask);
+	}
+	
+	public void doResumirMargin(Margen aResumir) {
+		ResumirMargenMapTask uMmTask = new ResumirMargenMapTask(aResumir);
+
+		uMmTask.installProgressBar(progressBox);
+		uMmTask.setOnSucceeded(handler -> {
+			Margen ret = (Margen)handler.getSource().getValue();
+			uMmTask.uninstallProgressBar();			
+			insertBeforeCompass(getWwd(), ret.getLayer());
+			this.getLayerPanel().update(this.getWwd());
+			playSound();
+			viewGoTo(ret);
+			System.out.println(Messages.getString("JFXMain.323")); 
+		});
+		executorPool.execute(uMmTask);
 	}
 
 	
