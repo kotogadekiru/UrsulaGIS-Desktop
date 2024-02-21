@@ -500,6 +500,14 @@ public class JFXMain extends Application {
 			doEditMargin((Margen) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 			return "margen editado" + layer.getName(); 
 		}));
+		
+		/**
+		 *Accion que permite resumir por categoria un mapa de rentabilidad
+		 */
+		margenesP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.resumeMargenAction"),(layer)->{	
+			configGUIController.doResumirMargin((Margen) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+			return "margen resumido" + layer.getName(); 
+		}));
 	}
 
 	private void addAccionesLabor(Map<Class<?>, List<LayerAction>> predicates) {
