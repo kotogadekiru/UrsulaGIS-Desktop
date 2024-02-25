@@ -13,6 +13,7 @@ import org.geotools.data.FileDataStore;
 import dao.Labor;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
+import dao.margen.Margen;
 import dao.suelo.Suelo;
 import dao.utils.PropertyHelper;
 import gui.HarvestConfigDialogController;
@@ -27,6 +28,8 @@ import tasks.crear.ConvertirSueloACosechaTask;
 import tasks.importar.OpenSoilMapTask;
 import tasks.importar.ProcessHarvestMapTask;
 import tasks.procesar.ProcessBalanceDeNutrientes;
+import tasks.procesar.ResumirMargenMapTask;
+import tasks.procesar.ResumirSoilMapTask;
 import utils.FileHelper;
 
 public class SueloGUIController {
@@ -57,6 +60,34 @@ public class SueloGUIController {
 			doEstimarPotencialRendimiento((Suelo) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 			return "potencial de rendimiento suelo estimado" + layer.getName(); 
 		}));
+		
+		/**
+		 *Accion que permite resumir por categoria un mapa de rentabilidad
+		 */
+		suelosP.add(LayerAction.constructPredicate(Messages.getString("ResumirMargenMapTask.resumirAction"),(layer)->{	
+			doResumirSuelo((Suelo) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+			return "margen resumido" + layer.getName(); 
+		}));
+		
+	}
+	
+	public void doResumirSuelo(Suelo aResumir) {
+		ResumirSoilMapTask uMmTask = new ResumirSoilMapTask(aResumir);
+
+		uMmTask.installProgressBar(main.progressBox);
+		uMmTask.setOnSucceeded(handler -> {
+			Suelo ret = (Suelo)handler.getSource().getValue();
+			uMmTask.uninstallProgressBar();			
+			
+			JFXMain.insertBeforeCompass(main.getWwd(), ret.getLayer());
+			main.getLayerPanel().update(main.getWwd());
+
+			main.playSound();
+			main.viewGoTo(ret);
+			
+			System.out.println(Messages.getString("JFXMain.323")); 
+		});
+		JFXMain.executorPool.execute(uMmTask);
 	}
 	
 	public void doProcesarBalanceNutrientes() {		
