@@ -3,6 +3,7 @@ package gui;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListResourceBundle;
@@ -115,6 +116,18 @@ public class Messages {
 		char sep=symbols.getDecimalSeparator();
 		return sep;
 	}
+	
+	public static void main(String[] args) {
+		//TEST NumberFormater
+		try {
+			Double d = Messages.getNumberFormat().parse("1085").doubleValue();
+			System.out.println("1085 es "+d);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+	}
+	
+
 }
 
  

@@ -180,13 +180,19 @@ public abstract class LaborItem implements Comparable<Object>{
 			
 			d = new Double((Long) o);
 		} else if(o instanceof String){			
+//			try {
+//				d = Messages.getNumberFormat().parse((String) o).doubleValue();
+//			}catch(Exception e) {
+//				e.printStackTrace();
+//				System.out.println("returning 0 for "+o);
+//			}
 			StringConverter<Number> converter = new NumberStringConverter(Messages.getLocale());
-
-			try{
+			try{				
 				d=converter.fromString((String) o).doubleValue();
 				//	d = new Double((String) o);
 			}catch(Exception e){
 				e.printStackTrace();
+				System.out.println("returning 0 for " + o);
 			}
 		}else{
 			//es por que estoy leyendo una columna que no existe en ese feature. como ancho en una prescripcion.

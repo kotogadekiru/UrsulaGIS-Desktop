@@ -3,11 +3,8 @@ package dao.suelo;
 import org.opengis.feature.simple.SimpleFeature;
 
 import dao.LaborItem;
-import dao.config.Fertilizante;
-import dao.cosecha.CosechaItem;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import utils.ProyectionConstants;
 
 //Los parámetros necesarios para cada tipo de suelo son: 
 //o Capacidad de campo
@@ -39,6 +36,7 @@ public class SueloItem extends LaborItem { //suelo item no es labor item. le sob
 	 *  Franco Arcilloso, 1,33 g cm-3; 
 	 *  Arcillo Arenoso, 1,3 g cm-3 y 
 	 *  Arcillosos, 1,25 g cm-3.
+	 *  densidad en kg/m3
 	 */
 	public static final double DENSIDAD_SUELO_KG = 1.4*1000;//+-0.4 Arenoso 1650, franco 1400, arcilloso 1250
 
@@ -50,14 +48,20 @@ public class SueloItem extends LaborItem { //suelo item no es labor item. le sob
 	private Double ppmP=new Double(0);	
 	private Double ppmK=new Double(0);	
 	private Double ppmS=new Double(0);	
+	
 	private Double porcMO=new Double(0);	//puede ser labil o permanente
 	private Double densAp=new Double(DENSIDAD_SUELO_KG);//Densidad aparente 0-60
-	/*La profundidad en cm hasta la napa*/
+	/**
+	 * La profundidad en cm hasta la napa
+	 */
 	private Double profNapa=new Double(0);	
 	private Double aguaPerfil=new Double(0);	
 	
 	private String textura ="";
 	private Double porosidad = new Double(0);
+	/**
+	 * Capacidad de campo
+	 */
 	private Double porcCC = new Double(0);//Capacidad de campo
 
 	
@@ -81,10 +85,16 @@ public class SueloItem extends LaborItem { //suelo item no es labor item. le sob
 				getPpmP(),
 				getPpmK(),
 				getPpmS(),
+				
 				getPorcMO(),
+				getDensAp(),
+				
 				getProfNapa(),
 				getAguaPerfil(),
-				getDensAp()
+				
+				getTextura(),
+				getPorosidad(),
+				getPorcCC()
 		};
 		return elements;
 	}

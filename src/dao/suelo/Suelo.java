@@ -38,6 +38,10 @@ public class Suelo extends Labor<SueloItem>{
 	public static final String COLUMNA_DENSIDAD = "Densidad";
 	public static final String COLUMNA_PROF_NAPA= "Prof_Nap";
 	public static final String COLUMNA_AGUA_PERFIL= "Agua_Pe";
+	
+	public static final String COLUMNA_TEXTURA = "Textura";
+	public static final String COLUMNA_POROSIDAD = "Porosidad";
+	public static final String COLUMNA_CAPACIDAD_CAMPO = "Capacidad_Campo";
 
 	//las propiedades que le permiten al usuario definir el nombre de sus columnas
 	@Transient
@@ -83,14 +87,24 @@ public class Suelo extends Labor<SueloItem>{
 				+ Suelo.COLUMNA_P + ":Double,"
 				+ Suelo.COLUMNA_K + ":Double,"
 				+ Suelo.COLUMNA_S + ":Double,"
-				+ Suelo.COLUMNA_MO + ":Double,"
+				
+				+ Suelo.COLUMNA_MO + ":Double,"		
+				+ Suelo.COLUMNA_DENSIDAD + ":Double,"
+				
 				+ Suelo.COLUMNA_PROF_NAPA + ":Double,"
 				+ Suelo.COLUMNA_AGUA_PERFIL + ":Double,"
-				+ Suelo.COLUMNA_DENSIDAD + ":Double";
+		
+				+ Suelo.COLUMNA_TEXTURA + ":String,"//getTextura(),
+				+ Suelo.COLUMNA_POROSIDAD + ":Double,"//	getPorosidad(),
+				+ Suelo.COLUMNA_CAPACIDAD_CAMPO + ":Double,";//	getPorcCC()
 
 		return type;
 	}
 
+	/**
+	 * 
+	 * metodo que construye un SueloItem teniendo en cuenta las columnas estandar
+	 */
 	@Override
 	public SueloItem constructFeatureContainerStandar(SimpleFeature next, boolean newIDS) {
 		SueloItem si = new SueloItem(next);
@@ -99,16 +113,27 @@ public class Suelo extends Labor<SueloItem>{
 		si.setPpmP(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_P)));
 		si.setPpmK(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_K)));
 		si.setPpmS(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_S)));
+		
 		si.setPorcMO(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_MO)));
-		si.setAguaPerfil(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_AGUA_PERFIL)));
-		si.setProfNapa(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_PROF_NAPA)));
 		si.setDensAp(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DENSIDAD)));
 		if(!(si.getDensAp()>0)) {
 			si.setDensAp(new Double(SueloItem.DENSIDAD_SUELO_KG));//Densidad aparente 0-60);
 		}
+		
+		si.setProfNapa(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_PROF_NAPA)));
+		si.setAguaPerfil(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_AGUA_PERFIL)));
+
+		si.setTextura((String) next.getAttribute(COLUMNA_TEXTURA));
+		si.setPorosidad(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_POROSIDAD)));
+		si.setPorcCC(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_CAPACIDAD_CAMPO)));
+	
+
 		return si;
 	}
 
+	/**
+	 * metodo que construye un SueloItem teniendo en cuenta las columnas informadas
+	 */
 	@Override
 	public SueloItem constructFeatureContainer(SimpleFeature next) {
 		SueloItem si = new SueloItem(next);
@@ -117,14 +142,20 @@ public class Suelo extends Labor<SueloItem>{
 		si.setPpmP(LaborItem.getDoubleFromObj(next.getAttribute(this.colPProperty.get())));
 		si.setPpmK(LaborItem.getDoubleFromObj(next.getAttribute(this.colKProperty.get())));
 		si.setPpmS(LaborItem.getDoubleFromObj(next.getAttribute(this.colSProperty.get())));
+		
 		si.setPorcMO(LaborItem.getDoubleFromObj(next.getAttribute(this.colMOProperty.get())));
-		si.setAguaPerfil(LaborItem.getDoubleFromObj(next.getAttribute(this.colAguaPerfProperty.get())));
-		si.setProfNapa(LaborItem.getDoubleFromObj(next.getAttribute(this.colProfNapaProperty.get())));
-
 		si.setDensAp(LaborItem.getDoubleFromObj(next.getAttribute(this.colDensidadProperty.get())));
 		if(!(si.getDensAp()>0)) {
 			si.setDensAp(new Double(SueloItem.DENSIDAD_SUELO_KG));//Densidad aparente 0-60);
 		}
+		
+		si.setAguaPerfil(LaborItem.getDoubleFromObj(next.getAttribute(this.colAguaPerfProperty.get())));
+		si.setProfNapa(LaborItem.getDoubleFromObj(next.getAttribute(this.colProfNapaProperty.get())));
+
+		si.setTextura((String) next.getAttribute(COLUMNA_TEXTURA));
+		si.setPorosidad(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_POROSIDAD)));
+		si.setPorcCC(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_CAPACIDAD_CAMPO)));
+		
 		//}
 		return si;
 	}

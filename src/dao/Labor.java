@@ -688,6 +688,12 @@ public abstract class Labor<E extends LaborItem>  {
 		LaborDataStore.changeFeature(old,ci,this);
 	}
 
+	/**
+	 * read from simple feature standar to LaborItem
+	 * @param ci
+	 * @param harvestFeature
+	 * @param newIDS
+	 */
 	public void constructFeatureContainerStandar(LaborItem ci, SimpleFeature harvestFeature, Boolean newIDS) {
 		ci.id = LaborItem.getDoubleFromObj(LaborItem.getID(harvestFeature));
 		if(ci.id ==null || newIDS){// flag que me permita ignorar el id del feature y asignar uno nuevo
@@ -722,6 +728,12 @@ public abstract class Labor<E extends LaborItem>  {
 		return false;	
 	}
 
+	/**
+	 * read from simple feature with defined columns to LaborItem
+	 * @param ci
+	 * @param harvestFeature
+	 * @param newIDS
+	 */
 	public void constructFeatureContainer(LaborItem ci, SimpleFeature harvestFeature) {
 		ci.setId(getNextID());
 
