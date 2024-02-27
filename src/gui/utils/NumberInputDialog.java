@@ -16,12 +16,13 @@ import javafx.scene.control.Tooltip;
 public class NumberInputDialog {
     private static Double value = 0.0;
     
-    public static Double showAndWait(String title, String content, String prompt, String tooltip) {
+    public static Double showAndWait(String title, String header, String label, String prompt, String tooltip) {
     	boolean inputIsValid = false;
 		
 		TextInputDialog dialog = new TextInputDialog(prompt);
 		dialog.setTitle(title);
-		dialog.setContentText(content);
+		dialog.setHeaderText(header);
+		dialog.setContentText(label);
 		dialog.initOwner(JFXMain.stage);
 		
 		// Tooltip
