@@ -130,7 +130,7 @@ public class JFXMain extends Application {
 
 	public static final String VERSION = "0.2.29"; 
 	public static final String TITLE_VERSION = "Ursula GIS-"+VERSION; 
-	public static final String buildDate = "01/11/2023";
+	public static final String buildDate = "26/02/2024";
 	public static  final String ICON ="gui/ursula_logo_2020.png";//"gui/32x32-icon-earth.png";// "gui/1-512.png";//UrsulaGIS-Desktop/src/gui/32x32-icon-earth.png 
 	private static final String SOUND_FILENAME = "gui/exito4.mp3";//"gui/Alarm08.wav";//"Alarm08.wav" funciona desde eclipse pero no desde el jar  
 
