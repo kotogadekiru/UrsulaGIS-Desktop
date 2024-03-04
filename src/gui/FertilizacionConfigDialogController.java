@@ -11,6 +11,7 @@ import dao.config.Configuracion;
 import dao.config.Fertilizante;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
+import dao.siembra.SiembraLabor;
 import dao.utils.PropertyHelper;
 import gui.utils.DateConverter;
 import javafx.beans.binding.Bindings;
@@ -193,11 +194,21 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 
 		//textCostoCosechaHa
 		//Bindings.bindBidirectional(this.textCostoLaborHa.textProperty(), labor.precioLaborProperty, converter);
-		this.textCostoLaborHa.textProperty().set(labor.getConfigLabor().getConfigProperties().getPropertyOrDefault(FertilizacionLabor.COLUMNA_PRECIO_PASADA, labor.getPrecioLabor().toString()));
-		this.textCostoLaborHa.textProperty().addListener((obj,old,n)->{			
-			labor.setPrecioLabor(converter.fromString(n).doubleValue());
-			//config.getConfigProperties().getPropertyOrDefault(CosechaLabor.PRECIO_GRANO,"0")
-			labor.getConfigLabor().getConfigProperties().setProperty(FertilizacionLabor.COLUMNA_PRECIO_PASADA, n);
+//		this.textCostoLaborHa.textProperty().set(labor.getConfigLabor().getConfigProperties().getPropertyOrDefault(FertilizacionLabor.COLUMNA_PRECIO_PASADA, labor.getPrecioLabor().toString()));
+//		this.textCostoLaborHa.textProperty().addListener((obj,old,n)->{			
+//			labor.setPrecioLabor(converter.fromString(n).doubleValue());
+//			//config.getConfigProperties().getPropertyOrDefault(CosechaLabor.PRECIO_GRANO,"0")
+//			labor.getConfigLabor().getConfigProperties().setProperty(FertilizacionLabor.COLUMNA_PRECIO_PASADA, n);
+//		});
+		
+		this.textCostoLaborHa.textProperty().set(labor.getConfigLabor().getConfigProperties().getPropertyOrDefault(SiembraLabor.COSTO_LABOR_SIEMBRA, labor.getPrecioLabor().toString()));
+		labor.setPrecioLabor(converter.fromString(this.textCostoLaborHa.textProperty().get()).doubleValue());
+		this.textCostoLaborHa.textProperty().addListener((obj,old,n)->{	
+			Number nuevoPrecio = converter.fromString(n);
+			if(nuevoPrecio!=null) {
+			labor.setPrecioLabor(nuevoPrecio.doubleValue());
+			labor.getConfigLabor().getConfigProperties().setProperty(FertilizacionLabor.COLUMNA_PRECIO_PASADA, converter.toString(nuevoPrecio));
+			}
 		});
 
 
