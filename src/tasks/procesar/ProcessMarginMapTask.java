@@ -10,7 +10,9 @@ import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.geometry.BoundingBox;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
@@ -68,13 +70,46 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 	public void doProcess() throws IOException {
 		//	this.featureTree = new Quadtree();
 		featureNumber = 0;
-
-		List<Polygon> geometryList = construirGrilla(getBounds());
-
 		
-		featureCount = geometryList.size();
+		List<Labor<?>> labores = new LinkedList<Labor<?>>();
+		labores.addAll(fertilizaciones);
+		labores.addAll(pulverizaciones);
+		labores.addAll(siembras);
+		labores.addAll(cosechas);	
+	
+	
+		ReferencedEnvelope unionEnvelope = getBounds(labores);
+		List<Polygon> grilla = construirGrilla(unionEnvelope);
+
+		List<Geometry> geometriasActivas = labores.parallelStream().collect(
+				()->new ArrayList<Geometry>(),
+				(activas, labor) ->{		
+					@SuppressWarnings("unchecked")
+					List<LaborItem> features = (List<LaborItem>) labor.outStoreQuery(unionEnvelope);
+					activas.addAll(
+							features.parallelStream().collect(
+							()->new ArrayList<Geometry>(),
+							(list, f) -> list.add((Geometry) f.getGeometry()),
+							(env1, env2) -> env1.addAll(env2))
+							);
+				},	(env1, env2) -> env1.addAll(env2));
+		
+		GeometryCollection activasCollection = GeometryHelper.toGeometryCollection(geometriasActivas);
+		Geometry cover =  activasCollection.buffer(0);
+		//intersectar la grilla con el contorno
+		List<Geometry> grillaCover = grilla.parallelStream().collect(
+				()->new ArrayList<Geometry>(),
+				(activas, poly) ->{					
+					Geometry intersection = GeometryHelper.getIntersection(poly, cover); 
+					if(intersection!=null) {
+						activas.add(intersection);
+					}
+				},	(env1, env2) -> env1.addAll(env2));
+		
+		
+		featureCount = grillaCover.size();
 	//	List<MargenItem> itemsToShow = new ArrayList<MargenItem>();)
-		List<MargenItem> itemsToShow = 	geometryList.parallelStream().collect(	
+		List<MargenItem> itemsToShow = 	grillaCover.parallelStream().collect(	
 				() -> new  LinkedList<MargenItem>(),
 				(list, polygon) -> {//	).forEach(polygon->{	
 			featureNumber++;
@@ -114,12 +149,12 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 	}
 
 
-	private BoundingBox getBounds() {
-		List<Labor<?>> labores = new ArrayList<Labor<?>>();
-		labores.addAll(cosechas);
-		labores.addAll(siembras);
-		labores.addAll(fertilizaciones);
-		labores.addAll(pulverizaciones);
+	private ReferencedEnvelope getBounds(List<Labor<?>> labores) {
+//		List<Labor<?>> labores = new ArrayList<Labor<?>>();
+//		labores.addAll(cosechas);
+//		labores.addAll(siembras);
+//		labores.addAll(fertilizaciones);
+//		labores.addAll(pulverizaciones);
 
 		ReferencedEnvelope unionEnvelope = labores.stream()
 				.filter((labor)->labor.layer.isEnabled())
@@ -245,20 +280,20 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 //	}
 
 
-	private MargenItem createRentaForPoly(Polygon harvestPolygon) {
+	private MargenItem createRentaForPoly(Geometry g) {
 		Double importeCosecha;
 		Double importePulv;
 		Double importeFert;
 		Double importeSiembra;
-		Double areaMargen = harvestPolygon.getArea() * ProyectionConstants.A_HAS();
+		Double areaMargen = g.getArea() * ProyectionConstants.A_HAS();
 		Double importeFijo = costoFijoHa*areaMargen;
 
-		importeCosecha = getImporteCosecha(harvestPolygon);
+		importeCosecha = getImporteCosecha(g);
 		System.out.println("ingreso por cosecha=" + importeCosecha);
 
-		importePulv = getImportePulv(harvestPolygon);
-		importeFert = getImporteFert(harvestPolygon);
-		importeSiembra = getImporteSiembra(harvestPolygon);
+		importePulv = getImportePulv(g);
+		importeFert = getImporteFert(g);
+		importeSiembra = getImporteSiembra(g);
 		
 
 
@@ -271,7 +306,7 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 			//c = new CosechaItem();
 			renta.setId(labor.getNextID());
 		}
-		renta.setGeometry(harvestPolygon);
+		renta.setGeometry(g);
 		renta.setImportePulvHa(importePulv/ areaMargen);
 		renta.setImporteFertHa(importeFert/ areaMargen);
 		renta.setImporteSiembraHa(importeSiembra/ areaMargen);

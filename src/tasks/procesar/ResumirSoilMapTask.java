@@ -103,7 +103,9 @@ public class ResumirSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		
 			for(List<SueloItem> catItems : itemsByCat) {
 				System.out.println("resumiendo "+catItems.size());
-				itemsCategoria.add(resumirItems(catItems));
+				if(catItems.size()>0) {
+					itemsCategoria.add(resumirItems(catItems));
+				}
 			}
 			
 		System.out.println("items resumidos "+itemsCategoria.size());
@@ -157,6 +159,7 @@ public class ResumirSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		}
 	
 		ret.setId(_id);
+		//System.out.println("devolviendo un suelo item con id="+_id);
 		ret.setDensAp(masaDeSuelo/hasTotal);
 		ret.setPpmNO3(kgN/masaDeSuelo);
 		ret.setPpmP(kgP/masaDeSuelo);

@@ -117,7 +117,9 @@ public class ResumirMargenMapTask extends ProcessMapTask<MargenItem,Margen> {
 		
 			for(List<MargenItem> catItems : itemsByCat) {
 				System.out.println("resumiendo "+catItems.size());
-				itemsCategoria.add(resumirItems(catItems));
+				if(catItems.size()>0) {
+					itemsCategoria.add(resumirItems(catItems));
+				}				
 			}
 			
 		System.out.println("items resumidos "+itemsCategoria.size());
