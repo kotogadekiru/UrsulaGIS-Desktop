@@ -712,6 +712,7 @@ public class GeometryHelper {
 		return area;
 	}
 	public static GeometryCollection toGeometryCollection(List<Geometry> list) {
+		list = list.stream().filter(g->g!=null).collect(Collectors.toList());
 		GeometryFactory fact = ProyectionConstants.getGeometryFactory();
 		Geometry[] array =list.toArray(new Geometry[list.size()]);
 		GeometryCollection collection = fact.createGeometryCollection(array );
