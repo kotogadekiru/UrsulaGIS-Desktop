@@ -97,7 +97,15 @@ public class CortarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem
 			return new Suelo();
 		});
 		constructor.put(Margen.class, l->{
-			return new Margen();
+			Margen ol =(Margen)l;
+			Margen newl = new Margen();
+			newl.setFecha(ol.getFecha());
+			newl.getCostoFleteProperty().setValue(ol.getCostoFleteProperty().getValue());
+			newl.getCostoFijoHaProperty().setValue(ol.getCostoFijoHaProperty().getValue());
+			newl.getCostoTnProperty().setValue(ol.getCostoTnProperty().getValue());
+			//set col amout
+			newl.colAmount.set(newl.colAmount.get());			
+			return newl;
 		});
 		return constructor;
 	}
