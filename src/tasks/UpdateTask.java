@@ -242,6 +242,7 @@ public class UpdateTask  extends Task<File>{
 	 * @return si la ultima version es mas grande que esta version devolver true
 	 */
 	public static boolean isUpdateAvailable() {
+		//System.out.println("viendo si necesito hacer update");
 		//TODO si ya se habia invocado no volver a llamar.
 		if(lastVersionNumber ==null) {
 		GenericUrl url = new GenericUrl(UPDATE_URL);//"http://www.ursulagis.com/update");// "http://www.lanacion.com.ar");
@@ -314,6 +315,7 @@ public class UpdateTask  extends Task<File>{
 	 * @param message
 	 */
 	private static void showWelcomeMessage(String message) {
+		//System.out.println("mostrando welcome \n"+message);
 		Platform.runLater(()->{		    
 			WebView webView = new WebView();
 			// webView.setPrefSize(600, 400);

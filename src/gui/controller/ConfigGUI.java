@@ -193,7 +193,7 @@ public class ConfigGUI extends AbstractGUIController{
 		MenuItem actualizarMI=addMenuItem(Messages.getString("JFXMain.configUpdate"),null,menuConfiguracion); 
 		actualizarMI.setOnAction((a)->doUpdate());
 		actualizarMI.setVisible(false);
-		//checkIfactualizarMIEnabled(menuConfiguracion, actualizarMI);
+		checkIfactualizarMIEnabled(menuConfiguracion, actualizarMI);
 		
 		return menuConfiguracion;
 	}
