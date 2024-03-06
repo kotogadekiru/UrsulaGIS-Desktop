@@ -76,6 +76,10 @@ public class SueloGUIController {
 
 		uMmTask.installProgressBar(main.progressBox);
 		uMmTask.setOnSucceeded(handler -> {
+			
+			aResumir.getLayer().setEnabled(false);
+			
+			
 			Suelo ret = (Suelo)handler.getSource().getValue();
 			uMmTask.uninstallProgressBar();			
 			

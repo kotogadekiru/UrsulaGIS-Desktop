@@ -241,6 +241,7 @@ public class ConfigGUI extends AbstractGUIController{
 
 		uMmTask.installProgressBar(progressBox);
 		uMmTask.setOnSucceeded(handler -> {
+			aResumir.getLayer().setEnabled(false);
 			Margen ret = (Margen)handler.getSource().getValue();
 			uMmTask.uninstallProgressBar();			
 			insertBeforeCompass(getWwd(), ret.getLayer());

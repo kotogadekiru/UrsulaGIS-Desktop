@@ -40,6 +40,7 @@ public class ResumirSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 //		labor.getCostoFleteProperty().setValue(aResumir.getCostoFleteProperty().getValue());
 //		labor.getCostoTnProperty().setValue(aResumir.getCostoTnProperty().getValue());
 		labor.setClasificador(aResumir.getClasificador().clone());
+	//	aResumir.getLayer().setEnabled(false);
 	}
 	
 	public void doProcess() throws IOException {

@@ -718,7 +718,8 @@ public class GeometryHelper {
 		return collection;
 	}
 	public static Geometry unirGeometrias(List<Geometry> aUnir) {
-		aUnir = aUnir.stream().map(g->{
+		try {
+			List<Geometry> aUnird = aUnir.stream().map(g->{
 			Densifier densifier = new Densifier(g);
 			densifier.setDistanceTolerance(ProyectionConstants.metersToLongLat(10));
 			g=densifier.getResultGeometry();
@@ -728,8 +729,9 @@ public class GeometryHelper {
 //		GeometryFactory fact = ProyectionConstants.getGeometryFactory();		
 //		Geometry[] geomArray = aUnir.toArray(new Geometry[aUnir.size()]);//put into an array
 //		GeometryCollection collection = fact.createGeometryCollection(geomArray);//create a collection
-		GeometryCollection collection = toGeometryCollection(aUnir);
+		GeometryCollection collection = toGeometryCollection(aUnird);
 		Double buffer = ProyectionConstants.metersToLongLat(0.25);
+		
 		Geometry union =collection.buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection
 		Geometry boundary = union.getBoundary().buffer(buffer,1,BufferParameters.CAP_FLAT);
 		union=union.difference(boundary);
@@ -738,7 +740,23 @@ public class GeometryHelper {
 		//TODO hacer un buffer 0.25
 		//y despues hacer un dif contra el boundary buffer 0.25 para evitar que crezcan los items
 		//System.out.println("geometria densa unida "+union);
-		return union;		
+		return union;
+		}catch(Exception e) {
+			e.printStackTrace();
+			Geometry union=null;
+			for(Geometry g:aUnir) {
+				if(union==null) {
+					union=g;
+				}else {
+					try {
+					union=union.union(g);
+					}catch(Exception e2) {
+						e2.printStackTrace();
+					}
+				}
+			}
+			return union;
+		}
 	}
 
 	public static Geometry removeSmallTriangles(Geometry g, double minLongLatArea) {
