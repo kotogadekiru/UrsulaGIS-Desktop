@@ -1132,7 +1132,6 @@ public class PoligonoGUIController extends AbstractGUIController{
 		if (rinde.isNaN()) {
 			return;
 		}
-		
 		CrearCosechaMapTask umTask = new CrearCosechaMapTask(labor,polis,rinde);
 		umTask.installProgressBar(progressBox);
 

@@ -115,7 +115,7 @@ public class UnirCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 			
 			reader.close();
 			//mantengo los valores configurados al clonar
-			labor.setPrecioGrano(c.getPrecioGrano());
+			labor.setPrecioInsumo(c.getPrecioInsumo());
 			labor.setCostoCosechaTn(c.getCostoCosechaTn());
 			labor.setPrecioLabor(c.getPrecioLabor());
 			labor.setCultivo(c.getCultivo());

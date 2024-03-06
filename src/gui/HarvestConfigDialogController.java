@@ -320,8 +320,8 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		DecimalFormat converter = PropertyHelper.getDoubleConverter();
 
 		//textPrecioGrano
-		PropertyHelper.bindDoubleToTextProperty(labor::getPrecioGrano,
-				labor::setPrecioGrano,
+		PropertyHelper.bindDoubleToTextProperty(labor::getPrecioInsumo,
+				labor::setPrecioInsumo,
 				this.textPrecioGrano.textProperty(),
 				config,
 				CosechaLabor.CosechaLaborConstants.PRECIO_GRANO);

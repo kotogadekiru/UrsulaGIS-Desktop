@@ -96,7 +96,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		String nombre =null;
 		Cultivo cultivo =null;
 		for(CosechaLabor c:cosechas){
-			labor.precioGrano=c.precioGrano;
+			//labor.precioGrano=c.precioGrano;
 			labor.costoCosechaTn=c.costoCosechaTn;
 			labor.setFecha(c.getFecha());//fechaProperty.setValue(c.fechaProperty.getValue());
 			labor.precioInsumo=c.precioInsumo;

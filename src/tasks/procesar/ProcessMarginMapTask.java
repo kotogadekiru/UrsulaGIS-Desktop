@@ -289,7 +289,7 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 		Double importeFijo = costoFijoHa*areaMargen;
 
 		importeCosecha = getImporteCosecha(g);
-		System.out.println("ingreso por cosecha=" + importeCosecha);
+		//System.out.println("ingreso por cosecha=" + importeCosecha);
 
 		importePulv = getImportePulv(g);
 		importeFert = getImporteFert(g);

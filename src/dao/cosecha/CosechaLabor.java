@@ -76,7 +76,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 	
 	public Cultivo cultivo= null;//FIXME producto no se puede guardar como una property
 	public Double costoCosechaTn = new Double(0);
-	public Double precioGrano = new Double(0);
+	//public Double precioGrano = new Double(0);
 	//public DoubleProperty precioGranoProperty= new SimpleDoubleProperty();	 
 	//public DoubleProperty costoCosechaTnProperty= new SimpleDoubleProperty();
 
@@ -122,7 +122,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 		minRindeProperty = PropertyHelper.initDoubleProperty(CosechaLabor.CosechaLaborConstants.MIN_RINDE_KEY, "0", properties);
 		maxRindeProperty = PropertyHelper.initDoubleProperty(CosechaLabor.CosechaLaborConstants.MAX_RINDE_KEY, "20", properties);
 		
-		precioGrano = PropertyHelper.initDouble(CosechaLabor.CosechaLaborConstants.PRECIO_GRANO, "0", properties);
+		Double precioGrano = PropertyHelper.initDouble(CosechaLabor.CosechaLaborConstants.PRECIO_GRANO, "0", properties);
 		this.setPrecioInsumo(precioGrano);
 		costoCosechaTn = PropertyHelper.initDouble(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_TN, "0", properties);
 
@@ -256,10 +256,13 @@ public class CosechaLabor extends Labor<CosechaItem> {
 	}
 
 	public void setPropiedadesLabor(CosechaItem ci){
-		ci.precioTnGrano = Math.max(this.getPrecioInsumo(),this.precioGrano);//precioGranoProperty.get();
+		ci.precioTnGrano = this.getPrecioInsumo();//precioGranoProperty.get();
 		ci.costoLaborHa=this.getPrecioLabor();
 		ci.costoLaborTn=this.getCostoCosechaTn();
 	}
+	
+
+
 	
 	@Override
 	public  CosechaItem constructFeatureContainerStandar(

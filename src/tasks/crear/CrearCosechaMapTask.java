@@ -106,6 +106,12 @@ public class CrearCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 		sb.append(Messages.getString("ProcessHarvestMapTask.25")
 				+df.format(cosechaItem.getElevacion() ) 
 				+ Messages.getString("ProcessHarvestMapTask.26"));
+		
+		sb.append(Messages.getString("OpenMargenMapTask.15")
+				+df.format(cosechaItem.getImporteHa() ) 
+				+ Messages.getString("OpenMargenMapTask.16"));
+		
+		
 		//superficie
 		if(area<1){
 			sb.append( Messages.getString("ProcessHarvestMapTask.33")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("ProcessHarvestMapTask.34")); 

@@ -78,7 +78,8 @@ public class PropertyHelper {
 		}else {
 			textProperty.set(configuracion.getPropertyOrDefault(key, "0"));
 		}
-		textProperty.addListener((obj,old,n)->{			
+		textProperty.addListener((obj,old,n)->{		
+		//	System.out.println("actualizando el valor a "+n);
 				setDouble.accept(parseDouble(n).doubleValue());
 				configuracion.setProperty(key, n);		
 		});
