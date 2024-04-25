@@ -360,9 +360,13 @@ public class ProcessBalanceDeNutrientes2 extends ProcessMapTask<SueloItem,Suelo>
 
 					Map<SueloParametro,Double> cFert = fertilizante.getCNutrientes();//%				
 					Double dosis = item.getDosistHa();//kg/ha
+					if(cFert!=null) {
 					for(SueloParametro k :cFert.keySet()) {					
 						addValueToMap(map,k,dosis*cFert.get(k)*area/100);						
 					}				
+					}else {
+						System.out.println("cFert es null para "+fertilizante.getNombre());
+					}
 				//	if(item.getElevacion()>10) {
 						addValueToMap(map,SueloParametro.Elevacion,item.getElevacion()*area);				
 						addValueToMap(map,SueloParametro.Area,area);

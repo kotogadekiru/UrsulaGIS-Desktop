@@ -2,6 +2,7 @@ package dao.config;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -70,17 +71,17 @@ public class Fertilizante extends Producto implements Comparable<Fertilizante>{
 	double porcK= 0.0;
 	double porcS= 0.0;
 	
-	private Map<SueloParametro,Double> cNutrientes = new HashMap<SueloParametro,Double>();
+	private Map<SueloParametro,Double> cNutrientes = null;
 	
 	
-	public Fertilizante() {}
+	public Fertilizante() {
+		super();
+
+	}
 	
 	public Fertilizante(String nom) {
 		super(nom);
-		 cNutrientes.put(SueloParametro.Nitrogeno, porcN);
-		 cNutrientes.put(SueloParametro.Fosforo, porcP);
-		 cNutrientes.put(SueloParametro.Potasio, porcK);
-		 cNutrientes.put(SueloParametro.Azufre, porcS);
+
 		
 	}
 	
@@ -90,14 +91,17 @@ public class Fertilizante extends Producto implements Comparable<Fertilizante>{
 		 porcP= p;
 		 porcK= k;
 		 porcS= s;
-		 
-		 cNutrientes.put(SueloParametro.Nitrogeno, porcN);
-		 cNutrientes.put(SueloParametro.Fosforo, porcP);
-		 cNutrientes.put(SueloParametro.Potasio, porcK);
-		 cNutrientes.put(SueloParametro.Azufre, porcS);
+		
 	}
 	
 	public Map<SueloParametro,Double> getCNutrientes(){
+		if(cNutrientes==null) {
+			 cNutrientes = new ConcurrentHashMap<SueloParametro,Double>();
+			 cNutrientes.put(SueloParametro.Nitrogeno, porcN);
+			 cNutrientes.put(SueloParametro.Fosforo, porcP);
+			 cNutrientes.put(SueloParametro.Potasio, porcK);
+			 cNutrientes.put(SueloParametro.Azufre, porcS);
+		}
 		return cNutrientes;
 	}
 
