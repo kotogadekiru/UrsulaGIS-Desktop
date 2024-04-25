@@ -61,6 +61,8 @@ import utils.UnzipUtility;
 
 
 public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
+	private static final String NDVI_DOWNLOAD_TYPE_CONFIG_KEY = "NDVI_DOWNLOAD_TYPE(SR/TOA)";
+	private static final String TOA = "TOA";
 	int MAX_URL_LENGHT = 4443;//2048 segun un stackoverflow //4443 segun pruevas con chrome// corresponde a 129 puntos
 	protected int featureCount=0;
 	protected int featureNumber=0;
@@ -78,8 +80,9 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 
 	private static final String BASE_URL = "https://gee-api-helper.herokuapp.com";
 	//private static final String BASE_URL = "http://0.0.0.0:5001";
-
-	private static final String HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3 = BASE_URL+"/ndvi_v4_SR";//"/ndvi_v4";//+"/gndvi_v4_SR";//"/ndvi_v3";//ndvi_v5
+	
+	private static final String HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V4_SR = BASE_URL+"/ndvi_v4_SR";//"/ndvi_v4";//+"/gndvi_v4_SR";//"/ndvi_v3";//ndvi_v5
+	private static final String HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3 = BASE_URL+"/ndvi_v4";//"/ndvi_v4";//+"/gndvi_v4_SR";//"/ndvi_v3";//ndvi_v5
 	private static final String HTTPS_GEE_API_HELPER_HEROKUAPP_COM_S2_PRODUCT_FINDER = BASE_URL+"/s2_product_finder_v4";
 	private static final String GEE_POLYGONS_GET_REQUEST_KEY = "polygons";
 
@@ -363,7 +366,17 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 						e.printStackTrace();
 					}
 					if(loaded==null || loaded.size()==0) {//if the file is not in db
-						GenericUrl url = new GenericUrl(HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3);
+						String ndviType = Configuracion.getInstance().getPropertyOrDefault(NDVI_DOWNLOAD_TYPE_CONFIG_KEY, TOA);
+						String ndviDownloadAddres= HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3;
+						if(TOA.equals(ndviType)) {
+							ndviDownloadAddres=HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3;
+							System.out.println("downloading TOA "+ndviDownloadAddres);
+						}else {
+							ndviDownloadAddres=HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V4_SR;
+							System.out.println("downloading SR "+ndviDownloadAddres);
+						}
+						
+						GenericUrl url = new GenericUrl(ndviDownloadAddres);
 
 						Map<String, String> req_data = new HashMap<String, String>();
 						req_data.put(GEE_POLYGONS_GET_REQUEST_KEY, poligono.getPoligonoToString());
