@@ -123,7 +123,7 @@ public class ConvertirNdviAFertilizacionTask extends ProcessMapTask<Fertilizacio
 		
 		//List<FertilizacionItem> itemsToShow = new ArrayList<FertilizacionItem>();
 		
-		double elev = 1;
+		double elev = 10.0;
 		double minLat = sector.getMaxLatitude().degrees;
 		double minLon = sector.getMinLongitude().degrees;
 		

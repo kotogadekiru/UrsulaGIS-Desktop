@@ -48,7 +48,7 @@ public class CrearPulverizacionMapTask extends ProcessMapTask<PulverizacionItem,
 		Polygon poly = fact.createPolygon(coordinates);	
 
 		ci.setGeometry(poly);
-		
+		ci.setElevacion(10.0);
 		labor.insertFeature(ci);
 				
 		labor.constructClasificador();

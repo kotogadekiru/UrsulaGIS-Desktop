@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.geotools.data.FeatureReader;
+import org.geotools.feature.DefaultFeatureCollection;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
@@ -43,12 +44,25 @@ public class OpenSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 			//		 storeCRS = labor.getInStore().getSchema().getCoordinateReferenceSystem();
 			//convierto los features en cosechas
 			featureCount=labor.getInStore().getFeatureSource().getFeatures().size();
-		} else{//XXX cuando es una grilla los datos estan en outstore y instore es null
-			reader = labor.outCollection.reader();
-			//	 storeCRS = labor.outCollection.getSchema().getCoordinateReferenceSystem();
-			//convierto los features en cosechas
-			featureCount=labor.outCollection.size();
 		}
+//		else{//XXX cuando es una grilla los datos estan en outstore y instore es null
+//			reader = labor.outCollection.reader();
+//			//	 storeCRS = labor.outCollection.getSchema().getCoordinateReferenceSystem();
+//			//convierto los features en cosechas
+//			featureCount=labor.outCollection.size();
+//		}
+		else{
+			if(labor.getInCollection() == null){//solo cambio la inCollection por la outCollection la primera vez
+				labor.setInCollection(labor.outCollection);
+				labor.outCollection=  new DefaultFeatureCollection("internal",labor.getType()); //$NON-NLS-1$
+			}
+			// cuando es una grilla los datos estan en outstore y instore es null
+			// si leo del outCollection y luego escribo en outCollection me quedo sin memoria
+			reader = labor.getInCollection().reader();
+			labor.outCollection.clear();
+			featureCount=labor.getInCollection().size();
+		}
+		
 		
 		int divisor = 1;
 		//List<SueloItem> itemsToShow = new ArrayList<SueloItem>();

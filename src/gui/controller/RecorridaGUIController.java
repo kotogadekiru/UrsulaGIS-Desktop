@@ -2,28 +2,56 @@ package gui.controller;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.geotools.data.FileDataStore;
 
+import com.google.gson.Gson;
+
 import dao.Labor;
 import dao.Ndvi;
+import dao.Poligono;
 import dao.fertilizacion.FertilizacionLabor;
+import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
+import dao.suelo.Suelo;
+import dao.suelo.SueloItem;
+import gov.nasa.worldwind.layers.Layer;
+import gov.nasa.worldwind.layers.LayerList;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import gui.FertilizacionConfigDialogController;
 import gui.JFXMain;
 import gui.Messages;
 import gui.nww.LaborLayer;
 import gui.nww.LayerAction;
+import gui.utils.DoubleTableColumn;
+import gui.utils.SmartTableView;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.image.Image;
+import javafx.stage.Stage;
 import tasks.CompartirRecorridaTask;
 import tasks.ShowRecorridaDirigidaTask;
 import tasks.importar.ImportarRecorridaTask;
 import tasks.importar.ProcessFertMapTask;
 import tasks.procesar.ExportarRecorridaTask;
+import tasks.procesar.GenerarRecorridaDirigidaTask;
+import tasks.procesar.InterpolarRecorridaMapTask;
 import utils.DAH;
 import utils.FileHelper;
 
@@ -42,8 +70,9 @@ public class RecorridaGUIController extends AbstractGUIController {
 			if(layerObject!=null && Recorrida.class.isAssignableFrom(layerObject.getClass())){
 				//mostrar un dialogo para editar el nombre del poligono
 				Recorrida recorrida =(Recorrida)layerObject;				
-				main.configGUIController.doShowRecorridaTable(Collections.singletonList(recorrida));
-				layer.setName(recorrida.getNombre());
+				doShowRecorridaTable(Collections.singletonList(recorrida));
+				layer.setName(recorrida.getNombre());		
+				GenerarRecorridaDirigidaTask.renderRecorrida((RenderableLayer)layer,recorrida);		
 				this.getLayerPanel().update(this.getWwd());
 			}
 			return "edite recorrida"; 
@@ -66,7 +95,7 @@ public class RecorridaGUIController extends AbstractGUIController {
 			if(layerObject!=null && Recorrida.class.isAssignableFrom(layerObject.getClass())){
 				//mostrar un dialogo para editar el nombre del poligono
 				Recorrida recorrida =(Recorrida)layerObject;
-				doInterpolarRecorrida(recorrida);
+				doInterpolarRecorrida(recorrida,layer);
 			}
 			return "interpole recorrida"; 
 		}));	
@@ -110,12 +139,33 @@ public class RecorridaGUIController extends AbstractGUIController {
 	 * metodo que toma las muestras de una recorrida y interpola los puntos en 
 	 * una grilla contenida dentro de un poligono seleccionado
 	 * @param recorrida
+	 * @param layer 
 	 */
-	private void doInterpolarRecorrida(Recorrida recorrida) {
+	private void doInterpolarRecorrida(Recorrida recorrida, Layer layer) {
 		main.enDesarrollo();
-		List<Ndvi> seleccionados = main.getNdviSeleccionados();
-		// TODO Auto-generated method stub
+		List<Poligono> contornos = main.poligonoGUIController.getEnabledPoligonos();
+		if(contornos==null || contornos.size()<1) {
+			Alert enDesarrollo = new Alert(AlertType.INFORMATION,"Debe seleccionar un poligono "); 
+			enDesarrollo.showAndWait();
+			return;
+		}
+		//TODO crear un task que tome un poligono y una recorrida 
+		//y devuelva un suelo con los valores de la recorrida interpolados por krigging
+		InterpolarRecorridaMapTask imTask = new InterpolarRecorridaMapTask(recorrida,contornos);
+		imTask.installProgressBar(main.progressBox);
+		imTask.setOnSucceeded(handler -> {
+			layer.setEnabled(false);
+			contornos.forEach(c->c.getLayer().setEnabled(false));
+			Suelo ret = (Suelo)handler.getSource().getValue();
+			imTask.uninstallProgressBar();			
+			
+			JFXMain.insertBeforeCompass(main.getWwd(), ret.getLayer());
+			main.getLayerPanel().update(main.getWwd());
 
+			main.playSound();
+			main.viewGoTo(ret);
+		});//fin del OnSucceeded
+		JFXMain.executorPool.execute(imTask);
 	}
 
 	public void doShowRecorrida(Recorrida recorrida) {
@@ -192,10 +242,229 @@ public class RecorridaGUIController extends AbstractGUIController {
 		executorPool.execute(task);
 	}
 
-	// junta las muestras con mismo nombre y permite completar los datos de las objervaciones
+//	// junta las muestras con mismo nombre y permite completar los datos de las objervaciones
+//	public void doAsignarValoresRecorrida(Recorrida recorrida) {
+//		doAsignarValoresRecorrida(recorrida);
+//	}	
+	
+	public void doShowRecorridaTable(List<Recorrida> recorridas) {
+	//	Platform.runLater(()->{
+			final ObservableList<Recorrida> data = FXCollections.observableArrayList(recorridas);
+
+			
+			SmartTableView<Recorrida> table = new SmartTableView<Recorrida>(data,
+					Arrays.asList("Id","Posicion"),
+					Arrays.asList("Nombre","Observacion","Latitude","Longitude"),//orden
+					Arrays.asList("Nombre","Observacion","Latitud","Longitud")//nombres					
+					//,Arrays.asList(Messages.getString("Recorrida.Nombre",,,)
+					);
+			table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
+			table.setEditable(true);
+			//			table.setOnDoubleClick(()->new Poligono());
+			table.setOnShowClick((recorrida)->{
+				//poli.setActivo(true);
+				main.recorridaGUIController.doShowRecorrida(recorrida);
+			});
+			
+			table.addSecondaryClickConsumer(Messages.getString("JFXMain.editarLayer"),(r)-> {
+				doShowMuestrasTable(r.getMuestras());
+			});
+
+			Scene scene = new Scene(table, 800, 600);
+			Stage tablaStage = new Stage();
+			tablaStage.getIcons().add(new Image(JFXMain.ICON));
+			tablaStage.setTitle(Messages.getString("JFXMain.configRecorridaMI")); //
+			tablaStage.setScene(scene);
+
+			tablaStage.onHiddenProperty().addListener((o,old,n)->{
+				main.getLayerPanel().update(main.getWwd());
+				//getWwd().redraw();
+			});
+
+			tablaStage.showAndWait();
+	//	});	
+
+	}
+
+	public void doShowMuestrasTable(List<Muestra> muestras) {
+		Platform.runLater(()->{
+			final ObservableList<Muestra> data = FXCollections.observableArrayList(muestras);
+
+			SmartTableView<Muestra> table = new SmartTableView<Muestra>(data,
+					Arrays.asList("Id","Posicion"),
+					Arrays.asList("Nombre","SubNombre","Latitude","Longitude","Observacion"),
+					Arrays.asList("Nombre","SubNombre","Latitud","Longitud","Observacion")
+					//TODO agregar la lista de nombres traducidos para mostrar
+					//,Arrays.asList(Messages.getString("Recorrida.Nombre",,,)
+					);
+			table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
+			table.setEliminarAction(
+					list->{
+						try {
+							DAH.beginTransaction();						
+							list.stream().forEach(m->{
+								m.getRecorrida().getMuestras().remove(m);	
+							});
+							DAH.save(list.get(0).getRecorrida());
+							List<Object> objs = new ArrayList<Object>(list);
+							DAH.removeAll(objs);
+							DAH.commitTransaction();
+						}catch(Exception e) {
+							DAH.rollbackTransaction();
+						}
+					}
+					);
+			table.setEditable(true);
+
+			Scene scene = new Scene(table, 800, 600);
+			Stage tablaStage = new Stage();
+			tablaStage.getIcons().add(new Image(JFXMain.ICON));
+			tablaStage.setTitle(Messages.getString("JFXMain.configRecorridaMI")); //
+			tablaStage.setScene(scene);
+
+			tablaStage.onHiddenProperty().addListener((o,old,n)->{
+				main.getLayerPanel().update(main.getWwd());
+			});
+			tablaStage.show();	 
+		});
+	}
+	
 	public void doAsignarValoresRecorrida(Recorrida recorrida) {
-		main.configGUIController.doAsignarValoresRecorrida(recorrida);
-	}	
+		List<Muestra> muestras = recorrida.getMuestras();
+		Map<String, List<Muestra>> nombresMuestraMap = muestras.stream().collect(Collectors.groupingBy(Muestra::getNombre));
+
+		List<Map<String,Object>> data = new ArrayList<Map<String,Object>>();
+
+		Map<String,Number> props =null;
+		for(String nombre : nombresMuestraMap.keySet()) {//obtengo los nombres de las columnas de cada categoria
+			Muestra m0 = nombresMuestraMap.get(nombre).get(0);
+			//"{\"PPM P\":\"\",\"PPM K\":\"\",\"Agua Perf\":\"\",\"PPM N\":\"\",\"Prof Napa\":\"\",\"PPM MO\":\"\",\"PPM S\":\"\"}"
+			String obs = m0.getObservacion();
+
+			@SuppressWarnings("unchecked")
+			Map<String,String> map = new Gson().fromJson(obs, Map.class);	 
+			if(map == null) {
+				System.out.println("salteando "+m0.nombre+" porque obs es null");
+				continue;
+			}
+			props = new LinkedHashMap<String,Number>();//convierto el valor de obs a number
+			for(String k : map.keySet()) {
+				Object value = map.get(k);
+				if(String.class.isAssignableFrom(value.getClass())) {				
+					Double dValue = new Double(0);
+					try { 
+						dValue=Messages.getNumberFormat().parse((String)value).doubleValue();
+						//dValue=new Double((String)value);
+					}catch(Exception e) {
+						System.err.println("error tratando de parsear \""+value+"\" reemplazo por 0");
+					}
+					props.put(k, dValue);//ojo number format exception
+				} else if(Number.class.isAssignableFrom(value.getClass())) {
+					props.put(k, (Number)value);
+				}			
+			}
+
+			Map<String,Object> initialD = new LinkedHashMap<String,Object>();
+			//System.out.println("agregando la observacion con nombre "+nombre);
+			initialD.put("Nombre", nombre);
+
+			initialD.putAll(props);
+
+			data.add(initialD);
+		}
+
+		//XXX porque no uso smartTable?
+		TableView<Map<String,Object>> tabla = new TableView<Map<String,Object>>( 
+				FXCollections.observableArrayList(data)//,
+				//Arrays.asList("Id","PoligonoToString"),
+				//Arrays.asList("Activo","Nombre","Lote","Area","PositionsString")
+				);
+		tabla.setEditable(true);
+		TableColumn<Map<String,Object>,String> columnNombre = new TableColumn<Map<String,Object>,String>("Nombre");
+		columnNombre.setEditable(false);
+		columnNombre.setCellFactory(TextFieldTableCell.forTableColumn());
+		columnNombre.setCellValueFactory(//new PropertyValueFactory<>(propName)
+				cellData ->{
+					String stringValue = null;
+					try{
+						stringValue =(String)  cellData.getValue().get("Nombre");						
+						return new SimpleStringProperty(stringValue);	
+					}catch(Exception e){
+						//System.out.println("La creacion de SimpleStringProperty en getStringColumn "+name +" con valor: "+stringValue);
+
+						return new SimpleStringProperty("sin datos");
+					}
+				});
+		columnNombre.setOnEditCommit(cellEditingEvent -> { 
+			int row = cellEditingEvent.getTablePosition().getRow();
+			Map<String,Object> p = cellEditingEvent.getTableView().getItems().get(row);
+			try {
+				p.put("Nombre", cellEditingEvent.getNewValue());
+				tabla.refresh();
+			} catch (Exception e) {	e.printStackTrace();}
+		});		
+
+		tabla.getColumns().add(columnNombre);
+		List<String> orderColumns = Arrays.asList("Nombre","SubNombre",SueloItem.PPM_N,SueloItem.PPM_FOSFORO);
+		List<String> nombresColumns = props.keySet().stream().sorted(
+				(a,b)->{
+
+					String nameA =a;//.getName();
+					String nameB =  b;//b.getName();
+					if(orderColumns.contains(nameA)&&orderColumns.contains(nameB)) {
+						return Integer.compare(orderColumns.indexOf(nameA),orderColumns.indexOf(nameB));
+					} else 	if(orderColumns.contains(nameA)&&!orderColumns.contains(nameB)) {
+						return -1;
+					}  else if(!orderColumns.contains(nameA)&&orderColumns.contains(nameB)) {
+						return 1;
+					} 
+					return nameA.compareToIgnoreCase(nameB);
+				}
+				).collect(Collectors.toList());
+		
+		for(String k : nombresColumns) {
+
+			DoubleTableColumn<Map<String,Object>> dColumn = new DoubleTableColumn<Map<String,Object>>(k,
+					(p)->{	try {
+						Number n =(Number) p.get(k);
+						if(n!=null) {
+							return n.doubleValue();
+						} else {
+							return 0.0;
+						}
+					} catch (Exception e) {	e.printStackTrace();}
+					return null;
+					},(p,d)->{ try {
+
+						p.put(k,d);
+						tabla.refresh();
+					} catch (Exception e) {	e.printStackTrace();}
+					});
+			dColumn.setEditable(true);
+			tabla.getColumns().add(dColumn);			
+		}
+
+		Scene scene = new Scene(tabla, 800, 600);
+		Stage tablaStage = new Stage();
+		tablaStage.getIcons().add(new Image(JFXMain.ICON));
+		tablaStage.setTitle(Messages.getString("Recorrida.asignarValores")); //
+		tablaStage.setScene(scene);
+
+		tablaStage.showAndWait();	 
+
+		//Al terminar de editar recoger la informacion y guardar los cambios
+		for(Map<String,Object> ma : data) {
+			String k = (String) ma.get("Nombre");
+			//System.out.println("persisting changes for "+k);
+			List<Muestra> muestrasNombre = nombresMuestraMap.get(k);
+			for(Muestra m : muestrasNombre) {
+				ma.remove("Nombre");
+				m.setObservacion(new Gson().toJson(ma));
+				//System.out.println("setting observaciones "+m.getObservacion());
+				DAH.save(m);
+			}
+		}
+	}
 
 	public void doExportRecorrida(Recorrida recorrida) {
 		String nombre = recorrida.getNombre();

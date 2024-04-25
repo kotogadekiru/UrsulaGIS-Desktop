@@ -8,6 +8,7 @@ import java.util.List;
 import org.geotools.data.DataUtilities;
 import org.geotools.data.FeatureReader;
 import org.geotools.data.simple.SimpleFeatureIterator;
+import org.geotools.feature.DefaultFeatureCollection;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
@@ -44,11 +45,23 @@ public class ProcessFertMapTask extends ProcessMapTask<FertilizacionItem,Fertili
 			//		 storeCRS = labor.getInStore().getSchema().getCoordinateReferenceSystem();
 			//convierto los features en cosechas
 			featureCount=labor.getInStore().getFeatureSource().getFeatures().size();
-		} else{//XXX cuando es una grilla los datos estan en outstore y instore es null
-			reader = labor.outCollection.reader();
-			//	 storeCRS = labor.outCollection.getSchema().getCoordinateReferenceSystem();
-			//convierto los features en cosechas
-			featureCount=labor.outCollection.size();
+		} 
+//		else{//XXX cuando es una grilla los datos estan en outstore y instore es null
+//			reader = labor.outCollection.reader();
+//			//	 storeCRS = labor.outCollection.getSchema().getCoordinateReferenceSystem();
+//			//convierto los features en cosechas
+//			featureCount=labor.outCollection.size();
+//		}	
+		else{
+			if(labor.getInCollection() == null){//solo cambio la inCollection por la outCollection la primera vez
+				labor.setInCollection(labor.outCollection);
+				labor.outCollection=  new DefaultFeatureCollection("internal",labor.getType()); //$NON-NLS-1$
+			}
+			// cuando es una grilla los datos estan en outstore y instore es null
+			// si leo del outCollection y luego escribo en outCollection me quedo sin memoria
+			reader = labor.getInCollection().reader();
+			labor.outCollection.clear();
+			featureCount=labor.getInCollection().size();
 		}
 		
 		System.out.println(Messages.getString("ProcessFertMapTask.0")+DataUtilities.spec(reader.getFeatureType())); //$NON-NLS-1$
@@ -171,12 +184,12 @@ public class ProcessFertMapTask extends ProcessMapTask<FertilizacionItem,Fertili
 		reader.close();
 
 		//List<FertilizacionItem> itemsToShow = new ArrayList<FertilizacionItem>();
-		SimpleFeatureIterator it = labor.outCollection.features();
-		while(it.hasNext()){
-			SimpleFeature f=it.next();
-			//itemsToShow.add(labor.constructFeatureContainerStandar(f,false));
-		}
-		it.close();
+//		SimpleFeatureIterator it = labor.outCollection.features();
+//		while(it.hasNext()){
+//			SimpleFeature f=it.next();
+//			//itemsToShow.add(labor.constructFeatureContainerStandar(f,false));
+//		}
+//		it.close();
 		labor.constructClasificador();
 		
 		runLater(this.getItemsList());

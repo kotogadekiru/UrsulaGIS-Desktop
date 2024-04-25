@@ -1,12 +1,14 @@
 package gui;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import dao.Clasificador;
 import dao.Labor;
 import dao.config.Configuracion;
+import dao.margen.Margen;
 import dao.suelo.Suelo;
 import dao.utils.PropertyHelper;
 import gui.utils.DateConverter;
@@ -18,6 +20,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
@@ -66,6 +69,10 @@ public class SueloConfigDialogController  extends Dialog<Suelo>{
 
 	@FXML
 	private ComboBox<String> comboDensidad;//ok
+	
+	@FXML
+	private ChoiceBox<String> comboAmount;
+
 
 
 	@FXML
@@ -197,6 +204,56 @@ public class SueloConfigDialogController  extends Dialog<Suelo>{
 		this.comboDensidad.setItems(FXCollections.observableArrayList(availableColums));
 		this.comboDensidad.valueProperty().bindBidirectional(labor.colDensidadProperty);
 		
+		List<String> options = Arrays.asList(
+				Suelo.COLUMNA_P,
+				Suelo.COLUMNA_N,
+				Suelo.COLUMNA_K,
+				Suelo.COLUMNA_S,
+				Suelo.COLUMNA_MO,
+				Suelo.COLUMNA_DENSIDAD,
+				Suelo.COLUMNA_ELEVACION,
+				Suelo.COLUMNA_AGUA_PERFIL,
+				Suelo.COLUMNA_CAPACIDAD_CAMPO,
+				Suelo.COLUMNA_POROSIDAD,
+				Suelo.COLUMNA_PROF_NAPA,
+				Suelo.COLUMNA_TEXTURA				
+				); 
+		this.comboAmount.setItems(FXCollections.observableArrayList(options));
+		this.comboAmount.getSelectionModel().select(options.indexOf(labor.colAmount.get()));
+//		if(Suelo.COLUMNA_P.equalsIgnoreCase(labor.colAmount.get())){				
+//			this.comboAmount.getSelectionModel().select(0);
+//		} else{
+//			this.comboAmount.getSelectionModel().select(1);
+//		}
+		
+		this.comboAmount.valueProperty().addListener((o,s,s2)->{
+			System.out.println("cambiando colAmount a "+s2); //$NON-NLS-1$
+			
+			labor.colAmount.set(s2);
+//			if(options.get(0).equalsIgnoreCase(s2)){				
+//				labor.colAmount.set(Suelo.COLUMNA_P);
+//				//cambia el nombre de la labor para que empiece segun la columna que se esta mostrando
+////				String n = textNombre.textProperty().get().replace(
+////						Messages.getString("MargenConfigDialogController.texto"),//Margen
+////						Messages.getString("MargenConfigDialogController.texto2")//Renta
+////						);
+////			
+////				
+////				System.out.println("nombre despues de reemplazar renta es "+n); //$NON-NLS-1$
+////				textNombre.textProperty().set(n);
+//			} else{
+//				labor.colAmount.set(Suelo.COLUMNA_N);
+////				String n = textNombre.textProperty().get().replace(
+////						Messages.getString("MargenConfigDialogController.property"),
+////						Messages.getString("MargenConfigDialogController.property2")
+////						);
+////				
+////				textNombre.textProperty().set(n);
+//			}
+			
+		});
+
+		
 		StringConverter<Number> converter = new NumberStringConverter(Messages.getLocale());
 
 		Bindings.bindBidirectional(this.textClasesClasificador.textProperty(), labor.clasificador.clasesClasificadorProperty, converter);
@@ -216,13 +273,10 @@ public class SueloConfigDialogController  extends Dialog<Suelo>{
 				Labor.FECHA_KEY);	
 	}
 
-
 	public void init() {
 		this.getDialogPane().setContent(content);
 
 	}
-
-
 
 	public static Optional<Suelo> config(Suelo labor2) {
 		Optional<Suelo> ret = Optional.empty();

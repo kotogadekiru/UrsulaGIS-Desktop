@@ -29,6 +29,22 @@ public class SueloItem extends LaborItem { //suelo item no es labor item. le sob
 	public static final String AGUA_PERFIL= "Agua Perf";
 	public static final String DENSIDAD = "kg/m3";
 	public static final String ELEVACION ="Elevacion";
+	
+	public static final String Calcio = "PPM Ca";
+	public static final String Magnecio = "PPM Mg";
+	public static final String Boro = "PPM Br";
+	public static final String Cloro = "PPM Cl";
+	public static final String Cobalto = "PPM Co";
+	public static final String Cobre = "PPM Cu";
+	public static final String Hierro = "PPM Fe";
+	public static final String Manganeso = "PPM Mn";
+	public static final String Molibdeno = "PPM Mo";
+	public static final String Zinc = "PPM Zn";
+	public static final String Textura = "Textura";
+	public static final String Porosidad = "Porosidad";
+	public static final String CapacidadCampo = "mm CC";
+	public static final String Area = "Superficie";
+	
 	/**
 	 *  Arenosos de 1,65 g cm-3;
 	 *  Franco arenoso, 1,5 g cm-3;
@@ -39,6 +55,7 @@ public class SueloItem extends LaborItem { //suelo item no es labor item. le sob
 	 *  densidad en kg/m3
 	 */
 	public static final double DENSIDAD_SUELO_KG = 1.4*1000;//+-0.4 Arenoso 1650, franco 1400, arcilloso 1250
+
 
 	//los ingenieros usan 2.6 para pasar de ppm a kg/ha. deben tomar la densidad en 1.3 en vez de 2
 	//para pasar de Ppm a kg/ha hay que multiplicar por 2.6. 
@@ -103,7 +120,4 @@ public class SueloItem extends LaborItem { //suelo item no es labor item. le sob
 	public Double getImporteHa() {//podriamos devolver una valuacion del suelo de acuerdo a sus propiedades
 		return 0.0;
 	}
-	
-
-
 }

@@ -118,6 +118,7 @@ public class ResumirSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		Double _id=null;
 
 		Double hasTotal=new Double(0.0);
+		Double elevacion=new Double(0.0);
 		
 		Double masaDeSuelo=new Double(0.0);
 		Double kgP=new Double(0.0);
@@ -152,7 +153,7 @@ public class ResumirSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 			porosidad +=item.getPorosidad()*hasItem;
 			porcCC +=item.getPorcCC()*hasItem;
 	
-			
+			elevacion+=item.getElevacion()*hasItem;
 			hasTotal+=hasItem;
 			geoms.add(item.getGeometry());
 			
@@ -160,6 +161,7 @@ public class ResumirSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		}
 	
 		ret.setId(_id);
+		
 		//System.out.println("devolviendo un suelo item con id="+_id);
 		ret.setDensAp(masaDeSuelo/hasTotal);
 		ret.setPpmNO3(kgN/masaDeSuelo);
@@ -172,7 +174,7 @@ public class ResumirSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		ret.setPorosidad(porosidad/hasTotal);
 		ret.setPorcCC(porcCC/hasTotal);
 		
-		
+		ret.setElevacion(elevacion/hasTotal);
 		ret.setGeometry(GeometryHelper.unirGeometrias(geoms));
 		
 		return ret;

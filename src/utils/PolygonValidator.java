@@ -74,7 +74,7 @@ public class PolygonValidator {
 				}
 				}catch(Exception e) {
 					System.out.println("no puedo ver si geom.isValid "+geom);
-					e.printStackTrace();
+				//	e.printStackTrace();
 				}
 				Polygonizer polygonizer = new Polygonizer();
 			
@@ -86,7 +86,8 @@ public class PolygonValidator {
 					geom.normalize(); // validate does not pick up rings in the wrong order - this will fix that
 					return geom; // If the multipolygon is valid just return it
 				}}catch(Exception ex){
-					ex.printStackTrace();
+					System.out.println("no puedo ver si geom.isValid "+geom);
+					//ex.printStackTrace();
 				}
 				Polygonizer polygonizer = new Polygonizer();
 				for(int n = geom.getNumGeometries(); n-- > 0;){

@@ -41,7 +41,7 @@ public class CrearFertilizacionMapTask extends ProcessMapTask<FertilizacionItem,
 
 			ci.setGeometry(pol.toGeometry());
 			ci.setId(labor.getNextID());
-			
+			ci.setElevacion(10.0);
 			//labor.setNombre(poli.getNombre());
 			labor.insertFeature(ci);
 		}		

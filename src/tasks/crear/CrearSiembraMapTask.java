@@ -65,7 +65,7 @@ public class CrearSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 
 			si.setGeometry(pol.toGeometry());
 			si.setId(labor.getNextID());
-
+			si.setElevacion(10.0);
 			labor.insertFeature(si);
 		}
 		labor.constructClasificador();

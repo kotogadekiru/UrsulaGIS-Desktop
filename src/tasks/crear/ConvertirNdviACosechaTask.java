@@ -103,7 +103,7 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 		
 		List<CosechaItem> itemsToShow = new ArrayList<CosechaItem>();
 		
-		double elev = 1;
+		double elev = 10.0;
 		double minLat = sector.getMaxLatitude().degrees;
 		double minLon = sector.getMinLongitude().degrees;
 		

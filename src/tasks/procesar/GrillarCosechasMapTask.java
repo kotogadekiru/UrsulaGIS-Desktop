@@ -180,7 +180,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 						}
 						},
 						(map1, map2) -> map1.putAll(map2)
-						// putAll reemplaza los valores de map1 con los de map 2 si los poligonos counciden
+						// putAll reemplaza los valores de map1 con los de map 2 si los poligonos coinciden
 						// pero no deberia haber poligonos que coincidan.
 						);
 		//Limpio la cache de las labores despues de hacer las querys
@@ -369,7 +369,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 	 * @return una lista de poligonos que representa una grilla con un 100% de superposiocion
 	 */
 	public static List<Polygon> construirGrilla(BoundingBox bounds,double ancho) {
-		System.out.println(Messages.getString("GrillarCosechasMapTask.16")); //$NON-NLS-1$
+		//System.out.println(Messages.getString("GrillarCosechasMapTask.16")); //$NON-NLS-1$
 		List<Polygon> polygons = new ArrayList<Polygon>();
 		//convierte los bounds de longlat a metros
 		Double minX = bounds.getMinX()/ProyectionConstants.metersToLong() - ancho/2;

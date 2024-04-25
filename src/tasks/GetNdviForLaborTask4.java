@@ -41,6 +41,7 @@ import com.google.api.client.util.ArrayMap;
 import dao.Labor;
 import dao.Ndvi;
 import dao.Poligono;
+import dao.config.Configuracion;
 //import gov.nasa.worldwind.geom.Angle;
 //import gov.nasa.worldwind.geom.Position;
 import javafx.application.Platform;
@@ -72,7 +73,7 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 	
 
 	//"ursulaGIS.cosechaService";//"ursulaGISv23";	//Nov 13, 2022 
-	private static final String URSULA_GIS_TOKEN = "ursulaGISv28";//"ursulaGISv23";
+	private static final String URSULA_GIS_TOKEN = "ursulaGISv29";//"ursulaGISv23";
 	private static final String TOKEN = "token";
 
 	private static final String BASE_URL = "https://gee-api-helper.herokuapp.com";
@@ -491,6 +492,10 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 				});
 		try {
 			HttpRequest request = requestFactory.buildPostRequest(url, req_content);//(url);
+			Configuracion conf = Configuracion.getInstance();
+			
+			String usr = conf.getPropertyOrDefault("USER", "number not set");//si no existia la clave se crea una nueva
+			request.getHeaders().put("USER", usr);
 			response= request.execute();
 
 		} catch (Exception e) {

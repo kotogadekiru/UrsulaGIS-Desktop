@@ -39,7 +39,7 @@ public class ConvertirSueloACosechaTask extends ProcessMapTask<CosechaItem,Cosec
 			CosechaItem ci = estimarCosecha(si);
 			ci.setId(si.getId());
 			ci.setGeometry(si.getGeometry());
-
+			ci.setElevacion(10.0);
 
 			SimpleFeature nf=ci.getFeature(labor.featureBuilder);
 
@@ -70,10 +70,10 @@ public class ConvertirSueloACosechaTask extends ProcessMapTask<CosechaItem,Cosec
 		
 		Double rindeAgua=(encharcamiento>0.5?(1-encharcamiento):1)*kgAgua;
 		System.out.println("mmDispo="+mmDispo+" => rindeAgua= "+rindeAgua);
-		Double kgP=this.suelo.getKgPHa(si);
+		Double kgP=Suelo.getKgPHa(si);
 		Double rindeP = cultivo.getAbsP()!=0?kgP/cultivo.getAbsP():0;
 		System.out.println("kgP="+kgP+" => rindeP= "+rindeP);
-		Double kgN= this.suelo.getKgNHa(si) 
+		Double kgN= Suelo.getKgNHa(si) 
 				+(cultivo.isEstival()?2/3:1/3) * suelo.getKgNOrganicoHa(si);
 		Double rindeN = cultivo.getAbsN()!=0?kgN/cultivo.getAbsN():0;
 		System.out.println("kgN="+kgN+" => rindeN: "+rindeN);

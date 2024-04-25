@@ -439,19 +439,28 @@ public class PoligonoGUIController extends AbstractGUIController{
 
 	public void doConvertirARecorrida(Object layerObject) {
 		Camino c = (Camino)layerObject;
-		
+		c.getLayer().setEnabled(false);
 		Recorrida recorrida = new Recorrida();
 		recorrida.setNombre(c.getNombre());
 		
+		
+		int i =0;
 		for(Position p:c.getPositions()){	
+			if(recorrida.getLatitude()==0.0) {
+				recorrida.setLatitude(p.getLatitude().degrees);
+				recorrida.setLongitude(p.getLongitude().degrees);
+			}
 			Angle lon= p.getLongitude();
 			Angle lat = p.getLatitude();
 			Muestra m = new Muestra();
 			m.setRecorrida(recorrida);
 			m.setNombre("A");
+			m.setSubNombre(Integer.toString(i));
 			m.setLongitude(lon.getDegrees());
 			m.setLatitude(lat.getDegrees());
+			m.initObservacionSuelo();
 			recorrida.getMuestras().add(m);
+			i++;
 		}
 
 		main.recorridaGUIController.doShowRecorrida(recorrida);
@@ -612,7 +621,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 		
 		//si viene con recorridas seleccionadas permito editarlas?
 		recorrida.setMuestras(muestras);
-		main.configGUIController.doAsignarValoresRecorrida(recorrida);//esto guarda una recorrida nueva
+		main.recorridaGUIController.doAsignarValoresRecorrida(recorrida);//esto guarda una recorrida nueva
 	
 
 //		TextInputDialog ppmPDialog = new TextInputDialog(Messages.getString("JFXMain.228")); //$NON-NLS-1$

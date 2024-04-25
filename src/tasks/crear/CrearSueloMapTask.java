@@ -16,6 +16,7 @@ import dao.Poligono;
 import dao.config.Fertilizante;
 import dao.recorrida.Recorrida;
 import dao.suelo.Suelo;
+import dao.suelo.Suelo.SueloParametro;
 import dao.suelo.SueloItem;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
@@ -60,7 +61,7 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 	public void doProcess() throws IOException {
 		labor.setContorno(poli);
 		rec.getMuestras().stream().forEach(m->{
-			Map<String, Number> props = m.getProps();
+			Map<String, Double> props = m.getProps();
 			SueloItem si = new SueloItem();
 			Number ppmP = props.get(SueloItem.PPM_FOSFORO);
 			Number ppmN = props.get(SueloItem.PPM_N);
@@ -73,7 +74,11 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 			si.setPpmP(ppmP.doubleValue());
 			si.setPpmNO3(ppmN.doubleValue());
 			si.setPorcMO(pcMO.doubleValue());
-			si.setElevacion(elevacion.doubleValue());		
+			if(elevacion.doubleValue()>10) {
+				si.setElevacion(elevacion.doubleValue());		
+			}else {
+				si.setElevacion(10.0);
+			}
 
 			labor.setPropiedadesLabor(si);
 
@@ -94,6 +99,7 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		//DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
 		NumberFormat df = Messages.getNumberFormat();//new DecimalFormat("#,###.##");//$NON-NLS-2$
 
+		//TODO agregar los demas nutrientes, potasio azufre, agua perfil, cc, etc
 		StringBuilder sb = new StringBuilder();
 		//Fosforo
 		//sb.append(Messages.getString("OpenSoilMapTask.1")+"\n ");//"Fosforo: "
@@ -107,6 +113,13 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		sb.append(df.format(Suelo.getKgNHa(si)));
 		//sb.append(df.format(Suelo.ppmToKg(si.getDensAp(),si.getPpmNO3(),0.6)*Fertilizante.porcN_NO3));
 		sb.append(" kgN/Ha 0-60cm \n");
+		
+		sb.append(df.format(si.getPpmK()));
+		//sb.append(df.format(Suelo.ppmToKg(si.getDensAp(),si.getPpmNO3(),0.6)*Fertilizante.porcN_NO3));
+		sb.append(" PpmK/Ha 0-20cm \n");
+		sb.append(df.format(si.getPpmS()));
+		//sb.append(df.format(Suelo.ppmToKg(si.getDensAp(),si.getPpmNO3(),0.6)*Fertilizante.porcN_NO3));
+		sb.append(" PpmS/Ha 0-20cm \n");
 		
 		sb.append(df.format(si.getPorcMO()));
 		sb.append("% " + Messages.getString("JFXMain.236") + " 0-20cm \n ");//JFXMain.236=%M0

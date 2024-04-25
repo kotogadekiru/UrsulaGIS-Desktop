@@ -1,5 +1,9 @@
 package dao.config;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.Entity;
@@ -8,6 +12,7 @@ import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
+import dao.suelo.Suelo.SueloParametro;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -19,18 +24,99 @@ import lombok.EqualsAndHashCode;
 	@NamedQuery(name=Nutriente.FIND_NAME, query="SELECT o FROM Nutriente o where o.nombre = :name") ,
 }) 
 
+/**
+ * Clase que modela los diferentes tipos de nutrientes que puede tener un fertilizante o necesitar un cultivo
+ */
+
+/**
+ * Macronutrientes primarios - nitrógeno (N), fósforo (P), potasio (K),
+Macronutrientes secundarios – azufre (S), calcio (Ca), magnesio (Mg)
+Micronutrientes - boro (B), cloro (Cl), cobalto (Co), cobre (Cu), hierro (Fe), manganeso (Mn), molibdeno (Mo) y zinc (Zn)
+ */
 public class Nutriente {
+	
+	public static final String ZINC = "Zinc";
+	public static final String MOLIBDENO = "Molibdeno";
+	public static final String MANGANESO = "Manganeso";
+	public static final String HIERRO = "Hierro";
+	public static final String COBRE = "Cobre";
+	public static final String COBALTO = "Cobalto";
+	public static final String CLORO = "Cloro";
+	public static final String BORO = "Boro";
+	public static final String MAGNECIO = "Magnecio";
+	public static final String CALCIO = "Calcio";
+	public static final String AZUFRE = "Azufre";
+	public static final String POTASIO = "Potasio";
+	public static final String FOSFORO = "Fosforo";
+	public static final String NITROGENO = "Nitrogeno";
 	
 	public static final String FIND_ALL="Nutriente.findAll";
 	public static final String FIND_NAME="Nutriente.findName";
 	
+	public static final Double porcN_NO3=0.2259;
+	
+	private static Map<SueloParametro,Nutriente> nutrientesDefault=null;
+	static{
+		nutrientesDefault = new ConcurrentHashMap<SueloParametro,Nutriente>();
+		
+		nutrientesDefault.put(SueloParametro.Nitrogeno,new Nutriente("Nitrogeno de Nitratos","N-NO3",porcN_NO3,0.6));//ok
+		nutrientesDefault.put(SueloParametro.Fosforo,new Nutriente("Fosforo de Fosfato","P",1.0,0.2));
+		nutrientesDefault.put(SueloParametro.Potasio,new Nutriente(POTASIO,"K",1.0,0.2));
+		nutrientesDefault.put(SueloParametro.Azufre,new Nutriente(AZUFRE,"S",1.0,0.2));
+		nutrientesDefault.put(SueloParametro.Calcio,new Nutriente(CALCIO,"Ca",1.0,0.2));
+		nutrientesDefault.put(SueloParametro.Magnecio,new Nutriente(MAGNECIO,"Mg",1.0,0.2));
+		
+		nutrientesDefault.put(SueloParametro.Boro,new Nutriente(BORO,"B",1.0,0.2));
+		nutrientesDefault.put(SueloParametro.Cloro,new Nutriente(CLORO,"Cl",1.0,0.2));
+		nutrientesDefault.put(SueloParametro.Cobalto,new Nutriente(COBALTO,"Co",1.0,0.2));
+		nutrientesDefault.put(SueloParametro.Cobre,new Nutriente(COBRE,"Cu",1.0,0.2));
+		nutrientesDefault.put(SueloParametro.Hierro,new Nutriente(HIERRO,"Fe",1.0,0.2));
+		nutrientesDefault.put(SueloParametro.Manganeso,new Nutriente(MANGANESO,"Mn",1.0,0.2));
+		nutrientesDefault.put(SueloParametro.Molibdeno,new Nutriente(MOLIBDENO,"Mo",1.0,0.2));
+		nutrientesDefault.put(SueloParametro.Zinc,new Nutriente(ZINC,"Zn",1.0,0.2));
+	}
 	
 	@Id @GeneratedValue
 	private Long id=null;
 	
-	public String nombre;
-	public String simbolo;
-	public Double pesoMolecular;
+	private String nombre;
+	private String simbolo;
+	private Double porcNutrienteEnMolecula=100.0;//sirve para convertir de ppm molecular a kg de nutriente
+	private Double profundidad=0.2;
+	
+	Nutriente(){
+		
+	}
+			
+	Nutriente(String nombre, String simbolo, Double porcNutriente,Double profundidad){
+		this.nombre=nombre;
+		this.simbolo=simbolo;
+		this.porcNutrienteEnMolecula=porcNutriente;
+		this.profundidad=profundidad;
+	}
+	
+	public static Map<SueloParametro,Nutriente> getNutrientesDefault(){
+		//System.out.println("devolviendo nutrientes default con "+nutrientesDefault.size()+" elementos");
+//		if(nutrientesDefault !=null)return nutrientesDefault;
+//		nutrientesDefault = new ConcurrentHashMap<SueloParametro,Nutriente>();
+//		
+//		nutrientesDefault.put(SueloParametro.Nitrogeno,new Nutriente("Nitrogeno de Nitratos","N-NO3",porcN_NO3));//ok
+//		nutrientesDefault.put(SueloParametro.Fosforo,new Nutriente("Fosforo de Fosfato","P",1.0));
+//		nutrientesDefault.put(SueloParametro.Potasio,new Nutriente(POTASIO,"K",1.0));
+//		nutrientesDefault.put(SueloParametro.Azufre,new Nutriente(AZUFRE,"S",1.0));
+//		nutrientesDefault.put(SueloParametro.Calcio,new Nutriente(CALCIO,"Ca",1.0));
+//		nutrientesDefault.put(SueloParametro.Magnecio,new Nutriente(MAGNECIO,"Mg",1.0));
+//		
+//		nutrientesDefault.put(SueloParametro.Boro,new Nutriente(BORO,"B",1.0));
+//		nutrientesDefault.put(SueloParametro.Cloro,new Nutriente(CLORO,"Cl",1.0));
+//		nutrientesDefault.put(SueloParametro.Cobalto,new Nutriente(COBALTO,"Co",1.0));
+//		nutrientesDefault.put(SueloParametro.Cobre,new Nutriente(COBRE,"Cu",1.0));
+//		nutrientesDefault.put(SueloParametro.Hierro,new Nutriente(HIERRO,"Fe",1.0));
+//		nutrientesDefault.put(SueloParametro.Manganeso,new Nutriente(MANGANESO,"Mn",1.0));
+//		nutrientesDefault.put(SueloParametro.Molibdeno,new Nutriente(MOLIBDENO,"Mo",1.0));
+//		nutrientesDefault.put(SueloParametro.Zinc,new Nutriente(ZINC,"Zn",1.0));
+		return nutrientesDefault;
+	}
 	
 
 }

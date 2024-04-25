@@ -752,7 +752,7 @@ public class CosechaGUIController extends AbstractGUIController {
 			}
 			//si viene con recorridas seleccionadas permito editarlas?
 			recorrida.setMuestras(muestras);
-			main.configGUIController.doAsignarValoresRecorrida(recorrida);//esto guarda una recorrida nueva
+			main.recorridaGUIController.doAsignarValoresRecorrida(recorrida);//esto guarda una recorrida nueva
 		}
 		ConvertirASueloTask csTask = new ConvertirASueloTask(cosecha,recorrida);
 		csTask.installProgressBar(progressBox);

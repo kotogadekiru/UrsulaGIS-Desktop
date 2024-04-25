@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
@@ -15,7 +16,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="content" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.SueloConfigDialogController">
+<VBox fx:id="content" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.SueloConfigDialogController">
    <children>
       <TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="361.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE">
         <tabs>
@@ -105,6 +106,8 @@
                                  </opaqueInsets>
                               </Label>
                               <ComboBox id="comboElev" fx:id="comboDensidad" prefWidth="150.0" GridPane.columnIndex="3" GridPane.rowIndex="8" />
+                              <Label text="%SueloConfigDialog.amountLabel" GridPane.columnIndex="2" GridPane.rowIndex="7" />
+                              <ChoiceBox fx:id="comboAmount" prefWidth="150.0" GridPane.columnIndex="3" GridPane.rowIndex="7" />
                            </children>
                         </GridPane>
                      </children>

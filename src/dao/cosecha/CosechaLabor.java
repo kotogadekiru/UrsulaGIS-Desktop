@@ -192,7 +192,8 @@ public class CosechaLabor extends Labor<CosechaItem> {
 
 		Double rindeDouble = LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colRendimiento.get()));
 
-		if(this.getConfiguracion().correccionAnchoEnabled()){			
+		if(this.getConfiguracion().correccionAnchoEnabled() 
+				&& ci.getAncho()!=0.0){//si el ancho era cero no lo expando			
 			ci.setAncho(this.anchoDefaultProperty.doubleValue());
 		} 
 

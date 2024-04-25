@@ -28,6 +28,7 @@ import tasks.crear.ConvertirSueloACosechaTask;
 import tasks.importar.OpenSoilMapTask;
 import tasks.importar.ProcessHarvestMapTask;
 import tasks.procesar.ProcessBalanceDeNutrientes;
+import tasks.procesar.ProcessBalanceDeNutrientes2;
 import tasks.procesar.ResumirMargenMapTask;
 import tasks.procesar.ResumirSoilMapTask;
 import utils.FileHelper;
@@ -101,8 +102,8 @@ public class SueloGUIController {
 		List<FertilizacionLabor> fertEnabled = main.getFertilizacionesSeleccionadas();		
 		List<CosechaLabor> cosechasEnabled = main.getCosechasSeleccionadas();//cosechas.stream().filter((l)->l.getLayer().isEnabled()).collect(Collectors.toList());
 
-		ProcessBalanceDeNutrientes balanceNutrientesTask = 
-				new ProcessBalanceDeNutrientes(suelosEnabled,
+		ProcessBalanceDeNutrientes2 balanceNutrientesTask = 
+				new ProcessBalanceDeNutrientes2(suelosEnabled,
 						cosechasEnabled, fertEnabled);
 
 		balanceNutrientesTask.installProgressBar(main.progressBox);

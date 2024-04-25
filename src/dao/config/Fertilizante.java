@@ -10,6 +10,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
 import dao.ordenCompra.Producto;
+import dao.suelo.Suelo.SueloParametro;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 @Data
@@ -39,27 +40,27 @@ public class Fertilizante extends Producto implements Comparable<Fertilizante>{
 	public static Map<String,Fertilizante> getFertilizantesDefault(){
 		Map<String,Fertilizante> fertilizantes = new HashMap<String,Fertilizante>();
 		//Nitrogenados
-fertilizantes.put("Amoníaco anhidro",new Fertilizante("Amoníaco anhidro",82,0.0,0.0,0.0));//ok
-fertilizantes.put("Nitrato de amonio",new Fertilizante("Nitrato de amonio",35,0.0,0.0,0.0));//ok
-fertilizantes.put("Sulfato de amonio",new Fertilizante("Sulfato de amonio",20.5,0.0,0.0,24.0));//ok
-fertilizantes.put("UAN",new Fertilizante("UAN",31,0.0,0.0,0.0));//ok
-fertilizantes.put("Urea",new Fertilizante("Urea",46,0.0,0.0,0.0));//ok
+		fertilizantes.put("Amoníaco anhidro",new Fertilizante("Amoníaco anhidro",82,0.0,0.0,0.0));//ok
+		fertilizantes.put("Nitrato de amonio",new Fertilizante("Nitrato de amonio",35,0.0,0.0,0.0));//ok
+		fertilizantes.put("Sulfato de amonio",new Fertilizante("Sulfato de amonio",20.5,0.0,0.0,24.0));//ok
+		fertilizantes.put("UAN",new Fertilizante("UAN",31,0.0,0.0,0.0));//ok
+		fertilizantes.put("Urea",new Fertilizante("Urea",46,0.0,0.0,0.0));//ok
 		//Fosfatados
-//acido fosforico
-fertilizantes.put("Fosfato diamónico",new Fertilizante("Fosfato diamónico",18,20,0.0,0));//ok
-fertilizantes.put("Fosfato monoamónico",new Fertilizante("Fosfato monoamónico",11,23,0.0,0));//ok
-fertilizantes.put("Fosfato monopotásico",new Fertilizante("Fosfato monopotásico",0,23,29,0));//ok
-fertilizantes.put("Superfosfato simple",new Fertilizante("Superfosfato simple",0.0,9,0.0,12));//ok
-fertilizantes.put("Superfosfato triple",new Fertilizante("Superfosfato triple",0.0,20,0.0,0.0));//ok
+		//acido fosforico
+		fertilizantes.put("Fosfato diamónico",new Fertilizante("Fosfato diamónico",18,20,0.0,0));//ok
+		fertilizantes.put("Fosfato monoamónico",new Fertilizante("Fosfato monoamónico",11,23,0.0,0));//ok
+		fertilizantes.put("Fosfato monopotásico",new Fertilizante("Fosfato monopotásico",0,23,29,0));//ok
+		fertilizantes.put("Superfosfato simple",new Fertilizante("Superfosfato simple",0.0,9,0.0,12));//ok
+		fertilizantes.put("Superfosfato triple",new Fertilizante("Superfosfato triple",0.0,20,0.0,0.0));//ok
 		//Potasicos
-fertilizantes.put("Cloruro de potasio",new Fertilizante("Cloruro de potasio",0.0,0.0,50,0.0));//ok
-fertilizantes.put("Nitrato de potasio",new Fertilizante("Nitrato de potasio",13,0.0,36,0.0));//ok
-fertilizantes.put("Sulfato de potasio",new Fertilizante("Sulfato de potasio",0.0,0.0,42,18));//ok
+		fertilizantes.put("Cloruro de potasio",new Fertilizante("Cloruro de potasio",0.0,0.0,50,0.0));//ok
+		fertilizantes.put("Nitrato de potasio",new Fertilizante("Nitrato de potasio",13,0.0,36,0.0));//ok
+		fertilizantes.put("Sulfato de potasio",new Fertilizante("Sulfato de potasio",0.0,0.0,42,18));//ok
 		//Azufrados
-fertilizantes.put("Yeso Agricola",new Fertilizante("Yeso Agricola",0.0,0.0,0,17));//ok S=17 Ca=22
+		fertilizantes.put("Yeso Agricola",new Fertilizante("Yeso Agricola",0.0,0.0,0,17));//ok S=17 Ca=22
 		//Calcicos
-//fertilizantes.put("Nitrato de calcio",new Fertilizante("Nitrato de calcio",15,0.0,0.0,0.0));19Ca 15N
-//fertilizantes.put("Superfosfato de calcio",new Fertilizante("Superfosfato de calcio",0.0,17,0.0,0.0));
+		//fertilizantes.put("Nitrato de calcio",new Fertilizante("Nitrato de calcio",15,0.0,0.0,0.0));19Ca 15N
+		//fertilizantes.put("Superfosfato de calcio",new Fertilizante("Superfosfato de calcio",0.0,17,0.0,0.0));
 
 		return fertilizantes;
 	}
@@ -69,11 +70,17 @@ fertilizantes.put("Yeso Agricola",new Fertilizante("Yeso Agricola",0.0,0.0,0,17)
 	double porcK= 0.0;
 	double porcS= 0.0;
 	
+	private Map<SueloParametro,Double> cNutrientes = new HashMap<SueloParametro,Double>();
+	
 	
 	public Fertilizante() {}
 	
 	public Fertilizante(String nom) {
 		super(nom);
+		 cNutrientes.put(SueloParametro.Nitrogeno, porcN);
+		 cNutrientes.put(SueloParametro.Fosforo, porcP);
+		 cNutrientes.put(SueloParametro.Potasio, porcK);
+		 cNutrientes.put(SueloParametro.Azufre, porcS);
 		
 	}
 	
@@ -83,7 +90,17 @@ fertilizantes.put("Yeso Agricola",new Fertilizante("Yeso Agricola",0.0,0.0,0,17)
 		 porcP= p;
 		 porcK= k;
 		 porcS= s;
+		 
+		 cNutrientes.put(SueloParametro.Nitrogeno, porcN);
+		 cNutrientes.put(SueloParametro.Fosforo, porcP);
+		 cNutrientes.put(SueloParametro.Potasio, porcK);
+		 cNutrientes.put(SueloParametro.Azufre, porcS);
 	}
+	
+	public Map<SueloParametro,Double> getCNutrientes(){
+		return cNutrientes;
+	}
+
 
 	@Override
 	public String toString() {

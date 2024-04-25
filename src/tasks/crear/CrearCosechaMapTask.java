@@ -65,6 +65,7 @@ public class CrearCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 
 		ci.setGeometry(poli.toGeometry());
 		ci.setId(labor.getNextID());
+		ci.setElevacion(10.0);
 		labor.insertFeature(ci);
 		}
 		labor.constructClasificador();

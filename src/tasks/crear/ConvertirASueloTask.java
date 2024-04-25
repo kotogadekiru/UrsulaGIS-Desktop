@@ -69,7 +69,7 @@ public class ConvertirASueloTask extends ProcessMapTask<SueloItem,Suelo > {
 			List<Muestra> muestrasK = mMap.get(catName); 
 			if(muestrasK!=null && muestrasK.size()>0) {
 				Muestra m = muestrasK.get(0);
-				Map<String, Number> props = m.getProps();
+				Map<String, Double> props = m.getProps();
 //				String obs = m.getObservacion();
 
 //				@SuppressWarnings("unchecked")

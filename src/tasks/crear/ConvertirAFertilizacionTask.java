@@ -84,7 +84,7 @@ public class ConvertirAFertilizacionTask extends ProcessMapTask<FertilizacionIte
 
 			si.setGeometry(ci.getGeometry());
 			si.setId(labor.getNextID());
-
+			si.setElevacion(10.0);
 			labor.insertFeature(si);
 		}
 		reader.close();

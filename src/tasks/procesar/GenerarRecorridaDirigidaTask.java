@@ -1,24 +1,18 @@
 package tasks.procesar;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 
 import org.geotools.data.FeatureReader;
-import org.geotools.data.simple.SimpleFeatureIterator;
-import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
-import com.google.gson.Gson;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -28,27 +22,19 @@ import com.vividsolutions.jts.geom.Polygon;
 import dao.Clasificador;
 import dao.Labor;
 import dao.LaborItem;
-import dao.Ndvi;
 import dao.recorrida.Camino;
 import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
-import dao.suelo.Suelo;
-import dao.suelo.SueloItem;
 import gov.nasa.worldwind.WorldWind;
 import gov.nasa.worldwind.geom.Position;
-import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import gov.nasa.worldwind.render.BasicShapeAttributes;
-import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gov.nasa.worldwind.render.Material;
 import gov.nasa.worldwind.render.Path;
 import gov.nasa.worldwind.render.PointPlacemark;
 import gov.nasa.worldwind.render.PointPlacemarkAttributes;
 import gov.nasa.worldwind.render.ShapeAttributes;
-import gov.nasa.worldwind.util.WWUtil;
-import gui.JFXMain;
 import gui.Messages;
-import gui.nww.LaborLayer;
 import javafx.concurrent.Task;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -57,10 +43,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import tasks.ProcessMapTask;
-import tasks.ShowRecorridaDirigidaTask;
 import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
@@ -281,13 +265,15 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 			categorias.sort(Comparator.reverseOrder());
 			String first = categorias.get(0);
 			
+			layer.removeAllRenderables();
 			
 			recorrida.muestras.stream().forEach(m->{
-				Position pointPosition = Position.fromDegrees(m.latitude, m.longitude, 10);
+			
+				Position pointPosition = m.getPosition();
 
 				PointPlacemark pmStandard = new PointPlacemark(pointPosition);
 
-				pmStandard.setLabelText(m.getNombre());//
+				pmStandard.setLabelText(m.toString());//
 				pmStandard.setAltitudeMode(WorldWind.RELATIVE_TO_GROUND);
 				
 				int index = Clasificador.cba.indexOf(m.getNombre())-Clasificador.cba.indexOf(first);						
@@ -318,10 +304,7 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 			attrs.setOutlineWidth(10d);
 			attrs.setOutlineOpacity(1);
 
-			Path path = new Path(recorrida.muestras.stream().map(m->{
-
-				return Position.fromDegrees(m.latitude, m.longitude, 10);
-			}).collect(Collectors.toList()));
+			Path path = new Path(recorrida.muestras.stream().map(m->m.getPosition()).collect(Collectors.toList()));
 			path.setAltitudeMode(WorldWind.RELATIVE_TO_GROUND);
 			path.setFollowTerrain(true);
 

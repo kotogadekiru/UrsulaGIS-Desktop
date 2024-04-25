@@ -83,9 +83,9 @@ public class ConvertirASiembraTask extends ProcessMapTask<SiembraItem,SiembraLab
 
 			labor.setPropiedadesLabor(si);
 
-			si.setGeometry(ci.getGeometry());
+			si.setGeometry(ci.getGeometry());			
 			si.setId(labor.getNextID());
-
+			si.setElevacion(10.0);
 			labor.insertFeature(si);
 		}
 		reader.close();

@@ -48,6 +48,7 @@ public class Muestra {
 	 * @name categoria
 	 */
 	public String nombre=new String();
+	public String subNombre=new String();
 	/**
 	 * @description jsonString with values
 	 */
@@ -65,12 +66,13 @@ public class Muestra {
 	}
 
 	public Position getPosition() {
-		return Position.fromDegrees(this.latitude,this.longitude);
+		Double elevacion = this.getProps().getOrDefault("Elevacion", 10.0);	
+		return Position.fromDegrees(this.latitude,this.longitude,elevacion);
 	}
 	
 	@Override
 	public String toString() {
-		return nombre;
+		return subNombre==null?nombre:nombre+" ("+subNombre+")";
 	}
 
 	@Transient
@@ -83,6 +85,7 @@ public class Muestra {
 		map.put(SueloItem.PC_MO, "");
 		map.put(SueloItem.PROF_NAPA, "");
 		map.put(SueloItem.AGUA_PERFIL, "");
+		
 		String densidadDefault =  Messages.getNumberFormat().format(SueloItem.DENSIDAD_SUELO_KG);
 		map.put(SueloItem.DENSIDAD,densidadDefault);
 		
@@ -97,13 +100,13 @@ public class Muestra {
 	 * @return
 	 */
 	@Transient
-	public Map<String,Number> getProps(){
+	public Map<String,Double> getProps(){
 		String obs = this.getObservacion();
 
 		@SuppressWarnings("unchecked")
 		Map<String,String> map = new Gson().fromJson(obs, Map.class);	 
 
-		LinkedHashMap<String, Number> props = new LinkedHashMap<String,Number>();
+		LinkedHashMap<String, Double> props = new LinkedHashMap<String,Double>();
 		for(String k : map.keySet()) {
 			Object value = map.get(k);
 			if(String.class.isAssignableFrom(value.getClass())) {				
@@ -113,7 +116,7 @@ public class Muestra {
 					System.err.println("error tratando de parsear \""+value+"\" reemplazo por 0");}
 				props.put(k, dValue);//ojo number format exception
 			} else if(Number.class.isAssignableFrom(value.getClass())) {
-				props.put(k, (Number)value);
+				props.put(k, ((Number)value).doubleValue());
 			}			
 		}
 		return props;

@@ -102,7 +102,7 @@ public class FertilizacionGUIController extends AbstractGUIController {
 			umTask.setOnSucceeded(handler -> {
 				this.getLayerPanel().update(this.getWwd());
 				umTask.uninstallProgressBar();
-				this.wwjPanel.repaint();
+				//this.wwjPanel.repaint();//null pointer
 				System.out.println(Messages.getString("JFXMain.283")); 
 				playSound();
 			});//fin del OnSucceeded						
