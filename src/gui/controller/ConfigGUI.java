@@ -1045,8 +1045,8 @@ public class ConfigGUI extends AbstractGUIController{
 	
 	private void doShowOrdenesConfiguracionTable() {
 		List<Map<String,String>> data = new ArrayList<Map<String,String>>();
-		String CLAVE_COLUMN_NOMBRE="Clave";
-		String VALOR_COLUMN_NOMBRE="Valor";
+		String CLAVE_COLUMN_NOMBRE=Messages.getString("ConfigGUI.configClave");//"Clave";
+		String VALOR_COLUMN_NOMBRE=Messages.getString("ConfigGUI.configValor");//"Valor";
 		Configuracion config = Configuracion.getInstance();
 		for(String key : config.getAllPropertyNames()) {
 			Map<String,String> map = new HashMap<String,String>();
