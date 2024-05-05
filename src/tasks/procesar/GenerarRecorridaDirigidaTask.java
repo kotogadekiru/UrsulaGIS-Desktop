@@ -206,7 +206,7 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 								&& intersectionCount == 0) {//esto asegura distancia a los otros puntos
 							Muestra muestra = new Muestra();
 							muestra.setNombre(nombre);//TODO cambiar por una letra de A a I
-
+							muestra.setSubNombre(Integer.toString(count));
 							muestra.initObservacionSuelo();
 
 							muestra.setLatitude(random.getY());

@@ -186,6 +186,8 @@ public class ConfigGUI extends AbstractGUIController{
 		addMenuItem(Messages.getString("JFXMain.configPulverizacionMI"),(a)->doShowOrdenesPulverizacionTable(),menuConfiguracion); //
 		addMenuItem(Messages.getString("JFXMain.configFertilizacionMI"),(a)->doShowOrdenesFertilizacionTable(),menuConfiguracion); //
 		addMenuItem(Messages.getString("JFXMain.configSiembraMI"),(a)->doShowOrdenesSiembraTable(),menuConfiguracion); //
+		
+		addMenuItem(Messages.getString("JFXMain.configConfigMI"),(a)->doShowOrdenesConfiguracionTable(),menuConfiguracion); //
 
 		addMenuItem(Messages.getString("JFXMain.configIdiomaMI"),(a)->doChangeLocale(),menuConfiguracion); 
 		addMenuItem(Messages.getString("JFXMain.configHelpMI"),(a)->doShowAcercaDe(),menuConfiguracion);
@@ -199,6 +201,8 @@ public class ConfigGUI extends AbstractGUIController{
 		
 		return menuConfiguracion;
 	}
+
+
 
 	public void checkIfactualizarMIEnabled(final Menu menuConfiguracion, MenuItem actualizarMI) {
 		JFXMain.executorPool.submit(()->{
@@ -977,6 +981,8 @@ public class ConfigGUI extends AbstractGUIController{
 		//		});	
 
 	}
+	
+	
 
 	public void doShowOrdenesSiembraTable() {
 		Platform.runLater(()->{
@@ -1035,6 +1041,99 @@ public class ConfigGUI extends AbstractGUIController{
 
 			tablaStage.show();	 
 		});	
+	}
+	
+	private void doShowOrdenesConfiguracionTable() {
+		List<Map<String,String>> data = new ArrayList<Map<String,String>>();
+		String CLAVE_COLUMN_NOMBRE="Clave";
+		String VALOR_COLUMN_NOMBRE="Valor";
+		Configuracion config = Configuracion.getInstance();
+		for(String key : config.getAllPropertyNames()) {
+			Map<String,String> map = new HashMap<String,String>();
+			map.put(CLAVE_COLUMN_NOMBRE, key);
+			map.put(VALOR_COLUMN_NOMBRE, config.getPropertyOrDefault(key, ""));
+			data.add(map);
+		}
+		
+	
+		TableView<Map<String,String>> tabla = new TableView<Map<String,String>>( FXCollections.observableArrayList(data));
+		tabla.setEditable(true);
+
+		TableColumn<Map<String,String>,String> columnNombre = new TableColumn<Map<String,String>,String>(CLAVE_COLUMN_NOMBRE);
+		columnNombre.setEditable(false);
+		columnNombre.setCellFactory(TextFieldTableCell.forTableColumn());
+		columnNombre.setCellValueFactory(//new PropertyValueFactory<>(propName)
+				cellData ->{
+					String stringValue = null;
+					try{
+						stringValue =(String)  cellData.getValue().get(CLAVE_COLUMN_NOMBRE);						
+						return new SimpleStringProperty(stringValue);	
+					}catch(Exception e){
+						//System.out.println("La creacion de SimpleStringProperty en getStringColumn "+name +" con valor: "+stringValue);
+
+						return new SimpleStringProperty("sin datos");
+					}
+				});
+		columnNombre.setOnEditCommit(cellEditingEvent -> { 
+			int row = cellEditingEvent.getTablePosition().getRow();
+			Map<String,String> p = cellEditingEvent.getTableView().getItems().get(row);
+			try {
+				p.put(CLAVE_COLUMN_NOMBRE, cellEditingEvent.getNewValue());
+				tabla.refresh();
+			} catch (Exception e) {	e.printStackTrace();}
+		});		
+
+		tabla.getColumns().add(columnNombre);
+
+		TableColumn<Map<String,String>,String> columnValor = new TableColumn<Map<String,String>,String>(VALOR_COLUMN_NOMBRE);
+		columnValor.setEditable(false);
+		columnValor.setCellFactory(TextFieldTableCell.forTableColumn());
+		columnValor.setCellValueFactory(//new PropertyValueFactory<>(propName)
+				cellData ->{
+					String stringValue = null;
+					try{
+						stringValue =(String)  cellData.getValue().get(VALOR_COLUMN_NOMBRE);						
+						return new SimpleStringProperty(stringValue);	
+					}catch(Exception e){
+						//System.out.println("La creacion de SimpleStringProperty en getStringColumn "+name +" con valor: "+stringValue);
+
+						return new SimpleStringProperty("sin datos");
+					}
+				});
+		columnValor.setOnEditCommit(cellEditingEvent -> { 
+			int row = cellEditingEvent.getTablePosition().getRow();
+			Map<String,String> p = cellEditingEvent.getTableView().getItems().get(row);
+			try {
+				p.put(VALOR_COLUMN_NOMBRE, cellEditingEvent.getNewValue());
+				tabla.refresh();
+			} catch (Exception e) {	e.printStackTrace();}
+		});		
+
+		tabla.getColumns().add(columnValor);		
+		
+
+		BorderPane bp = new BorderPane();
+		bp.setCenter(tabla);
+		Button accept =new Button(Messages.getString("Recorrida.Aceptar"));
+		bp.setBottom(accept);
+		Scene scene = new Scene(bp, 400, 300);
+		Stage tablaStage = new Stage();
+		tablaStage.getIcons().add(new Image(JFXMain.ICON));
+		tablaStage.setTitle(Messages.getString("Recorrida.asignarValores")); //
+		tablaStage.setScene(scene);
+
+		accept.setOnAction((e)->{tablaStage.close();});
+
+
+		tablaStage.showAndWait();	 
+		
+		for(Map<String,String> ma : data) {
+			String k = (String) ma.get(CLAVE_COLUMN_NOMBRE);
+			String v = (String) ma.get(VALOR_COLUMN_NOMBRE);
+			config.setProperty(k, v);
+		}
+		config.save();
+		
 	}
 
 	public void doShowOrdenesPulverizacionTable() {

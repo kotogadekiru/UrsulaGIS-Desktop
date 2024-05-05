@@ -46,7 +46,7 @@ public class GeometryHelper {
 
 		double has = ProyectionConstants.A_HAS(union.getArea());
 
-		Poligono poli = ExtraerPoligonosDeLaborTask.geometryToPoligono(union);
+		Poligono poli = constructPoligono(union);//ExtraerPoligonosDeLaborTask.geometryToPoligono(union);
 		poli.setArea(has);
 		poli.setNombre(joiner.toString()); //$NON-NLS-1$
 		return poli;
