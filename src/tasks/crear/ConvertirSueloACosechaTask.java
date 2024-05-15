@@ -128,6 +128,7 @@ public class ConvertirSueloACosechaTask extends ProcessMapTask<CosechaItem,Cosec
 	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem,ExtrudedPolygon  renderablePolygon) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		String tooltipText = CrearCosechaMapTask.buildTooltipText(cosechaItem, area);
+		tooltipText+="\n "+cosechaItem.getObservaciones();
 		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText,renderablePolygon);
 
 	}
