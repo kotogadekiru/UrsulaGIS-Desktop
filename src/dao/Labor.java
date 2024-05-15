@@ -117,10 +117,12 @@ public abstract class Labor<E extends LaborItem>  {
 	@Transient public static final String COLUMNA_CURSO = "Curso(deg)";
 	@Transient public static final String COLUMNA_ANCHO = "Ancho";
 	@Transient public static final String COLUMNA_ELEVACION = "Elevacion";
+	@Transient public static final String COLUMNA_OBSERVACIONES = "Observaciones";
 
 	@Transient private static final String ANCHO_DEFAULT = "ANCHO_DEFAULT";
 	@Transient
 	public static final String FECHA_KEY = "FECHA_KEY";
+
 
 	@Transient public Clasificador clasificador=null;	
 	@Transient public SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(getType());
@@ -652,7 +654,8 @@ public abstract class Labor<E extends LaborItem>  {
 				+ COLUMNA_CURSO + ":Double,"
 				+ COLUMNA_ANCHO + ":Double,"
 				+ COLUMNA_ELEVACION + ":Double,"
-				+ COLUMNA_CATEGORIA + ":Integer,";
+				+ COLUMNA_CATEGORIA + ":Integer,"
+		+ COLUMNA_OBSERVACIONES + ":String,";
 		typeDescriptor+= getTypeDescriptors();
 
 		try {

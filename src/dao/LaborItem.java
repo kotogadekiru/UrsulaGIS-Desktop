@@ -249,7 +249,8 @@ public abstract class LaborItem implements Comparable<Object>{
 				rumbo,
 				ancho,
 				elevacion,
-				getCategoria()};
+				getCategoria(),
+				getObservaciones()};
 
 		Object[] specialElements= getSpecialElementsArray();
 		Object[] completeElements = new Object[basicElements.length+specialElements.length];
