@@ -42,6 +42,7 @@ public abstract class LaborItem implements Comparable<Object>{
 
 	protected Double areaSinSup= new Double(0);
 
+	protected String observaciones=new String();
 	public LaborItem() {
 	}
 	

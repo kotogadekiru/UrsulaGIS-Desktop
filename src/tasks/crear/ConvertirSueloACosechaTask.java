@@ -70,19 +70,58 @@ public class ConvertirSueloACosechaTask extends ProcessMapTask<CosechaItem,Cosec
 		
 		Double rindeAgua=(encharcamiento>0.5?(1-encharcamiento):1)*kgAgua;
 		System.out.println("mmDispo="+mmDispo+" => rindeAgua= "+rindeAgua);
+	
+		String observaciones ="agua";
+		
 		Double kgP=Suelo.getKgPHa(si);
 		Double rindeP = cultivo.getAbsP()!=0?kgP/cultivo.getAbsP():0;
 		System.out.println("kgP="+kgP+" => rindeP= "+rindeP);
+		if(rindeAgua>rindeP) {//factor limitante es fosforo
+			observaciones="fosforo";
+		}
+		
 		Double kgN= Suelo.getKgNHa(si) 
 				+(cultivo.isEstival()?2/3:1/3) * suelo.getKgNOrganicoHa(si);
 		Double rindeN = cultivo.getAbsN()!=0?kgN/cultivo.getAbsN():0;
 		System.out.println("kgN="+kgN+" => rindeN: "+rindeN);
+		
+	
+		Double rindeLimitante = Math.min(
+				Math.min(rindeAgua,rindeP),
+				rindeN);
 		ci.setRindeTnHa(
-				Math.min(
-						Math.min(rindeAgua,rindeP),
-						rindeN)
+				rindeLimitante
 				);
+		if(rindeLimitante == rindeAgua) {
+			if(rindeN<rindeP) {
+				ci.setObservaciones("rinde limitado por agua "+mmDispo+"mm despues por kgN y finalmente por kgP");
+			}else {
+				ci.setObservaciones("rinde limitado por agua "+mmDispo+"mm despues por kgP y finalmente por kgN");
+			}
+		} else if(rindeLimitante == rindeN) {
+			if(rindeAgua<rindeP) {
+				Double difRinde = rindeAgua-rindeN;
+				Double kgNFaltan = difRinde*cultivo.getAbsN();
+				ci.setObservaciones("rinde limitado por kgN faltan "+kgNFaltan+" kgN despues por Agua y finalmente por kgP");
+			}else {
+				Double difRinde = rindeP-rindeN;
+				Double kgNFaltan = difRinde*cultivo.getAbsN();
+				ci.setObservaciones("rinde limitado porkgN faltan "+kgNFaltan+" kgN despues por kgP y finalmente por Agua");
+			}
+		}else if(rindeLimitante == rindeP) {
+			if(rindeAgua<rindeN) {
+				Double difRinde = rindeAgua-rindeP;
+				Double kgPFaltan = difRinde*cultivo.getAbsP();
+				ci.setObservaciones("rinde limitado por kgP faltan "+kgPFaltan+" kgP despues por Agua y finalmente por kgN");
+			}else {
+				Double difRinde = rindeN-rindeP;
+				Double kgPFaltan = difRinde*cultivo.getAbsP();
+				ci.setObservaciones("rinde limitado por kgP faltan "+kgPFaltan+" kgP despues por kgN y finalmente por Agua");
+			}
+		}
+
 		return ci;
+		
 	}
 		
 	@Override
