@@ -46,7 +46,7 @@ import tasks.crear.CrearSueloMapTask;
 import utils.GeometryHelper;
 import utils.PolygonValidator;
 import utils.ProyectionConstants;
-
+@Deprecated
 public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> {
 	double distanciaAvanceMax = 0;
 	double anchoMax = 0;

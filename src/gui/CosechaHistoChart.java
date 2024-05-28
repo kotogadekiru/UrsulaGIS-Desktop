@@ -1,6 +1,5 @@
 package gui;
 
-import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
 import org.geotools.data.simple.SimpleFeatureIterator;
@@ -31,7 +30,7 @@ import utils.ProyectionConstants;
 
 public class CosechaHistoChart extends VBox {
 	// VBox root = new VBox();
-	private static final String ICON = "gisUI/1-512.png"; //$NON-NLS-1$
+	//private static final String ICON = "gisUI/1-512.png"; //$NON-NLS-1$
 	public static final String[] colors = {
 			//	"rgb(158,1,66)",
 			//	"rgb(213,62,79)",

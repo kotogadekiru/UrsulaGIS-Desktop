@@ -58,6 +58,7 @@ public class LaborDataStore<E> {
 		}
 		return availableColumns;
 	}
+	
 	public static  List<LaborItem> inStoreQuery(Envelope envelope,Labor<? extends LaborItem> labor) throws IOException{
 		List<LaborItem> objects = new ArrayList<>();
 		FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2( GeoTools.getDefaultHints() );

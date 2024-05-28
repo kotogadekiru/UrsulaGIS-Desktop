@@ -797,20 +797,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 		//h2: que los puntos alineados se reemplacen por sus extremos
 		//-> reemplazar cada grupo de puntos por un segmento de recta siempre que el error sea menor a e=E/L
 		JFXMain.executorPool.submit(()->{
-		Geometry g = p.toGeometry();
-		//g=g.buffer(ProyectionConstants.metersToLongLat(10));
-		
-		//TODO remover un punto si el area que forma el triangulo con sus vecinos es suficientemente pequenia
-		g=GeometryHelper.removeSmallTriangles(g, (0.005)/ProyectionConstants.A_HAS());
-		
-		g=GeometryHelper.douglassPeuckerSimplify(g,ProyectionConstants.metersToLongLat(5));
-		//g=GeometryHelper.removeClosePoints(g, ProyectionConstants.metersToLongLat(2));
-		//g=GeometryHelper.removeSinglePoints(g, ProyectionConstants.metersToLongLat(2));
-		//g=GeometryHelper.reduceAlignedPoints(g, 0.2);
-		Poligono pol =GeometryHelper.constructPoligono(g);
-
-		MeasureTool measureTool = (MeasureTool) p.getLayer().getValue(PoligonLayerFactory.MEASURE_TOOL);
-		measureTool.setPositions((ArrayList<? extends Position>) pol.getPositions());
+		GeometryHelper.simplificarPoligono(p);
 		});
 //		List<? extends Position> positions = measureTool.getPositions();//p.getPositions();
 //		List<Position> interpolated = new ArrayList<Position>();
@@ -843,6 +830,9 @@ public class PoligonoGUIController extends AbstractGUIController{
 		
 		//p.setPositions(interpolated);
 	}
+
+
+
 	
 	public void doCrearCirculo(Object layerObject) {
 		Camino c = (Camino)layerObject;

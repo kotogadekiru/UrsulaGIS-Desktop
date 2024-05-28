@@ -56,6 +56,8 @@ import dao.recorrida.Recorrida;
 import dao.siembra.SiembraLabor;
 import dao.suelo.SueloItem;
 import gov.nasa.worldwind.geom.Position;
+import gui.BulkNdviDownloadGUI;
+import gui.CorrelacionarCapas;
 import gui.JFXMain;
 import gui.MargenConfigDialogController;
 import gui.Messages;
@@ -155,6 +157,7 @@ public class ConfigGUI extends AbstractGUIController{
 		addMenuItem(Messages.getString("JFXMain.generarOrdenCompra"),(a)->doGenerarOrdenDeCompra(),menuHerramientas); 
 		addMenuItem(Messages.getString("JFXMain.goTo"),(a)->showGoToDialog(),menuHerramientas);
 		addMenuItem(Messages.getString("JFXMain.bulk_ndvi_download"),(a)->main.ndviGUIController.doBulkNDVIDownload(),menuHerramientas);
+		addMenuItem(Messages.getString("JFXMain.correlacionarCapas"),(a)->doCorrelacionarCapas(),menuHerramientas);
 		/*Menu Exportar*/
 		final Menu menuExportar = new Menu(Messages.getString("JFXMain.exportar"));		 
 		addMenuItem(Messages.getString("JFXMain.exportarPantallaMenuItem"),(a)->main.doSnapshot(),menuExportar);
@@ -221,6 +224,12 @@ public class ConfigGUI extends AbstractGUIController{
 			}
 		});
 	}	
+	//TODO seleccionar capas y columnas para armar un grafico de x,y
+	private void doCorrelacionarCapas() {
+		//TODO seleccionar labor x
+		CorrelacionarCapas gui = new CorrelacionarCapas(main);
+		gui.show();		
+	}
 	
 	/**
 	 * metodo que toma las labores activas de siembra fertilizacion y pulverizacion y hace una lista con los insumos y cantidades para

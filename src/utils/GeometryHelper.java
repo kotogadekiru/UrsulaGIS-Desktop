@@ -2,13 +2,19 @@ package utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.densify.Densifier;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -25,13 +31,16 @@ import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
 import com.vividsolutions.jts.util.GeometricShapeFactory;
 
+import dao.Labor;
 import dao.Poligono;
 import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.util.measure.MeasureTool;
+import gui.PoligonLayerFactory;
 import tasks.procesar.ExtraerPoligonosDeLaborTask;
 
 public class GeometryHelper {
 	public static Poligono unirPoligonos(List<Poligono> pActivos) {
-		
+
 		StringJoiner joiner = new StringJoiner("-");
 		//joiner.add(Messages.getString("JFXMain.poligonUnionNamePrefixText"));
 
@@ -51,7 +60,7 @@ public class GeometryHelper {
 		poli.setNombre(joiner.toString()); //$NON-NLS-1$
 		return poli;
 	}
-	
+
 	public static Geometry splineInterpolation(Geometry g) {
 		List<Float> X = new ArrayList<Float>();
 		List<Float> Y = new ArrayList<Float>();
@@ -72,7 +81,7 @@ public class GeometryHelper {
 
 		return ret;
 	}
-	
+
 	/**
 	 * replace a set of coordinates with a line segment while 
 	 * the error is less than error
@@ -83,26 +92,26 @@ public class GeometryHelper {
 	 */
 	public static Geometry removeClosePoints(Geometry g, Double minDistance) {
 		Geometry ret=null;
-		
+
 		Coordinate[] boundCoords = g.getCoordinates();
 		List<Coordinate> vertices = new ArrayList<Coordinate>();
 		vertices.add(boundCoords[0]);
 		boolean changed = false;
-	//	do {
-			changed = false;
+		//	do {
+		changed = false;
 		for(int i=1;i<boundCoords.length;i++) {	
 			Coordinate c0 = vertices.get(vertices.size()-1);//last
 			Coordinate c1 = boundCoords[i];			
-		
+
 			if(c0.distance(c1)>minDistance) {
 				vertices.add(c1);
 			} else {
-				
+
 				changed=true;
 			}
 		}
-	//	boundCoords=vertices.toArray(new Coordinate[vertices.size()]);
-	//	}while(changed);
+		//	boundCoords=vertices.toArray(new Coordinate[vertices.size()]);
+		//	}while(changed);
 		vertices.add(vertices.get(0));//Cerrar el ciclo
 		ret = g.getFactory().createPolygon(vertices.toArray(new Coordinate[vertices.size()]));
 
@@ -119,14 +128,14 @@ public class GeometryHelper {
 	 */
 	public static Geometry removeSinglePoints(Geometry g, Double minDistance) {
 		Geometry ret=null;
-		
+
 		Coordinate[] boundCoords = g.getCoordinates();
 		List<Coordinate> vertices = new ArrayList<Coordinate>();
 		vertices.add(boundCoords[0]);	
-	System.out.println("bounds size ="+boundCoords.length);
+		System.out.println("bounds size ="+boundCoords.length);
 		for(int i=1;i<boundCoords.length-1;i++) {	//busco i+1 asi que esta bien cortar en length-1
 			Coordinate c0 = vertices.get(vertices.size()-1);//last
-			
+
 			Coordinate c1 = boundCoords[i];
 			System.out.println("i: "+i+" "+c1);
 			Coordinate c2 = boundCoords[i+1];		
@@ -144,7 +153,7 @@ public class GeometryHelper {
 
 		return ret;
 	}
-	
+
 	/**
 	 * replace a set of coordinates with a line segment while 
 	 * the error is less than error
@@ -161,7 +170,7 @@ public class GeometryHelper {
 		vertices.add(boundCoords[0]);
 
 		List<Coordinate> segmentCandidates = new ArrayList<Coordinate>();
-	
+
 		for(int i=1;i<boundCoords.length;i++) {	
 			Coordinate c0 = vertices.get(vertices.size()-1);//last
 			Coordinate c1 = boundCoords[i];			
@@ -169,12 +178,12 @@ public class GeometryHelper {
 			//TODO add c1 to segmentCandidates and check the condition else pop c1			
 
 			Coordinate[] candidatesArr =segmentCandidates.toArray(new Coordinate[segmentCandidates.size()]);
-			
+
 			Coordinate[] refCoords =new Coordinate[]{c0,c1}; //segmento de referencia
-			
+
 			LineString ls= fact.createLineString(refCoords);
 			Double distances =0.0;
-			
+
 			for(Coordinate c:candidatesArr) {				
 				distances+=	ls.distance(fact.createPoint(c));
 			}
@@ -191,7 +200,7 @@ public class GeometryHelper {
 
 		return ret;
 	}
-	
+
 	/**
 	 * 
 	 * @param g geometria a simplificar
@@ -236,7 +245,7 @@ public class GeometryHelper {
 			GeometryFactory fact = ProyectionConstants.getGeometryFactory();
 			LineString ls= fact.createLineString(refCoords);
 			Double distances =0.0;
-			
+
 			for(Coordinate c:candidatesArr) {				
 				distances+=	ls.distance(fact.createPoint(c));
 			}
@@ -274,9 +283,9 @@ public class GeometryHelper {
 
 	public static Geometry simplificarContorno(Geometry g) {
 		g=g.buffer(ProyectionConstants.metersToLongLat(10));
-//		g=GeometryHelper.removeClosePoints(g, ProyectionConstants.metersToLongLat(2));
-//		g=GeometryHelper.removeSinglePoints(g, ProyectionConstants.metersToLongLat(2));
-//		g=GeometryHelper.reduceAlignedPoints(g, 0.2);
+		//		g=GeometryHelper.removeClosePoints(g, ProyectionConstants.metersToLongLat(2));
+		//		g=GeometryHelper.removeSinglePoints(g, ProyectionConstants.metersToLongLat(2));
+		//		g=GeometryHelper.reduceAlignedPoints(g, 0.2);
 		return g;
 	}
 	public static Geometry smooth(Geometry g) {
@@ -369,28 +378,28 @@ public class GeometryHelper {
 		Double radius = ProyectionConstants.getDistancia(c, c2);
 		return createCircle (c,radius);
 	}
-	
+
 	public static Geometry createCircle(Point c,double radius) {
 		System.out.println("creando un circulo con radio "+radius);
 		double latRadius = ProyectionConstants.metersToLat()*radius;
-		
+
 		double fact = ProyectionConstants.metersToLat()/ProyectionConstants.metersToLong();
 
-		 GeometricShapeFactory shapeFactory = new GeometricShapeFactory();
-		    shapeFactory.setNumPoints(64); // adjustable
-		    shapeFactory.setCentre(c.getCoordinate());
-		    // Length in meters of 1° of latitude = always 111.32 km
-		    shapeFactory.setHeight(2*latRadius);//diameterInMeters/111320d);
-		
-		    double longRadius = latRadius/fact;
-		    // Length in meters of 1° of longitude = 40075 km * cos( latitude ) / 360
-		    shapeFactory.setWidth(2*longRadius);//diameterInMeters / (40075000 * Math.cos(Math.toRadians(latitude)) / 360));
+		GeometricShapeFactory shapeFactory = new GeometricShapeFactory();
+		shapeFactory.setNumPoints(64); // adjustable
+		shapeFactory.setCentre(c.getCoordinate());
+		// Length in meters of 1° of latitude = always 111.32 km
+		shapeFactory.setHeight(2*latRadius);//diameterInMeters/111320d);
 
-		    Polygon circle = shapeFactory.createEllipse();
-		
+		double longRadius = latRadius/fact;
+		// Length in meters of 1° of longitude = 40075 km * cos( latitude ) / 360
+		shapeFactory.setWidth(2*longRadius);//diameterInMeters / (40075000 * Math.cos(Math.toRadians(latitude)) / 360));
+
+		Polygon circle = shapeFactory.createEllipse();
+
 		return circle;//c.buffer(radius);//esto me genera una elipse
 	}
-	
+
 	public static Polygon constructPolygon(ReferencedEnvelope e) {
 		Coordinate D = new Coordinate(e.getMaxX(), e.getMaxY()); // x-l-d
 		Coordinate C = new Coordinate(e.getMinX(), e.getMaxY());// X+l-d
@@ -471,25 +480,78 @@ public class GeometryHelper {
 		return rumbo<0?rumbo+360:rumbo;
 		//return rumbo;
 	}
-	
-	public static void main(String[] args) {
-		Point X=ProyectionConstants.getGeometryFactory().createPoint(new Coordinate(-60,-33));
-		Geometry circle = createCircle(X,20);
-		System.out.println("cirlce = "+circle);
-		
-	}
-	public static Poligono constructPoligono(Geometry g) {
-		Poligono p = new Poligono();
-		List<Position> positions = new ArrayList<Position>();
-		Coordinate[] coords = g.getBoundary().getCoordinates();
-		for(int i=0;i<coords.length;i++) {
-			Coordinate c = coords[i];
-			positions.add(Position.fromDegrees(c.y, c.x));
 
+
+	public static Poligono constructPoligono(Geometry g) {
+		//ExtraerPoligonosDeLaborTask.geometryToPoligono((Geometry)g);
+		System.out.println("convirtiendo geometria a poligono "+g);		
+		List<Position> positions = new ArrayList<Position>();		
+			
+		if(g instanceof Polygon) {
+			Polygon pol =(Polygon)g;
+			System.out.println("es polygon");
+			
+			Coordinate[] coords = pol.getExteriorRing().getCoordinates();
+			for(int i=0;i<coords.length;i++) {
+				Coordinate c = coords[i];
+				positions.add(Position.fromDegrees(c.y, c.x));
+			}
+			positions.add(positions.get(0));
+			
+			
+			for(int r=0;r<pol.getNumInteriorRing();r++) {
+				List<Position> hole =new ArrayList<Position>();	
+				LineString ring = pol.getInteriorRingN(r);
+				Coordinate[] ringCoords = ring.reverse().getCoordinates();
+				for(int i=0;i<ringCoords.length;i++) {
+					Coordinate c = ringCoords[i];
+					hole.add(Position.fromDegrees(c.y, c.x));
+				}
+				//hole.add(hole.get(0));
+				insertHole(positions,hole);
+			}			
 		}
+
+		
+		Poligono p = new Poligono();
 		p.setPositions(positions);		
 		p.setArea(GeometryHelper.getHas(g));
 		return p;
+	}
+	
+	public static Double distance(Position p1,Position p2) {		
+		return Position.linearDistance(p1, p2).degrees;
+	}
+	public static void insertHole(List<Position> ring,List<Position> hole) {
+		//TODO encontrar los puntos pas cercanos e insertar hole en outerRing
+		Position minR=null,minH=null;
+		int minI=-1,minJ=-1;
+		Double minDist =null; 
+		for(int i=0;i<ring.size();i++) {
+			Position r=ring.get(i);
+			for(int j=0;j<hole.size();j++) {
+				Position h =hole.get(j);			
+				Double dist = distance(r,h);
+				if(minDist==null || minDist>dist) {
+					minDist = dist;
+					minI=i;
+					minJ=j;
+					minR=r;
+					minH=h;
+				}
+			}
+		}		
+		//TODO insertar en minI hole empezando por minJ
+		List<Position> sortedHole = new ArrayList<Position>();
+		for(int h = 0; h<hole.size();h++) {
+			Position hPos = hole.get((h+minJ)%(hole.size()));
+			sortedHole.add(h,hPos);
+			//ring.add(minI+h, hPos);
+		}
+		sortedHole.add(sortedHole.get(0));
+		sortedHole.add(0,minR);
+		ring.addAll(minI,sortedHole);
+		ring.add(minI+sortedHole.size(),minR);
 	}
 
 	public static Polygon constructPolygon(Envelope e) {
@@ -532,7 +594,7 @@ public class GeometryHelper {
 	 * @param g2
 	 * @return computes validated intersection. returns null if geometrys dont intersect
 	 */
-
+	//FIXME check thread safety
 	public static Geometry getIntersection(Geometry g1, Geometry g2){
 		if(g1==null || g2 ==null) {
 			System.err.println("antes de validar geometrias devolviendo null porque una de las geometrias a intersectar es null. g1= "+g1+",g2= "+g2);
@@ -603,18 +665,18 @@ public class GeometryHelper {
 		//obtener la diferencia entre la union y los vertices
 
 		Geometry[] boundaryArr =  aIntersectar.stream().map(g->g.getBoundary()).toArray(s->new Geometry[s]);
-		
+
 		GeometryFactory fact = ProyectionConstants.getGeometryFactory();
 		GeometryCollection boundarysCol = fact.createGeometryCollection(boundaryArr);
 		Double buffer25=ProyectionConstants.metersToLongLat(0.25);
 		Geometry boundary_buffer = boundarysCol.buffer(buffer25,1,BufferParameters.CAP_FLAT);
-		
+
 		GeometryCollection colectionCat = fact.createGeometryCollection(
 				aIntersectar.toArray(new Geometry[aIntersectar.size()]));
 		//(buffer0,1,BufferParameters.CAP_SQUARE);
 		Double buffer0=ProyectionConstants.metersToLongLat(0);
 		Geometry convexHull = colectionCat.buffer(buffer0,1,BufferParameters.CAP_FLAT);
-		
+
 		Geometry diff = convexHull.difference(boundary_buffer);
 		Set<Geometry> geometriasOutput = new HashSet<Geometry>();
 		//double tolerance = ProyectionConstants.metersToLongLat(1);
@@ -626,7 +688,7 @@ public class GeometryHelper {
 			if(g.getArea()<bufferWidth*bufferWidth) {
 				continue;
 			}
-			
+
 			g=g.buffer(buffer30,1,BufferParameters.CAP_FLAT);//mitad del buffer esta en esta y mitad en la otra
 			g = PolygonValidator.validate(g);
 			geometriasOutput.add(g);
@@ -718,30 +780,107 @@ public class GeometryHelper {
 		GeometryCollection collection = fact.createGeometryCollection(array );
 		return collection;
 	}
+
+	public static Geometry unirCascading(Labor<?> aUnir,Envelope bounds) {
+		try {
+		List<Geometry> boundsGeoms = new ArrayList<Geometry>();
+		//System.out.println("bounds area = "+ProyectionConstants.A_HAS(bounds.getArea()));
+		if(ProyectionConstants.A_HAS(bounds.getArea())>1) {
+			//si es mayor a 100m2 divido en 4
+			List<Envelope> envelopes = splitEnvelope(bounds);
+			//System.out.println("split "+bounds);
+		//	int i=0;
+			for(Envelope e:envelopes) {
+			//	System.out.println("envelope "+i+": "+e);
+			//	i++;
+				Geometry eGeom = unirCascading(aUnir,e);
+				if(eGeom !=null) {
+					boundsGeoms.add(eGeom);
+				} 
+//				else {
+//					System.out.println("eGeom es null");
+//				}
+			}
+			//System.out.println("fin split "+bounds);
+			//System.out.println("geoms "+boundsGeoms.size());
+		} else {
+			boundsGeoms.addAll( aUnir.cachedOutStoreQuery(bounds).stream()
+					.map(i->i.getGeometry())					
+					.collect(Collectors.toList()));			 
+		}
+
+		//Double buffer = ProyectionConstants.metersToLongLat(0.25);
+		//System.out.println("juntando "+boundsGeoms.size()+" geoms");
+		Geometry union = null; 
+				//toGeometryCollection(boundsGeoms).buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection
+		for(Geometry g : boundsGeoms) {
+			if(union==null) {
+				union=g;
+			}else {
+				union = union.union(g);
+			}
+		}
+		return union;
+		}catch(Exception e ) {
+			e.printStackTrace();
+			return null;
+			}	
+		}
+
+
+
+	public static List<Envelope> splitEnvelope(Envelope e){
+		List<Envelope> result = new ArrayList<Envelope>();
+		double ancho = e.getWidth()/2;
+		double alto = e.getHeight()/2;
+		for(double x = e.getMinX(); x <= e.getMaxX()-ancho; x+=ancho) {
+			for(double y = e.getMinY(); y <= e.getMaxY()-alto; y+=alto) {			
+				result.add(new Envelope(x,x+ancho,y,y+ancho));
+			}
+		}
+		return result;
+	}
+
+	public static void main(String [] args) {
+		Envelope e = new Envelope(0,10,0,10);
+		List<Envelope> envelopes = splitEnvelope(e);
+		//Arrays.toString
+		//	String s = Arrays.asList(j).stream().collect(Collectors.joining("</td><td>","<td>","</td>"));
+		System.out.println("envelopes created = "+envelopes);
+	}
+
 	public static Geometry unirGeometrias(List<Geometry> aUnir) {
 		try {
 			List<Geometry> aUnird = aUnir.stream().map(g->{
-			Densifier densifier = new Densifier(g);
-			densifier.setDistanceTolerance(ProyectionConstants.metersToLongLat(10));
-			g=densifier.getResultGeometry();
-			return  g;			
-		}).collect(Collectors.toList());
-		
-//		GeometryFactory fact = ProyectionConstants.getGeometryFactory();		
-//		Geometry[] geomArray = aUnir.toArray(new Geometry[aUnir.size()]);//put into an array
-//		GeometryCollection collection = fact.createGeometryCollection(geomArray);//create a collection
-		GeometryCollection collection = toGeometryCollection(aUnird);
-		Double buffer = ProyectionConstants.metersToLongLat(0.25);
-		
-		Geometry union =collection.buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection
-		Geometry boundary = union.getBoundary().buffer(buffer,1,BufferParameters.CAP_FLAT);
-		union=union.difference(boundary);
-		//buffered = CascadedPolygonUnion.union(geometriesCat);
-		//Geometry union = collection.buffer(0);//ProyectionConstants.metersToLongLat(20));
-		//TODO hacer un buffer 0.25
-		//y despues hacer un dif contra el boundary buffer 0.25 para evitar que crezcan los items
-		//System.out.println("geometria densa unida "+union);
-		return union;
+				Densifier densifier = new Densifier(g);
+				densifier.setDistanceTolerance(ProyectionConstants.metersToLongLat(10));
+				g=densifier.getResultGeometry();
+				return  g;			
+			}).collect(Collectors.toList());
+
+			//		GeometryFactory fact = ProyectionConstants.getGeometryFactory();		
+			//		Geometry[] geomArray = aUnir.toArray(new Geometry[aUnir.size()]);//put into an array
+			//		GeometryCollection collection = fact.createGeometryCollection(geomArray);//create a collection
+			GeometryCollection collection = toGeometryCollection(aUnird);
+			Double buffer = ProyectionConstants.metersToLongLat(0.25);
+
+			Geometry union =collection.buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection
+			Geometry boundary = union.getBoundary().buffer(buffer,1,BufferParameters.CAP_FLAT);
+			Geometry dif=union.difference(boundary);
+			dif = PolygonValidator.validate(dif);
+			if(dif.isValid()) {
+				System.out.println("dif es valid");
+				return dif;
+			}else {
+				System.out.println("dif no es valid");
+				return union;
+			}
+			//buffered = CascadedPolygonUnion.union(geometriesCat);
+			//Geometry union = collection.buffer(0);//ProyectionConstants.metersToLongLat(20));
+			//TODO hacer un buffer 0.25
+			//y despues hacer un dif contra el boundary buffer 0.25 para evitar que crezcan los items
+			//System.out.println("geometria densa unida "+union);
+			//return dif;
 		}catch(Exception e) {
 			e.printStackTrace();
 			Geometry union=null;
@@ -750,13 +889,64 @@ public class GeometryHelper {
 					union=g;
 				}else {
 					try {
-					union=union.union(g);
+						union=union.union(g);
 					}catch(Exception e2) {
 						e2.printStackTrace();
 					}
 				}
 			}
 			return union;
+		}
+	}
+
+	public static synchronized void extractContorno(Labor<?> labor) {
+		//TODO compute contorno
+		//		List<Geometry> geometriesCat = new ArrayList<Geometry>();
+		//		SimpleFeatureIterator it = labor.outCollection.features();
+
+
+
+		//		while(it.hasNext()){
+		//			SimpleFeature f=it.next();
+		//			geometriesCat.add((Geometry)f.getDefaultGeometry());
+		//		}
+		//		it.close();		
+
+		try{					
+			ReferencedEnvelope bounds = labor.outCollection.getBounds();
+			//System.out.println("outCollectionBounds "+bounds);
+			Geometry cascadedUnion = unirCascading(labor,bounds);
+			//Geometry buffered = GeometryHelper.unirGeometrias(geometriesCat);
+			//CascadedPolygonUnion.union(geometriesCat);
+			//sino le pongo buffer al resumir geometrias me quedan rectangulos medianos
+			//				buffered = buffered.buffer(
+			//						ProyectionConstants.metersToLongLat(0.25),
+			//						1,BufferParameters.CAP_SQUARE);
+			//buffered =GeometryHelper.simplificarContorno(buffered);
+			Poligono contorno =GeometryHelper.constructPoligono(cascadedUnion);
+			//	simplificarPoligono(contorno);
+			contorno.setNombre(labor.getNombre());
+			labor.setContorno(contorno);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+
+	public static void simplificarPoligono(Poligono p) {
+		Geometry g = p.toGeometry();
+		//g=g.buffer(ProyectionConstants.metersToLongLat(10));
+
+		//TODO remover un punto si el area que forma el triangulo con sus vecinos es suficientemente pequenia
+		g=GeometryHelper.removeSmallTriangles(g, (0.005)/ProyectionConstants.A_HAS());
+
+		g=GeometryHelper.douglassPeuckerSimplify(g,ProyectionConstants.metersToLongLat(5));
+		//g=GeometryHelper.removeClosePoints(g, ProyectionConstants.metersToLongLat(2));
+		//g=GeometryHelper.removeSinglePoints(g, ProyectionConstants.metersToLongLat(2));
+		//g=GeometryHelper.reduceAlignedPoints(g, 0.2);
+		Poligono pol =GeometryHelper.constructPoligono(g);
+		if(p.getLayer()!=null) {
+			MeasureTool measureTool = (MeasureTool) p.getLayer().getValue(PoligonLayerFactory.MEASURE_TOOL);
+			measureTool.setPositions((ArrayList<? extends Position>) pol.getPositions());
 		}
 	}
 
@@ -768,10 +958,10 @@ public class GeometryHelper {
 		vertices.add(boundCoords[0]);
 		boolean changed = false;
 
-			changed = false;
-			//double minTriangleHas = ProyectionConstants.A_HAS(minLongLatArea);
-			//System.out.println("minTriangleHas ="+minTriangleHas);
-			//System.out.println("bounds length "+boundCoords.length);
+		changed = false;
+		//double minTriangleHas = ProyectionConstants.A_HAS(minLongLatArea);
+		//System.out.println("minTriangleHas ="+minTriangleHas);
+		//System.out.println("bounds length "+boundCoords.length);
 		for(int i=1;i<boundCoords.length-1;i++) {	
 			Coordinate c0 = vertices.get(vertices.size()-1);//last
 			ProyectionConstants.setLatitudCalculo(c0.y);
@@ -786,14 +976,14 @@ public class GeometryHelper {
 				if(triangle.getArea()>minLongLatArea) {
 					vertices.add(c1);
 				} else {
-					
+
 					changed=true;
 				}
 			}catch(Exception e) {
 				vertices.add(c1);
 				e.printStackTrace();
 			}
-		
+
 		}
 
 		vertices.add(vertices.get(0));//Cerrar el ciclo
@@ -801,7 +991,7 @@ public class GeometryHelper {
 
 		return ret;
 	}
-	
+
 	/**
 	 * The Douglas-Peucker algorithm uses a point-to-edge distance tolerance. 
 	 * The algorithm starts with a crude simplification that is the single edge joining the 
@@ -822,7 +1012,7 @@ public class GeometryHelper {
 		return DouglasPeuckerSimplifier.simplify(g, 0.000001);
 
 	}
-	
+
 	/**
 	 * 
 	 * @param g geometria a simplificar

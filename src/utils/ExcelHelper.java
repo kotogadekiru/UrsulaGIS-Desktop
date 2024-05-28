@@ -446,8 +446,65 @@ public class ExcelHelper {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+		}
+		
+		public void exportNumberSeries(Series<Number, Number> series) {//OK!
+			File outFile = getNewExcelFile();
 
 
+			XSSFWorkbook workbook = new XSSFWorkbook();				
+			//				Calendar periodoCalendar = Calendar.getInstance();
+			//				int sec = periodoCalendar.get(Calendar.SECOND);
+			//				int min = periodoCalendar.get(Calendar.MINUTE);
+			//				int hour = periodoCalendar.get(Calendar.HOUR_OF_DAY);
+			//				int day = periodoCalendar.get(Calendar.DAY_OF_MONTH);
+			//				int mes = periodoCalendar.get(Calendar.MONTH);//, Calendar.SHORT_FORMAT, Locale.getDefault());
+			//				int anio = periodoCalendar.get(Calendar.YEAR);//, Calendar.SHORT_FORMAT, Locale.getDefault());
+			//
+			//				String periodoName = String.valueOf(anio)+"-"+String.valueOf(mes)+"-"+String.valueOf(day)+"-"+String.valueOf(hour)+String.valueOf(min)+String.valueOf(sec);
+			//				// Create a blank sheet
+
+			String sheetName = series.getName();
+			if(sheetName ==null){
+				sheetName="Data";
+			}
+			XSSFSheet sheet = workbook.createSheet(sheetName);
+
+			// This data needs to be written (Object[])
+			Map<String, Object[]> data = new TreeMap<String, Object[]>();
+
+			List<Data<Number,Number>> datos =series.getData();
+			String xName = series.getChart().getXAxis().getLabel();
+			String YName = series.getChart().getYAxis().getLabel();
+			data.put("0", new Object[] {
+					xName,
+					YName
+			});
+			
+			for(int i = 0;i<datos.size();i++){
+				Number xVal  = datos.get(i).getXValue();				
+				Number yVal = datos.get(i).getYValue();
+					Object[] d = new Object[2];	
+					d[0]=xVal;
+					d[1]=yVal;
+					data.put(String.valueOf(i+1),d);			
+			}	
+
+
+			// Iterate over data and write to sheet
+			writeDataToSheet( sheet, data);
+
+			try {
+				// Write the workbook in file system
+				FileOutputStream out = new FileOutputStream(outFile);
+				workbook.write(out);
+				out.close();
+				workbook.close();
+				System.out
+				.println("el backup del fue guardado con exito.");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		
 		public void exportSeries(Series<String, Number> series) {//OK!
@@ -479,7 +536,7 @@ public class ExcelHelper {
 			data.put("0", new Object[] {
 					"Rango",
 					"Superficie",
-					"Rinde"
+					"Cantidad"
 			});
 
 

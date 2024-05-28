@@ -1071,7 +1071,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		labor.setCantidadInsumo(new Double(0.0));
 
 
-
+		
 		itemsToShow.parallelStream().forEach(fc->{
 			Geometry g = fc.getGeometry();
 
@@ -1256,29 +1256,10 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	}
 
 	public void extractContorno() {
-		//TODO compute contorno
-		List<Geometry> geometriesCat = new ArrayList<Geometry>();
-		SimpleFeatureIterator it = labor.outCollection.features();
-		while(it.hasNext()){
-			SimpleFeature f=it.next();
-			geometriesCat.add((Geometry)f.getDefaultGeometry());
-		}
-		it.close();		
-
-		try{						
-			Geometry buffered = GeometryHelper.unirGeometrias(geometriesCat);// CascadedPolygonUnion.union(geometriesCat);
-			//sino le pongo buffer al resumir geometrias me quedan rectangulos medianos
-			//				buffered = buffered.buffer(
-			//						ProyectionConstants.metersToLongLat(0.25),
-			//						1,BufferParameters.CAP_SQUARE);
-			//buffered =GeometryHelper.simplificarContorno(buffered);
-			Poligono contorno =GeometryHelper.constructPoligono(buffered);
-
-			labor.setContorno(contorno);
-		}catch(Exception e){
-			e.printStackTrace();
-		}
+		GeometryHelper.extractContorno(labor);
 	}
+
+
 
 	private RenderableLayer createExtrudedPolygonsLayer(Collection<FC> itemsToShow) {	
 

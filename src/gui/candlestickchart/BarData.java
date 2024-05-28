@@ -23,7 +23,7 @@ import java.util.GregorianCalendar;
  *
  * @author RobTerpilowski
  */
-public class BarData implements Serializable, Comparable {
+public class BarData implements Serializable, Comparable<BarData> {
         
     /**
 	 * 
@@ -253,7 +253,7 @@ public class BarData implements Serializable, Comparable {
     }
     
     @Override
-    public int compareTo(Object o){
+    public int compareTo(BarData o){
     
     	try{
     		BarData b = (BarData)o;

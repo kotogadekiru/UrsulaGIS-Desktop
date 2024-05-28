@@ -114,7 +114,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
         xAxis.forceZeroInRangeProperty().setValue(Boolean.FALSE);
         //setTitle(title);
         setAnimated(true);
-        getStylesheets().add(getClass().getResource(CANDLE_STICK_CHART_STYLES_CSS).toExternalForm());
+        //getStylesheets().add(getClass().getResource(CANDLE_STICK_CHART_STYLES_CSS).toExternalForm());
         xAxis.setAnimated(true);
         yAxis.setAnimated(true);
         verticalGridLinesVisibleProperty().set(false);
@@ -122,8 +122,8 @@ public class CandleStickChart extends XYChart<Number, Number> {
         List<BarData> sublist = getSubList(bars, maxBarsToDisplay);
         for (BarData bar : sublist) {
             series.getData().add(new XYChart.Data<>(bar.getElevacion(), bar.getAverage(), bar));
-            logger.log(Level.INFO, "Adding bar with rinde: {0}", bar.getElevacion());
-            logger.log(Level.INFO, "Adding bar with open: {0}", bar.getAverage());
+            logger.log(Level.INFO, "Adding bar with elevacion: {0}", bar.getElevacion());
+            logger.log(Level.INFO, "Adding bar with rinde: {0}", bar.getAverage());
         }
 
         dataSeries = FXCollections.observableArrayList(series);
@@ -227,10 +227,12 @@ public class CandleStickChart extends XYChart<Number, Number> {
                     double high = getYAxis().getDisplayPosition(bar.getMax());
                     double low = getYAxis().getDisplayPosition(bar.getMin());
                     double candleWidth = Math.min(100, bar.getVolume().intValue()/ProyectionConstants.METROS2_POR_HA);
+                   
+                    candleWidth=Math.max(2, candleWidth);//aseguro que por lo menos tiene 5 de ancho
                     // update candle
                     double closeOfset = -10;//close - y;// es el alto de la barra que muestra el promedio
-                   candle.color = CosechaHistoChart.colors[bar.getClase()];
-                    candle.update(closeOfset, high - y, low - y, candleWidth);//esto da cero porque y y close, etc son iguales
+                    candle.color = CosechaHistoChart.colors[bar.getClase()];
+                    candle.update(closeOfset, high-y, low - y, candleWidth);//esto da cero porque y y close, etc son iguales
 
                     // update tooltip content
                     candle.updateTooltip(bar.getElevacion(),
@@ -429,7 +431,13 @@ public class CandleStickChart extends XYChart<Number, Number> {
             this.dataStyleClass = dataStyleClass;
             updateStyleClasses();
         }
-
+/**
+ * 
+ * @param closeOffset altura de la vela
+ * @param highOffset valor maximo del bigote
+ * @param lowOffset valor minimo del bigote
+ * @param candleWidth ancho de la vela
+ */
         public void update(double closeOffset, double highOffset, double lowOffset, double candleWidth) {
             openAboveClose = closeOffset > 0;
             updateStyleClasses();
@@ -475,6 +483,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
         private final Label aveValue = new Label();
 
         private TooltipContent() {
+        	//TODO traducir mensajes en CandleStickChart
             Label elev = new Label("Elevacion:");
             Label sup = new Label("Sup (Ha):");
             Label max = new Label("Max Rinde:");

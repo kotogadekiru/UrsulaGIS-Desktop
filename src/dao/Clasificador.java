@@ -317,7 +317,7 @@ public class Clasificador {
 		List<Double> sorted = valores.stream().sorted().collect(Collectors.toList());
 		//if(numLimites>1) {
 			for(int i = 0; i < numLimites; i++){	
-				histograma[i] = sorted.get(i);// code block
+				histograma[i] = sorted.get(i);// java.lang.IndexOutOfBoundsException: Index: 0, Size: 0
 				System.out.println("i: "+i+" -> "+histograma[i]);
 				//histograma[i] = average  + desvioEstandar * (i- 1/numLimites );
 			}

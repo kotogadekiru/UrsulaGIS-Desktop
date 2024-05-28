@@ -11,6 +11,7 @@ import java.net.URL;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -128,7 +129,7 @@ public class JFXMain extends Application {
 	private static final String GOV_NASA_WORLDWIND_AVKEY_INITIAL_LATITUDE = "gov.nasa.worldwind.avkey.InitialLatitude"; 
 	public static Configuracion config = Configuracion.getInstance();
 
-	public static final String VERSION = "0.2.29"; 
+	public static final String VERSION = "0.2.30"; 
 	public static final String TITLE_VERSION = "Ursula GIS-"+VERSION; 
 	public static final String buildDate = "25/04/2024";
 	public static  final String ICON ="gui/ursula_logo_2020.png";//"gui/32x32-icon-earth.png";// "gui/1-512.png";//UrsulaGIS-Desktop/src/gui/32x32-icon-earth.png 
@@ -547,6 +548,16 @@ public class JFXMain extends Application {
 			return "poligonos Extraidos " + layer.getName(); 
 		}));
 		
+		
+		/**
+		 * Accion que permite extraer el contorno de una cosecha
+		 * es solo de prueba. se puede realizar extrayendo poligonos y uniendolos
+		 */
+//		laboresP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.extraerContornoAction"),(layer)->{
+//			doExtraerContorno((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+//			return "poligonos Extraidos " + layer.getName(); 
+//		}));
+		
 		/**
 		 * Accion que permite cortar una labor por el poligono/s seleccionado
 		 */
@@ -932,6 +943,17 @@ public class JFXMain extends Application {
 			});//execute
 		});//foreach
 	}
+	
+	
+	
+//	private void doExtraerContorno(Labor<?> labor ) {	
+//			Poligono contorno = labor.getContorno();
+//			
+//			this.poligonoGUIController.showPoligonos(Collections.singletonList(contorno));			
+//		
+//			this.wwjPanel.repaint();
+//
+//	}
 	
 	private void doExtraerPoligonos(Labor<?> labor ) {	
 		ExtraerPoligonosDeLaborTask umTask = new ExtraerPoligonosDeLaborTask(labor);

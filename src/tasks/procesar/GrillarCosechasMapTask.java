@@ -14,6 +14,7 @@ import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.geometry.BoundingBox;
+import org.opengis.geometry.DirectPosition;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
@@ -371,6 +372,10 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 	public static List<Polygon> construirGrilla(BoundingBox bounds,double ancho) {
 		//System.out.println(Messages.getString("GrillarCosechasMapTask.16")); //$NON-NLS-1$
 		List<Polygon> polygons = new ArrayList<Polygon>();
+		DirectPosition esq = bounds.getUpperCorner();
+		//System.out.println("esq.getOrdinate(1) "+esq.getOrdinate(1));//esq.getOrdinate(0) -61.9547387
+		ProyectionConstants.setLatitudCalculo(esq.getOrdinate(1));
+		
 		//convierte los bounds de longlat a metros
 		Double minX = bounds.getMinX()/ProyectionConstants.metersToLong() - ancho/2;
 		Double minY = bounds.getMinY()/ProyectionConstants.metersToLat() - ancho/2;

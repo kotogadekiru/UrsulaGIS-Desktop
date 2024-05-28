@@ -52,6 +52,7 @@ import javafx.beans.property.StringProperty;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import utils.GeometryHelper;
 
 /**
  * hace las veces de un featureStore con los metodos especificos para manejar el tipo de labor especifico
@@ -778,11 +779,20 @@ public abstract class Labor<E extends LaborItem>  {
 			ci.setElevacion(1.0);
 		}
 	}
+	
+
+	public Poligono getContorno() {
+		if(contorno==null) {
+			GeometryHelper.extractContorno(this);
+		}
+		return contorno;
+	}
 
 
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
+		if(o==null)return false;
 		if (!(Labor.class.isAssignableFrom(o.getClass()))) return false;
 		Labor<E> lab = (Labor<E>) o;
 		return id != null && id.equals((lab).id);

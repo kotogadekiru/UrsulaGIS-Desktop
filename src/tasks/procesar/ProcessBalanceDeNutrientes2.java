@@ -111,14 +111,19 @@ public class ProcessBalanceDeNutrientes2 extends ProcessMapTask<SueloItem,Suelo>
 
 		//unir las geometrias de todas las labores para obtener un poligono de contorno
 		Geometry cover = GeometryHelper.unirGeometrias(geometriasActivas);
+		//FIXME cover no se hace bien
 		//System.out.println("el area del cover es: "+GeometryHelper.getHas(cover));//el area del cover es: 3.114509320893096E-12
 		//intersectar la grilla con el contorno
 		List<Geometry> grillaCover = grilla.parallelStream().collect(
 				()->new ArrayList<Geometry>(),
-				(intersecciones, poly) ->{					
+				(intersecciones, poly) ->{			
+					try {
 					Geometry intersection = GeometryHelper.getIntersection(poly, cover); 
 					if(intersection!=null) {
 						intersecciones.add(intersection);
+					}
+					}catch(Exception e) {
+						e.printStackTrace();
 					}
 				},	(env1, env2) -> env1.addAll(env2));
 
