@@ -20,6 +20,7 @@ import org.geotools.data.FileDataStore;
 import org.geotools.data.ServiceInfo;
 import org.opengis.feature.simple.SimpleFeatureType;
 
+import dao.AbstractBaseEntity;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -39,7 +40,11 @@ import lombok.Setter;
 	@NamedQuery(name=Recorrida.FIND_ID, query="SELECT o FROM Recorrida o where o.id = :id") ,
 }) 
 
-public class Recorrida {
+public class Recorrida extends AbstractBaseEntity{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	//public static final String FIND_ALL = "Recorrida.findAll";
 	public static final String CLASS_NAME= "Recorrida";
 	public static final String FIND_ALL = CLASS_NAME+".findAll";
@@ -61,7 +66,7 @@ public class Recorrida {
 	@OrderBy("id ASC")
 	public List<Muestra> muestras =new ArrayList<Muestra>();
 	
-	public Recorrida() {
+	public Recorrida()  {
 		
 //		Recorrida r=this;
 //		muestras.addListener(new ListChangeListener<Muestra>() {
