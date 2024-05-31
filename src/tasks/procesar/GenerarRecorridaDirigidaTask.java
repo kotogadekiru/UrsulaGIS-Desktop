@@ -103,12 +103,7 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 		String nombreRecorrida =null;
 		//ancho me permite controlar la distancia minima entre los puntos y entre el punto y la frontera
 		double ancho = 5+Math.sqrt(superficieMinimaAMuestrear*ProyectionConstants.METROS2_POR_HA)/10;
-		//double ancho = Math.sqrt(ProyectionConstants.METROS2_POR_HA / this.densidadDeMuestrasDeseada) ;
-		//ancho = Math.min(anchoSup, ancho);
 		System.out.println("ancho="+ancho); //ancho=86.60254037844386
-
-		//List<SueloItem> features = Collections.synchronizedList(new ArrayList<SueloItem>());
-
 		Map<String,Color> colorCat = new HashMap<String, Color>();
 
 		for(Labor<? extends LaborItem> c:aMuestrear){			
@@ -119,12 +114,12 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 			}
 
 			int featureCount = c.outCollection.size();
-			//	labor.setClasificador(c.getClasificador().clone());
 			FeatureReader<SimpleFeatureType, SimpleFeature> reader =c.outCollection.reader();
-			//por cada poligono de las labores de entrada 
+		
 			List<Muestra> muestrasGeneradas = new ArrayList<Muestra>();//agregadas+candidates
 			int count=0;
-			while (reader.hasNext()) {
+			int countMuestraGenerada = 0;
+			while (reader.hasNext()) {	//por cada poligono de las labores de entrada 
 				SimpleFeature feature = reader.next();
 				Geometry geometry = (Geometry) feature.getDefaultGeometry();
 				GeometryFactory fact = geometry.getFactory();
@@ -132,24 +127,19 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 
 				Integer categoria =c.getClasificador().getCategoryFor(container.getAmount());
 				Color color  = c.getClasificador().getColorForCategoria(categoria);
-
-				//int size = c.getClasificador().getNumClasses();
+				
 				String nombre =c.getClasificador().getLetraCat(categoria);//""+Clasificador.abc[size-categoria-1];
 				colorCat.put(nombre,color);
-				//System.out.println("categoria para Amount "+container.getAmount()+" es: "+categoria);//OK! categoria para Amount 12.28167988386877 es: 1
 
-				//TODO si el area del poligono es mayor que la superficieMinimaAMuestrear
 				boolean insertCentroid=true;
 				Point centroid = geometry.getCentroid();
 				ProyectionConstants.setLatitudCalculo(centroid.getY());
 				double areaPoly = ProyectionConstants.A_HAS(geometry.getArea());
-				if(areaPoly > superficieMinimaAMuestrear){
+				if(areaPoly > superficieMinimaAMuestrear){//el poligono debe ser muestreado
 					List<Muestra> puntosGeneradosGeom = new ArrayList<Muestra>();
 					Random rand = new Random();
 					double sigmaX = geometry.getEnvelopeInternal().getWidth()/2;
 					double sigmaY = geometry.getEnvelopeInternal().getHeight()/2;
-					//double sigma = Math.sqrt(geometry.getArea())/3;//area en longLat
-					//System.out.println("creando un muestreo con sigma = "+sigmaX+" , "+sigmaY);
 					double numeroMuestrasEstimadoFeature = densidadDeMuestrasDeseada*areaPoly;
 					//mientas que la cantidad de puntos generados para el poligono sea menor que
 					//la cantidadMinimaDeMuestrasPoligonoAMuestrear 
@@ -160,18 +150,16 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 							&& i < 100000 * numeroMuestrasEstimadoFeature;  //limite de intentos si no se cumple la condicion
 							i++){
 
-						//TODO generar puntos al azar que esten dentro del poligono y por cada punto crear agregar un sueloItem al suelo	
+						// generar puntos al azar que esten dentro del poligono y por cada punto crear agregar un sueloItem al suelo	
 						/*
 						 *if you want mean 1 hour and std-deviance 15 minutes you'll need to call it as nextGaussian()*15+60*/
 						//TODO los puntos generados pueden tener una distribucion normal al rededor del centroide del poligono y desvio relacionado al area del poligono
 
 						Point random =null;
-
 						if(!insertCentroid) {
 							double x = rand.nextGaussian()*sigmaX+centroid.getX();
 							double y = rand.nextGaussian()*sigmaY+centroid.getY();
 							random = fact.createPoint(new Coordinate(x,y));							
-
 						} else {
 							random = centroid;
 							insertCentroid=false;
@@ -183,30 +171,23 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 						Polygon bufferMuestra = GeometryHelper.constructPolygon(l,d,random);
 
 						//controlar que la distancia a una muestra anterior sea mayor a un minimo
-
-
 						muestrasGeneradas.addAll(recorrida.muestras);
 						muestrasGeneradas.addAll(puntosGeneradosGeom);//candidates
 
-
 						double intersectionCount =
 								muestrasGeneradas.stream().filter( m ->	
-
 								bufferMuestra.intersects(fact.createPoint(new Coordinate(m.longitude,m.latitude)))
-
-								//DoubleStream.of(fact.createPoint(new Coordinate(m.latitude,m.longitude)).distance(bufferMuestra))
-										).count();
-						//System.out.println("intersection count = "+intersectionCount);
+										).count();//verifico si random esta demasiado cerca de alguna de las muestras ya generadas						
 						muestrasGeneradas.clear();
 						//si el poligono esta dentro de la geometria a muestrear y la distancia mas chica a los puntos generados es mayor al minimo
 						//lo agrego
 
-
 						if(geometry.contains(bufferMuestra)//esto asegura distancia a la frontera 
 								&& intersectionCount == 0) {//esto asegura distancia a los otros puntos
 							Muestra muestra = new Muestra();
-							muestra.setNombre(nombre);//TODO cambiar por una letra de A a I
-							muestra.setSubNombre(Integer.toString(count));
+							muestra.setNombre(nombre);//una letra de A a I
+							muestra.setSubNombre(Integer.toString(countMuestraGenerada));
+							countMuestraGenerada++;
 							muestra.initObservacionSuelo();
 
 							muestra.setLatitude(random.getY());
@@ -220,7 +201,7 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 					recorrida.muestras.addAll(puntosGeneradosGeom);
 
 				}//termino de evaluar el poligono con tamanio suficiente
-				count++;
+				count++;//FIXME subnombre se repite
 				updateProgress(count, featureCount);
 				System.out.println("Termine de generar todos los puntos "+recorrida.muestras.size());
 			}//termino de recorrer el while de una labor
@@ -229,25 +210,16 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 
 		recorrida.setNombre(nombreRecorrida);
 
-
-
-
 		//TODO crear un PathLayer con los puntos de itemsToShow
 		ordenarMuestras(recorrida.muestras);
 		System.out.println("Termine de ordenar las muestras");
 		Muestra first = recorrida.muestras.get(0);
 		
 		recorrida.setLatitude(first.latitude);
-		recorrida.setLongitude(first.longitude);
-		
+		recorrida.setLongitude(first.longitude);		
 		
 		RenderableLayer layer = new RenderableLayer();
-		//layer.setName(recorrida.getNombre());
-
-
 		renderRecorrida(layer,recorrida);
-
-
 		return layer;
 	}
 
