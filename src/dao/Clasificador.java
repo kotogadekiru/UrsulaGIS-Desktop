@@ -311,19 +311,31 @@ public class Clasificador {
 
 	private Double[] constructValoresHisto(Set<Double> valores) {
 		System.out.println("creando histograma para un set menor o igual a la cantidad de clases del sistema valores.size() "+ valores.size());
-		int numLimites = valores.size()>1?valores.size()-1:1;//esto es porque el histograma se extiende hacia el infinito por lo que gana una clase
+		if(valores.size()==1) {
+			histograma=new Double[1];
+			this.clasesClasificadorProperty.set(2);
+			histograma=valores.toArray(histograma);
+		}else {
+		int numLimites = valores.size()-1;//esto es porque el histograma se extiende hacia el infinito por lo que gana una clase
 		histograma=new Double[numLimites];//2 clases 1 limite, 3 clases 2 limites...
 		this.clasesClasificadorProperty.set(numLimites+1);
 		List<Double> sorted = valores.stream().sorted().collect(Collectors.toList());
-		//if(numLimites>1) {
-			for(int i = 0; i < numLimites; i++){	
-				histograma[i] = sorted.get(i);// java.lang.IndexOutOfBoundsException: Index: 0, Size: 0
-				System.out.println("i: "+i+" -> "+histograma[i]);
-				//histograma[i] = average  + desvioEstandar * (i- 1/numLimites );
-			}
-//		} else if(numLimites==1){
-//			histograma[0]=average;
-//		}
+		for(int i=1;i<sorted.size();i++) {
+			double s0=sorted.get(i-1);
+			double s1=sorted.get(i);
+			double average =(s0+s1)/2;
+			histograma[i-1]=average;
+		}
+		}
+//		//if(numLimites>1) {
+//			for(int i = 0; i < numLimites; i++){	
+//				histograma[i] = sorted.get(i);// java.lang.IndexOutOfBoundsException: Index: 0, Size: 0
+//				System.out.println("i: "+i+" -> "+histograma[i]);
+//				//histograma[i] = average  + desvioEstandar * (i- 1/numLimites );
+//			}
+////		} else if(numLimites==1){
+////			histograma[0]=average;
+////		}
 
 		this.initialized=true;
 
