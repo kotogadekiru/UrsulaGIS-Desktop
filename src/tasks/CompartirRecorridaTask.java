@@ -119,9 +119,13 @@ public class CompartirRecorridaTask extends Task<String> {
 		//System.out.println("message "+message);
 		if(data !=null) {
 			Recorrida dbRecorrida = gson.fromJson(data, Recorrida.class);
-			DAH.save(dbRecorrida);//merge local recorrida
+			//FIXME si recorrida existe la duplica
+			//DAH.save(dbRecorrida);//merge local recorrida
+			//DAH.getAllRecorridas()
 		//	Long id = dbRecorrida.getId();
 			String dbUrl = dbRecorrida.getUrl();
+			this.recorrida.setUrl(dbUrl);
+			DAH.save(this.recorrida);
 		//java.math.BigDecimal id = (java.math.BigDecimal) data.get("id");
 		//String prettyresponse = resContent.toPrettyString();
 		//System.out.println("prettyresponse "+prettyresponse);
