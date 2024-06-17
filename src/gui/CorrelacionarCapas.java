@@ -150,17 +150,13 @@ public class CorrelacionarCapas {
 		Stage s= new Stage();	
 		s.setTitle("Grafico de correlación");
 		s.initOwner(JFXMain.stage);
-		s.getIcons().addAll(JFXMain.stage.getIcons());		
-
-
+		s.getIcons().addAll(JFXMain.stage.getIcons());
 	    
 		SkatterChartWithRegression chart = SkatterChartWithRegression.construct();
 		chart.getXAxis().setLabel(xAxisName);                
-		chart.getYAxis().setLabel(yAxisName);	
-
+		chart.getYAxis().setLabel(yAxisName);
 
 		chart.setTitle("Correlación");
-
 		
 		chart.getData().add(series);
 		String ecuation = chart.getEcuation(series);
