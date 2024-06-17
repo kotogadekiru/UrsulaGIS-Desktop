@@ -1,135 +1,122 @@
 package gui.snake;
 
 import java.awt.Color;
-import java.awt.Toolkit;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import gov.nasa.worldwind.WorldWind;
+import com.vividsolutions.jts.geom.Point;
+
+import gov.nasa.worldwind.View;
 import gov.nasa.worldwind.WorldWindow;
-import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.layers.RenderableLayer;
-import gov.nasa.worldwind.render.BasicShapeAttributes;
-import gov.nasa.worldwind.render.Box;
 import gov.nasa.worldwind.render.DrawContext;
-import gov.nasa.worldwind.render.Material;
-import gov.nasa.worldwind.render.ShapeAttributes;
+import gui.JFXMain;
+import javafx.scene.input.KeyCode;
+import utils.ProyectionConstants;
 
 
-public class SnakesLayer extends RenderableLayer  implements KeyListener {
-	boolean gameOver=false;         
+public class SnakesLayer extends RenderableLayer {
+	Timer timer= new Timer();
+	AdvanceTheSnakeTask advanceTask = new AdvanceTheSnakeTask(this);
+	final double MIN_TIME_INTERVAL=5;
 
-	Toolkit toolkit;
-	Timer timer=null;
+	int millisecs=200;
 
-	final double MIN_TIME_INTERVAL=1;
-	int totalTimeSteps=0;
-	int millisecs=25;
-
-	Snake redSnake =null;// new Snake(new SnakeSection(-61,-70,Snake.altitud),0,1,Color.red);  
-	Snake blueSnake =null;// new Snake(new SnakeSection(-52,-80,Snake.altitud),0,-10,Color.blue);
-	int redScore=0;
-	int blueScore=0;
-
-	int redCrashes=0;
-	int blueCrashes=0;
-
-	int foodValue;
-	SnakeSection foodPosition;
-	ShapeAttributes attrs = new BasicShapeAttributes();
-	Box foodBox =new Box();//sections box
+	Snake redSnake =null;
+	int redCrashes=0;	
+	List<SnakeFood> food=new ArrayList<SnakeFood>();
 
 	private WorldWindow ww=null;
 
+	private boolean stop=false;
 
 	public SnakesLayer(WorldWindow worldWindow) {   
 		this.ww = worldWindow;
-		Material mat = new Material(Color.green);
-		attrs.setInteriorMaterial(mat);
-		attrs.setInteriorOpacity(1);
-		attrs.setEnableLighting(true);
-		attrs.setOutlineMaterial(mat);
-		attrs.setOutlineWidth(2d);
-		attrs.setDrawInterior(true);
-		attrs.setDrawOutline(false);
-		foodBox.setEastWestRadius(2*Snake.scale);
-		foodBox.setNorthSouthRadius(2*Snake.scale);
-		foodBox.setAltitudeMode(WorldWind.RELATIVE_TO_GROUND);       
-		foodBox.setAttributes(attrs);
-		foodBox.setValue(AVKey.DISPLAY_NAME, "snake body");
-		//  setFocusable(true);
-		resetSnakes();
-		foodValue = 3;   // Initial food value.
-		foodPosition = getNewFoodPosition();
+		createSnakes();
+		createStartFood();
 
 		// First thing to do: Start up the periodic task:
 		System.out.println("About to start the snake.");
-		startSnake(millisecs);   // Argument is number of milliseconds per snake move.
+		startTimer(millisecs);   // Argument is number of milliseconds per snake move.
 		System.out.println("Snake started.");
 
-		//   setBackground(Color.black);        
-		//   addKeyListener(this);
-	
 
+		JFXMain.stage.getScene().setOnKeyPressed(event->{
+			KeyCode key=event.getCode();
+			//System.out.println(key+" typed");
+			switch(key) {
+			case A:redSnakeLeft();break;
+			case D:redSnakeRight();break;
+			default :break;		  
+			}
+		});
 	}
 
-	public void startSnake(int milliseconds) {
-		toolkit = Toolkit.getDefaultToolkit();
-		timer = new Timer();
-		Date firstTime = new Date();  // Start task now.
-		timer.schedule(new AdvanceTheSnakeTask(this), firstTime, milliseconds);
-	}
-
-	public void resetSnakes() {
-		millisecs=200;    
-		totalTimeSteps=0;    
-		redSnake = new Snake(new SnakeSection(-61,-70,120,20),1,1,Color.red);  
-		//redSnake.snakeSecs[0].heading=Angle.fromDegrees(180);
-		blueSnake = new Snake(new SnakeSection(-65,40,20,20),1,1,Color.blue);
-		//blueSnake.snakeSecs[0].heading=Angle.fromDegrees(-10);
-		if(timer!=null)timer.cancel();
-		startSnake(millisecs);
-	}
-
-	public SnakeSection getNewFoodPosition() {    
-		// Now we need to find a position for the food that is not already on one of the snakes.
-		// We try different positions until we find one that is not part of a snake.
-		boolean acceptable=false;
-		double newFoodX=0,newFoodY=0;
-		while (!acceptable) {
-			newFoodX=(double) (Math.random()*180);          
-			newFoodY=(double) (Math.random()*90);
-			if (!redSnake.contains(newFoodX,newFoodY) && !blueSnake.contains(newFoodX,newFoodY))
-				acceptable=true;
+	public void createStartFood() {
+		for(int i=0;i<1000;i++) {
+			food.add(getNewFood());
 		}
-		// Now that we have an acceptable position for the food, put the food in that position.          
-		return new SnakeSection(newFoodX,newFoodY,40);
+		System.out.println("start food created "+food.size());
+	}
+	
+	public void createSnakes() {
+		//millisecs=200;    
+		View view = ww.getView();
+		Position start = view.getEyePosition();
+		start =Snake.posWithElev(start, Snake.scale);
+		int viewportWith = view.getViewport().width;
+		Angle heading = view.getHeading();
+		//Snake.scale=viewportWith/10;
+		redSnake = new Snake(start,heading,Color.red);  
+	}
+
+	/**
+	 * 
+	 * @param milliseconds time in milliseconds between successive task executions
+	 */
+	public void startTimer(int milliseconds) {
+		if(stop) return;
+		long delay = 1000;
+		timer.schedule(advanceTask, delay, milliseconds);
 	}
 
 	class AdvanceTheSnakeTask extends TimerTask {
 		SnakesLayer layer=null;
+		private int totalTimeSteps;
 		public AdvanceTheSnakeTask(SnakesLayer _layer) {
 			super();
 			layer = _layer;
+			System.out.println("AdvanceTheSnakeTask Constructor");
 		}
 		public void run() {
-
 			// Put stuff here that should happen during every advance.
-
 			redSnake.move();             
-			blueSnake.move();
-//			Position gotoPos = redSnake.snakeSecs[0].pos;
-//			gotoPos=Position.fromDegrees(gotoPos.getLatitude().degrees,
-//					gotoPos.getLongitude().degrees,12*1000*1000);
-//			layer.ww.getView().setEyePosition(gotoPos);
-			layer.ww.redrawNow();
+
+			Position snakePos = redSnake.snakeHead.getCenterPosition();
+			View view = ww.getView();
+			if( !view.isAnimating()) {
+				//double scale = view.getViewport().getWidth()/10;
+				//Snake.scale=10000;
+				Position eyePos = view.getEyePosition();				
+				
+//				double eyeElev=eyePos.elevation;
+//				Point newEyePoint = ProyectionConstants.getPoint(
+//						Snake.posToPoint(snakePos),
+//						redSnake.heading.degrees+180, 
+//						eyeElev);
+//				double lon=snakePos.getLongitude().degrees;
+//				double lat=snakePos.getLatitude().degrees;
+//				Position newCenterPos=Position.fromDegrees(lat, lon,eyeElev/3);
+//				Position newEyePos=Position.fromDegrees(newEyePoint.getY(),newEyePoint.getX(),eyeElev);
+			//	view.setOrientation(newEyePos, newCenterPos);
 			
-			
+				//view.setHeading(redSnake.heading);
+				//ww.redrawNow();
+			}
 
 			// Here, we check to see if the snakes have collided with each other.
 			// This is done by checking whether the head of one snake (SnakeSection 0)
@@ -144,29 +131,19 @@ public class SnakesLayer extends RenderableLayer  implements KeyListener {
 			// time step, each snake hits the other snake's body. In this case, neither player
 			// is awarded any points.
 
-			boolean redHitsBlue=blueSnake.checkBodyPositions(redSnake.snakeSecs[0]);
-			boolean blueHitsRed=redSnake.checkBodyPositions(blueSnake.snakeSecs[0]);
+			if(redSnake.snakeSecs.size()>0) {
+				SnakeSection first = redSnake.snakeSecs.getFirst();
+				boolean redHitsRed = redSnake.checkBodyPositions(first);
 
-			if (redHitsBlue && !blueHitsRed) {          // true if only red crashes.
-				blueScore+=blueSnake.snakeLength;
-				redCrashes++;
-			}
-			if (!redHitsBlue && blueHitsRed) {          // true if only blue crashes.
-				redScore+=redSnake.snakeLength;
-				blueCrashes++;
-			}
-			if (redHitsBlue && blueHitsRed) {           // true if both snakes crash simultaneously.
-				blueCrashes++;
-				redCrashes++;
-			}
-			if (redHitsBlue || blueHitsRed) {           // true if EITHER snake crashes.
-				//resetSnakes();
-			}
+//				if (redHitsRed) {           // true if EITHER snake crashes.
+//					redCrashes++;
+//					createSnakes();
+//				}
 
-			if (redCrashes==5 || blueCrashes==5) {      // game ends after one player has crashed 5 times.
-				gameOver=true;
+				if (redCrashes==5) {      // game ends after one player has crashed 5 times.
+					stop=true;
+				}
 			}
-
 			// Here, we check to see if the snake has eaten the current food.
 			// Note that we will only check to see if the head of the snake (SnakeSection 0)
 			// is in the same place as the food.
@@ -174,131 +151,86 @@ public class SnakesLayer extends RenderableLayer  implements KeyListener {
 			// Note that if both snakes get to the food simultaneously, they both
 			// get to eat it.
 
-			boolean newFood=false;
-			if (redSnake.snakeSecs[0].match(foodPosition)) {
-				redSnake.snakeLength+=foodValue;
-				newFood=true;
+
+			SnakeFood foodColission=null;
+			for(SnakeFood f:food) {			
+				if (f.match(redSnake)) {					
+					foodColission=f;
+					break;
+				}
 			}
-			if (blueSnake.snakeSecs[0].match(foodPosition)) {
-				blueSnake.snakeLength+=foodValue;
-				newFood=true;
-			}
-			if (newFood) {
-				foodValue=(int) (Math.random()*8+1);       // Food has value from 1 to 9.
-				foodPosition=getNewFoodPosition();
+			if (foodColission!=null) {
+				redSnake.grow(foodColission.foodValue);
+		
+				food.remove(foodColission);
+				food.add(getNewFood());
 			}
 
-			totalTimeSteps++;      
-			if (totalTimeSteps%50 == 0) {                 // Update speed every 50 time steps.
-				timer.cancel();                             // Cancel previous periodic events.
-				if (millisecs>MIN_TIME_INTERVAL) 
-					millisecs = (int) (millisecs * .9);       // Reduce current delay by 10%.  
-				System.out.print(millisecs+" ");            // Diagnostic.
-				startSnake(millisecs);
-			}
-			
-			//TODO call repaint or redraw
-			//repaint();
+
+//			totalTimeSteps++;      
+//			if (totalTimeSteps%50 == 0 && timer!=null) {                 // Update speed every 50 time steps.
+//				timer.cancel();                             // Cancel previous periodic events.
+//				if (millisecs>MIN_TIME_INTERVAL) 
+//					millisecs = (int) (millisecs * .9);       // Reduce current delay by 10%.  
+//				//	System.out.print(millisecs+" ");            // Diagnostic.				
+//				startTimer(millisecs);
+//			}
 		}
+	}//fin del timmer task
+	
+	public SnakeFood getNewFood() {    
+		// Now we need to find a position for the food that is not already on one of the snakes.
+		// We try different positions until we find one that is not part of a snake.
+		boolean acceptable=false;
+		double newFoodX=0,newFoodY=0;
+		while (!acceptable) {
+			newFoodX=(double) (Math.random()*2*180-180);          
+			newFoodY=(double) (Math.random()*2*90-90);
+			//			if (!redSnake.contains(newFoodX,newFoodY) )
+							acceptable=true;
+		}
+		// Now that we have an acceptable position for the food, put the food in that position.  
+		//int foodValue = 3;   // Initial food value.
+		int foodValue=(int) (Math.random()*8+1);       // Food has value from 1 to 9.
+		SnakeFood f = new SnakeFood(newFoodX,newFoodY,2*Snake.scale);
+		f.foodValue=foodValue;
+		return f;
 	}
 
+	public void redSnakeLeft() {
+		System.out.println("turning left");
+		redSnake.turnLeft();
+	}
+	
+	public void redSnakeRight() {
+		System.out.println("turning right");
+		redSnake.turnRight();
+	}
+	
+	public void render(DrawContext dc){
+		if(redSnake!=null) {
+			redSnake.render(dc);    
 
-
-	public void render(DrawContext dc){			
-		//		 if (gameOver) {
-		//		      g.setColor(Color.white);
-		//		      g.drawString("*********************************",300,200);
-		//		      g.drawString("*********************************",300,220);
-		//		      g.drawString("*********** Game over *********",300,240);
-		//		      g.drawString("Red score: "+redScore+"    Blue score: "+blueScore+" ",300,260);
-		//		      g.drawString("*********************************",300,280);
-		//		      g.drawString("*********************************",300,300);
-		//		      g.drawString("*** Hit any key to quit. ********",300,340);
-		//		      
-		//		      timer.cancel();          // We must cancel the periodic events scheduled by the timerTask.
-		//		    }
-
-		// The body of the else paints the screen at each time step of the game.
-		// It shows the score of each player, the number of crashes. Then it draws the snakes and
-		// the food, with the value of the food in the food box.
-
-		//		    else {     
-		//		      // Show the score information.
-		//		      g.setColor(Color.red);
-		//		      g.drawString("Red Snake", 30, 15);
-		//		      g.drawString("Score: "+redScore+"  Crashes: "+redCrashes,4,30);
-		//		      g.setColor(Color.blue);
-		//		      g.drawString("Blue Snake", 680, 15);
-		//		      g.drawString("Score: "+blueScore+"  Crashes: "+blueCrashes,654,30);
-		//		      
-		// Draw the snakes.
-		redSnake.paint(dc);    
-		blueSnake.paint(dc);
-		foodBox.setCenterPosition(foodPosition.pos);
-		foodBox.render(dc);
-
-		//TODO Draw food.
-		//		      g.setColor(Color.yellow);
-		//		      g.drawRect(foodPosition.x*20,foodPosition.y*20,20,20);
-		//		      g.drawString(""+foodValue,foodPosition.x*20+5,foodPosition.y*20+15);
-		//		    }
-
+			for(SnakeFood f:food) {
+				f.render(dc);
+			}
+		}
 	}
 
 	@Override
 	public void pick(DrawContext dc, java.awt.Point point) {
 		//TODO pick
-
 	}
 
-	public void keyTyped(KeyEvent e) {
-		if (gameOver) {
-			System.exit(0);
+	public void stop() {
+		System.out.println("stopping timer in SnakeLayer");
+		this.stop=true;
+		if(timer!=null) {
+			timer.cancel();
+			timer=null;
+			this.ww.getModel().getLayers().remove(this);
 		}
-		if (e.getKeyChar() =='h') {
-			redSnake.snakeSecs[0].x=(int) (Math.random()*20);
-			redSnake.snakeSecs[0].y=(int) (Math.random()*20);
-		}
-		if (e.getKeyChar()=='a') {              // Red snake left.
-			redSnake.dirX=-2;
-			redSnake.dirY=0;
-		}
-		else if (e.getKeyChar()=='d') {         // Red snake right.
-			redSnake.dirX=1;
-			redSnake.dirY=0;
-		}
-		else if (e.getKeyChar()=='w') {         // Red snake up.
-			redSnake.dirX=0;
-			redSnake.dirY=-1;
-		}
-		else if (e.getKeyChar()=='s') {         // Red snake down.
-			redSnake.dirX=0;
-			redSnake.dirY=1;
-		}
-		else if (e.getKeyChar()=='l') {         // Blue snake left.
-			blueSnake.dirX=-1;
-			blueSnake.dirY=0;
-		}
-		else if (e.getKeyChar()=='\'') {        // Blue snake right.
-			blueSnake.dirX=1;
-			blueSnake.dirY=0;
-		}
-		else if (e.getKeyChar()=='p') {         // Blue snake up.
-			blueSnake.dirX=0;
-			blueSnake.dirY=-1;
-		}
-		else if (e.getKeyChar()==';') {         // Blue snake down.
-			blueSnake.dirX=0;
-			blueSnake.dirY=1;
-		}
-	}
 
-	// Ignore key which is held down.
-	public void keyPressed(KeyEvent e) {
-	}
-
-	// Ignore key release events.
-	public void keyReleased(KeyEvent e) {
 	}
 
 }
