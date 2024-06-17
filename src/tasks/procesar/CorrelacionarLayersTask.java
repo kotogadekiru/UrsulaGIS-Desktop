@@ -101,8 +101,10 @@ public class CorrelacionarLayersTask extends ProgresibleTask<XYChart.Series<Numb
 		//System.out.println("construi una grilla con "+grilla.size()+" elementos");//construi una grilla con 5016 elementos
 		//obtener una lista con todas las geometrias de las labores
 		List<Geometry> contornos = new ArrayList<Geometry>();
-		contornos.add(lx.getContorno().toGeometry());
-		contornos.add(ly.getContorno().toGeometry());
+		Geometry lxContorno = GeometryHelper.extractContornoGeometry(lx);
+		Geometry lyContorno = GeometryHelper.extractContornoGeometry(ly);
+		contornos.add(lxContorno);
+		contornos.add(lyContorno);
 	
 
 		//unir las geometrias de todas las labores para obtener un poligono de contorno
