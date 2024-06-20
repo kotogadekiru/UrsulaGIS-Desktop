@@ -35,7 +35,7 @@ public class ResumirSoilMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		this.labor=margen;
 		aResumir=_aResumir;
 		labor.setNombre(aResumir.getNombre()+Messages.getString("ResumirSoilMapTask.resumido"));
-		labor.setContorno(aResumir.getContorno());
+		//labor.setContorno(aResumir.getContorno());
 //		labor.getCostoFijoHaProperty().setValue(aResumir.getCostoFijoHaProperty().getValue());
 //		labor.getCostoFleteProperty().setValue(aResumir.getCostoFleteProperty().getValue());
 //		labor.getCostoTnProperty().setValue(aResumir.getCostoTnProperty().getValue());

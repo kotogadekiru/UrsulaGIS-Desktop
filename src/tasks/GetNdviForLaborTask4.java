@@ -42,6 +42,7 @@ import dao.Labor;
 import dao.Ndvi;
 import dao.Poligono;
 import dao.config.Configuracion;
+import gui.JFXMain;
 //import gov.nasa.worldwind.geom.Angle;
 //import gov.nasa.worldwind.geom.Position;
 import javafx.application.Platform;
@@ -78,6 +79,7 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 	private static final String URSULA_GIS_TOKEN = "ursulaGISv29";//"ursulaGISv23";
 	private static final String TOKEN = "token";
 
+	//private static final String BASE_URL = "https://gee-api-helper-staging.herokuapp.com";
 	private static final String BASE_URL = "https://gee-api-helper.herokuapp.com";
 	//private static final String BASE_URL = "http://0.0.0.0:5001";
 	
@@ -366,7 +368,8 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 						e.printStackTrace();
 					}
 					if(loaded==null || loaded.size()==0) {//if the file is not in db
-						String ndviType = Configuracion.getInstance().getPropertyOrDefault(NDVI_DOWNLOAD_TYPE_CONFIG_KEY, TOA);
+						
+						String ndviType = JFXMain.config.getPropertyOrDefault(NDVI_DOWNLOAD_TYPE_CONFIG_KEY, TOA);
 						String ndviDownloadAddres= HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3;
 						if(TOA.equals(ndviType)) {
 							ndviDownloadAddres=HTTP_GEE_API_HELPER_HEROKUAPP_COM_NDVI_V3;

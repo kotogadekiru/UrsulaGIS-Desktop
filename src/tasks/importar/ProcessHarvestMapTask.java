@@ -52,7 +52,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 	Coordinate lastA = null, lastB = null;
 	private Point lastX=null;
 	private double lastRumbo;
-	
+
 	double distanciaAvanceProm = 0;
 	private int puntosEliminados=0;
 
@@ -140,16 +140,17 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 				Point longLatPoint = (Point) geometry;
 				ProyectionConstants.setLatitudCalculo(longLatPoint.getY());
 				rumbo = corregirRumbo(longLatPoint,rumbo);
-				ci.setRumbo(rumbo);
+				ci.setRumbo(rumbo);			
 				Geometry longLatGeom = createGeomPoint(longLatPoint, ancho, distancia, rumbo, elevacion);
-				longLatGeom = removerSuperposiciones(longLatGeom);
+				if(longLatGeom!=null)longLatGeom = removerSuperposiciones(longLatGeom);
+
 				//la geometria puede ser null si en ancho el 0.0 (la maquina reporta ancho cero cuando esta con el cabezal en alto)
 				if(longLatGeom == null 
 						//			|| geom.getArea()*ProyectionConstants.A_HAS()*10000<labor.config.supMinimaProperty().doubleValue()
 						){//con esto descarto las geometrias muy chicas
 					System.out.println("geom es null, ignorando...");
 					continue;
-				}
+				}				
 
 				/**
 				 * solo ingreso la cosecha al arbol si la geometria es valida
@@ -227,7 +228,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 			System.out.println(Messages.getString("ProcessHarvestMapTask.8")); //$NON-NLS-1$
 		}
 		CosechaConfig config = (CosechaConfig)labor.getConfiguracion();
-		
+
 		labor.constructClasificador();
 		if(config.resumirGeometriasProperty().getValue()){
 			resumirGeometrias();
@@ -418,28 +419,28 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 	 * @param cosechasItemaUnir lista de cosechasItem que pertenecen todas a la misma categoria y cuyas geometrias se tocan
 	 * @return la cosecha que sintetiza a todas las cosechas de esa categoria y la union de sus geometrias
 	 */
-//	private CosechaItem sintentizarCosechasIdemCatEnContacto(List<CosechaItem> cosechasItemAUnir){		
-//		GeometryFactory fact = new GeometryFactory();
-//		int n = cosechasItemAUnir.size();
-//		Geometry[] geomArray = new Geometry[n];
-//		GeometryCollection colectionCat = fact.createGeometryCollection(geomArray);//error de casteo
-//		Geometry buffered = colectionCat.union();		
-//
-//		Double sumRinde=new Double(0);
-//		Double sumatoriaElevacion=new Double(0);
-//
-//		for(CosechaItem cosechaAUnir:cosechasItemAUnir){
-//			sumRinde+=cosechaAUnir.getRindeTnHa();
-//			sumatoriaElevacion += cosechaAUnir.getElevacion();
-//		}
-//
-//		CosechaItem cosechaSintetica = new CosechaItem();
-//		cosechaSintetica.setRindeTnHa(sumRinde/n);
-//		cosechaSintetica.setElevacion(sumatoriaElevacion/n);	
-//		cosechaSintetica.setGeometry(buffered);
-//		return cosechaSintetica;
-//
-//	}
+	//	private CosechaItem sintentizarCosechasIdemCatEnContacto(List<CosechaItem> cosechasItemAUnir){		
+	//		GeometryFactory fact = new GeometryFactory();
+	//		int n = cosechasItemAUnir.size();
+	//		Geometry[] geomArray = new Geometry[n];
+	//		GeometryCollection colectionCat = fact.createGeometryCollection(geomArray);//error de casteo
+	//		Geometry buffered = colectionCat.union();		
+	//
+	//		Double sumRinde=new Double(0);
+	//		Double sumatoriaElevacion=new Double(0);
+	//
+	//		for(CosechaItem cosechaAUnir:cosechasItemAUnir){
+	//			sumRinde+=cosechaAUnir.getRindeTnHa();
+	//			sumatoriaElevacion += cosechaAUnir.getElevacion();
+	//		}
+	//
+	//		CosechaItem cosechaSintetica = new CosechaItem();
+	//		cosechaSintetica.setRindeTnHa(sumRinde/n);
+	//		cosechaSintetica.setElevacion(sumatoriaElevacion/n);	
+	//		cosechaSintetica.setGeometry(buffered);
+	//		return cosechaSintetica;
+	//
+	//	}
 
 	private void corregirRinde(CosechaItem cosechaFeature) {
 		if(labor.getConfiguracion().correccionRindeAreaEnabled()){
@@ -660,7 +661,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 	protected int gerAmountMax() {
 		return 15;
 	}
-	
+
 
 
 	/**
@@ -673,84 +674,89 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 	 * @return
 	 */
 	private Polygon createGeomPoint(Point center,double ancho, double distancia,double rumbo,double elevacion) {
-		GeometryFactory fact = ProyectionConstants.getGeometryFactory();
-		Polygon ret=null;
-		//partir de center y calcular distancia/2 
-		Point d = ProyectionConstants.getPoint(center,  rumbo, distancia/2);
-		Point a = ProyectionConstants.getPoint(center,  (rumbo+90)%360, ancho/2);
+		try {
+			GeometryFactory fact = ProyectionConstants.getGeometryFactory();
+			Polygon ret=null;
+			//partir de center y calcular distancia/2 
+			Point d = ProyectionConstants.getPoint(center,  rumbo, distancia/2);
+			Point a = ProyectionConstants.getPoint(center,  (rumbo+90)%360, ancho/2);
 
-		//       adelante
-		// A ^^^^^^^^^^^^^^^ B
-		//          |
-		// D ^^^^^^^^^^^^^^^ C
-		//        atras
+			//       adelante
+			// A ^^^^^^^^^^^^^^^ B
+			//          |
+			// D ^^^^^^^^^^^^^^^ C
+			//        atras
 
-		//center+(distancia-center)-(ancho-center)=center-distancia+ancho
-		Coordinate A = new Coordinate(center.getX()+d.getX()-a.getX(),
-				center.getY()+d.getY()-a.getY(),elevacion);
-		//center+(distancia-center)+(ancho-center)=-center+distancia+ancho
-		Coordinate B =  new Coordinate(-center.getX()+d.getX()+a.getX(),
-				-center.getY()+d.getY()+a.getY(),elevacion);
-		//center-(distancia-center)+(ancho-center)=center-distancia+ancho
-		Coordinate C = new Coordinate(center.getX()-d.getX()+a.getX(),
-				center.getY()-d.getY()+a.getY(),elevacion);
-		//center-(distancia-center)-(ancho-center)=3*center-distancia+ancho
-		Coordinate D = new Coordinate(3*center.getX()-d.getX()-a.getX(),
-				3*center.getY()-d.getY()-a.getY(),elevacion);
-		
+			//center+(distancia-center)-(ancho-center)=center-distancia+ancho
+			Coordinate A = new Coordinate(center.getX()+d.getX()-a.getX(),
+					center.getY()+d.getY()-a.getY(),elevacion);
+			//center+(distancia-center)+(ancho-center)=-center+distancia+ancho
+			Coordinate B =  new Coordinate(-center.getX()+d.getX()+a.getX(),
+					-center.getY()+d.getY()+a.getY(),elevacion);
+			//center-(distancia-center)+(ancho-center)=center-distancia+ancho
+			Coordinate C = new Coordinate(center.getX()-d.getX()+a.getX(),
+					center.getY()-d.getY()+a.getY(),elevacion);
+			//center-(distancia-center)-(ancho-center)=3*center-distancia+ancho
+			Coordinate D = new Coordinate(3*center.getX()-d.getX()-a.getX(),
+					3*center.getY()-d.getY()-a.getY(),elevacion);
 
-		if (labor.getConfiguracion().correccionDistanciaEnabled() 
-				&& cantidadDistanciasTolerancia > 0) {
-			if (lastA != null ) {
-				//verificar que el delta de rumbo sea menor a 90
-				double ang =Math.abs(lastRumbo-rumbo);
-				boolean check = Math.tan(Math.toRadians(ang))<distancia/(ancho/2);
-				if(ang<45 && check) {
-					//System.out.println("rumbo="+rumbo+" lasRumbo="+lastRumbo+" dif="+Math.abs(lastRumbo-rumbo));
 
-					double distD = ProyectionConstants.getDistancia(
-							fact.createPoint(D)
-							, fact.createPoint(lastA));
-					if(distD < cantidadDistanciasTolerancia*distanciaAvanceProm) {						
-						//D=lastA;// = A;//A se convierte en D del siguiente			
-						if(!verificarCruce(A,B,C,lastA)) {
-							D=lastA;
-							//A=lastA;
+			if (labor.getConfiguracion().correccionDistanciaEnabled() 
+					&& cantidadDistanciasTolerancia > 0) {
+				if (lastA != null ) {
+					//verificar que el delta de rumbo sea menor a 90
+					double ang =Math.abs(lastRumbo-rumbo);
+					boolean check = Math.tan(Math.toRadians(ang))<distancia/(ancho/2);
+					if(ang<45 && check) {
+						//System.out.println("rumbo="+rumbo+" lasRumbo="+lastRumbo+" dif="+Math.abs(lastRumbo-rumbo));
+
+						double distD = ProyectionConstants.getDistancia(
+								fact.createPoint(D)
+								, fact.createPoint(lastA));
+						if(distD < cantidadDistanciasTolerancia*distanciaAvanceProm) {						
+							//D=lastA;// = A;//A se convierte en D del siguiente			
+							if(!verificarCruce(A,B,C,lastA)) {
+								D=lastA;
+								//A=lastA;
+							}
+							//C=lastB;// = B;//B se convierte en C del siguiente
 						}
-						//C=lastB;// = B;//B se convierte en C del siguiente
-					}
-					double distC = ProyectionConstants.getDistancia(
-							fact.createPoint(C)
-							, fact.createPoint(lastB));
-					if(distC < cantidadDistanciasTolerancia*distanciaAvanceProm) {
-						//D=lastA;// = A;//A se convierte en D del siguiente
-						
-						if(!verificarCruce(A,B,lastB,D)) {
-							C=lastB;// = B;//B se convierte en C del siguiente
+						double distC = ProyectionConstants.getDistancia(
+								fact.createPoint(C)
+								, fact.createPoint(lastB));
+						if(distC < cantidadDistanciasTolerancia*distanciaAvanceProm) {
+							//D=lastA;// = A;//A se convierte en D del siguiente
+
+							if(!verificarCruce(A,B,lastB,D)) {
+								C=lastB;// = B;//B se convierte en C del siguiente
+							}
 						}
 					}
-				}
-			} 			
-		}//fin corregir distancia
-		// corregir distancia y entrada en regimen
-		boolean esNuevaPasada=Math.abs(lastRumbo-rumbo)>90;
-		esNuevaPasada=esNuevaPasada||(lastA==null);
-		lastA = A;//A se convierte en D del siguiente
-		lastB = B;//B se convierte en C del siguiente
-		lastRumbo =rumbo;
+				} 			
+			}//fin corregir distancia
+			// corregir distancia y entrada en regimen
+			boolean esNuevaPasada=Math.abs(lastRumbo-rumbo)>90;
+			esNuevaPasada=esNuevaPasada||(lastA==null);
+			lastA = A;//A se convierte en D del siguiente
+			lastB = B;//B se convierte en C del siguiente
+			lastRumbo =rumbo;
 
-		if(labor.getConfiguracion().correccionDemoraPesadaEnabled() && esNuevaPasada){
-			System.out.println("corrigiendo entrada en regimen");
-			double distEntradaRegimen = distanciaAvanceProm*cantidadDistanciasEntradaRegimen;
-			C = ProyectionConstants.getPoint(fact.createPoint(C), rumbo+180, distEntradaRegimen).getCoordinate();
-			D = ProyectionConstants.getPoint(fact.createPoint(D), rumbo+180, distEntradaRegimen).getCoordinate();
+			if(labor.getConfiguracion().correccionDemoraPesadaEnabled() && esNuevaPasada){
+				System.out.println("corrigiendo entrada en regimen");
+				double distEntradaRegimen = distanciaAvanceProm*cantidadDistanciasEntradaRegimen;
+				C = ProyectionConstants.getPoint(fact.createPoint(C), rumbo+180, distEntradaRegimen).getCoordinate();
+				D = ProyectionConstants.getPoint(fact.createPoint(D), rumbo+180, distEntradaRegimen).getCoordinate();
+			}
+
+			Coordinate[] coordinates = { A, B, C, D, A };// Tiene que ser cerrado.
+			ret = fact.createPolygon(coordinates);
+			return ret;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return null;
 		}
-
-		Coordinate[] coordinates = { A, B, C, D, A };// Tiene que ser cerrado.
-		ret = fact.createPolygon(coordinates);
-		return ret;
 	}
-	
+
 	/**
 	 * 
 	 * @param A
@@ -768,59 +774,63 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		boolean intersects = AB.intersects(CD);
 		return intersects;
 	}
-	
+
 	/**
 	 * 
 	 * @param bounds en long/lat
 	 * @param ancho en metros
 	 * @return una lista de poligonos que representa una grilla con un 100% de superposiocion
 	 */
-//	private List<Polygon> construirGrilla(BoundingBox bounds,double ancho) {
-//		System.out.println(Messages.getString("ProcessHarvestMapTask.39")); //$NON-NLS-1$
-//		List<Polygon> polygons = new ArrayList<Polygon>();
-//		//convierte los bounds de longlat a metros
-//
-//		Double minX = bounds.getMinX()/ProyectionConstants.metersToLong() - ancho/2;
-//		Double minY = bounds.getMinY()/ProyectionConstants.metersToLat() - ancho/2;
-//		Double maxX = bounds.getMaxX()/ProyectionConstants.metersToLong()+ ancho/2;
-//		Double maxY = bounds.getMaxY()/ProyectionConstants.metersToLat()+ ancho/2;
-//		Double x0=minX;
-//		for(int x=0;(x0)<maxX;x++){
-//			x0=minX+x*ancho;
-//			Double x1=minX+(x+1)*ancho;
-//			for(int y=0;(minY+y*ancho)<maxY;y++){
-//				Double y0=minY+y*ancho;
-//				Double y1=minY+(y+1)*ancho;
-//
-//
-//				Coordinate D = new Coordinate(x0*ProyectionConstants.metersToLong(), y0*ProyectionConstants.metersToLat()); 
-//				Coordinate C = new Coordinate(x1*ProyectionConstants.metersToLong(), y0*ProyectionConstants.metersToLat());
-//				Coordinate B = new Coordinate(x1*ProyectionConstants.metersToLong(), y1*ProyectionConstants.metersToLat());
-//				Coordinate A =  new Coordinate(x0*ProyectionConstants.metersToLong(), y1*ProyectionConstants.metersToLat());
-//
-//				/**
-//				 * D-- ancho de carro--C ^ ^ | | avance ^^^^^^^^ avance | | A-- ancho de
-//				 * carro--B
-//				 * 
-//				 */
-//				Coordinate[] coordinates = { A, B, C, D, A };// Tiene que ser cerrado.
-//				// Empezar y terminar en
-//				// el mismo punto.
-//				// sentido antihorario
-//
-//
-//				GeometryFactory fact =ProyectionConstants.getGeometryFactory();
-//
-//				LinearRing shell = fact.createLinearRing(coordinates);
-//				LinearRing[] holes = null;
-//				Polygon poly = new Polygon(shell, holes, fact);			
-//				polygons.add(poly);
-//			}
-//		}
-//		return polygons;
-//	}
+	//	private List<Polygon> construirGrilla(BoundingBox bounds,double ancho) {
+	//		System.out.println(Messages.getString("ProcessHarvestMapTask.39")); //$NON-NLS-1$
+	//		List<Polygon> polygons = new ArrayList<Polygon>();
+	//		//convierte los bounds de longlat a metros
+	//
+	//		Double minX = bounds.getMinX()/ProyectionConstants.metersToLong() - ancho/2;
+	//		Double minY = bounds.getMinY()/ProyectionConstants.metersToLat() - ancho/2;
+	//		Double maxX = bounds.getMaxX()/ProyectionConstants.metersToLong()+ ancho/2;
+	//		Double maxY = bounds.getMaxY()/ProyectionConstants.metersToLat()+ ancho/2;
+	//		Double x0=minX;
+	//		for(int x=0;(x0)<maxX;x++){
+	//			x0=minX+x*ancho;
+	//			Double x1=minX+(x+1)*ancho;
+	//			for(int y=0;(minY+y*ancho)<maxY;y++){
+	//				Double y0=minY+y*ancho;
+	//				Double y1=minY+(y+1)*ancho;
+	//
+	//
+	//				Coordinate D = new Coordinate(x0*ProyectionConstants.metersToLong(), y0*ProyectionConstants.metersToLat()); 
+	//				Coordinate C = new Coordinate(x1*ProyectionConstants.metersToLong(), y0*ProyectionConstants.metersToLat());
+	//				Coordinate B = new Coordinate(x1*ProyectionConstants.metersToLong(), y1*ProyectionConstants.metersToLat());
+	//				Coordinate A =  new Coordinate(x0*ProyectionConstants.metersToLong(), y1*ProyectionConstants.metersToLat());
+	//
+	//				/**
+	//				 * D-- ancho de carro--C ^ ^ | | avance ^^^^^^^^ avance | | A-- ancho de
+	//				 * carro--B
+	//				 * 
+	//				 */
+	//				Coordinate[] coordinates = { A, B, C, D, A };// Tiene que ser cerrado.
+	//				// Empezar y terminar en
+	//				// el mismo punto.
+	//				// sentido antihorario
+	//
+	//
+	//				GeometryFactory fact =ProyectionConstants.getGeometryFactory();
+	//
+	//				LinearRing shell = fact.createLinearRing(coordinates);
+	//				LinearRing[] holes = null;
+	//				Polygon poly = new Polygon(shell, holes, fact);			
+	//				polygons.add(poly);
+	//			}
+	//		}
+	//		return polygons;
+	//	}
 
-
+	/**
+	 * 
+	 * @param poly geometria a agregar quitando superposiciones
+	 * @return devuelve la parte de poly que no se superpone con las geometrias procesadas anteriormente
+	 */
 	private Geometry removerSuperposiciones(Geometry poly) {
 		/*
 		 * ahora que tengo el poligono lo filtro con los anteriores para
@@ -828,7 +838,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 		 */
 		Geometry difGeom = poly;
 		Geometry geometryUnion = null;
-		if(labor.getConfiguracion().correccionSuperposicionEnabled()){
+		if(poly!=null && labor.getConfiguracion().correccionSuperposicionEnabled()){
 			Geometry longlatPoly = poly;// crsAntiTransform(poly);
 			Envelope query = longlatPoly.getEnvelopeInternal();		//hago la query en coordenadas long/lat
 			List<CosechaItem> objects = labor.cachedOutStoreQuery(query);

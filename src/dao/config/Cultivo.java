@@ -60,6 +60,7 @@ public class Cultivo implements Comparable<Cultivo>{
 	private Double extS=new Double(0);
 
 	private Double rindeEsperado=new Double(0);
+	private Double ndviRindeCero=new Double(0);
 	
 	private Boolean estival = true;
 	private Double semPorBolsa = 1.0;

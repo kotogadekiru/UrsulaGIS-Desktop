@@ -33,6 +33,7 @@ import gov.nasa.worldwindx.examples.analytics.ExportableAnalyticSurface;
 import tasks.ProcessMapTask;
 import tasks.ShowNDVITifFileTask;
 import utils.GeometryHelper;
+import utils.LinearRegression;
 import utils.ProyectionConstants;
 import utils.Logistic.Data;
 
@@ -45,11 +46,17 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 		super(cosechaLabor);
 		rindeProm=_rinde;
 		ndvi=_ndvi;
-
+		try {
+			NDVI_RINDE_CERO=cosechaLabor.getCultivo().getNdviRindeCero();
+		}catch(Exception e) {
+			e.printStackTrace();
+			NDVI_RINDE_CERO=ShowNDVITifFileTask.MIN_VALUE;
+		}
+		
 	}
 
 	public void doProcess() throws IOException {
-		labor.setContorno(ndvi.getContorno());
+	//	labor.setContorno(ndvi.getContorno());
 		Iterable<? extends GridPointAttributes> values = ndvi.getSurfaceLayer().getValues();
 		Iterator<? extends GridPointAttributes> it = values.iterator();
 		
@@ -60,7 +67,7 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 			Double value = new Double(gpa.getValue());
 			//OJO cuando se trabaja con el jar la version de world wind que esta levantando no es la que usa eclipse.
 			// es por eso que el jar permite valores Nan y en eclipse no.
-			if(value < ShowNDVITifFileTask.MIN_VALUE || value > ShowNDVITifFileTask.MAX_VALUE || value == 0 || value.isNaN()){
+			if(value < NDVI_RINDE_CERO || value > ShowNDVITifFileTask.MAX_VALUE || value == 0 || value.isNaN()){
 					continue;
 			} else{
 			//System.out.println("calculando el promedio para el valor "+value+" suma parcial "+sum+" size "+size);
@@ -78,11 +85,11 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 		// si el rinde promedio es >0.5 => NDVI_RINDE_CERO es 0.3
 		//si el rinde promedio es <0.5 => NDVI_RINDE_CERO es 0.1
 		//chequear el minimo ndvi segun el cultivo? para el trigo inicial en macollo el minimo de 0.5 es malo
-		Cultivo cult =super.labor.getCultivo();
-		if(cult.isEstival()) {
-			//ver si la imagen es del final del ciclo o del principio?
-			NDVI_RINDE_CERO= averageNdvi>0.5?0.2:0.1;//depende del cultivo?
-		}
+//		Cultivo cult =super.labor.getCultivo();
+//		if(cult.isEstival()) {
+//			//ver si la imagen es del final del ciclo o del principio?
+//			NDVI_RINDE_CERO= averageNdvi>0.5?0.2:0.1;//depende del cultivo?
+//		}
 		if(averageNdvi.isNaN()) averageNdvi = 1.0;
 		 it = values.iterator();
 		 
@@ -152,7 +159,7 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 				}
 				
 				
-				if(ndvi <= ShowNDVITifFileTask.MAX_VALUE && ndvi >= ShowNDVITifFileTask.MIN_VALUE && ndvi !=0){
+				if( ndvi <= ShowNDVITifFileTask.MAX_VALUE && ndvi >= NDVI_RINDE_CERO && ndvi !=0){
 					CosechaItem ci = new CosechaItem();
 					ci.setId(id);
 					ci.setElevacion(elev);
@@ -173,7 +180,7 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 					coordinates[1]= new Coordinate(lon+lonStep,lat,elev);
 					coordinates[2]= new Coordinate(lon+lonStep,lat+latStep,elev);
 					coordinates[3]= new Coordinate(lon,lat+latStep,elev);
-					coordinates[4]= new Coordinate(lon,lat,elev);
+					coordinates[4]= new Coordinate(lon,lat,elev);//coordinates[0];
 					
 					Geometry poly = fact.createPolygon(coordinates);	
 				
@@ -224,14 +231,22 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 
 	}
 
+	
 	private Function<Double, Double> getRineForNDVILinealFunction(Double averageNdvi) {
+		double[] xs= {0,averageNdvi};
+		double[] ys= {0,rindeProm};
+		LinearRegression lr= new LinearRegression(xs,ys);
+		
+		Function<Double,Double> calcRinde = (ndvi)->lr.predict(ndvi);
+		return calcRinde;
+	}
+	
+	private Function<Double, Double> getRineForNDVILinealFunctionOLD(Double averageNdvi) {
 		//lineal r=a*ndvi+b
 		//a=(r2-r1)/(ndvi2-ndvi1)=(rProm-0)/(ndviProm-0.1)
 		double pendienteNdviRinde = averageNdvi>NDVI_RINDE_CERO?rindeProm/(averageNdvi-NDVI_RINDE_CERO):1;
 		//b=0-a*0.1
 		double origenNdviRinde = 0-pendienteNdviRinde*NDVI_RINDE_CERO;
-		
-		//List<Data> dataset = new ArrayList<Data>();
 		
 		Function<Double,Double> calcRinde = (ndvi)->pendienteNdviRinde*ndvi+origenNdviRinde;
 		return calcRinde;

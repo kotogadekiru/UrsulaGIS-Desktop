@@ -2,19 +2,13 @@ package utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.densify.Densifier;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -809,16 +803,25 @@ public class GeometryHelper {
 					.collect(Collectors.toList()));			 
 		}
 
-		//Double buffer = ProyectionConstants.metersToLongLat(0.25);
+		
 		//System.out.println("juntando "+boundsGeoms.size()+" geoms");
 		Geometry union = null; 
 				//toGeometryCollection(boundsGeoms).buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection
-		for(Geometry g : boundsGeoms) {
-			if(union==null) {
-				union=g;
-			}else {
-				union = union.union(g);
-			}
+		try {
+			union = unirGeometrias(boundsGeoms);
+//		for(Geometry g : boundsGeoms) {
+//			if(union==null) {
+//				union=g;
+//			}else {
+//				
+//				union = union.union(g);// This method does not support GeometryCollection arguments
+//			
+//			}
+//		}
+		}catch(Exception e ) {
+			Double buffer = ProyectionConstants.metersToLongLat(0.25);
+			union = toGeometryCollection(boundsGeoms).buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection
+			e.printStackTrace();
 		}
 		return union;
 		}catch(Exception e ) {
@@ -851,10 +854,17 @@ public class GeometryHelper {
 
 	public static Geometry unirGeometrias(List<Geometry> aUnir) {
 		try {
-			List<Geometry> aUnird = aUnir.stream().map(g->{
+			List<Geometry> aUnird = aUnir.parallelStream().filter(g->g!=null&&!g.isEmpty()).map(g->{
+				try {
+					if(!g.isEmpty()) {
 				Densifier densifier = new Densifier(g);
 				densifier.setDistanceTolerance(ProyectionConstants.metersToLongLat(10));
-				g=densifier.getResultGeometry();
+				g=densifier.getResultGeometry();//java.lang.ArrayIndexOutOfBoundsException: -1
+					}
+				}catch(Exception e) {
+					System.err.println("fallo densifier con "+g);
+					//e.printStackTrace();
+				}
 				return  g;			
 			}).collect(Collectors.toList());
 
@@ -869,10 +879,10 @@ public class GeometryHelper {
 			Geometry dif=union.difference(boundary);
 			dif = PolygonValidator.validate(dif);
 			if(dif.isValid()) {
-				System.out.println("dif es valid");
+				//System.out.println("dif es valid");
 				return dif;
 			}else {
-				System.out.println("dif no es valid");
+				//System.out.println("dif no es valid");
 				return union;
 			}
 			//buffered = CascadedPolygonUnion.union(geometriesCat);
@@ -882,7 +892,8 @@ public class GeometryHelper {
 			//System.out.println("geometria densa unida "+union);
 			//return dif;
 		}catch(Exception e) {
-			e.printStackTrace();
+			System.err.println("fallo collection buffer uniendo de a una "+aUnir);
+			//e.printStackTrace();
 			Geometry union=null;
 			for(Geometry g:aUnir) {
 				if(union==null) {
@@ -899,38 +910,57 @@ public class GeometryHelper {
 		}
 	}
 
-	public static synchronized void extractContorno(Labor<?> labor) {
-		//TODO compute contorno
-		//		List<Geometry> geometriesCat = new ArrayList<Geometry>();
-		//		SimpleFeatureIterator it = labor.outCollection.features();
-
-
-
-		//		while(it.hasNext()){
-		//			SimpleFeature f=it.next();
-		//			geometriesCat.add((Geometry)f.getDefaultGeometry());
-		//		}
-		//		it.close();		
-
+	/**
+	 * metodo que se llama al construir la grilla en correlacionarLayers
+	 * @param labor
+	 * @return
+	 */
+	public static synchronized Geometry extractContornoGeometry(Labor<?> labor) {
 		try{					
 			ReferencedEnvelope bounds = labor.outCollection.getBounds();
-			//System.out.println("outCollectionBounds "+bounds);
 			Geometry cascadedUnion = unirCascading(labor,bounds);
-			//Geometry buffered = GeometryHelper.unirGeometrias(geometriesCat);
-			//CascadedPolygonUnion.union(geometriesCat);
-			//sino le pongo buffer al resumir geometrias me quedan rectangulos medianos
-			//				buffered = buffered.buffer(
-			//						ProyectionConstants.metersToLongLat(0.25),
-			//						1,BufferParameters.CAP_SQUARE);
-			//buffered =GeometryHelper.simplificarContorno(buffered);
-			Poligono contorno =GeometryHelper.constructPoligono(cascadedUnion);
-			//	simplificarPoligono(contorno);
-			contorno.setNombre(labor.getNombre());
-			labor.setContorno(contorno);
+			return cascadedUnion;
 		}catch(Exception e){
 			e.printStackTrace();
+			return null;
 		}
 	}
+	/**
+	 * metodo llamado en labor.getContorno
+	 * @param labor
+	 */
+//	public static void extractContorno(Labor<?> labor) {
+//		//TODO compute contorno
+//		//		List<Geometry> geometriesCat = new ArrayList<Geometry>();
+//		//		SimpleFeatureIterator it = labor.outCollection.features();
+//
+//
+//
+//		//		while(it.hasNext()){
+//		//			SimpleFeature f=it.next();
+//		//			geometriesCat.add((Geometry)f.getDefaultGeometry());
+//		//		}
+//		//		it.close();		
+//
+//		try{					
+//			ReferencedEnvelope bounds = labor.outCollection.getBounds();
+//			//System.out.println("outCollectionBounds "+bounds);
+//			Geometry cascadedUnion = unirCascading(labor,bounds);
+//			//Geometry buffered = GeometryHelper.unirGeometrias(geometriesCat);
+//			//CascadedPolygonUnion.union(geometriesCat);
+//			//sino le pongo buffer al resumir geometrias me quedan rectangulos medianos
+//			//				buffered = buffered.buffer(
+//			//						ProyectionConstants.metersToLongLat(0.25),
+//			//						1,BufferParameters.CAP_SQUARE);
+//			//buffered =GeometryHelper.simplificarContorno(buffered);
+//			Poligono contorno =GeometryHelper.constructPoligono(cascadedUnion);
+//			//	simplificarPoligono(contorno);
+//			contorno.setNombre(labor.getNombre());
+//			//labor.setContorno(contorno);
+//		}catch(Exception e){
+//			e.printStackTrace();
+//		}
+//	}
 
 	public static void simplificarPoligono(Poligono p) {
 		Geometry g = p.toGeometry();

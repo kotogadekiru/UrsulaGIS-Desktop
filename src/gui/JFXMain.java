@@ -104,6 +104,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -196,6 +197,7 @@ public class JFXMain extends Application {
 					System.exit(0); 
 				});
 			});
+			configGUIController.startKeyBoardListener();
 			primaryStage.show();
 
 			//start clearCache cronJob
@@ -205,6 +207,8 @@ public class JFXMain extends Application {
 			e.printStackTrace();
 		}
 	}
+	
+
 
 	private void startClearCacheCronJob() {
 		ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
@@ -769,6 +773,16 @@ public class JFXMain extends Application {
 			return o!=null && clazz.isAssignableFrom(o.getClass());
 		});
 		return layersOfClazz.map(l->l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR)).collect(Collectors.toList());
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" }) 
+	public List<?> getLayersOfClass(Class clazz){
+		LayerList layers = this.getWwd().getModel().getLayers();
+		Stream<Layer> layersOfClazz = layers.stream().filter(l->{
+			
+			return l!=null && clazz.isAssignableFrom(l.getClass());
+		});
+		return layersOfClazz.collect(Collectors.toList());
 	}
 
 	public List<Labor<?>> getLaboresCargadas() {

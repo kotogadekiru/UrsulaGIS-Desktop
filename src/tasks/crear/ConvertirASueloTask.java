@@ -44,7 +44,7 @@ public class ConvertirASueloTask extends ProcessMapTask<SueloItem,Suelo > {
 
 	@Override
 	protected void doProcess() throws IOException {
-		labor.setContorno(cosecha.getContorno());
+	//	labor.setContorno(cosecha.getContorno());
 		//crear un map de muestra segun su nombre
 		Map<String, List<Muestra>> mMap = recorrida.getMuestras().stream().collect(Collectors.groupingBy(Muestra::getNombre));
 
@@ -92,6 +92,8 @@ public class ConvertirASueloTask extends ProcessMapTask<SueloItem,Suelo > {
 				Number ppmP = props.get(SueloItem.PPM_FOSFORO);
 				Number ppmN = props.get(SueloItem.PPM_N);
 				Number ppmMO = props.get(SueloItem.PC_MO);
+				Number ppmS = props.get(SueloItem.PPM_ASUFRE);
+				Number ppmK = props.get(SueloItem.PPM_POTASIO);
 				
 				Number densidad = props.get(SueloItem.DENSIDAD);
 				Number elevacion = props.get(SueloItem.ELEVACION);
@@ -102,6 +104,8 @@ public class ConvertirASueloTask extends ProcessMapTask<SueloItem,Suelo > {
 				si.setDensAp(densidad.doubleValue());
 				si.setPpmP(ppmP.doubleValue());
 				si.setPpmNO3(ppmN.doubleValue());
+				si.setPpmS(ppmS.doubleValue());
+				si.setPpmK(ppmK.doubleValue());
 				si.setPorcMO(ppmMO.doubleValue());
 				si.setElevacion(elevacion.doubleValue());
 				labor.setPropiedadesLabor(si);

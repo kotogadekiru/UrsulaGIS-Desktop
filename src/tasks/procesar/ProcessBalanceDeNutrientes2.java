@@ -106,14 +106,31 @@ public class ProcessBalanceDeNutrientes2 extends ProcessMapTask<SueloItem,Suelo>
 		List<Geometry> geometriasActivas = labores.parallelStream().collect(
 				()->new ArrayList<Geometry>(),
 				(activas, labor) ->{		
-					activas.add(labor.getContorno().toGeometry());
-				},	(env1, env2) -> env1.addAll(env2));		
+					try {
+						//Geometry lContorno = labor.getContorno().toGeometry();
+						ReferencedEnvelope bounds = labor.outCollection.getBounds();
+						//System.out.println("outCollectionBounds "+bounds);
+						Geometry cascadedUnion = GeometryHelper.unirCascading(labor,bounds);
+						if(cascadedUnion!=null) {
+							activas.add(cascadedUnion);
+						}else {
+							System.err.println("no se pudo extraer el contorno de "+labor.getNombre());
+						}
+					}catch(Exception e ) {
+						e.printStackTrace();
+						System.err.println("no se pudo extraer el contorno de "+labor.getNombre());						
+					}
+				},	(l1, l2) -> l1.addAll(l2));		
 
 		//unir las geometrias de todas las labores para obtener un poligono de contorno
 		Geometry cover = GeometryHelper.unirGeometrias(geometriasActivas);
 		//FIXME cover no se hace bien
 		//System.out.println("el area del cover es: "+GeometryHelper.getHas(cover));//el area del cover es: 3.114509320893096E-12
 		//intersectar la grilla con el contorno
+		if(cover==null) {
+			System.err.println("no se pudo unir el contorno de las labores a procesar "+cover);
+			return;
+		}
 		List<Geometry> grillaCover = grilla.parallelStream().collect(
 				()->new ArrayList<Geometry>(),
 				(intersecciones, poly) ->{			

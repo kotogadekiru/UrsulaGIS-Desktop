@@ -46,7 +46,7 @@ public class ConvertirAPulverizacionTask extends ProcessMapTask<PulverizacionIte
 	}
 
 	public void doProcess() throws IOException {
-		labor.setContorno(cosecha.getContorno());
+		//labor.setContorno(cosecha.getContorno());
 		this.featureCount=cosecha.outCollection.size();
 		this.featureNumber=0;
 		FeatureReader<SimpleFeatureType, SimpleFeature> reader =cosecha.outCollection.reader();

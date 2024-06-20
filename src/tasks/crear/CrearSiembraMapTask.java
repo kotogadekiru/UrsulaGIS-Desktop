@@ -39,7 +39,7 @@ public class CrearSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 	}
 
 	public void doProcess() throws IOException {
-		labor.setContorno(GeometryHelper.unirPoligonos(polis));
+		//labor.setContorno(GeometryHelper.unirPoligonos(polis));
 		Semilla semilla = labor.getSemilla();
 		System.out.println("semilla es "+semilla);
 		double entresurco = labor.getEntreSurco();

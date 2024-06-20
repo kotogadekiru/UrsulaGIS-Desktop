@@ -31,6 +31,7 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
+import com.vividsolutions.jts.geom.Geometry;
 
 import api.OrdenSiembra;
 import api.OrdenSiembraItem;
@@ -55,6 +56,7 @@ import javafx.scene.paint.Color;
 import tasks.procesar.ExportarPrescripcionSiembraTask;
 import utils.DAH;
 import utils.FileHelper;
+import utils.GeometryHelper;
 import utils.JsonUtil;
 import utils.TarjetaHelper;
 import utils.UnzipUtility;
@@ -202,9 +204,12 @@ public class CompartirSiembraLaborTask extends Task<String> {
 					}
 			
 
-				Poligono contorno = siembra.getContorno();
-				if(contorno!=null) {
-					op.setPoligonoString(contorno.getPositionsString());
+				//Poligono contorno = siembra.getContorno();
+				Geometry contornoG = GeometryHelper.extractContornoGeometry(siembra);
+				
+				Poligono contornoP =GeometryHelper.constructPoligono(contornoG);
+				if(contornoP!=null) {
+					op.setPoligonoString(contornoP.getPositionsString());
 				}
 				Optional<OrdenSiembra> retOp = OrdenSiembraPaneController.config(op);
 		if(retOp.isPresent()) {

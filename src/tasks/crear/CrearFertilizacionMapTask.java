@@ -28,7 +28,7 @@ public class CrearFertilizacionMapTask extends ProcessMapTask<FertilizacionItem,
 	}
 
 	public void doProcess() throws IOException {
-		labor.setContorno(GeometryHelper.unirPoligonos(polis));
+		//labor.setContorno(GeometryHelper.unirPoligonos(polis));
 		//GeometryFactory fact = new GeometryFactory();
 		for(Poligono pol : this.polis) {
 			FertilizacionItem ci = new FertilizacionItem();

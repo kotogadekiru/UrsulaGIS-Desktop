@@ -54,7 +54,7 @@ public class CrearCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 	}
 
 	public void doProcess() throws IOException {
-		labor.setContorno(GeometryHelper.unirPoligonos(polis));
+		//labor.setContorno(GeometryHelper.unirPoligonos(polis));
 		for(Poligono poli : polis) {
 		CosechaItem ci = new CosechaItem();
 		ci.setRindeTnHa(rinde);

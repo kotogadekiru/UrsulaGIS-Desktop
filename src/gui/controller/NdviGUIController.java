@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
+import com.vividsolutions.jts.geom.Geometry;
+
 import dao.Labor;
 import dao.Ndvi;
 import dao.Poligono;
@@ -65,6 +67,7 @@ import tasks.crear.ConvertirNdviAFertilizacionTask;
 import tasks.importar.ProcessHarvestMapTask;
 import utils.DAH;
 import utils.FileHelper;
+import utils.GeometryHelper;
 
 public class NdviGUIController extends AbstractGUIController{
 
@@ -517,7 +520,10 @@ public class NdviGUIController extends AbstractGUIController{
 		if( placementObject!=null && Poligono.class.isAssignableFrom(placementObject.getClass())){
 			task.setPoligono((Poligono) placementObject);
 		} else 	if( placementObject!=null && Labor.class.isAssignableFrom(placementObject.getClass())){
-			task.setPoligono(((Labor<?>) placementObject).getContorno());
+			Labor<?> l = (Labor<?>) placementObject;
+			Geometry contornoG = GeometryHelper.extractContornoGeometry(l);
+			Poligono contornoP = GeometryHelper.constructPoligono(contornoG);
+			task.setPoligono(contornoP);
 		}
 		task.setOnSucceeded(handler -> {
 			Layer ndviLayer = (Layer) handler.getSource().getValue();	
@@ -601,7 +607,11 @@ public class NdviGUIController extends AbstractGUIController{
 			if(placementObject !=null && Labor.class.isAssignableFrom(placementObject.getClass())){
 				Labor<?> l =(Labor<?>)placementObject;
 				
-				placementObject =  l.getContorno();
+			
+				Geometry contornoG = GeometryHelper.extractContornoGeometry(l);
+				Poligono contornoP = GeometryHelper.constructPoligono(contornoG);
+				
+				placementObject =  contornoP;
 //				ReferencedEnvelope bounds =
 //				Polygon pol = GeometryHelper.constructPolygon(bounds);
 //				placementObject =GeometryHelper.constructPoligono(pol);

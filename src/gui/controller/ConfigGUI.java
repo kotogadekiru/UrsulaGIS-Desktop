@@ -62,6 +62,7 @@ import gui.JFXMain;
 import gui.MargenConfigDialogController;
 import gui.Messages;
 import gui.nww.LaborLayer;
+import gui.snake.SnakesLayer;
 import gui.utils.DoubleTableColumn;
 import gui.utils.SmartTableView;
 import javafx.application.Platform;
@@ -92,6 +93,7 @@ import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -158,6 +160,7 @@ public class ConfigGUI extends AbstractGUIController{
 		addMenuItem(Messages.getString("JFXMain.goTo"),(a)->showGoToDialog(),menuHerramientas);
 		addMenuItem(Messages.getString("JFXMain.bulk_ndvi_download"),(a)->main.ndviGUIController.doBulkNDVIDownload(),menuHerramientas);
 		addMenuItem(Messages.getString("JFXMain.correlacionarCapas"),(a)->doCorrelacionarCapas(),menuHerramientas);
+		//addMenuItem(Messages.getString("JFXMain.JugarSnake"),(a)->doJugarSnake(),menuHerramientas);
 		/*Menu Exportar*/
 		final Menu menuExportar = new Menu(Messages.getString("JFXMain.exportar"));		 
 		addMenuItem(Messages.getString("JFXMain.exportarPantallaMenuItem"),(a)->main.doSnapshot(),menuExportar);
@@ -190,7 +193,7 @@ public class ConfigGUI extends AbstractGUIController{
 		addMenuItem(Messages.getString("JFXMain.configFertilizacionMI"),(a)->doShowOrdenesFertilizacionTable(),menuConfiguracion); //
 		addMenuItem(Messages.getString("JFXMain.configSiembraMI"),(a)->doShowOrdenesSiembraTable(),menuConfiguracion); //
 		
-		addMenuItem(Messages.getString("JFXMain.configConfigMI"),(a)->doShowOrdenesConfiguracionTable(),menuConfiguracion); //
+		addMenuItem(Messages.getString("JFXMain.configConfigMI"),(a)->doShowConfiguracionTable(),menuConfiguracion); //
 
 		addMenuItem(Messages.getString("JFXMain.configIdiomaMI"),(a)->doChangeLocale(),menuConfiguracion); 
 		addMenuItem(Messages.getString("JFXMain.configHelpMI"),(a)->doShowAcercaDe(),menuConfiguracion);
@@ -229,6 +232,47 @@ public class ConfigGUI extends AbstractGUIController{
 		//TODO seleccionar labor x
 		CorrelacionarCapas gui = new CorrelacionarCapas(main);
 		gui.show();		
+	}
+	
+	public void doJugarSnake() {
+	  	SnakesLayer layer = new SnakesLayer(getWwd());	     
+	  	insertBeforeCompass(getWwd(), layer);
+	}
+	
+	public void doCerrarSnake() {
+	  	//SnakesLayer layer = new SnakesLayer(getWwd());	     
+	  	//insertBeforeCompass(getWwd(), layer);
+		System.out.println("cerrando snake");
+		List<SnakesLayer> snakes = (List<SnakesLayer>)main.getLayersOfClass(SnakesLayer.class);
+		if(snakes.size()==0) {
+			System.out.println("No encontre snakesLayer");
+		}
+		for(SnakesLayer s:snakes) {
+			s.stop();
+			
+		}	  	
+	}
+	
+	public void startKeyBoardListener() {
+		JFXMain.stage.getScene().setOnKeyReleased(event->{
+			KeyCode key=event.getCode();
+			//System.out.println(key+" typed");
+			switch(key) {
+			case S:{
+				if(event.isControlDown()) {
+					doJugarSnake();
+				}
+				break;
+				}
+			case C:{
+				if(event.isControlDown()) {
+					doCerrarSnake();
+				}
+				break;
+				}			
+			default :break;		  
+			}
+		});
 	}
 	
 	/**
@@ -1052,7 +1096,7 @@ public class ConfigGUI extends AbstractGUIController{
 		});	
 	}
 	
-	private void doShowOrdenesConfiguracionTable() {
+	private void doShowConfiguracionTable() {
 		List<Map<String,String>> data = new ArrayList<Map<String,String>>();
 		String CLAVE_COLUMN_NOMBRE=Messages.getString("ConfigGUI.configClave");//"Clave";
 		String VALOR_COLUMN_NOMBRE=Messages.getString("ConfigGUI.configValor");//"Valor";
@@ -1117,6 +1161,7 @@ public class ConfigGUI extends AbstractGUIController{
 				tabla.refresh();
 			} catch (Exception e) {	e.printStackTrace();}
 		});		
+		columnValor.setEditable(true);
 
 		tabla.getColumns().add(columnValor);		
 		

@@ -54,7 +54,7 @@ public class ConvertirNdviAFertilizacionTask extends ProcessMapTask<Fertilizacio
 	}
 	
 	public void doProcess() throws IOException {
-		labor.setContorno(ndvi.getContorno());
+		//labor.setContorno(ndvi.getContorno());
 		Iterable<? extends GridPointAttributes> values = ndvi.getSurfaceLayer().getValues();
 		Iterator<? extends GridPointAttributes> it = values.iterator();
 		

@@ -14,6 +14,8 @@ import javax.persistence.Transient;
 import org.geotools.data.FileDataStore;
 import org.opengis.feature.simple.SimpleFeature;
 
+import com.vividsolutions.jts.geom.Geometry;
+
 import dao.Clasificador;
 import dao.Labor;
 import dao.LaborConfig;
@@ -29,6 +31,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import utils.DAH;
+import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
 @Getter
@@ -212,7 +215,8 @@ public class SiembraLabor extends Labor<SiembraItem> {
 	
 	public Double getCantLabor(ToDoubleFunction<SiembraItem> get) {
 		Double ret = new Double(0);
-		List<SiembraItem> items = this.cachedOutStoreQuery(this.getContorno().toGeometry().getEnvelopeInternal());
+		Geometry contorno = GeometryHelper.extractContornoGeometry(this);
+		List<SiembraItem> items = this.cachedOutStoreQuery(contorno.getEnvelopeInternal());
 		try {
 		ret = items.parallelStream().collect(
 				()->new Double(0),

@@ -120,7 +120,7 @@ public class Configuracion{
 	public String getPropertyOrDefault(String key,String def) {
 		String ret = configProp.getProperty(key);
 		if(ret == null){
-			setProperty(key,def);
+			setProperty(key,def);//save?
 			ret = def;
 		}
 		return ret;

@@ -1192,6 +1192,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	}
 
 	protected void runLater(Collection<FC> itemsToShow) {	
+		//labor.setContorno(null);
 		updateStatsLabor(itemsToShow);
 		RenderableLayer extrudedPolygonsLayer = createExtrudedPolygonsLayer(itemsToShow);//XXX ojo! si son muchos esto me puede tomar toda la memoria.	
 
@@ -1238,9 +1239,9 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				//				return CompletableFuture.runAsync(()->{});
 				//			}).thenRun(
 				//					()->{
-				if(labor.getContorno()==null) {
-					extractContorno();//FIXME consume mucha memoria si son muchos puntos
-				}
+//				if(labor.getContorno()==null) {
+//					extractContorno();//FIXME consume mucha memoria si son muchos puntos
+//				}
 				System.out.println("corriendo analyticSurfaceLayerHD");
 				RenderableLayer analyticSurfaceLayerHD = createAnalyticSurfaceFromQuery(highRes);//30
 				analyticSurfaceLayerHD.setPickEnabled(false);//ya es false de fabrica
@@ -1255,9 +1256,9 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		//		}
 	}
 
-	public void extractContorno() {
-		GeometryHelper.extractContorno(labor);
-	}
+//	public void extractContorno() {
+//		GeometryHelper.extractContorno(labor);
+//	}
 
 
 

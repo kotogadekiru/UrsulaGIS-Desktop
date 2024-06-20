@@ -95,7 +95,7 @@ public abstract class Labor<E extends LaborItem>  {
 	public Double cantidadInsumo=new Double(0);
 	public Double cantidadLabor=new Double(0);
 	
-	private Poligono contorno=null;
+	//private Poligono contorno=null;
 	
 	@Lob
 	private byte[] content=null;//el contenido zip shpfile
@@ -626,6 +626,7 @@ public abstract class Labor<E extends LaborItem>  {
 	 * metodo que se ocupa de hacer la limpieza al momento de quitar la labor
 	 */
 	public void dispose() {
+		
 		LaborDataStore.dispose(this);
 	}
 
@@ -781,12 +782,12 @@ public abstract class Labor<E extends LaborItem>  {
 	}
 	
 
-	public Poligono getContorno() {
-		if(contorno==null) {
-			GeometryHelper.extractContorno(this);
-		}
-		return contorno;
-	}
+//	public Poligono getContorno() {
+//		if(contorno==null) {
+//			GeometryHelper.extractContorno(this);
+//		}
+//		return contorno;
+//	}
 
 
 	@Override

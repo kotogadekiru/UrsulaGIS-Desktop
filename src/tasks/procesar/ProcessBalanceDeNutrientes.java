@@ -46,6 +46,9 @@ import tasks.crear.CrearSueloMapTask;
 import utils.GeometryHelper;
 import utils.PolygonValidator;
 import utils.ProyectionConstants;
+/**
+ * proceso que no contemplaba potacio ni azufre
+ */
 @Deprecated
 public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> {
 	double distanciaAvanceMax = 0;
@@ -106,7 +109,8 @@ public class ProcessBalanceDeNutrientes extends ProcessMapTask<SueloItem,Suelo> 
 		List<Geometry> geometriasActivas = labores.parallelStream().collect(
 				()->new ArrayList<Geometry>(),
 				(activas, labor) ->{		
-					activas.add(labor.getContorno().toGeometry());
+					Geometry contorno = GeometryHelper.extractContornoGeometry(labor);
+					activas.add(contorno);
 //					@SuppressWarnings("unchecked")
 //					List<LaborItem> features = (List<LaborItem>) labor.outStoreQuery(unionEnvelope);
 //					activas.addAll(

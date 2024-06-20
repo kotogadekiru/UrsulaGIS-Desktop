@@ -59,7 +59,7 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 	}
 	
 	public void doProcess() throws IOException {
-		labor.setContorno(poli);
+	//	labor.setContorno(poli);
 		rec.getMuestras().stream().forEach(m->{
 			Map<String, Double> props = m.getProps();
 			SueloItem si = new SueloItem();
