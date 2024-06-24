@@ -69,8 +69,14 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 			Number ppmS = props.get(SueloItem.PPM_ASUFRE);
 			Number ppmK = props.get(SueloItem.PPM_POTASIO);
 			
+			Number aguaPerf = props.get(SueloItem.AGUA_PERFIL);
+			Number profNapa = props.get(SueloItem.PROF_NAPA);
+			
 			Number densidad = props.get(SueloItem.DENSIDAD);
 			Number elevacion = props.get(SueloItem.ELEVACION);
+			
+			//agua perfil
+			//prof napa
 			
 			si.setDensAp(densidad.doubleValue());
 			si.setPpmP(ppmP.doubleValue());
@@ -78,12 +84,16 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 			si.setPorcMO(pcMO.doubleValue());
 			si.setPpmS(ppmS.doubleValue());
 			si.setPpmK(ppmK.doubleValue());
+			
 			if(elevacion.doubleValue()>10) {
 				si.setElevacion(elevacion.doubleValue());		
 			}else {
 				si.setElevacion(10.0);
 			}
-
+			
+			si.setAguaPerfil(aguaPerf.doubleValue());
+			si.setProfNapa(profNapa.doubleValue());
+			
 			labor.setPropiedadesLabor(si);
 
 			si.setGeometry(poli.toGeometry());
