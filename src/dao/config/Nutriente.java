@@ -33,8 +33,7 @@ import lombok.EqualsAndHashCode;
 Macronutrientes secundarios – azufre (S), calcio (Ca), magnesio (Mg)
 Micronutrientes - boro (B), cloro (Cl), cobalto (Co), cobre (Cu), hierro (Fe), manganeso (Mn), molibdeno (Mo) y zinc (Zn)
  */
-public class Nutriente {
-	
+public class Nutriente {	
 	public static final String ZINC = "Zinc";
 	public static final String MOLIBDENO = "Molibdeno";
 	public static final String MANGANESO = "Manganeso";
@@ -54,6 +53,8 @@ public class Nutriente {
 	public static final String FIND_NAME="Nutriente.findName";
 	
 	public static final Double porcN_NO3=0.2259;
+	//pongo 1 porque quiero trabajar con S como elemento no como ion Sulfato
+	public static final Double porcS_SO4=1.0;// 32.06/(32.06+4*15.99);//=0.3338;
 	
 	private static Map<SueloParametro,Nutriente> nutrientesDefault=null;
 	static{
@@ -62,7 +63,7 @@ public class Nutriente {
 		nutrientesDefault.put(SueloParametro.Nitrogeno,new Nutriente("Nitrogeno de Nitratos","N-NO3",porcN_NO3,0.6));//ok
 		nutrientesDefault.put(SueloParametro.Fosforo,new Nutriente("Fosforo de Fosfato","P",1.0,0.2));
 		nutrientesDefault.put(SueloParametro.Potasio,new Nutriente(POTASIO,"K",1.0,0.2));
-		nutrientesDefault.put(SueloParametro.Azufre,new Nutriente(AZUFRE,"S",1.0,0.2));
+		nutrientesDefault.put(SueloParametro.Azufre,new Nutriente(AZUFRE,"S-SO4",porcS_SO4,0.2));//S04
 		nutrientesDefault.put(SueloParametro.Calcio,new Nutriente(CALCIO,"Ca",1.0,0.2));
 		nutrientesDefault.put(SueloParametro.Magnecio,new Nutriente(MAGNECIO,"Mg",1.0,0.2));
 		

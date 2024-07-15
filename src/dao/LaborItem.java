@@ -164,7 +164,9 @@ public abstract class LaborItem implements Comparable<Object>{
 		String identifier = harvestFeature.getIdentifier().getID();
 		String[] split = identifier.split("\\.");
 		if (split.length > 1) {
-			return split[split.length - 1];
+			String id = split[split.length - 1];
+			if(id==null)id="0.0";
+			return id;
 		}
 
 		return "0.0";
@@ -249,16 +251,18 @@ public abstract class LaborItem implements Comparable<Object>{
 				rumbo,
 				ancho,
 				elevacion,
-				getCategoria(),
-				getObservaciones()};
+				getCategoria()
+				,getObservaciones()
+				};
 
 		Object[] specialElements= getSpecialElementsArray();
+		//System.out.println("creando un array para "+basicElements.length+specialElements.length);//creando un array para 711
 		Object[] completeElements = new Object[basicElements.length+specialElements.length];
 		for(int i =0;i<basicElements.length;i++){
 			completeElements[i]=basicElements[i];
 		}
 
-		for(int i =0;i<specialElements.length;i++){
+		for(int i=0;i<specialElements.length;i++){
 			completeElements[i+basicElements.length]=
 					specialElements[i];
 		}

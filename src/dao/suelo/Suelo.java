@@ -275,8 +275,19 @@ public class Suelo extends Labor<SueloItem>{
 		//double kgSueloHa = ProyectionConstants.METROS2_POR_HA*0.6*this.getDensidad();
 		//Double kgNHa= (Double) item.getPpmN()*kgSueloHa*Fertilizante.porcN_NO3/1000000;
 		
-		Double kgNHa= ppmToKg(item.getDensAp(),item.getPpmNO3(),0.6)*Fertilizante.porcN_NO3;
+		Double kgNHa= ppmToKg(item.getDensAp(),item.getPpmNO3(),0.6)*Nutriente.porcN_NO3;
 		return kgNHa;		
+	}
+	
+	/**
+	 * convierte de kg de S por ha aplicados a densidad en ppm 0-20cm
+	 * @param kgNHa
+	 * @return la densidad en ppm para 0-20cm en el suelo 
+	 */
+	public double calcPpmNHaKg(Double densidad, Double kgNHa) {
+		//double kgSueloHa = ProyectionConstants.METROS2_POR_HA*0.6*this.getDensidad();
+		//Double ppmN= (Double) kgNHa*1000000/(kgSueloHa*Fertilizante.porcN_NO3);
+		return kgToPpm(densidad,kgNHa,0.6)/Nutriente.porcN_NO3;//convierto de n elemento a N03 para poder comparar con los analisis de laboratorio		
 	}
 	
 	/**
@@ -284,11 +295,13 @@ public class Suelo extends Labor<SueloItem>{
 	 * @param kgNHa
 	 * @return la densidad en ppm para 0-60cm en el suelo 
 	 */
-	public double calcPpmNHaKg(Double densidad, Double kgNHa) {
+	public double calcPpmSHaKg(Double densidad, Double kgNHa) {
 		//double kgSueloHa = ProyectionConstants.METROS2_POR_HA*0.6*this.getDensidad();
 		//Double ppmN= (Double) kgNHa*1000000/(kgSueloHa*Fertilizante.porcN_NO3);
-		return kgToPpm(densidad,kgNHa,0.6)/Fertilizante.porcN_NO3;//convierto de n elemento a N03 para poder comparar con los analisis de laboratorio		
+		return kgToPpm(densidad,kgNHa,0.2)/Nutriente.porcS_SO4;//convierto de n elemento a N03 para poder comparar con los analisis de laboratorio		
 	}
+	
+	
 	
 	//MATERIA ORGANICA
 	public double getKgMoHa(SueloItem item) {

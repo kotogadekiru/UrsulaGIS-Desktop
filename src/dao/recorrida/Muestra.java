@@ -113,7 +113,7 @@ public class Muestra {
 				Double dValue = new Double(0);
 				try { dValue=new Double((String)value);
 				}catch(Exception e) {
-					System.err.println("error tratando de parsear \""+value+"\" reemplazo por 0");}
+					System.err.println("error en k= "+k+" tratando de parsear \""+value+"\" reemplazo por 0");}
 				props.put(k, dValue);//ojo number format exception
 			} else if(Number.class.isAssignableFrom(value.getClass())) {
 				props.put(k, ((Number)value).doubleValue());

@@ -47,6 +47,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import tasks.ExportLaborMapTask;
 import tasks.crear.ConvertirAFertilizacionTask;
 import tasks.crear.ConvertirAPulverizacionTask;
 import tasks.crear.ConvertirASueloTask;
@@ -835,8 +836,20 @@ public class CosechaGUIController extends AbstractGUIController {
 
 	private void doExportHarvestDePuntos(CosechaLabor laborToExport) {
 		String nombre = laborToExport.getNombre();
-		File shapeFile = FileHelper.getNewShapeFile(nombre);
-		executorPool.execute(()->ExportarCosechaDePuntosTask.run(laborToExport, shapeFile));
+		File shapeFile =  FileHelper.getNewShapeFile(nombre);
+
+		ExportarCosechaDePuntosTask ehTask = new ExportarCosechaDePuntosTask(laborToExport,shapeFile);
+		ehTask.installProgressBar(progressBox);
+
+		ehTask.setOnSucceeded(handler -> {
+			playSound();
+			ehTask.uninstallProgressBar();
+		});
+		executorPool.execute(ehTask);
+		
+//		String nombre = laborToExport.getNombre();
+//		File shapeFile = FileHelper.getNewShapeFile(nombre);
+//		executorPool.execute(()->ExportarCosechaDePuntosTask.run(laborToExport, shapeFile));
 	}
 	//XXX insert aqui
 

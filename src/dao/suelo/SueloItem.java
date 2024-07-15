@@ -19,10 +19,11 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper=true)//si no pones esto todos los hashmaps andan mal y grillar cosecha no anda
 public class SueloItem extends LaborItem { //suelo item no es labor item. le sobra: rumbo, ancho y distancia
-	public static final String PPM_N = "PPM NO3";
-	public static final String PPM_FOSFORO = "PPM P";
-	public static final String PPM_POTASIO= "PPM K";
-	public static final String PPM_ASUFRE = "PPM S";
+	public static final String PPM = "PPM";
+	public static final String PPM_N =PPM+" NO3";
+	public static final String PPM_FOSFORO = PPM+" P";
+	public static final String PPM_POTASIO= PPM+" K";
+	public static final String PPM_ASUFRE = PPM+" S";//dejar en PPM S porque sino no importa las recorridas anteriores
 	public static final String PC_MO = "PC MO";
 	
 	public static final String PROF_NAPA= "Prof Napa";
@@ -30,16 +31,16 @@ public class SueloItem extends LaborItem { //suelo item no es labor item. le sob
 	public static final String DENSIDAD = "kg/m3";
 	public static final String ELEVACION ="Elevacion";
 	
-	public static final String Calcio = "PPM Ca";
-	public static final String Magnecio = "PPM Mg";
-	public static final String Boro = "PPM Br";
-	public static final String Cloro = "PPM Cl";
-	public static final String Cobalto = "PPM Co";
-	public static final String Cobre = "PPM Cu";
-	public static final String Hierro = "PPM Fe";
-	public static final String Manganeso = "PPM Mn";
-	public static final String Molibdeno = "PPM Mo";
-	public static final String Zinc = "PPM Zn";
+	public static final String Calcio = PPM+" Ca";
+	public static final String Magnecio = PPM+" Mg";
+	public static final String Boro = PPM+" Br";
+	public static final String Cloro = PPM+" Cl";
+	public static final String Cobalto = PPM+" Co";
+	public static final String Cobre = PPM+" Cu";
+	public static final String Hierro = PPM+" Fe";
+	public static final String Manganeso = PPM+" Mn";
+	public static final String Molibdeno = PPM+" Mo";
+	public static final String Zinc = PPM+" Zn";
 	public static final String Textura = "Textura";
 	public static final String Porosidad = "Porosidad";
 	public static final String CapacidadCampo = "mm CC";

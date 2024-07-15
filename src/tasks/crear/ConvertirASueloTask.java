@@ -101,13 +101,13 @@ public class ConvertirASueloTask extends ProcessMapTask<SueloItem,Suelo > {
 				synchronized(labor){
 					si.setId(labor.getNextID());
 				}
-				si.setDensAp(densidad.doubleValue());
-				si.setPpmP(ppmP.doubleValue());
-				si.setPpmNO3(ppmN.doubleValue());
-				si.setPpmS(ppmS.doubleValue());
-				si.setPpmK(ppmK.doubleValue());
-				si.setPorcMO(ppmMO.doubleValue());
-				si.setElevacion(elevacion.doubleValue());
+				if(densidad!=null)si.setDensAp(densidad.doubleValue());
+				if(ppmP!=null)si.setPpmP(ppmP.doubleValue());
+				if(ppmN!=null)si.setPpmNO3(ppmN.doubleValue());
+				if(ppmS!=null)si.setPpmS(ppmS.doubleValue());
+				if(ppmK!=null)si.setPpmK(ppmK.doubleValue());
+				if(ppmMO!=null)si.setPorcMO(ppmMO.doubleValue());
+				if(elevacion!=null)si.setElevacion(elevacion.doubleValue());
 				labor.setPropiedadesLabor(si);
 
 

@@ -27,7 +27,7 @@ public class Fertilizante extends Producto implements Comparable<Fertilizante>{
 	public static final String FOSFATO_MONOAMONICO_MAP = "Fosfato Monoamonico (MAP)";
 	public static final String FOSFATO_DIAMONICO_DAP = "Fosfato Diamonico (DAP)";//se usa en fertilizacion labor para seleccionar el default
 	
-	public static final Double porcN_NO3=0.2259;//necesario para convertir de ppm Nitratos NO3 a kgN
+	//public static final Double porcN_NO3=0.2259;//necesario para convertir de ppm Nitratos NO3 a kgN
 	//public static final Double porcP_PO4=0.3231;// la informacion que estoy ingresando esta en ppm P no P204 
 	
 	public static final Double porcN_MO=0.04;

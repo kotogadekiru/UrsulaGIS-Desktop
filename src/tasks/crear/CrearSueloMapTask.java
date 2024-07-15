@@ -112,7 +112,7 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 	public static String buildTooltipText(SueloItem si,double area) {
 		//DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
 		NumberFormat df = Messages.getNumberFormat();//new DecimalFormat("#,###.##");//$NON-NLS-2$
-
+		df.setMaximumFractionDigits(2);
 		//TODO agregar los demas nutrientes, potasio azufre, agua perfil, cc, etc
 		StringBuilder sb = new StringBuilder();
 		//Fosforo
@@ -126,14 +126,14 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		
 		sb.append(df.format(Suelo.getKgNHa(si)));
 		//sb.append(df.format(Suelo.ppmToKg(si.getDensAp(),si.getPpmNO3(),0.6)*Fertilizante.porcN_NO3));
-		sb.append(" kgN/Ha 0-60cm \n");
+		sb.append(" kg/ha N 0-60cm \n");// por kg/ha
 		
 		sb.append(df.format(si.getPpmK()));
 		//sb.append(df.format(Suelo.ppmToKg(si.getDensAp(),si.getPpmNO3(),0.6)*Fertilizante.porcN_NO3));
-		sb.append(" PpmK/Ha 0-20cm \n");
+		sb.append(" Ppm K 0-20cm \n");
 		sb.append(df.format(si.getPpmS()));
 		//sb.append(df.format(Suelo.ppmToKg(si.getDensAp(),si.getPpmNO3(),0.6)*Fertilizante.porcN_NO3));
-		sb.append(" PpmS/Ha 0-20cm \n");
+		sb.append(" Ppm S 0-20cm \n");
 		
 		sb.append(df.format(si.getPorcMO()));
 		sb.append("% " + Messages.getString("JFXMain.236") + " 0-20cm \n ");//JFXMain.236=%M0

@@ -1,34 +1,21 @@
 package tasks.procesar;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.OptionalDouble;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
-import java.util.stream.DoubleStream;
 
-import org.geotools.data.FeatureReader;
 import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
 
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryCollection;
-import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 
 import dao.Labor;
-import dao.LaborItem;
 import dao.config.Cultivo;
 import dao.config.Fertilizante;
-import dao.config.Nutriente;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionItem;
@@ -37,14 +24,11 @@ import dao.suelo.Suelo;
 import dao.suelo.Suelo.SueloParametro;
 import dao.suelo.SueloItem;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
-import gui.Messages;
 import gui.nww.LaborLayer;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import tasks.ProcessMapTask;
 import tasks.crear.CrearSueloMapTask;
 import utils.GeometryHelper;
-import utils.PolygonValidator;
 import utils.ProyectionConstants;
 
 public class ProcessBalanceDeNutrientes2 extends ProcessMapTask<SueloItem,Suelo> {
@@ -103,6 +87,7 @@ public class ProcessBalanceDeNutrientes2 extends ProcessMapTask<SueloItem,Suelo>
 		List<Polygon>  grilla = GrillarCosechasMapTask.construirGrilla(unionEnvelope, ancho);
 		//System.out.println("construi una grilla con "+grilla.size()+" elementos");//construi una grilla con 5016 elementos
 		//obtener una lista con todas las geometrias de las labores
+		/*
 		List<Geometry> geometriasActivas = labores.parallelStream().collect(
 				()->new ArrayList<Geometry>(),
 				(activas, labor) ->{		
@@ -131,6 +116,7 @@ public class ProcessBalanceDeNutrientes2 extends ProcessMapTask<SueloItem,Suelo>
 			System.err.println("no se pudo unir el contorno de las labores a procesar "+cover);
 			return;
 		}
+	
 		List<Geometry> grillaCover = grilla.parallelStream().collect(
 				()->new ArrayList<Geometry>(),
 				(intersecciones, poly) ->{			
@@ -144,11 +130,11 @@ public class ProcessBalanceDeNutrientes2 extends ProcessMapTask<SueloItem,Suelo>
 					}
 				},	(env1, env2) -> env1.addAll(env2));
 
-
-		featureCount = grillaCover.size();
+	*/
+		featureCount = grilla.size();
 		//System.out.println("grilla cover size "+featureCount);
 
-		grillaCover.parallelStream().forEach(g->{		
+		grilla.parallelStream().forEach(g->{		
 			SueloItem sueloItem = createSueloForPoly(g);		
 			if(sueloItem!=null){
 				labor.insertFeature(sueloItem);
@@ -171,20 +157,23 @@ public class ProcessBalanceDeNutrientes2 extends ProcessMapTask<SueloItem,Suelo>
 		}
 
 		//System.out.println("obteniendo los nutrientes de los suelos");
-		Map<SueloParametro,Double> kgNutrienteSuelos = getKgNutrientesSuelos(geomQuery);
-		Double sumaAreasSuelos = kgNutrienteSuelos.get(SueloParametro.Area);
-		
+		NutrienteSuelo kgNutrienteSuelos = getKgNutrientesSuelos(geomQuery);
+		Double areaSuperpuestItem =0.0;
+		Double sumaAreasSuelos = kgNutrienteSuelos.parametros.get(SueloParametro.Area);
+		if(kgNutrienteSuelos.parametros.containsKey(SueloParametro.Area)) {
+			areaSuperpuestItem+=sumaAreasSuelos;
+		}
 		Double elev =  10.0;
 		Double newDensSuelo =SueloItem.DENSIDAD_SUELO_KG;
 		if(sumaAreasSuelos!=null && sumaAreasSuelos>0) {
-			if(kgNutrienteSuelos.containsKey(SueloParametro.Elevacion)) {
-				elev= kgNutrienteSuelos.get(SueloParametro.Elevacion)/sumaAreasSuelos;
+			if(kgNutrienteSuelos.parametros.containsKey(SueloParametro.Elevacion)) {
+				elev= kgNutrienteSuelos.parametros.get(SueloParametro.Elevacion)/sumaAreasSuelos;
 			}
 			
 		
-			if(kgNutrienteSuelos.containsKey(SueloParametro.Densidad)) {
+			if(kgNutrienteSuelos.parametros.containsKey(SueloParametro.Densidad)) {
 				//FIXME solo deberia dividir por las areas de los suelos; en el caso normal solo habria un suelo
-				newDensSuelo = kgNutrienteSuelos.get(SueloParametro.Densidad)/sumaAreasSuelos;//aca tiro una excepcion
+				newDensSuelo = kgNutrienteSuelos.parametros.get(SueloParametro.Densidad)/sumaAreasSuelos;//aca tiro una excepcion
 			}
 		}
 
@@ -193,49 +182,67 @@ public class ProcessBalanceDeNutrientes2 extends ProcessMapTask<SueloItem,Suelo>
 
 		
 		//System.out.println("obteniendo los nutrientes de las fertilizaciones");
-		Map<SueloParametro,Double> kgNutrienteFerts = getKgNutrientesFertilizaciones(geomQuery);
+		NutrienteSuelo kgNutrienteFerts = getKgNutrientesFertilizaciones(geomQuery);	
+		if(kgNutrienteFerts.parametros.containsKey(SueloParametro.Area)) {
+		areaSuperpuestItem+=kgNutrienteFerts.parametros.get(SueloParametro.Area);
+		}
 		//System.out.println("obteniendo los nutrientes de las cosechas");
-		Map<SueloParametro,Double> kgNutrientesCosechas = getKgNutrientesCosechas(geomQuery);
-
+		NutrienteSuelo kgNutrientesCosechas = getKgNutrientesCosechas(geomQuery);
+		if(kgNutrientesCosechas.parametros.containsKey(SueloParametro.Area)) {
+		areaSuperpuestItem+=kgNutrientesCosechas.parametros.get(SueloParametro.Area);
+		}
+		if(!(areaSuperpuestItem>0)) {
+			return null;
+		}
 
 		//System.out.println("uniendo los parametros de los suelos y fertilizaciones");
-		joinParametrosSuelosMaps(kgNutrienteSuelos,kgNutrienteFerts);
+		kgNutrienteSuelos.join(kgNutrienteFerts);
 		//System.out.println("uniendo los parametros de los suelos y cosechas");
-		joinParametrosSuelosMaps(kgNutrienteSuelos,kgNutrientesCosechas);
+		kgNutrienteSuelos.join(kgNutrientesCosechas);
 
-	
+		Geometry geomSup = GeometryHelper.unirGeometrias(kgNutrienteSuelos.geoms);
+		Double areaSup=0.0;
+		if(geomSup!=null) {
+			areaSup=ProyectionConstants.A_HAS(geomSup.getArea());
+		}
+		if(!(areaSup>0)) {
+			System.err.println("descargando "+geomSup);
+			return null;
+		}else {
+			areaQuery=areaSup;
+		}
 
 		// y si hay superposicion entre los suelo item? no deberia
 		//N
 		//no tomo el n organico porque lo calculo al momento de hacer la recomendacion y no quiero duplicaciones
 		Double newKgHaNSuelo = 	0.0;
-		if(kgNutrienteSuelos.containsKey(SueloParametro.Nitrogeno)) {
-			newKgHaNSuelo=kgNutrienteSuelos.get(SueloParametro.Nitrogeno)/ areaQuery;
+		if(kgNutrienteSuelos.parametros.containsKey(SueloParametro.Nitrogeno)) {
+			newKgHaNSuelo=kgNutrienteSuelos.parametros.get(SueloParametro.Nitrogeno)/ areaQuery;
 		}
 		//P
 		Double newKgHaPSuelo = 0.0;
-		if(kgNutrienteSuelos.containsKey(SueloParametro.Fosforo)) {
-			newKgHaPSuelo = kgNutrienteSuelos.get(SueloParametro.Fosforo)/ areaQuery;
+		if(kgNutrienteSuelos.parametros.containsKey(SueloParametro.Fosforo)) {
+			newKgHaPSuelo = kgNutrienteSuelos.parametros.get(SueloParametro.Fosforo)/ areaQuery;
 		}
 		
 		Double newKgHaKsuelo = 0.0;
-		if(kgNutrienteSuelos.containsKey(SueloParametro.Potasio)) {
-			newKgHaKsuelo = kgNutrienteSuelos.get(SueloParametro.Potasio)/ areaQuery;
+		if(kgNutrienteSuelos.parametros.containsKey(SueloParametro.Potasio)) {
+			newKgHaKsuelo = kgNutrienteSuelos.parametros.get(SueloParametro.Potasio)/ areaQuery;
 		}
 
 		Double newKgHaSsuelo = 0.0;
-		if(kgNutrienteSuelos.containsKey(SueloParametro.Azufre)) {
-			newKgHaSsuelo = kgNutrienteSuelos.get(SueloParametro.Azufre)/ areaQuery;
+		if(kgNutrienteSuelos.parametros.containsKey(SueloParametro.Azufre)) {
+			newKgHaSsuelo = kgNutrienteSuelos.parametros.get(SueloParametro.Azufre)/ areaQuery;
 		}
 		
 		Double newKgHaMOSuelo =0.0;
-		if(kgNutrienteSuelos.containsKey(SueloParametro.MateriaOrganica)) {
-			newKgHaMOSuelo= kgNutrienteSuelos.get(SueloParametro.MateriaOrganica)/ (areaQuery);
+		if(kgNutrienteSuelos.parametros.containsKey(SueloParametro.MateriaOrganica)) {
+			newKgHaMOSuelo= kgNutrienteSuelos.parametros.get(SueloParametro.MateriaOrganica)/ (areaQuery);
 		}
 		Double newPpmNsuelo=labor.calcPpmNHaKg(newDensSuelo,newKgHaNSuelo);
 		Double newPpmPsuelo=labor.calcPpm_0_20(newDensSuelo,newKgHaPSuelo);
 		Double newPpmKsuelo=labor.calcPpm_0_20(newDensSuelo,newKgHaKsuelo);
-		Double newPpmSsuelo=labor.calcPpm_0_20(newDensSuelo,newKgHaSsuelo);
+		Double newPpmSsuelo=labor.calcPpmSHaKg(newDensSuelo,newKgHaSsuelo);//dice isabel que va 0-60 es SO4
 		Double newPMoSuelo = labor.calcPorcMoHaKg(newDensSuelo,newKgHaMOSuelo);
 		
 		SueloItem sueloItem = new SueloItem();
@@ -243,7 +250,7 @@ public class ProcessBalanceDeNutrientes2 extends ProcessMapTask<SueloItem,Suelo>
 			//fi= new FertilizacionItem();					
 			sueloItem.setId(labor.getNextID());
 		}
-		sueloItem.setGeometry(geomQuery);
+		sueloItem.setGeometry(geomSup);
 
 		sueloItem.setDensAp(newDensSuelo);	
 		sueloItem.setPpmNO3(newPpmNsuelo);
@@ -256,6 +263,54 @@ public class ProcessBalanceDeNutrientes2 extends ProcessMapTask<SueloItem,Suelo>
 		return sueloItem;
 	}	
 
+	private NutrienteSuelo getKgNutrientesSuelos(Geometry geometry) {
+		NutrienteSuelo nutrientesGeom = suelos.parallelStream().collect( 
+				() -> new NutrienteSuelo(), 
+				(n, suelo)->getKgNutrientesSuelo(geometry, n, suelo)			 
+				,
+				(n1,n2)->n1.join(n2)
+				);
+		return nutrientesGeom;
+	}
+	private void getKgNutrientesSuelo(Geometry geometry, NutrienteSuelo nutriente, Suelo suelo) {		
+		List<SueloItem> items = suelo.cachedOutStoreQuery(geometry.getEnvelopeInternal());
+		NutrienteSuelo nutrientesSuelo = items.stream().collect( 
+				() -> new NutrienteSuelo(), 
+				(n, item)->{
+					Double area = 0.0;
+					try {
+						Geometry itemG = item.getGeometry();		
+						Geometry inteseccionGeom = GeometryHelper.getIntersection(geometry, itemG);//geometry.intersection(fertGeom);// Computes a
+						area=GeometryHelper.getHas(inteseccionGeom);
+						n.geoms.add(inteseccionGeom);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+
+					Map<SueloParametro,Double> nutrientesHaItem= Suelo.getKgNutrientes(item);// (Double) item.getPpmP()*suelo.getDensidad()/2;//TODO multiplicar por la densidad del suelo
+
+					for(SueloParametro k :nutrientesHaItem.keySet()) {					
+						addValueToMap(n.parametros,k,nutrientesHaItem.get(k)*area);
+					}		
+					//if(item.getElevacion()>1) {
+					//calcular la mineralizacion N de la materia organica. no eso va en recomendacion
+					addValueToMap(n.parametros,SueloParametro.Densidad,item.getDensAp()*area);			
+					addValueToMap(n.parametros,SueloParametro.Elevacion,item.getElevacion()*area);	
+					
+					Double pesoMOHa =item.getPorcMO()*item.getDensAp()*0.2*ProyectionConstants.METROS2_POR_HA/100;
+					addValueToMap(n.parametros,SueloParametro.MateriaOrganica,pesoMOHa*area);		
+					addValueToMap(n.parametros,SueloParametro.Area,area);
+					//						}else {
+					//							System.out.println("la elevacion no es > 1");
+					//						}
+
+				}, 
+				(n1,n2)->n1.join(n2)
+				);
+		nutriente.join(nutrientesSuelo);
+	}
+	
+	/*
 	private Map<SueloParametro,Double> getKgNutrientesSuelos(Geometry geometry) {
 		Map<SueloParametro,Double> nutrientesGeom = suelos.parallelStream().collect( 
 				() -> new ConcurrentHashMap<SueloParametro,Double>(), 
@@ -301,49 +356,94 @@ public class ProcessBalanceDeNutrientes2 extends ProcessMapTask<SueloItem,Suelo>
 				);
 		joinParametrosSuelosMaps(mapG, nutrientesFertilizacion);
 	}
-
-	private Map<SueloParametro,Double> getKgNutrientesCosechas(Geometry geometry) {
-		Map<SueloParametro,Double> nutrientesGeom = cosechas.parallelStream().collect( 
-				() -> new ConcurrentHashMap<SueloParametro,Double>(), 
-				(mapG, cosecha)->getKgNutrientesCosecha(geometry, mapG, cosecha),
-				(map1,map2)->joinParametrosSuelosMaps(map1,map2)
+*/
+	private NutrienteSuelo getKgNutrientesCosechas(Geometry geometry) {
+		NutrienteSuelo nutrientesGeom = cosechas.parallelStream().collect( 
+				() -> new NutrienteSuelo(), 
+				(n, cosecha)->getKgNutrientesCosecha(geometry, n, cosecha),
+				(n1,n2)->n1.join(n2)
 				);
 		return nutrientesGeom;
 	}
 
-	private void getKgNutrientesCosecha(Geometry geometry, Map<SueloParametro, Double> mapG, CosechaLabor cosecha) {		
+	/**
+	 * metodo que toma un suelo item y le descuenta los nutrientes extraidos por la cosecha dentro del mismo.
+	 * une las geometrias de la cosecha a la geometria del item
+	 * @param geometry
+	 * @param item
+	 * @param cosecha
+	 */
+	private void getKgNutrientesCosecha(Geometry geometry, NutrienteSuelo item, CosechaLabor cosecha) {		
 		Cultivo cultivo = cosecha.getCultivo();		
 
 		List<CosechaItem> items = cosecha.cachedOutStoreQuery(geometry.getEnvelopeInternal());
-		Map<SueloParametro,Double> nutrientesFertilizacion = items.parallelStream().collect( 
-				() -> new ConcurrentHashMap<SueloParametro,Double>(), 
-				(map, item)->{
-					Geometry itemG = item.getGeometry();				
+		NutrienteSuelo nutrientesCosecha = items.parallelStream().collect( 
+				() -> new NutrienteSuelo(), 
+				(sueloItem, cosechaItem)->{
+					Geometry itemG = cosechaItem.getGeometry();				
 					Double area = 0.0;
 					try {						
 						Geometry inteseccionGeom = GeometryHelper.getIntersection(geometry, itemG);//geometry.intersection(pulvGeom);// Computes a
-						area=GeometryHelper.getHas(inteseccionGeom);					
+						area=GeometryHelper.getHas(inteseccionGeom);
+						sueloItem.geoms.add(inteseccionGeom);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}					
-					Double rinde = item.getRindeTnHa();
-					addValueToMap(map,SueloParametro.Nitrogeno,-1*rinde * cultivo.getExtN() * area);
-					addValueToMap(map,SueloParametro.Fosforo,-1*rinde * cultivo.getExtP() * area);
-					addValueToMap(map,SueloParametro.Potasio,-1*rinde * cultivo.getExtK() * area);
-					addValueToMap(map,SueloParametro.Azufre,-1*rinde * cultivo.getExtS() * area);
+					Double rinde = cosechaItem.getRindeTnHa();
+					
+					addValueToMap(sueloItem.parametros,SueloParametro.Nitrogeno,-1*rinde * cultivo.getExtN() * area);
+					addValueToMap(sueloItem.parametros,SueloParametro.Fosforo,-1*rinde * cultivo.getExtP() * area);
+					addValueToMap(sueloItem.parametros,SueloParametro.Potasio,-1*rinde * cultivo.getExtK() * area);
+					addValueToMap(sueloItem.parametros,SueloParametro.Azufre,-1*rinde * cultivo.getExtS() * area);
 
-					addValueToMap(map,SueloParametro.MateriaOrganica,rinde * cultivo.getAporteMO() * area);	
+					addValueToMap(sueloItem.parametros,SueloParametro.MateriaOrganica,rinde * cultivo.getAporteMO() * area);	
 					//if(item.getElevacion()>1) {
-					addValueToMap(map,SueloParametro.Elevacion,item.getElevacion()*area);				
-					addValueToMap(map,SueloParametro.Area,area);
+					addValueToMap(sueloItem.parametros,SueloParametro.Elevacion,cosechaItem.getElevacion() * area);				
+					addValueToMap(sueloItem.parametros,SueloParametro.Area,area);
 					//	}
 
 
 				}, 
-				(map1,map2)->joinParametrosSuelosMaps(map1,map2)
+				(nutrientes1,nutrientes2)->{
+					nutrientes1.join(nutrientes2);
+				}
 				);
-		joinParametrosSuelosMaps(mapG, nutrientesFertilizacion);
+		item.join(nutrientesCosecha);
 	}
+	
+//	private void getKgNutrientesCosecha(Geometry geometry, Map<SueloParametro, Double> mapG, CosechaLabor cosecha) {		
+//		Cultivo cultivo = cosecha.getCultivo();		
+//
+//		List<CosechaItem> items = cosecha.cachedOutStoreQuery(geometry.getEnvelopeInternal());
+//		Map<SueloParametro,Double> nutrientesCosechas = items.parallelStream().collect( 
+//				() -> new ConcurrentHashMap<SueloParametro,Double>(), 
+//				(map, item)->{
+//					Geometry itemG = item.getGeometry();				
+//					Double area = 0.0;
+//					try {						
+//						Geometry inteseccionGeom = GeometryHelper.getIntersection(geometry, itemG);//geometry.intersection(pulvGeom);// Computes a
+//						area=GeometryHelper.getHas(inteseccionGeom);					
+//					} catch (Exception e) {
+//						e.printStackTrace();
+//					}					
+//					Double rinde = item.getRindeTnHa();
+//					addValueToMap(map,SueloParametro.Nitrogeno,-1*rinde * cultivo.getExtN() * area);
+//					addValueToMap(map,SueloParametro.Fosforo,-1*rinde * cultivo.getExtP() * area);
+//					addValueToMap(map,SueloParametro.Potasio,-1*rinde * cultivo.getExtK() * area);
+//					addValueToMap(map,SueloParametro.Azufre,-1*rinde * cultivo.getExtS() * area);
+//
+//					addValueToMap(map,SueloParametro.MateriaOrganica,rinde * cultivo.getAporteMO() * area);	
+//					//if(item.getElevacion()>1) {
+//					addValueToMap(map,SueloParametro.Elevacion,item.getElevacion()*area);				
+//					addValueToMap(map,SueloParametro.Area,area);
+//					//	}
+//
+//
+//				}, 
+//				(map1,map2)->joinParametrosSuelosMaps(map1,map2)
+//				);
+//		joinParametrosSuelosMaps(mapG, nutrientesCosechas);
+//	}
 
 	private void addValueToMap(Map<SueloParametro,Double> map,SueloParametro p,Double value) {		
 		Double kgMap = map.get(p);
@@ -354,61 +454,128 @@ public class ProcessBalanceDeNutrientes2 extends ProcessMapTask<SueloItem,Suelo>
 	}
 
 
-
-
-	private Map<SueloParametro,Double> getKgNutrientesFertilizaciones(Geometry geometry) {
-		Map<SueloParametro,Double> nutrientesGeom = fertilizaciones.parallelStream().collect( 
-				() -> new ConcurrentHashMap<SueloParametro,Double>(), 
-				(mapG, fert)->getKgNutrientesFertilizacion(geometry, mapG, fert),
-				(map1,map2)->joinParametrosSuelosMaps(map1,map2)
+	private NutrienteSuelo getKgNutrientesFertilizaciones(Geometry geometry) {
+		NutrienteSuelo nutrientesGeom = fertilizaciones.parallelStream().collect( 
+				() -> new NutrienteSuelo(), 
+				(n, fert)->getKgNutrientesFertilizacion(geometry, n, fert),
+				(n1,n2)->n1.join(n2)				
 				);
 		return nutrientesGeom;
 	}
 
-	public void getKgNutrientesFertilizacion(Geometry geometry, Map<SueloParametro, Double> mapG, FertilizacionLabor fert) {
+//	private Map<SueloParametro,Double> getKgNutrientesFertilizaciones(Geometry geometry) {
+//		Map<SueloParametro,Double> nutrientesGeom = fertilizaciones.parallelStream().collect( 
+//				() -> new ConcurrentHashMap<SueloParametro,Double>(), 
+//				(mapG, fert)->getKgNutrientesFertilizacion(geometry, mapG, fert),
+//				(map1,map2)->joinParametrosSuelosMaps(map1,map2)
+//				);
+//		return nutrientesGeom;
+//	}
+
+	public void getKgNutrientesFertilizacion(Geometry geometry, NutrienteSuelo item, FertilizacionLabor fert) {
 		Fertilizante fertilizante = fert.fertilizanteProperty.getValue();
 		List<FertilizacionItem> items = fert.cachedOutStoreQuery(geometry.getEnvelopeInternal());
-		Map<SueloParametro,Double> nutrientesFertilizacion = items.stream().collect( 
-				() -> new ConcurrentHashMap<SueloParametro,Double>(), 
-				(map, item)->{	
+		NutrienteSuelo nutrientesFertilizacion = items.stream().collect( 
+				() -> new NutrienteSuelo(), 
+				(n, fertItem)->{	
 					Double area = 0.0;
 					try {
-						Geometry fertGeom = item.getGeometry();		
+						Geometry fertGeom = fertItem.getGeometry();		
 						Geometry inteseccionGeom = GeometryHelper.getIntersection(geometry, fertGeom);//geometry.intersection(fertGeom);// Computes a
-						area=GeometryHelper.getHas(inteseccionGeom);						
+						area=GeometryHelper.getHas(inteseccionGeom);	
+						n.geoms.add(inteseccionGeom);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 
 					Map<SueloParametro,Double> cFert = fertilizante.getCNutrientes();//%				
-					Double dosis = item.getDosistHa();//kg/ha
+					Double dosis = fertItem.getDosistHa();//kg/ha
 					if(cFert!=null) {
 					for(SueloParametro k :cFert.keySet()) {					
-						addValueToMap(map,k,dosis*cFert.get(k)*area/100);						
+						addValueToMap(n.parametros,k,dosis*cFert.get(k)*area/100);						
 					}				
 					}else {
 						System.out.println("cFert es null para "+fertilizante.getNombre());
 					}
 				//	if(item.getElevacion()>10) {
-						addValueToMap(map,SueloParametro.Elevacion,item.getElevacion()*area);				
-						addValueToMap(map,SueloParametro.Area,area);
+						addValueToMap(n.parametros,SueloParametro.Elevacion,fertItem.getElevacion()*area);				
+						addValueToMap(n.parametros,SueloParametro.Area,area);
 				//	}
 
 				}, 
-				(map1,map2)->joinParametrosSuelosMaps(map1,map2)
+				(n1,n2)->n1.join(n2)
 				);
-		joinParametrosSuelosMaps(mapG, nutrientesFertilizacion);
-	}	
+		item.join(nutrientesFertilizacion);
+		
+	}
+//	
+//	public void getKgNutrientesFertilizacion(Geometry geometry, Map<SueloParametro, Double> mapG, FertilizacionLabor fert) {
+//		Fertilizante fertilizante = fert.fertilizanteProperty.getValue();
+//		List<FertilizacionItem> items = fert.cachedOutStoreQuery(geometry.getEnvelopeInternal());
+//		Map<SueloParametro,Double> nutrientesFertilizacion = items.stream().collect( 
+//				() -> new ConcurrentHashMap<SueloParametro,Double>(), 
+//				(map, item)->{	
+//					Double area = 0.0;
+//					try {
+//						Geometry fertGeom = item.getGeometry();		
+//						Geometry inteseccionGeom = GeometryHelper.getIntersection(geometry, fertGeom);//geometry.intersection(fertGeom);// Computes a
+//						area=GeometryHelper.getHas(inteseccionGeom);						
+//					} catch (Exception e) {
+//						e.printStackTrace();
+//					}
+//
+//					Map<SueloParametro,Double> cFert = fertilizante.getCNutrientes();//%				
+//					Double dosis = item.getDosistHa();//kg/ha
+//					if(cFert!=null) {
+//					for(SueloParametro k :cFert.keySet()) {					
+//						addValueToMap(map,k,dosis*cFert.get(k)*area/100);						
+//					}				
+//					}else {
+//						System.out.println("cFert es null para "+fertilizante.getNombre());
+//					}
+//				//	if(item.getElevacion()>10) {
+//						addValueToMap(map,SueloParametro.Elevacion,item.getElevacion()*area);				
+//						addValueToMap(map,SueloParametro.Area,area);
+//				//	}
+//
+//				}, 
+//				(map1,map2)->joinParametrosSuelosMaps(map1,map2)
+//				);
+//		joinParametrosSuelosMaps(mapG, nutrientesFertilizacion);
+//	}	
 
-	private void joinParametrosSuelosMaps(Map<SueloParametro, Double> map1, Map<SueloParametro, Double> map2) {			
-		map2.keySet().forEach(k->{
-			Double kg=0.0;
-			Double kg2 = map2.get(k);
-			if(kg2!=null)kg+=kg2;
-			Double kg1 = map1.get(k);
-			if(kg1!=null)kg+=kg1;
-			map1.put(k,kg);
-		});		
+
+	
+	/**
+	 * clase que representa un proto suelo item pero con valores en kg en vez de ppm
+	 */
+	private class NutrienteSuelo{
+		/**
+		 * coleccion de geometrias tomadas para este objeto
+		 */
+		public List<Geometry> geoms =  Collections.synchronizedList(new ArrayList<>());;
+		public Map<SueloParametro,Double> parametros = new ConcurrentHashMap<SueloParametro,Double>();
+
+		/**
+		 * add to this nutrientes suelo n
+		 * @param n
+		 */
+		public void join(NutrienteSuelo n) {
+			joinParametrosSuelosMaps(this.parametros,n.parametros);
+			this.geoms.addAll(n.geoms);
+			
+		}
+		
+		private void joinParametrosSuelosMaps(Map<SueloParametro, Double> map1, Map<SueloParametro, Double> map2) {			
+			map2.keySet().forEach(k->{
+				Double kg=0.0;
+				Double kg2 = map2.get(k);
+				if(kg2!=null)kg+=kg2;
+				Double kg1 = map1.get(k);
+				if(kg1!=null)kg+=kg1;
+				map1.put(k,kg);
+			});		
+		}
 	}
 
 
