@@ -26,6 +26,7 @@ import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
 import com.vividsolutions.jts.util.GeometricShapeFactory;
 
 import dao.Labor;
+import dao.LaborItem;
 import dao.Poligono;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.util.measure.MeasureTool;
@@ -778,29 +779,30 @@ public class GeometryHelper {
 	public static Geometry unirCascading(Labor<?> aUnir,Envelope bounds) {
 		try {
 		List<Geometry> boundsGeoms = new ArrayList<Geometry>();
-		//System.out.println("bounds area = "+ProyectionConstants.A_HAS(bounds.getArea()));
-		if(ProyectionConstants.A_HAS(bounds.getArea())>1) {
+		List<LaborItem> boundsFeatures = (List<LaborItem>)aUnir.cachedOutStoreQuery(bounds);
+		if(ProyectionConstants.A_HAS(bounds.getArea()) > 1				
+				&& boundsFeatures.size()>1000) {//divido hasta que cubre 1has
+			System.out.println("bounds area = "+ProyectionConstants.A_HAS(bounds.getArea()));
 			//si es mayor a 100m2 divido en 4
 			List<Envelope> envelopes = splitEnvelope(bounds);
-			//System.out.println("split "+bounds);
-		//	int i=0;
+
 			for(Envelope e:envelopes) {
-			//	System.out.println("envelope "+i+": "+e);
-			//	i++;
+
 				Geometry eGeom = unirCascading(aUnir,e);
 				if(eGeom !=null) {
 					boundsGeoms.add(eGeom);
 				} 
-//				else {
-//					System.out.println("eGeom es null");
-//				}
+
 			}
-			//System.out.println("fin split "+bounds);
-			//System.out.println("geoms "+boundsGeoms.size());
+
 		} else {
-			boundsGeoms.addAll( aUnir.cachedOutStoreQuery(bounds).stream()
+			//List<LaborItem> boundsFeatures = (List<LaborItem>)aUnir.cachedOutStoreQuery(bounds);
+			if(boundsFeatures.size()>0) {
+			System.out.println("joining "+boundsFeatures.size());
+			boundsGeoms.addAll( boundsFeatures.parallelStream()
 					.map(i->i.getGeometry())					
-					.collect(Collectors.toList()));			 
+					.collect(Collectors.toList()));
+			}
 		}
 
 		
@@ -809,15 +811,7 @@ public class GeometryHelper {
 				//toGeometryCollection(boundsGeoms).buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection
 		try {
 			union = unirGeometrias(boundsGeoms);
-//		for(Geometry g : boundsGeoms) {
-//			if(union==null) {
-//				union=g;
-//			}else {
-//				
-//				union = union.union(g);// This method does not support GeometryCollection arguments
-//			
-//			}
-//		}
+
 		}catch(Exception e ) {
 			Double buffer = ProyectionConstants.metersToLongLat(0.25);
 			union = toGeometryCollection(boundsGeoms).buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection

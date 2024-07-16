@@ -47,7 +47,10 @@ public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,Cosech
 		rindeProm=_rinde;
 		ndvi=_ndvi;
 		try {
-			NDVI_RINDE_CERO=cosechaLabor.getCultivo().getNdviRindeCero();
+			NDVI_RINDE_CERO=
+					cosechaLabor
+					.getCultivo()
+					.getNdviRindeCero();
 		}catch(Exception e) {
 			e.printStackTrace();
 			NDVI_RINDE_CERO=ShowNDVITifFileTask.MIN_VALUE;

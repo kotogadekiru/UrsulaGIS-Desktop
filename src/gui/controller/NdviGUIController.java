@@ -343,7 +343,7 @@ public class NdviGUIController extends AbstractGUIController{
 			return;
 		}
 
-		ConvertirNdviACosechaTask umTask = new ConvertirNdviACosechaTask(labor,ndvi,rinde);
+		ConvertirNdviACosechaTask umTask = new ConvertirNdviACosechaTask(cosechaConfigured.get(),ndvi,rinde);
 		umTask.installProgressBar(progressBox);
 
 		umTask.setOnSucceeded(handler -> {

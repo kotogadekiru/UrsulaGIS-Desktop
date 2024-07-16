@@ -1310,7 +1310,8 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 			private ExtrudedPolygon getFreeRenderable() {
 				gov.nasa.worldwind.render.ExtrudedPolygon  renderablePolygon =null;
-				if(this.renderablesPool.size()>0) {
+				if(renderablesPool==null)renderablesPool=new ArrayList<Renderable>();
+				if(this.renderablesPool.size()>0) {//java.lang.NullPointerException
 					renderablePolygon=(ExtrudedPolygon) renderablesPool.get(0);
 					renderablesPool.remove(0);
 				}else {
