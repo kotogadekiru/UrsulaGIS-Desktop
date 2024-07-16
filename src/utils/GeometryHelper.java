@@ -782,7 +782,7 @@ public class GeometryHelper {
 		List<LaborItem> boundsFeatures = (List<LaborItem>)aUnir.cachedOutStoreQuery(bounds);
 		if(ProyectionConstants.A_HAS(bounds.getArea()) > 1				
 				&& boundsFeatures.size()>1000) {//divido hasta que cubre 1has
-			System.out.println("bounds area = "+ProyectionConstants.A_HAS(bounds.getArea()));
+//			System.out.println("bounds area = "+ProyectionConstants.A_HAS(bounds.getArea()));
 			//si es mayor a 100m2 divido en 4
 			List<Envelope> envelopes = splitEnvelope(bounds);
 
@@ -798,7 +798,7 @@ public class GeometryHelper {
 		} else {
 			//List<LaborItem> boundsFeatures = (List<LaborItem>)aUnir.cachedOutStoreQuery(bounds);
 			if(boundsFeatures.size()>0) {
-			System.out.println("joining "+boundsFeatures.size());
+//			System.out.println("joining "+boundsFeatures.size());
 			boundsGeoms.addAll( boundsFeatures.parallelStream()
 					.map(i->i.getGeometry())					
 					.collect(Collectors.toList()));
@@ -889,6 +889,30 @@ public class GeometryHelper {
 			System.err.println("fallo collection buffer uniendo de a una "+aUnir);
 			//e.printStackTrace();
 			Geometry union=null;
+			
+//			Geometry[] unionContainer = aUnir.parallelStream().collect(
+//					()->new Geometry[1],
+//					(arr,g)->{
+//						if(arr[0]==null) {
+//							arr[0]=g;
+//						}else {
+//							try {
+//								arr[0]=arr[0].union(g);
+//							}catch(Exception e2) {
+//								e2.printStackTrace();
+//							}
+//						}
+//					},
+//					(arr1,arr2)->{
+//						try {
+//							arr1[0]=arr1[0].union(arr2[0]);
+//						}catch(Exception e2) {
+//							e2.printStackTrace();
+//						}
+//					}
+//					);
+//			union=unionContainer[0];
+			
 			for(Geometry g:aUnir) {
 				if(union==null) {
 					union=g;
