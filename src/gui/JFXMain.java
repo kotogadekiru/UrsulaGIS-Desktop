@@ -99,6 +99,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.MenuBar;
+import javafx.scene.control.Slider;
 import javafx.scene.control.SplitPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
@@ -492,6 +493,40 @@ public class JFXMain extends Application {
 			layer.dispose();
 			getLayerPanel().update(getWwd());
 			return "layer removido" + layer.getName(); 
+		}));
+		
+		//editar opacidad
+		//JFXMain.layerTransparencia=Transparencia
+		todosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.layerTransparencia"),(layer)->{
+			//TODO show stage with slider
+	//		Object layerObject =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			double op = layer.getOpacity();
+			//double newOp = op*0.5;
+			
+			 Slider slider = new Slider(0, 1, op);
+			 slider.setShowTickMarks(true);
+			 slider.setShowTickLabels(true);
+			 slider.setMajorTickUnit(0.25f);
+			 slider.setBlockIncrement(0.1f);
+			 Scene sc = new Scene(slider,600,50);
+			 //TODO fixme no se ve un layer a travez del otro
+			 slider.valueProperty().addListener((obs,n,o)->{
+				 
+					layer.setOpacity(n.doubleValue());//newOp>0.1?newOp:1);
+					this.getWwd().redraw();
+					System.out.println("layer transparente" + layer.getName()+" "+layer.getOpacity());
+			 });
+			 Stage stage = new Stage();
+			 stage.setScene(sc);
+			 stage.initOwner(JFXMain.stage);
+			 stage.getIcons().addAll(JFXMain.stage.getIcons());
+			 stage.setTitle(Messages.getString("JFXMain.layerTransparencia")+" "+layer.getName());
+			 stage.show();
+			 
+					 
+			 
+
+			return "layer transparente" + layer.getName()+" "+layer.getOpacity(); 
 		}));
 	}	
 
