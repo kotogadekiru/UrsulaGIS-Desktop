@@ -277,11 +277,11 @@ public class JFXMain extends Application {
 	}
 
 	protected Node initializeWorldWind() {
-		try {//com.sun.java.swing.plaf.windows.WindowsLookAndFeel
-			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");//UIManager.getSystemLookAndFeelClassName()); 
-		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
-			ex.printStackTrace();
-		}
+//		try {//com.sun.java.swing.plaf.windows.WindowsLookAndFeel
+//			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");//UIManager.getSystemLookAndFeelClassName()); 
+//		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
+//			ex.printStackTrace();
+//		}
 
 		//setDefaultSize(50);//esto funciona para la barra de abajo pero no para los placemarks
 		//		try {

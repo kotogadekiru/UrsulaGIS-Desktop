@@ -104,7 +104,7 @@ public class OrdenSiembraPaneController extends Dialog<OrdenSiembra>{
 		super();
 		System.out.println("construyendo el controller"); //$NON-NLS-1$
 
-		this.setTitle(Messages.getString("OrdenPulv.title")); //$NON-NLS-1$
+		this.setTitle(Messages.getString("OrdenSiem.title")); //$NON-NLS-1$
 		Stage stage = ((Stage)this.getDialogPane().getScene().getWindow());
 		stage.getIcons().add(new Image(JFXMain.ICON));
 

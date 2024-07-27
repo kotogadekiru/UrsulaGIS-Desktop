@@ -21,6 +21,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import dao.Labor;
 import dao.LaborItem;
 import dao.config.Cultivo;
+import dao.config.Semilla;
 import dao.cosecha.CosechaItem;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.ordenCompra.OrdenCompra;
@@ -64,38 +65,76 @@ public class GenerarOrdenCompraTask  extends Task<OrdenCompra>{
 		Map<Producto,OrdenCompraItem> prodCantidadMap = new HashMap<Producto,OrdenCompraItem>();
 		StringBuilder description = new StringBuilder();
 
+		
 		this.siembras.forEach(l->{
 			description.append(l.getNombre());
-			Producto producto =l.getSemilla();
+			Semilla producto =l.getSemilla();
+			
 			Cultivo cultivo = l.getSemilla().getCultivo();
 			Double semBolsa = cultivo.getSemPorBolsa();
 			double kgBolsa=1;
 			if(semBolsa!=null) {
 				Double pMil = l.getSemilla().getPesoDeMil();
-				kgBolsa=semBolsa*pMil/1000000;
+				kgBolsa=semBolsa*pMil/1000000;			
 			}
 			
-			//TODO resolver el problema de la unidad de compra. kg o bolsas
-			//si cultivo es maiz que la unidad sea bolsas. 			
-
-
-			Double cantSemilla = l.getCantLabor(SiembraHelper.getSemillaCantMethod());
-			Double cantidadFertL = l.getCantLabor(SiembraHelper.getFertLCantMethod());
-			Double cantidadFertC = l.getCantLabor(SiembraHelper.getFertCCantMethod());
-			cantSemilla = cantSemilla/kgBolsa;
+			double fertCTotal=0;
+			double fertLTotal=0;
+			double insumoTotal=0;
+			double laborTotal=0;
+			SimpleFeatureIterator it = l.outCollection.features();
+			fertCTotal =  l.getCantidadFertilizanteCostado();
+			fertLTotal = l.getCantidadFertilizanteLinea();
+			while(it.hasNext()){
+				SimpleFeature f = it.next();
+				Double rinde = LaborItem.getDoubleFromObj(f.getAttribute(l.colAmount.get()));//labor.colAmount.get()
+				Geometry geometry = (Geometry) f.getDefaultGeometry();
+				Double area = geometry.getArea() * ProyectionConstants.A_HAS();			
+				insumoTotal+=rinde*area;
+				laborTotal+=area;
+			}
+			it.close();			
+			putItem(prodCantidadMap, producto, insumoTotal/kgBolsa,l.getPrecioInsumo());
+			putItem(prodCantidadMap, l.getProductoLabor(), laborTotal,l.getPrecioLabor());
 			
-			putItem(prodCantidadMap, l.getFertCostado(), cantidadFertC,0.0);
-			putItem(prodCantidadMap, l.getFertLinea(), cantidadFertL,0.0);
-			putItem(prodCantidadMap, producto, cantSemilla,kgBolsa/l.getPrecioInsumo());
-			putItem(prodCantidadMap, l.getProductoLabor(), l.getCantidadLabor(),l.getPrecioLabor());
-			if(l.getFertCostado()!=null) {
-				putItem(prodCantidadMap, l.getFertCostado(), l.getCantidadFertilizanteCostado(),0.0);
-			}
-			if(l.getFertLinea()!=null) {
-				putItem(prodCantidadMap, l.getFertLinea(), l.getCantidadFertilizanteLinea(),0.0);
-			}
-
+			putItem(prodCantidadMap, l.getFertLinea(), fertLTotal,0.0);
+			putItem(prodCantidadMap, l.getFertCostado(), fertCTotal,0.0);
 		});
+		
+//		this.siembras.forEach(l->{
+//			description.append(l.getNombre());
+//			Producto producto =l.getSemilla();
+//			Cultivo cultivo = l.getSemilla().getCultivo();
+//			Double semBolsa = cultivo.getSemPorBolsa();
+//			double kgBolsa=1;
+//			if(semBolsa!=null) {
+//				Double pMil = l.getSemilla().getPesoDeMil();
+//				kgBolsa=semBolsa*pMil/1000000;
+//			}
+//			
+//			//TODO resolver el problema de la unidad de compra. kg o bolsas
+//			//si cultivo es maiz que la unidad sea bolsas. 			
+//
+//
+//			Double cantSemilla = l.getCantLabor(SiembraHelper.getSemillaCantMethod());
+//			Double cantidadFertL = l.getCantLabor(SiembraHelper.getFertLCantMethod());
+//			Double cantidadFertC = l.getCantLabor(SiembraHelper.getFertCCantMethod());
+//			cantSemilla = cantSemilla/kgBolsa;
+//			
+//			putItem(prodCantidadMap, l.getFertCostado(), cantidadFertC,0.0);
+//			putItem(prodCantidadMap, l.getFertLinea(), cantidadFertL,0.0);
+//			putItem(prodCantidadMap, producto, cantSemilla,kgBolsa/l.getPrecioInsumo());
+//			putItem(prodCantidadMap, l.getProductoLabor(), l.getCantidadLabor(),l.getPrecioLabor());
+//			
+//			if(l.getFertCostado()!=null) {
+//				putItem(prodCantidadMap, l.getFertCostado(), l.getCantidadFertilizanteCostado(),0.0);
+//			}
+//			if(l.getFertLinea()!=null) {
+//				putItem(prodCantidadMap, l.getFertLinea(), l.getCantidadFertilizanteLinea(),0.0);
+//			}
+//
+//		});
+		
 		this.fertilizaciones.forEach(l->{
 			description.append(l.getNombre());
 			Producto producto =l.getFertilizanteProperty().getValue();

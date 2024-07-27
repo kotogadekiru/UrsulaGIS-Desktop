@@ -167,56 +167,57 @@ public class CompartirSiembraLaborTask extends Task<String> {
 	}
 
 	public static OrdenSiembra constructOrdenSiembra(SiembraLabor siembra) {	
-				OrdenSiembra op = new OrdenSiembra();
-				op.setNombre(siembra.getNombre());
-				Locale loc = new Locale("en", "US");
-				DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.DEFAULT, loc);
-				op.setFecha(dateFormat.format(siembra.getFecha()));		
-				op.setSuperficie(Messages.getNumberFormat().format(siembra.getCantidadLabor()));
-				
-					OrdenSiembraItem i = new OrdenSiembraItem();
-					Double has =siembra.getCantidadLabor();					
-					i.setProducto(siembra.getSemilla());
-					i.setCantidad(siembra.getCantidadInsumo());				
-					if(has>0) {
-						i.setDosisHa(i.getCantidad()/has);
-					}				
-					op.getItems().add(i);
-					
-					OrdenSiembraItem costado = new OrdenSiembraItem();								
-					costado.setProducto(siembra.getFertLinea());
-					costado.setCantidad(siembra.getCantidadFertilizanteLinea());			
-					if(has>0) {
-						costado.setDosisHa(i.getCantidad()/has);
-					}
-					if(costado.getProducto()!=null) {
-						op.getItems().add(costado);				
-					}					
-					
-					OrdenSiembraItem linea = new OrdenSiembraItem();								
-					linea.setProducto(siembra.getFertLinea());
-					linea.setCantidad(siembra.getCantidadFertilizanteLinea());				
-					if(has>0) {
-						linea.setDosisHa(i.getCantidad()/has);
-					}				
-					if(linea.getProducto()!=null) {
-						op.getItems().add(linea);				
-					}
-			
+		OrdenSiembra orden = new OrdenSiembra();
+		orden.setNombre(siembra.getNombre());
+		Locale loc = new Locale("en", "US");
+		DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.DEFAULT, loc);
+		orden.setFecha(dateFormat.format(siembra.getFecha()));		
+		orden.setSuperficie(Messages.getNumberFormat().format(siembra.getCantidadLabor()));
 
-				//Poligono contorno = siembra.getContorno();
-				Geometry contornoG = GeometryHelper.extractContornoGeometry(siembra);
-				
-				Poligono contornoP =GeometryHelper.constructPoligono(contornoG);
-				if(contornoP!=null) {
-					op.setPoligonoString(contornoP.getPositionsString());
-				}
-				Optional<OrdenSiembra> retOp = OrdenSiembraPaneController.config(op);
+		OrdenSiembraItem i = new OrdenSiembraItem();
+		Double has =siembra.getCantidadLabor();		
+		System.out.println("cantidad labor oc= "+has);
+		i.setProducto(siembra.getSemilla());
+		i.setCantidad(siembra.getCantidadInsumo());				
+		if(has>0) {
+			i.setDosisHa(i.getCantidad()/has);
+		}				
+		orden.getItems().add(i);
+
+		OrdenSiembraItem costado = new OrdenSiembraItem();								
+		costado.setProducto(siembra.getFertLinea());
+		costado.setCantidad(siembra.getCantidadFertilizanteLinea());			
+		if(has>0) {
+			costado.setDosisHa(i.getCantidad()/has);
+		}
+		if(costado.getProducto()!=null) {
+			orden.getItems().add(costado);				
+		}					
+
+		OrdenSiembraItem linea = new OrdenSiembraItem();								
+		linea.setProducto(siembra.getFertLinea());
+		linea.setCantidad(siembra.getCantidadFertilizanteLinea());				
+		if(has>0) {
+			linea.setDosisHa(i.getCantidad()/has);
+		}				
+		if(linea.getProducto()!=null) {
+			orden.getItems().add(linea);				
+		}
+
+
+		//Poligono contorno = siembra.getContorno();
+		Geometry contornoG = GeometryHelper.extractContornoGeometry(siembra);
+
+		Poligono contornoP =GeometryHelper.constructPoligono(contornoG);
+		if(contornoP!=null) {
+			orden.setPoligonoString(contornoP.getPositionsString());
+		}
+		Optional<OrdenSiembra> retOp = OrdenSiembraPaneController.config(orden);
 		if(retOp.isPresent()) {
-			op=retOp.get();
-			return op;
+			orden=retOp.get();
+			return orden;
 		} else {return null;}
-		
+
 	}
 
 	/**
@@ -244,7 +245,7 @@ public class CompartirSiembraLaborTask extends Task<String> {
 		File zipFile = UnzipUtility.zipFiles(FileHelper.selectAllFiles(dir),dir.toFile());
 		return zipFile;
 	}
-	
+
 	public static  JsonDeserializer<Producto> getProductoDeserializer() {
 		return new JsonDeserializer<Producto>() {
 
@@ -347,7 +348,7 @@ public class CompartirSiembraLaborTask extends Task<String> {
 						request.setParser(new JsonObjectParser(JSON_FACTORY));
 						request.setReadTimeout(0);
 						request.setConnectTimeout(0);
-						
+
 						HttpHeaders headers = request.getHeaders();//USER=693,468
 						headers.set("USER", Configuracion.getInstance().getPropertyOrDefault("USER", "nonefound"));
 					}
