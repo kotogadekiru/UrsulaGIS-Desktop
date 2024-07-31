@@ -14,6 +14,8 @@ import org.geotools.data.FileDataStore;
 import api.OrdenFertilizacion;
 import api.OrdenPulverizacion;
 import dao.Labor;
+import dao.cosecha.CosechaConfig;
+import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.siembra.SiembraLabor;
@@ -23,6 +25,7 @@ import gui.Messages;
 import gui.SiembraConfigDialogController;
 import gui.nww.LaborLayer;
 import gui.nww.LayerAction;
+import gui.utils.NumberInputDialog;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
@@ -32,6 +35,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import tasks.CompartirFertilizacionLaborTask;
 import tasks.CompartirPulverizacionLaborTask;
+import tasks.crear.ProcessSplitFertMapTask;
 import tasks.importar.ProcessFertMapTask;
 import tasks.procesar.CrearSiembraDesdeFertilizacionTask;
 import tasks.procesar.ExportarPrescripcionFertilizacionTask;
@@ -62,13 +66,21 @@ public class FertilizacionGUIController extends AbstractGUIController {
 		List<LayerAction> fertilizacionesP = new ArrayList<LayerAction>();
 		predicates.put(FertilizacionLabor.class, fertilizacionesP);
 		/**
-		 *Accion que permite ediytar una fertilizacion
+		 *Accion que permite editar una fertilizacion
 		 */
 		fertilizacionesP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.editFertAction"),(layer)->{			
 			doEditFertilizacion((FertilizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 			return "fertilizacion editada" + layer.getName(); 
 		}));
 
+		/**
+		 *Accion que permite partir una fertiliacion en 2
+		 */
+		fertilizacionesP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.splitFertAction"),(layer)->{			
+			doPartirFertilizacion((FertilizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+			return "fertilizacion partida" + layer.getName(); 
+		}));
+		
 		/**
 		 * Accion permite exportar la labor como shp
 		 */
@@ -108,6 +120,111 @@ public class FertilizacionGUIController extends AbstractGUIController {
 			});//fin del OnSucceeded						
 			JFXMain.executorPool.execute(umTask);
 		}
+	}
+	
+	//TODO tomar una fertilizacion y partirla en 2 preguntando que % asignar a la primera
+	private void doPartirFertilizacion(FertilizacionLabor fAPartir ) {
+	//	Optional<FertilizacionLabor> cosechaConfigured=FertilizacionConfigDialogController.config(fConfigured);
+		FertilizacionLabor primeraParticion =  new FertilizacionLabor(fAPartir);
+		primeraParticion.setNombre(primeraParticion.getNombre()+" 1");
+		primeraParticion.setLayer(new LaborLayer());
+		FertilizacionLabor segundaParticion =  new FertilizacionLabor(fAPartir);
+		segundaParticion.setNombre(segundaParticion.getNombre()+" 2");
+		segundaParticion.setLayer(new LaborLayer());
+		
+		
+		//Dialogo preguntar min y max a aplicar
+		Alert minMaxDialog = new Alert(AlertType.CONFIRMATION);
+		NumberFormat df=Messages.getNumberFormat();
+		TextField firsPartPCTF = new TextField(df.format(50));
+		TextField min = new TextField(df.format(0));
+		TextField max = new TextField(df.format(0));
+
+		VBox vb = new VBox();
+		vb.getChildren().add(new HBox(new Label(Messages.getString("ProcessSplitFertMap.PCprimeraParticion")),firsPartPCTF)); 
+		vb.getChildren().add(new HBox(new Label(Messages.getString("JFXMain.301")),min)); 
+		vb.getChildren().add(new HBox(new Label(Messages.getString("JFXMain.302")),max)); 
+
+		minMaxDialog.setGraphic(vb);
+		minMaxDialog.setTitle(Messages.getString("JFXMain.303")); 
+		minMaxDialog.setContentText(Messages.getString("JFXMain.304")); 
+		minMaxDialog.initOwner(JFXMain.stage);
+		Optional<ButtonType> res = minMaxDialog.showAndWait();
+		Double firsPartPC=null, minFert =null,maxFert=null; 
+		if(res.get().equals(ButtonType.OK)){
+			try {
+				firsPartPC=df.parse(firsPartPCTF.getText()).doubleValue();
+				//TODO validar que este entre 0 y 100
+				if(firsPartPC<0||firsPartPC>100) {
+					Alert inputFieldAlert = new Alert(AlertType.INFORMATION,Messages.getString("JFXMain.IngreseNumValido")); 
+					inputFieldAlert.showAndWait();
+					return;
+				}else {
+					firsPartPC=firsPartPC/100;
+				}
+				//if(firsPartPC==0)minFert=null;
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			try {
+				minFert=df.parse(min.getText()).doubleValue();
+				if(minFert==0)minFert=null;
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			try {
+				maxFert=df.parse(max.getText()).doubleValue();
+				if(maxFert==0)maxFert=null;
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+		} else {
+			return;
+		}
+			
+
+		ProcessSplitFertMapTask umTask = new ProcessSplitFertMapTask(
+				primeraParticion,
+				fAPartir,
+				firsPartPC,
+				minFert,
+				maxFert);
+		umTask.installProgressBar(progressBox);
+
+		umTask.setOnSucceeded(handler -> {
+			FertilizacionLabor ret = (FertilizacionLabor)handler.getSource().getValue();
+			if(ret.getLayer()!=null){
+				insertBeforeCompass(getWwd(), ret.getLayer());				
+				this.getLayerPanel().update(this.getWwd());
+			}	
+			umTask.uninstallProgressBar();
+			System.out.println(Messages.getString("JFXMain.283")); 
+			playSound();
+		});//fin del OnSucceeded						
+		JFXMain.executorPool.execute(umTask);
+		
+		ProcessSplitFertMapTask umTask2 = new ProcessSplitFertMapTask(
+				segundaParticion,
+				fAPartir,
+				1-firsPartPC,//el complemento de la 1 
+				//FIXME si la 1 toma min y max el complemento del PC no te da el total inicial
+				null,
+				null);
+		umTask2.installProgressBar(progressBox);
+
+		umTask2.setOnSucceeded(handler -> {
+			FertilizacionLabor ret = (FertilizacionLabor)handler.getSource().getValue();
+			if(ret.getLayer()!=null){
+				insertBeforeCompass(getWwd(), ret.getLayer());				
+				this.getLayerPanel().update(this.getWwd());
+				fAPartir.setActivo(false);
+			}		
+			umTask2.uninstallProgressBar();
+			System.out.println(Messages.getString("JFXMain.283")); 
+			playSound();
+		});//fin del OnSucceeded						
+		JFXMain.executorPool.execute(umTask2);
+		
 	}
 	
 	private void doGenerarSiembraDesdeFertilizacion(FertilizacionLabor fertilizacionLabor) {

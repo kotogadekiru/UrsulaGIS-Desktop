@@ -34,6 +34,7 @@ import gui.PulverizacionConfigDialogController;
 import gui.nww.LaborLayer;
 import gui.nww.LayerAction;
 import gui.nww.LayerPanel;
+import gui.utils.NumberInputDialog;
 import javafx.concurrent.Task;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -393,18 +394,44 @@ public class CosechaGUIController extends AbstractGUIController {
 		} else {
 			cosechasAUnir.add(cosechaAGrillar);
 		}
-		TextInputDialog anchoDialog = new TextInputDialog(JFXMain.config.getPropertyOrDefault(CosechaConfig.ANCHO_GRILLA_KEY,Messages.getString("JFXMain.288"))); 
-		anchoDialog.initOwner(JFXMain.stage);
-		anchoDialog.setTitle(Messages.getString("JFXMain.289")); 
-		anchoDialog.setContentText(Messages.getString("JFXMain.290")); 
-		Optional<String> anchoOptional = anchoDialog.showAndWait();
-		if(anchoOptional.isPresent()){
-			JFXMain.config.loadProperties();
-			JFXMain.config.setProperty(CosechaConfig.ANCHO_GRILLA_KEY,anchoOptional.get());
-			JFXMain.config.save();
-		} else{
-			return;
+		NumberFormat format = Messages.getNumberFormat();
+		String anchoDefaultString =JFXMain.config.getPropertyOrDefault(CosechaConfig.ANCHO_GRILLA_KEY,
+				Messages.getString("JFXMain.288"));
+		Double ancho = 10.0;
+		try {
+			ancho = format.parse(anchoDefaultString).doubleValue();
+		}catch(Exception e ) {
+			e.printStackTrace();
 		}
+		ancho = NumberInputDialog.showAndWait(
+				Messages.getString("JFXMain.289"), 
+						Messages.getString("JFXMain.cosechaNumHeader"),  
+						Messages.getString("JFXMain.cosechaNumLabel"),
+						anchoDefaultString, 
+						Messages.getString("JFXMain.SeparatorWarningTooltip"));
+		if (ancho.isNaN()) {
+			System.out.println("ancho default");
+			ancho = 10.0;
+		} else {
+			JFXMain.config.loadProperties();
+			JFXMain.config.setProperty(CosechaConfig.ANCHO_GRILLA_KEY,format.format(ancho));
+			JFXMain.config.save();
+		}
+		
+//		TextInputDialog anchoDialog = new TextInputDialog(
+//				JFXMain.config.getPropertyOrDefault(CosechaConfig.ANCHO_GRILLA_KEY,
+//						Messages.getString("JFXMain.288"))); 
+//		anchoDialog.initOwner(JFXMain.stage);
+//		anchoDialog.setTitle(Messages.getString("JFXMain.289")); 
+//		anchoDialog.setContentText(Messages.getString("JFXMain.290")); 
+//		Optional<String> anchoOptional = anchoDialog.showAndWait();
+//		if(anchoOptional.isPresent()){
+//			JFXMain.config.loadProperties();
+//			JFXMain.config.setProperty(CosechaConfig.ANCHO_GRILLA_KEY,anchoOptional.get());
+//			JFXMain.config.save();
+//		} else{
+//			return;
+//		}
 
 		Alert rellenarHuecosAlert= new Alert(Alert.AlertType.CONFIRMATION);
 		rellenarHuecosAlert.initOwner(JFXMain.stage);
@@ -421,8 +448,8 @@ public class CosechaGUIController extends AbstractGUIController {
 
 		GrillarCosechasMapTask umTask = new GrillarCosechasMapTask(cosechasAUnir);
 		umTask.setRellenarHuecos(rellenarHuecos);
-		double anchoGrilla = PropertyHelper.parseDouble(anchoOptional.get()).doubleValue();
-		umTask.setAncho(anchoGrilla);
+		//double anchoGrilla = PropertyHelper.parseDouble(anchoOptional.get()).doubleValue();
+		umTask.setAncho(ancho);
 		umTask.installProgressBar(progressBox);
 		umTask.setOnSucceeded(handler -> {
 			CosechaLabor ret = (CosechaLabor)handler.getSource().getValue();
@@ -440,26 +467,26 @@ public class CosechaGUIController extends AbstractGUIController {
 		JFXMain.executorPool.execute(umTask);
 	}
 
-	private void doCortarCosecha(CosechaLabor cosechaAcortar) {
-		List<Poligono> geometriasActivas = main.poligonoGUIController.getEnabledPoligonos();
-
-		geometriasActivas.stream().forEach((geom)->{
-			CortarCosechaMapTask umTask = new CortarCosechaMapTask(cosechaAcortar,Collections.singletonList(geom));
-			umTask.installProgressBar(progressBox);
-			umTask.setOnSucceeded(handler -> {
-				CosechaLabor ret = (CosechaLabor)handler.getSource().getValue();
-				if(ret.getLayer()!=null){	
-					insertBeforeCompass(getWwd(), ret.getLayer());
-					this.getLayerPanel().update(this.getWwd());
-				}
-				umTask.uninstallProgressBar();
-				viewGoTo(ret);
-				System.out.println(Messages.getString("JFXMain.286")); 
-				playSound();
-			});//fin del OnSucceeded
-			JFXMain.executorPool.execute(umTask);
-		});
-	}
+//	private void doCortarCosecha(CosechaLabor cosechaAcortar) {
+//		List<Poligono> geometriasActivas = main.poligonoGUIController.getEnabledPoligonos();
+//
+//		geometriasActivas.stream().forEach((geom)->{
+//			CortarCosechaMapTask umTask = new CortarCosechaMapTask(cosechaAcortar,Collections.singletonList(geom));
+//			umTask.installProgressBar(progressBox);
+//			umTask.setOnSucceeded(handler -> {
+//				CosechaLabor ret = (CosechaLabor)handler.getSource().getValue();
+//				if(ret.getLayer()!=null){	
+//					insertBeforeCompass(getWwd(), ret.getLayer());
+//					this.getLayerPanel().update(this.getWwd());
+//				}
+//				umTask.uninstallProgressBar();
+//				viewGoTo(ret);
+//				System.out.println(Messages.getString("JFXMain.286")); 
+//				playSound();
+//			});//fin del OnSucceeded
+//			JFXMain.executorPool.execute(umTask);
+//		});
+//	}
 
 	/**
 	 * metodo que toma los poligonos de la labor y genera un mapa de puntos con las densidades configuradas

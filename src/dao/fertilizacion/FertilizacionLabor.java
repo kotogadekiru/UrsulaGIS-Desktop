@@ -53,6 +53,16 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 		initConfig();
 	}
 
+	//crea una nueva fertilizacion pero con los datos de la fertilizacion de ingreso
+	//fecha, fertilizante, titulo, etc
+	public FertilizacionLabor(FertilizacionLabor fAPartir) {
+		super(fAPartir);
+		initConfig();
+		colKgHaProperty.set(fAPartir.colKgHaProperty.get());
+		fertilizanteProperty.setValue(fAPartir.getFertilizanteProperty().getValue());
+		
+	}
+
 	private void initConfig() {
 		this.productoLabor=DAH.getProductoLabor(ProductoLabor.LABOR_DE_FERTILIZACION);
 		List<String> availableColums = this.getAvailableColumns();		

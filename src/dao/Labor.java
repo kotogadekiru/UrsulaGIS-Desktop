@@ -38,6 +38,7 @@ import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
 import dao.config.Configuracion;
+import dao.fertilizacion.FertilizacionLabor;
 import dao.ordenCompra.ProductoLabor;
 import dao.utils.LaborDataStore;
 import dao.utils.PropertyHelper;
@@ -128,7 +129,7 @@ public abstract class Labor<E extends LaborItem>  {
 	@Transient public Clasificador clasificador=null;	
 	@Transient public SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(getType());
 
-	@Transient  public StringProperty colAmount=null; //usada por el clasificador para leer el outstore tiene que ser parte de TYPE
+	@Transient  public StringProperty colAmount=new SimpleStringProperty();	; //usada por el clasificador para leer el outstore tiene que ser parte de TYPE
 	//columnas configuradas para leer el instore
 
 	@Transient public StringProperty colElevacion=new SimpleStringProperty();	
@@ -169,6 +170,32 @@ public abstract class Labor<E extends LaborItem>  {
 		initConfigLabor();
 	}
 
+	//constructor de copia superficial de la labor
+	public Labor(FertilizacionLabor l) {
+		super();
+		clasificador=new Clasificador();
+		outCollection = new DefaultFeatureCollection("internal",getType());
+		initConfigLabor();		
+		
+		this.nombre=l.nombre;
+		this.fecha = l.fecha;
+		this.precioLabor = l.precioLabor;//esto queda en 0
+		this.precioInsumo = l.precioInsumo;//esto queda en 0 
+		//this.cantidadInsumo = l.cantidadInsumo;//es total
+		//this.cantidadLabor = l.cantidadLabor;//es total
+		this.productoLabor=l.productoLabor;
+		this.anchoDefaultProperty.set(l.getAnchoDefaultProperty().get());	
+			
+		//se inicia en la implementacion init 
+		this.colAmount.set(l.colAmount.get());
+		
+		this.colElevacion.set(l.colElevacion.get());
+		this.colAncho.set(l.colAncho.get());
+		this.colCurso.set(l.colCurso.get());
+		this.colDistancia.set(l.colDistancia.get());
+
+
+	}
 
 	private void initConfigLabor() {
 		List<String> availableColums = this.getAvailableColumns();		
