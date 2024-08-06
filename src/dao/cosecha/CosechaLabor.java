@@ -26,6 +26,7 @@ import javafx.beans.property.StringProperty;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import utils.CultivoHelper;
 import utils.DAH;
 import utils.ProyectionConstants;
 
@@ -126,7 +127,7 @@ public class CosechaLabor extends Labor<CosechaItem> {
 		this.setPrecioInsumo(precioGrano);
 		costoCosechaTn = PropertyHelper.initDouble(CosechaLabor.CosechaLaborConstants.COSTO_COSECHA_TN, "0", properties);
 
-		String productoKEY = properties.getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.PRODUCTO_DEFAULT, Cultivo.MAIZ);
+		String productoKEY = properties.getPropertyOrDefault(CosechaLabor.CosechaLaborConstants.PRODUCTO_DEFAULT, CultivoHelper.MAIZ);
 		Cultivo cultDefault = null;
 		try {
 			cultDefault = DAH.getCultivo(productoKEY);

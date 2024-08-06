@@ -12,6 +12,8 @@ import java.util.concurrent.Executor;
 
 import org.geotools.data.FileDataStore;
 
+import api.OrdenCosecha;
+import api.OrdenFertilizacion;
 import dao.Labor;
 import dao.Poligono;
 import dao.cosecha.CosechaConfig;
@@ -48,6 +50,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import tasks.CompartirCosechaLaborTask;
+import tasks.CompartirFertilizacionLaborTask;
 import tasks.ExportLaborMapTask;
 import tasks.crear.ConvertirAFertilizacionTask;
 import tasks.crear.ConvertirAPulverizacionTask;
@@ -61,6 +65,7 @@ import tasks.procesar.RecomendFertNFromHarvestMapTask;
 import tasks.procesar.RecomendFertPAbsFromHarvestMapTask;
 import tasks.procesar.RecomendFertPFromHarvestMapTask;
 import tasks.procesar.UnirCosechasMapTask;
+import utils.DAH;
 import utils.FileHelper;
 
 public class CosechaGUIController extends AbstractGUIController {
@@ -109,7 +114,16 @@ public class CosechaGUIController extends AbstractGUIController {
 			doGrillarCosechas((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 			return "cosecha grillada" + layer.getName(); 
 		}));
-
+		
+		/**
+		 * Accion que permite compartir una cosecha
+		 */
+		cosechasP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.compartir"),(layer)->{
+			doCompartirCosecha((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+			return "cosecha compartida" + layer.getName(); 
+		}));	
+		
+		
 		/**
 		 * Accion que permite clonar la cosecha
 		 */
@@ -260,6 +274,27 @@ public class CosechaGUIController extends AbstractGUIController {
 		}//if stores != null
 	}
 
+	/**
+	 *  updload cosecha to server and show url to access
+	 * @param cosecha
+	 */
+	public void doCompartirCosecha(CosechaLabor value) {
+		OrdenCosecha op = CompartirCosechaLaborTask.constructOrdenCosecha(value);
+		if(op==null)return;
+		DAH.save(op);
+		CompartirCosechaLaborTask task = new CompartirCosechaLaborTask(value,op);			
+			task.installProgressBar(main.progressBox);
+			task.setOnSucceeded(handler -> {
+				String ret = (String)handler.getSource().getValue();
+
+				if(ret!=null) {
+					main.configGUIController.showQR(ret);
+				}
+				task.uninstallProgressBar();			
+			});
+			System.out.println("ejecutando Compartir Fertilizacion");
+			JFXMain.executorPool.submit(task);		
+	}
 	
 	public void showAmountVsElevacionChart(Labor<?> cosechaLabor) {
 		TextInputDialog anchoDialog = new TextInputDialog("20"); 

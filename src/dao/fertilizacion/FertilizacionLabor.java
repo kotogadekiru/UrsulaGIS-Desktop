@@ -38,7 +38,7 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 	
 	private static final String FERTILIZANTE_DEFAULT = "FERTILIZANTE_DEFAULT";
 
-	private static final String COSTO_LABOR_FERTILIZACION = "costoLaborFertilizacion";
+	public static final String COSTO_LABOR_FERTILIZACION = "costoLaborFertilizacion";
 
 	public StringProperty colKgHaProperty;
 

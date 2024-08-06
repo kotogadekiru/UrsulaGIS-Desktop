@@ -42,6 +42,7 @@ import dao.config.Cultivo;
 import dao.config.Empresa;
 import dao.config.Establecimiento;
 import dao.config.Fertilizante;
+import dao.config.Grano;
 import dao.config.Lote;
 import dao.config.Semilla;
 import dao.cosecha.CosechaLabor;
@@ -430,7 +431,7 @@ public class DAH {
 		TypedQuery<Cultivo> query = em.createNamedQuery(Cultivo.FIND_ALL, Cultivo.class);
 		List<Cultivo> results = query.getResultList();
 		if(results.size()==0){
-			Cultivo.getCultivosDefault().values().forEach((d)->{				
+			CultivoHelper.getCultivosDefault().values().forEach((d)->{				
 				DAH.save(d);
 				results.add(d);
 			});
@@ -680,6 +681,18 @@ public class DAH {
 			//System.out.println("buscando "+nombre+" encontre "+result);
 		}  
 		return result;	
+	}
+
+	public static List<Grano> findGranos(Cultivo cultivo) {
+		TypedQuery<Grano> query = em().createNamedQuery(
+				Grano.FIND_BY_CULTIVO, Grano.class);
+		query.setParameter("cultivo", cultivo);
+		List<Grano> result = null;
+		if(query.getResultList().size()>0){
+			result = query.getResultList();
+		}  
+		return result;	
+		
 	}
 
 	

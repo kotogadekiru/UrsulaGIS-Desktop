@@ -13,6 +13,7 @@ import dao.ordenCompra.Producto;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import utils.CultivoHelper;
 
 //@Data
 @Getter
@@ -44,10 +45,10 @@ public class Semilla  extends Producto implements Comparable<Semilla>{
 	
 	public static Map<String,Semilla> getSemillasDefault(){
 		 Map<String,Semilla> semillas = new HashMap<String,Semilla>();
-		 Map<String, Cultivo> cultivos = Cultivo.getCultivosDefault();
-			semillas.put(SEMILLA_DE_MAIZ,new Semilla(SEMILLA_DE_MAIZ,cultivos.get(Cultivo.MAIZ)));	
-			semillas.put(SEMILLA_DE_SOJA,new Semilla(SEMILLA_DE_SOJA,cultivos.get(Cultivo.SOJA)));
-			semillas.put(SEMILLA_DE_TRIGO,new Semilla(SEMILLA_DE_TRIGO,cultivos.get(Cultivo.TRIGO)));
+		 Map<String, Cultivo> cultivos = CultivoHelper.getCultivosDefault();
+			semillas.put(SEMILLA_DE_MAIZ,new Semilla(SEMILLA_DE_MAIZ,cultivos.get(CultivoHelper.MAIZ)));	
+			semillas.put(SEMILLA_DE_SOJA,new Semilla(SEMILLA_DE_SOJA,cultivos.get(CultivoHelper.SOJA)));
+			semillas.put(SEMILLA_DE_TRIGO,new Semilla(SEMILLA_DE_TRIGO,cultivos.get(CultivoHelper.TRIGO)));
 		return semillas;
 	}
 	public Semilla(){

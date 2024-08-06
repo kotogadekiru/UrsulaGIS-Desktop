@@ -34,7 +34,6 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import tasks.CompartirFertilizacionLaborTask;
-import tasks.CompartirPulverizacionLaborTask;
 import tasks.crear.ProcessSplitFertMapTask;
 import tasks.importar.ProcessFertMapTask;
 import tasks.procesar.CrearSiembraDesdeFertilizacionTask;

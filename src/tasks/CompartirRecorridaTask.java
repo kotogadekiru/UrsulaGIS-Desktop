@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 import com.google.api.client.http.ByteArrayContent;
@@ -145,7 +146,7 @@ public class CompartirRecorridaTask extends Task<String> {
 		}
 		 */
 		//String urlGoto = "https://www.ursulagis.com/api/recorridas/4/";
-			//TODO cambiar esta url por una url mobile que permita hacer la recorrida via web.
+			
 		String urlGoto =dbUrl;// GET_RECORRIDAS_BY_ID_URL+id+"/";
 		return urlGoto;
 		}
@@ -169,8 +170,9 @@ public class CompartirRecorridaTask extends Task<String> {
 			}
 			@Override
 			public boolean shouldSkipField(FieldAttributes arg0) {
-				if (arg0.getAnnotation(ManyToOne.class) != null)return true;
-
+				if (arg0.getAnnotation(ManyToOne.class) != null)return true;//no subo referencias circulares
+				if (arg0.getAnnotation(Id.class) != null)return true;//no subo las ids locales al servidor
+				
 				return false;
 			}
 		};
