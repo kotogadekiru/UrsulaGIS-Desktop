@@ -1,6 +1,9 @@
 package tasks.crear;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.geotools.data.FeatureReader;
 import org.opengis.feature.simple.SimpleFeature;
@@ -40,7 +43,7 @@ public class ConvertirSueloACosechaTask extends ProcessMapTask<CosechaItem,Cosec
 			ci.setId(si.getId());
 			ci.setGeometry(si.getGeometry());
 			ci.setElevacion(10.0);
-
+			System.out.println("observaciones en doProcess "+ci.getObservaciones());
 			SimpleFeature nf=ci.getFeature(labor.featureBuilder);
 
 			System.out.println("insertando "+nf);
@@ -65,7 +68,7 @@ public class ConvertirSueloACosechaTask extends ProcessMapTask<CosechaItem,Cosec
 		Double mmDispo = si.getAguaPerfil()+this.mmLluviaEstimados;
 		Double mmTn = cultivo.getAbsAgua();
 		Double kgAgua = mmTn!=0?mmDispo/mmTn:0;
-		//TODO si hay demaciada agua bajar el rinde; mas de 1800mm/2000mm
+		//TODO si hay demasiada agua bajar el rinde; mas de 1800mm/2000mm
 		Double encharcamiento = Math.min(2000, mmDispo)/2000;
 		
 		Double rindeAgua=(encharcamiento>0.5?(1-encharcamiento):1)*kgAgua;
@@ -76,7 +79,7 @@ public class ConvertirSueloACosechaTask extends ProcessMapTask<CosechaItem,Cosec
 		Double kgP=Suelo.getKgPHa(si);
 		Double rindeP = cultivo.getAbsP()!=0?kgP/cultivo.getAbsP():0;
 		System.out.println("kgP="+kgP+" => rindeP= "+rindeP);
-		if(rindeAgua>rindeP) {//factor limitante es fosforo
+		if(rindeAgua<rindeP) {//factor limitante es fosforo
 			observaciones="fosforo";
 		}
 		
@@ -85,13 +88,14 @@ public class ConvertirSueloACosechaTask extends ProcessMapTask<CosechaItem,Cosec
 		Double rindeN = cultivo.getAbsN()!=0?kgN/cultivo.getAbsN():0;
 		System.out.println("kgN="+kgN+" => rindeN: "+rindeN);
 		
-	
-		Double rindeLimitante = Math.min(
-				Math.min(rindeAgua,rindeP),
-				rindeN);
-		ci.setRindeTnHa(
-				rindeLimitante
-				);
+		
+		List<Double> rindes = Arrays.asList(rindeAgua,rindeP,rindeN);
+		Double rindeLimitante = rindes.stream().min((d1,d2)->Double.compare(d1, d2)).get();
+//		Double rindeLimitante = Math.min(
+//				Math.min(rindeAgua,rindeP),
+//				rindeN);
+		ci.setRindeTnHa(rindeLimitante);
+		ci.setObservaciones("rinde no limitado");
 		if(rindeLimitante == rindeAgua) {
 			if(rindeN<rindeP) {
 				ci.setObservaciones("rinde limitado por agua "+mmDispo+"mm despues por kgN y finalmente por kgP");
@@ -129,6 +133,7 @@ public class ConvertirSueloACosechaTask extends ProcessMapTask<CosechaItem,Cosec
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		String tooltipText = CrearCosechaMapTask.buildTooltipText(cosechaItem, area);
 		tooltipText+="\n "+cosechaItem.getObservaciones();
+		
 		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText,renderablePolygon);
 
 	}

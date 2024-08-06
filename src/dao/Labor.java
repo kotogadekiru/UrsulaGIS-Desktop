@@ -742,6 +742,9 @@ public abstract class Labor<E extends LaborItem>  {
 				.getAttribute(COLUMNA_ANCHO));
 		ci.elevacion = LaborItem.getDoubleFromObj(harvestFeature
 				.getAttribute(COLUMNA_ELEVACION));
+		String obs = (String) harvestFeature.getAttribute(COLUMNA_OBSERVACIONES);
+		//System.out.println("obs es "+obs);
+		ci.observaciones =obs!=null?obs:""; 
 	}
 
 	/**

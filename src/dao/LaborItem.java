@@ -242,7 +242,11 @@ public abstract class LaborItem implements Comparable<Object>{
 
 
 	//abstract public SimpleFeature getFeature(SimpleFeatureBuilder featureBuilder);
-
+/**
+ * metodo llamado para convertir un simple LaborItem a un SimpleFeature para ser inertado en el data store
+ * @param featureBuilder
+ * @return SimpleFeature representando este LaborItem
+ */
 	public  SimpleFeature getFeature(SimpleFeatureBuilder featureBuilder) {
 
 		Object[] basicElements = new Object[]{
@@ -251,8 +255,8 @@ public abstract class LaborItem implements Comparable<Object>{
 				rumbo,
 				ancho,
 				elevacion,
-				getCategoria()
-				,getObservaciones()
+				getCategoria(),
+				getObservaciones()
 				};
 
 		Object[] specialElements= getSpecialElementsArray();

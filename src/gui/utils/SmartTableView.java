@@ -1216,6 +1216,7 @@ public class SmartTableView<T> extends TableView<T> {
 		String propName = name.replace("Property", "");
 		DoubleTableColumn<T> dColumn = new DoubleTableColumn<T>(propName,
 				(p)->{	try {
+					//Class gui.utils.SmartTableView can not access a member of class dao.suelo.Suelo$1 with modifiers "public"
 					Number n = ((Number) method.invoke(p, (Object[])null));
 					if(n!=null) {
 						return n.doubleValue();
