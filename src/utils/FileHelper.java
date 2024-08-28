@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -172,7 +173,9 @@ public class FileHelper {
 		}
 		List<FileDataStore> stores = new ArrayList<FileDataStore>();
 		if (files != null) {
-			for(File f : files){
+			
+			List<File> shapeFiles = files.stream().filter(f->f.getName().endsWith("shp")).collect(Collectors.toList());
+			for(File f : shapeFiles){
 				try {
 					stores.add(FileDataStoreFinder.getDataStore(f));//esto falla con java10 :(
 				} catch (IOException e) {

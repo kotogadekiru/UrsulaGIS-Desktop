@@ -13,16 +13,22 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
+
+import javax.xml.stream.XMLStreamException;
 
 import org.geotools.data.FileDataStore;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.geotools.math.Fraction;
 import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.densify.Densifier;
@@ -45,11 +51,20 @@ import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
 import dao.utils.PropertyHelper;
 import gov.nasa.worldwind.WorldWindow;
+import gov.nasa.worldwind.avlist.AVList;
 import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.geom.Position.PositionList;
 import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.LayerList;
 import gov.nasa.worldwind.layers.RenderableLayer;
+import gov.nasa.worldwind.ogc.kml.KMLAbstractFeature;
+import gov.nasa.worldwind.ogc.kml.KMLBoundary;
+import gov.nasa.worldwind.ogc.kml.KMLDocument;
+import gov.nasa.worldwind.ogc.kml.KMLFolder;
+import gov.nasa.worldwind.ogc.kml.KMLPlacemark;
+import gov.nasa.worldwind.ogc.kml.KMLRoot;
+import gov.nasa.worldwind.util.Logging;
 import gov.nasa.worldwind.util.measure.MeasureTool;
 import gui.FertilizacionConfigDialogController;
 import gui.HarvestConfigDialogController;
@@ -100,44 +115,44 @@ public class PoligonoGUIController extends AbstractGUIController{
 
 	public PoligonoGUIController(JFXMain _main) {
 		super(_main);
-		
+
 		//this.progressBox=main.getProgressBox();
 		//this.executorPool = JFXMain.executorPool;
 	}
 
 
-//	private void insertBeforeCompass(WorldWindow wwd, LaborLayer layer) {
-//		JFXMain.insertBeforeCompass(wwd, layer);		
-//	}
+	//	private void insertBeforeCompass(WorldWindow wwd, LaborLayer layer) {
+	//		JFXMain.insertBeforeCompass(wwd, layer);		
+	//	}
 
 
-	
-//	public List<Poligono> getPoligonosActivos() {
-//		List<Poligono> geometriasActivas = new ArrayList<Poligono>();
-//		
-//		//1 obtener los poligonos activos
-//		LayerList layers = this.getWwd().getModel().getLayers();
-//		for (Layer l : layers) {
-//			Object o = l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-//			if (l.isEnabled() && o instanceof Poligono){
-//				Poligono p = (Poligono)o;
-//				geometriasActivas.add(p);
-//			}
-//		}
-//		return geometriasActivas;
-//	}
-	
+
+	//	public List<Poligono> getPoligonosActivos() {
+	//		List<Poligono> geometriasActivas = new ArrayList<Poligono>();
+	//		
+	//		//1 obtener los poligonos activos
+	//		LayerList layers = this.getWwd().getModel().getLayers();
+	//		for (Layer l : layers) {
+	//			Object o = l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+	//			if (l.isEnabled() && o instanceof Poligono){
+	//				Poligono p = (Poligono)o;
+	//				geometriasActivas.add(p);
+	//			}
+	//		}
+	//		return geometriasActivas;
+	//	}
+
 	@SuppressWarnings("unchecked")
 	public List<Poligono> getEnabledPoligonos() {
 		return ((List<Poligono>)main.getObjectFromLayersOfClass(Poligono.class)).stream()
 				.filter((p)-> p.getLayer().isEnabled())
 				.collect(Collectors.toList());
 	}
-	
+
 	public void addPoligonosRootNodeActions() {
 		List<LayerAction> rootNodeP = new ArrayList<LayerAction>();
 
-		
+
 		rootNodeP.add(new LayerAction((layer)->{
 			doMedirDistancia();
 			return "distancia";	
@@ -150,7 +165,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 		},Messages.getString("JFXMain.superficie")));
 
 
-		
+
 		//unir
 		rootNodeP.add(new LayerAction(Messages.getString("JFXMain.unirPoligonos"),(layer)->{
 			doUnirPoligonos();
@@ -255,7 +270,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 
 		getLayerPanel().addAccionesClase(rootNodeP,Poligono.class);
 	}
-	
+
 	public void addAccionesPoligonos(Map<Class<?>, List<LayerAction>> predicates) {
 		List<LayerAction> poligonosP = new ArrayList<LayerAction>();
 		predicates.put(Poligono.class, poligonosP);
@@ -267,7 +282,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 			}
 			return "edite poligono"; //$NON-NLS-1$
 		}));
-		
+
 		poligonosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.clonar"),(layer)->{
 			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 			if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){
@@ -275,7 +290,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 			}
 			return "clone poligono"; //$NON-NLS-1$
 		}));
-		
+
 		//XXX simplificar poligono action. sirve para probar alinear los puntos que estan en un margen 
 		poligonosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.simplificar"),(layer)->{
 			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
@@ -343,9 +358,9 @@ public class PoligonoGUIController extends AbstractGUIController{
 				Poligono poli = (Poligono)layerObject;
 				Geometry geom = poli.toGeometry();
 				if(geom!=null) {
-				Point c = geom.getCentroid();
-				Position pos =Position.fromDegrees(c.getY(), c.getX());
-				viewGoTo(pos);
+					Point c = geom.getCentroid();
+					Position pos =Position.fromDegrees(c.getY(), c.getX());
+					viewGoTo(pos);
 				}
 			}
 			return "went to " + layer.getName(); //$NON-NLS-1$
@@ -360,13 +375,13 @@ public class PoligonoGUIController extends AbstractGUIController{
 
 		Collections.sort(poligonosP);
 	}
-	
+
 	public void addAccionesCaminos(Map<Class<?>, List<LayerAction>> predicates) {
 		List<LayerAction> poligonosP = new ArrayList<LayerAction>();
 		predicates.put(Camino.class, poligonosP);
-		
+
 		//TODO agregar aqui funcion para convertir camino a recorrida dirigida ver GenerarRecorridaDirigidaTask
-		
+
 		poligonosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.convertirARecorrida"),(layer)->{
 
 			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
@@ -375,16 +390,16 @@ public class PoligonoGUIController extends AbstractGUIController{
 			}
 			return "converti a recorrida"; //$NON-NLS-1$			
 		}));
-		
+
 		poligonosP.add(LayerAction.constructPredicate("Convertir a Circulo",
 				(layer)->{
-			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-			if(layerObject!=null && Camino.class.isAssignableFrom(layerObject.getClass())){
-				doCrearCirculo(layerObject);
-			}
-			return "converti a circulo"; //$NON-NLS-1$			
-		}));
-		
+					Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+					if(layerObject!=null && Camino.class.isAssignableFrom(layerObject.getClass())){
+						doCrearCirculo(layerObject);
+					}
+					return "converti a circulo"; //$NON-NLS-1$			
+				}));
+
 
 
 		poligonosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.editarLayer"),(layer)->{
@@ -442,8 +457,8 @@ public class PoligonoGUIController extends AbstractGUIController{
 		c.getLayer().setEnabled(false);
 		Recorrida recorrida = new Recorrida();
 		recorrida.setNombre(c.getNombre());
-		
-		
+
+
 		int i =0;
 		for(Position p:c.getPositions()){	
 			if(recorrida.getLatitude()==0.0) {
@@ -493,14 +508,14 @@ public class PoligonoGUIController extends AbstractGUIController{
 		}							
 
 		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.siembraNumTitle"), 
-													Messages.getString("JFXMain.siembraNumHeader"), 
-													Messages.getString("JFXMain.siembraNumLabel"), 
-													Messages.getString("JFXMain.siembraNumPrompt"), 
-													Messages.getString("JFXMain.SeparatorWarningTooltip"));
+				Messages.getString("JFXMain.siembraNumHeader"), 
+				Messages.getString("JFXMain.siembraNumLabel"), 
+				Messages.getString("JFXMain.siembraNumPrompt"), 
+				Messages.getString("JFXMain.SeparatorWarningTooltip"));
 		if (dosis.isNaN()) {
 			return;
 		}
-		
+
 		CrearSiembraMapTask umTask = new CrearSiembraMapTask(labor,polis,dosis);
 		umTask.installProgressBar(main.getProgressBox());
 
@@ -533,14 +548,14 @@ public class PoligonoGUIController extends AbstractGUIController{
 		}							
 
 		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.fertNumTitle"), 
-													Messages.getString("JFXMain.fertNumHeader"), 
-													Messages.getString("JFXMain.fertNumLabel"), 
-													Messages.getString("JFXMain.fertNumPrompt"), 
-													Messages.getString("JFXMain.SeparatorWarningTooltip"));
+				Messages.getString("JFXMain.fertNumHeader"), 
+				Messages.getString("JFXMain.fertNumLabel"), 
+				Messages.getString("JFXMain.fertNumPrompt"), 
+				Messages.getString("JFXMain.SeparatorWarningTooltip"));
 		if (dosis.isNaN()) {
 			return;
 		}
-		
+
 		CrearFertilizacionMapTask umTask = new CrearFertilizacionMapTask(labor,polis,dosis);
 		umTask.installProgressBar(progressBox);
 
@@ -574,16 +589,16 @@ public class PoligonoGUIController extends AbstractGUIController{
 			labor.dispose();//libero los recursos reservados
 			return;
 		}							
-		
+
 		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.pulvNumTitle"), 
-													Messages.getString("JFXMain.pulvNumHeader"),  
-													Messages.getString("JFXMain.pulvNumLabel"),
-													Messages.getString("JFXMain.pulvNumPrompt"), 
-													Messages.getString("JFXMain.SeparatorWarningTooltip"));
+				Messages.getString("JFXMain.pulvNumHeader"),  
+				Messages.getString("JFXMain.pulvNumLabel"),
+				Messages.getString("JFXMain.pulvNumPrompt"), 
+				Messages.getString("JFXMain.SeparatorWarningTooltip"));
 		if (dosis.isNaN()) {
 			return;
 		}
-		
+
 		CrearPulverizacionMapTask umTask = new CrearPulverizacionMapTask(labor,poli,dosis);
 		umTask.installProgressBar(progressBox);
 
@@ -601,7 +616,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 		JFXMain.executorPool.execute(umTask);		
 	}
 
-		
+
 	private void doCrearSuelo(Poligono poli) {
 		Suelo labor = new Suelo();
 		labor.setNombre(poli.getNombre());
@@ -618,43 +633,43 @@ public class PoligonoGUIController extends AbstractGUIController{
 		m.setNombre("A");
 		m.setRecorrida(recorrida);				
 		muestras.add(m);
-		
+
 		//si viene con recorridas seleccionadas permito editarlas?
 		recorrida.setMuestras(muestras);
 		main.recorridaGUIController.doAsignarValoresRecorrida(recorrida);//esto guarda una recorrida nueva
-	
 
-//		TextInputDialog ppmPDialog = new TextInputDialog(Messages.getString("JFXMain.228")); //$NON-NLS-1$
-//		ppmPDialog.initOwner(JFXMain.stage);
-//		ppmPDialog.setTitle(Messages.getString("JFXMain.229")); //$NON-NLS-1$
-//		ppmPDialog.setContentText(Messages.getString("JFXMain.230")); //$NON-NLS-1$
-//		Optional<String> ppmPOptional = ppmPDialog.showAndWait();
-//		Double ppmP = PropertyHelper.parseDouble(ppmPOptional.get()).doubleValue();//Double.valueOf(ppmPOptional.get());
-//
-//		TextInputDialog ppmNDialog = new TextInputDialog(Messages.getString("JFXMain.231")); //$NON-NLS-1$
-//		ppmNDialog.initOwner(JFXMain.stage);
-//		ppmNDialog.setTitle(Messages.getString("JFXMain.232")); //$NON-NLS-1$
-//		ppmNDialog.setContentText(Messages.getString("JFXMain.233")); //$NON-NLS-1$
-//		Optional<String> ppmNOptional = ppmNDialog.showAndWait();
-//		Double ppmN = PropertyHelper.parseDouble(ppmNOptional.get()).doubleValue();
-//
-//		TextInputDialog pMODialog = new TextInputDialog(Messages.getString("JFXMain.234")); //$NON-NLS-1$
-//		pMODialog.initOwner(JFXMain.stage);
-//		pMODialog.setTitle(Messages.getString("JFXMain.235")); //$NON-NLS-1$
-//		pMODialog.setContentText(Messages.getString("JFXMain.236")); //$NON-NLS-1$
-//		Optional<String> pMOOptional = pMODialog.showAndWait();
-//		Double pMO = PropertyHelper.parseDouble(pMOOptional.get()).doubleValue();// Double.valueOf(pMOOptional.get());
-//
-//		TextInputDialog densidaDialog = new TextInputDialog(Messages.getNumberFormat().format(SueloItem.DENSIDAD_SUELO_KG)); //$NON-NLS-1$
-//		densidaDialog.initOwner(JFXMain.stage);
-//		densidaDialog.setTitle("Configure la densidad"); //$NON-NLS-1$
-//		densidaDialog.setContentText(SueloItem.DENSIDAD); //$NON-NLS-1$
-//		Optional<String> dOptional = densidaDialog.showAndWait();
-//		Double densidad = PropertyHelper.parseDouble(dOptional.get()).doubleValue();// Double.valueOf(pMOOptional.get());
-//		System.out.println("ingrese densidad "+densidad);
-//		
-//		CrearSueloMapTask umTask = new CrearSueloMapTask(labor,poli,ppmP,ppmN,pMO,densidad);
-		
+
+		//		TextInputDialog ppmPDialog = new TextInputDialog(Messages.getString("JFXMain.228")); //$NON-NLS-1$
+		//		ppmPDialog.initOwner(JFXMain.stage);
+		//		ppmPDialog.setTitle(Messages.getString("JFXMain.229")); //$NON-NLS-1$
+		//		ppmPDialog.setContentText(Messages.getString("JFXMain.230")); //$NON-NLS-1$
+		//		Optional<String> ppmPOptional = ppmPDialog.showAndWait();
+		//		Double ppmP = PropertyHelper.parseDouble(ppmPOptional.get()).doubleValue();//Double.valueOf(ppmPOptional.get());
+		//
+		//		TextInputDialog ppmNDialog = new TextInputDialog(Messages.getString("JFXMain.231")); //$NON-NLS-1$
+		//		ppmNDialog.initOwner(JFXMain.stage);
+		//		ppmNDialog.setTitle(Messages.getString("JFXMain.232")); //$NON-NLS-1$
+		//		ppmNDialog.setContentText(Messages.getString("JFXMain.233")); //$NON-NLS-1$
+		//		Optional<String> ppmNOptional = ppmNDialog.showAndWait();
+		//		Double ppmN = PropertyHelper.parseDouble(ppmNOptional.get()).doubleValue();
+		//
+		//		TextInputDialog pMODialog = new TextInputDialog(Messages.getString("JFXMain.234")); //$NON-NLS-1$
+		//		pMODialog.initOwner(JFXMain.stage);
+		//		pMODialog.setTitle(Messages.getString("JFXMain.235")); //$NON-NLS-1$
+		//		pMODialog.setContentText(Messages.getString("JFXMain.236")); //$NON-NLS-1$
+		//		Optional<String> pMOOptional = pMODialog.showAndWait();
+		//		Double pMO = PropertyHelper.parseDouble(pMOOptional.get()).doubleValue();// Double.valueOf(pMOOptional.get());
+		//
+		//		TextInputDialog densidaDialog = new TextInputDialog(Messages.getNumberFormat().format(SueloItem.DENSIDAD_SUELO_KG)); //$NON-NLS-1$
+		//		densidaDialog.initOwner(JFXMain.stage);
+		//		densidaDialog.setTitle("Configure la densidad"); //$NON-NLS-1$
+		//		densidaDialog.setContentText(SueloItem.DENSIDAD); //$NON-NLS-1$
+		//		Optional<String> dOptional = densidaDialog.showAndWait();
+		//		Double densidad = PropertyHelper.parseDouble(dOptional.get()).doubleValue();// Double.valueOf(pMOOptional.get());
+		//		System.out.println("ingrese densidad "+densidad);
+		//		
+		//		CrearSueloMapTask umTask = new CrearSueloMapTask(labor,poli,ppmP,ppmN,pMO,densidad);
+
 		CrearSueloMapTask umTask = new CrearSueloMapTask(labor,poli,recorrida);
 		umTask.installProgressBar(progressBox);
 
@@ -671,12 +686,12 @@ public class PoligonoGUIController extends AbstractGUIController{
 		});//fin del OnSucceeded
 		JFXMain.executorPool.execute(umTask);		
 	}
-	
+
 	private void doGuardarPoligono(Poligono layerObject){
 		layerObject.setActivo(true);
 		DAH.save(layerObject);
 	}
-	
+
 	/**
 	 * descargar los tiff correspondientes a un polygono y mostrarlos como ndvi
 	 * @param placementObject
@@ -698,14 +713,14 @@ public class PoligonoGUIController extends AbstractGUIController{
 
 
 		if(ndviDpDLG.finalDate != null){
-		//	File downloadLocation=null;
-//			try {
-//				downloadLocation = File.createTempFile(Messages.getString("JFXMain.214"), Messages.getString("JFXMain.215")).getParentFile(); //$NON-NLS-1$ //$NON-NLS-2$
-//			} catch (IOException e) {
-//
-//				e.printStackTrace();
-//			}//directoryChooser();
-		//	if(downloadLocation == null) return;
+			//	File downloadLocation=null;
+			//			try {
+			//				downloadLocation = File.createTempFile(Messages.getString("JFXMain.214"), Messages.getString("JFXMain.215")).getParentFile(); //$NON-NLS-1$ //$NON-NLS-2$
+			//			} catch (IOException e) {
+			//
+			//				e.printStackTrace();
+			//			}//directoryChooser();
+			//	if(downloadLocation == null) return;
 			ObservableList<Ndvi> observableList = FXCollections.observableArrayList(new ArrayList<Ndvi>());
 			observableList.addListener((ListChangeListener<Ndvi>) c -> {				
 				if(c.next()){
@@ -716,11 +731,11 @@ public class PoligonoGUIController extends AbstractGUIController{
 			});
 			if(placementObject !=null && Labor.class.isAssignableFrom(placementObject.getClass())){
 				Labor<?> l =(Labor<?>)placementObject;
-				
+
 				ReferencedEnvelope bounds = l.getOutCollection().getBounds();
 				Polygon pol = GeometryHelper.constructPolygon(bounds);
 				placementObject =GeometryHelper.constructPoligono(pol);
-				
+
 			} 
 			GetNdviForLaborTask4 task = new GetNdviForLaborTask4((Poligono)placementObject, observableList);
 			task.setBeginDate(ndviDpDLG.initialDate);
@@ -739,40 +754,40 @@ public class PoligonoGUIController extends AbstractGUIController{
 			JFXMain.executorPool.submit(task);
 		}
 	}
-	
+
 	/**
 	 * descargar los tiff correspondientes a un polygono y mostrarlos como ndvi
 	 * @param placementObject
 	 */
 	@SuppressWarnings("unchecked")
 	private void doGetLatestNdviForPoligono(Poligono poligono) {
-		
+
 		LocalDate fin =DateConverter.asLocalDate(new Date());
 		LocalDate begin = fin.minus(1, ChronoUnit.MONTHS);		
-			
-			//aca empieza el codigo una vez que la fecha esta configurada
-			ObservableList<Ndvi> observableList = FXCollections.observableArrayList(new ArrayList<Ndvi>());
-			observableList.addListener((ListChangeListener<Ndvi>) c -> {
-				
-				if(c.next()){
-					c.getAddedSubList().forEach((ndvi)->{
-						main.ndviGUIController.showNdvi(poligono, ndvi, false);
-					});//fin del foreach
-				}			
-			});				
-	
-			GetNdviForLaborTask4 task = new GetNdviForLaborTask4(poligono, observableList);
-			task.setBeginDate(begin);
-			task.setFinDate(fin);			
-			task.setIgnoreNDVI((List<Ndvi>) main.getObjectFromLayersOfClass(Ndvi.class));
-			System.out.println("procesando los datos entre "+begin+" y "+fin);//hasta aca ok!
-			task.installProgressBar(progressBox);
-			task.setOnSucceeded(handler -> {			
-				task.uninstallProgressBar();			
-			});
-			JFXMain.executorPool.submit(task);		
+
+		//aca empieza el codigo una vez que la fecha esta configurada
+		ObservableList<Ndvi> observableList = FXCollections.observableArrayList(new ArrayList<Ndvi>());
+		observableList.addListener((ListChangeListener<Ndvi>) c -> {
+
+			if(c.next()){
+				c.getAddedSubList().forEach((ndvi)->{
+					main.ndviGUIController.showNdvi(poligono, ndvi, false);
+				});//fin del foreach
+			}			
+		});				
+
+		GetNdviForLaborTask4 task = new GetNdviForLaborTask4(poligono, observableList);
+		task.setBeginDate(begin);
+		task.setFinDate(fin);			
+		task.setIgnoreNDVI((List<Ndvi>) main.getObjectFromLayersOfClass(Ndvi.class));
+		System.out.println("procesando los datos entre "+begin+" y "+fin);//hasta aca ok!
+		task.installProgressBar(progressBox);
+		task.setOnSucceeded(handler -> {			
+			task.uninstallProgressBar();			
+		});
+		JFXMain.executorPool.submit(task);		
 	}
-	
+
 	/**
 	 * metodo que toma un poligono lo clona y lo agrega a los layers de main
 	 */
@@ -785,8 +800,8 @@ public class PoligonoGUIController extends AbstractGUIController{
 		insertBeforeCompass(this.getWwd(), measureTool.getApplicationLayer());
 		this.getLayerPanel().update(this.getWwd());	
 	}
-	
-	
+
+
 	/**
 	 * metodo que reemplaza los puntos por una version interpolada
 	 */
@@ -797,43 +812,43 @@ public class PoligonoGUIController extends AbstractGUIController{
 		//h2: que los puntos alineados se reemplacen por sus extremos
 		//-> reemplazar cada grupo de puntos por un segmento de recta siempre que el error sea menor a e=E/L
 		JFXMain.executorPool.submit(()->{
-		GeometryHelper.simplificarPoligono(p);
+			GeometryHelper.simplificarPoligono(p);
 		});
-//		List<? extends Position> positions = measureTool.getPositions();//p.getPositions();
-//		List<Position> interpolated = new ArrayList<Position>();
-//		System.out.println("poligon size "+positions.size());
-//		positions.remove(0);
-//		positions.remove(positions.size()-1);
-//		System.out.println("poligon size "+positions.size());
-//		Position last = positions.get(positions.size()-1);
-//		for(int i=0;i<positions.size();i++) {
-//			Position este = positions.get(i);
-//			double dist = Position.linearDistance(este, last).degrees;
-//			//int nextIndex = i+1 < positions.size() ? i+1 : 0;
-//			System.out.println("este "+i);
-//			//Position next = positions.get(nextIndex);
-//			
-//			//Position interp = last.subtract(este);//Position.interpolate(1.3, last, este);
-//			//double deltaLat = este.latitude.degrees-last.latitude.degrees;
-//			//double deltaLon = este.longitude.degrees-last.longitude.degrees;
-//			//Position interp=Position.fromDegrees(deltaLat*1/3, deltaLon*1/3);
-//			//interp=este.subtract(interp);
-//			Position interp = Position.interpolate(2/3, last, este);
-//			interpolated.add(interp);
-//			interpolated.add(este);
-//			
-//			last=este;
-//		}
-//		interpolated.add(interpolated.get(0));
-		
+		//		List<? extends Position> positions = measureTool.getPositions();//p.getPositions();
+		//		List<Position> interpolated = new ArrayList<Position>();
+		//		System.out.println("poligon size "+positions.size());
+		//		positions.remove(0);
+		//		positions.remove(positions.size()-1);
+		//		System.out.println("poligon size "+positions.size());
+		//		Position last = positions.get(positions.size()-1);
+		//		for(int i=0;i<positions.size();i++) {
+		//			Position este = positions.get(i);
+		//			double dist = Position.linearDistance(este, last).degrees;
+		//			//int nextIndex = i+1 < positions.size() ? i+1 : 0;
+		//			System.out.println("este "+i);
+		//			//Position next = positions.get(nextIndex);
+		//			
+		//			//Position interp = last.subtract(este);//Position.interpolate(1.3, last, este);
+		//			//double deltaLat = este.latitude.degrees-last.latitude.degrees;
+		//			//double deltaLon = este.longitude.degrees-last.longitude.degrees;
+		//			//Position interp=Position.fromDegrees(deltaLat*1/3, deltaLon*1/3);
+		//			//interp=este.subtract(interp);
+		//			Position interp = Position.interpolate(2/3, last, este);
+		//			interpolated.add(interp);
+		//			interpolated.add(este);
+		//			
+		//			last=este;
+		//		}
+		//		interpolated.add(interpolated.get(0));
+
 		//measureTool.setPositions((ArrayList<? extends Position>) interpolated);
-		
+
 		//p.setPositions(interpolated);
 	}
 
 
 
-	
+
 	public void doCrearCirculo(Object layerObject) {
 		Camino c = (Camino)layerObject;
 		List<Position> positions = c.getPositions();
@@ -846,7 +861,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 		}
 	}
 
-	
+
 	public void doCrearPoligono(){
 		Poligono poli = new Poligono();
 		MeasureTool measureTool = PoligonLayerFactory.createPoligonMeasureTool(poli, this.getWwd(), this.getLayerPanel());
@@ -875,7 +890,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 			this.getLayerPanel().update(this.getWwd());
 		});
 	}
-	
+
 	public void doCortarLaborPorPoligono(Labor<?> laborACortar) {
 		List<Poligono> geometriasActivas = getEnabledPoligonos();
 
@@ -926,7 +941,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 		insertBeforeCompass(this.getWwd(), measureTool.getApplicationLayer());
 		this.getLayerPanel().update(this.getWwd());		
 	}
-	
+
 
 	public void doMedirDistancia(){
 		Camino camino = new Camino();
@@ -960,7 +975,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 			this.getLayerPanel().update(this.getWwd());
 		});
 	}
-	
+
 	/**
 	 * metodo que toma los poligonos seleccionados calcula la inteseccion y agrega
 	 * los poligonos intesectados
@@ -1014,8 +1029,8 @@ public class PoligonoGUIController extends AbstractGUIController{
 			}
 		});
 	}
-	
-	
+
+
 
 	private void doConvertirPoligonosACosecha() {
 		List<Poligono> geometriasActivas = new ArrayList<Poligono>();
@@ -1105,9 +1120,9 @@ public class PoligonoGUIController extends AbstractGUIController{
 
 	}
 
-	
 
-	
+
+
 
 	private void doCrearCosecha(List<Poligono> polis) {
 		CosechaLabor labor = new CosechaLabor();
@@ -1122,12 +1137,12 @@ public class PoligonoGUIController extends AbstractGUIController{
 			return;
 		}		
 		Double rindeEsperado = cosechaConfigured.get().getCultivo().getRindeEsperado();
-			
+
 		Double rinde = NumberInputDialog.showAndWait(Messages.getString("JFXMain.cosechaNumTitle"), 
-													Messages.getString("JFXMain.cosechaNumHeader"),  
-													Messages.getString("JFXMain.cosechaNumLabel"),
-													Messages.getNumberFormat().format(rindeEsperado), 
-													Messages.getString("JFXMain.SeparatorWarningTooltip"));
+				Messages.getString("JFXMain.cosechaNumHeader"),  
+				Messages.getString("JFXMain.cosechaNumLabel"),
+				Messages.getNumberFormat().format(rindeEsperado), 
+				Messages.getString("JFXMain.SeparatorWarningTooltip"));
 		if (rinde.isNaN()) {
 			return;
 		}
@@ -1204,22 +1219,22 @@ public class PoligonoGUIController extends AbstractGUIController{
 			}
 		}
 	}
-	
+
 	public void showPoligonos(List<Poligono> poligonos) {
-		
+
 		Platform.runLater(()->{
 			for(Poligono poli : poligonos){
-			MeasureTool measureTool = PoligonLayerFactory.createPoligonMeasureTool(poli, this.getWwd(), this.getLayerPanel());
-		
+				MeasureTool measureTool = PoligonLayerFactory.createPoligonMeasureTool(poli, this.getWwd(), this.getLayerPanel());
+
 				insertBeforeCompass(this.getWwd(), measureTool.getApplicationLayer());
 				this.getLayerPanel().update(this.getWwd());//ponerlo fuera del for?
-			
-		}
+
+			}
 		});
 	}
-	
 
-	
+
+
 	public void showPoligonosActivos() {
 		List<Poligono> poligonos = DAH.getPoligonosActivos();
 		showPoligonos(poligonos);
@@ -1229,13 +1244,68 @@ public class PoligonoGUIController extends AbstractGUIController{
 		//poligonos.stream().forEach(p->this.doGetLatestNdviForPoligono(p));		
 	}
 
-	
+
 	/**
 	 * @see doExtraerPoligonos(Labor<?>) para ver como optimizar este codigo
 	 * @ metodo que lee todas las geometrias de todos los archivos seleccionados y los carga como poligonos en memoria
-	 * @param files
+	 * @param files viene con null 
 	 */
 	public void doImportarPoligonos(List<File> files) {
+		if(files == null) {
+			files = FileHelper.chooseFiles("kml,shp", "*.kml; *.shp");
+			List<File> klmFiles = files.stream().filter(f->f.getName().endsWith("kml")).collect(Collectors.toList());
+			for(File source :klmFiles) {
+
+				try {
+					KMLRoot kmlRoot = KMLRoot.create(source);
+					if (kmlRoot == null) {
+						String message = Logging.getMessage("generic.UnrecognizedSourceType", source.toString(),
+								source.toString());
+						throw new IllegalArgumentException(message);
+					}
+
+					try{
+						// Try with a namespace aware parser.
+						kmlRoot.parse();
+					}  catch (XMLStreamException e) {
+						// Try without namespace awareness.
+						kmlRoot = KMLRoot.create(source, false);
+						kmlRoot.parse();
+					}
+					//AVList fields = kmlRoot.getFields();
+					KMLDocument doc = (KMLDocument) kmlRoot.getField("Document");				   
+					List<KMLAbstractFeature> docFeatures = doc.getFeatures();
+					Queue<KMLAbstractFeature> featuresQueue=new ConcurrentLinkedQueue<>();
+					featuresQueue.addAll(docFeatures);
+					while(!featuresQueue.isEmpty()) {
+						KMLAbstractFeature feature = featuresQueue.poll();
+						if(feature instanceof KMLPlacemark) {
+							KMLPlacemark placemark = (KMLPlacemark)feature;
+							importPlacemarkPoligon(placemark);							
+						} else if(feature instanceof KMLFolder) {
+							KMLFolder folder=(KMLFolder)feature;
+							featuresQueue.addAll(folder.getFeatures());
+
+						}
+					}
+					//					for(  KMLAbstractFeature feature : docFeatures ) {
+					//						if(feature instanceof KMLPlacemark) {
+					//							KMLPlacemark placemark = (KMLPlacemark)feature;
+					//							importPlacemarkPoligon(placemark);							
+					//						} else if(feature instanceof KMLFolder) {
+					//							KMLFolder folder=(KMLFolder)feature;
+					//							//folder.getFeatures()
+					//
+					//						}
+					//					}		
+					this.getLayerPanel().update(this.getWwd());
+				} catch (IOException | XMLStreamException e) {
+					e.printStackTrace();
+				}
+
+			}
+		}
+
 		List<FileDataStore> stores = FileHelper.chooseShapeFileAndGetMultipleStores(files);
 		executorPool.submit(()->{
 			if (stores != null) {for(FileDataStore store : stores){//abro cada store y lo dibujo en el harvestMap individualmente
@@ -1280,5 +1350,24 @@ public class PoligonoGUIController extends AbstractGUIController{
 			}//fin del for stores
 			}//if stores != null
 		});
+	}
+
+
+	public void importPlacemarkPoligon(KMLPlacemark placemark) {
+		try {
+			String name = placemark.getName();
+			KMLBoundary boundary = (KMLBoundary)placemark.getGeometry().getField("outerBoundaryIs");
+			PositionList coordinates = boundary.getLinearRing().getCoordinates();
+			Poligono poli = GeometryHelper.constructPolygon(coordinates);
+			poli.setNombre(name);		
+			double lonLatArea = poli.toGeometry().getArea();
+			Double has = ProyectionConstants.A_HAS(lonLatArea);
+
+			MeasureTool measureTool = PoligonLayerFactory.createPoligonMeasureTool(poli, this.getWwd(), this.getLayerPanel());
+			poli.setArea(has);
+			insertBeforeCompass(this.getWwd(), measureTool.getApplicationLayer());
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

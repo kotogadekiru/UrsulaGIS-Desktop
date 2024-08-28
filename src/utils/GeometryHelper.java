@@ -29,6 +29,7 @@ import dao.Labor;
 import dao.LaborItem;
 import dao.Poligono;
 import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.geom.Position.PositionList;
 import gov.nasa.worldwind.util.measure.MeasureTool;
 import gui.PoligonLayerFactory;
 import tasks.procesar.ExtraerPoligonosDeLaborTask;
@@ -481,19 +482,19 @@ public class GeometryHelper {
 		//ExtraerPoligonosDeLaborTask.geometryToPoligono((Geometry)g);
 		System.out.println("convirtiendo geometria a poligono "+g);		
 		List<Position> positions = new ArrayList<Position>();		
-			
+
 		if(g instanceof Polygon) {
 			Polygon pol =(Polygon)g;
 			System.out.println("es polygon");
-			
+
 			Coordinate[] coords = pol.getExteriorRing().getCoordinates();
 			for(int i=0;i<coords.length;i++) {
 				Coordinate c = coords[i];
 				positions.add(Position.fromDegrees(c.y, c.x));
 			}
 			positions.add(positions.get(0));
-			
-			
+
+
 			for(int r=0;r<pol.getNumInteriorRing();r++) {
 				List<Position> hole =new ArrayList<Position>();	
 				LineString ring = pol.getInteriorRingN(r);
@@ -507,13 +508,13 @@ public class GeometryHelper {
 			}			
 		}
 
-		
+
 		Poligono p = new Poligono();
 		p.setPositions(positions);		
 		p.setArea(GeometryHelper.getHas(g));
 		return p;
 	}
-	
+
 	public static Double distance(Position p1,Position p2) {		
 		return Position.linearDistance(p1, p2).degrees;
 	}
@@ -778,51 +779,51 @@ public class GeometryHelper {
 
 	public static Geometry unirCascading(Labor<?> aUnir,Envelope bounds) {
 		try {
-		List<Geometry> boundsGeoms = new ArrayList<Geometry>();
-		List<LaborItem> boundsFeatures = (List<LaborItem>)aUnir.cachedOutStoreQuery(bounds);
-		if(ProyectionConstants.A_HAS(bounds.getArea()) > 1				
-				&& boundsFeatures.size()>1000) {//divido hasta que cubre 1has
-//			System.out.println("bounds area = "+ProyectionConstants.A_HAS(bounds.getArea()));
-			//si es mayor a 100m2 divido en 4
-			List<Envelope> envelopes = splitEnvelope(bounds);
+			List<Geometry> boundsGeoms = new ArrayList<Geometry>();
+			List<LaborItem> boundsFeatures = (List<LaborItem>)aUnir.cachedOutStoreQuery(bounds);
+			if(ProyectionConstants.A_HAS(bounds.getArea()) > 1				
+					&& boundsFeatures.size()>1000) {//divido hasta que cubre 1has
+				//			System.out.println("bounds area = "+ProyectionConstants.A_HAS(bounds.getArea()));
+				//si es mayor a 100m2 divido en 4
+				List<Envelope> envelopes = splitEnvelope(bounds);
 
-			for(Envelope e:envelopes) {
+				for(Envelope e:envelopes) {
 
-				Geometry eGeom = unirCascading(aUnir,e);
-				if(eGeom !=null) {
-					boundsGeoms.add(eGeom);
-				} 
+					Geometry eGeom = unirCascading(aUnir,e);
+					if(eGeom !=null) {
+						boundsGeoms.add(eGeom);
+					} 
 
+				}
+
+			} else {
+				//List<LaborItem> boundsFeatures = (List<LaborItem>)aUnir.cachedOutStoreQuery(bounds);
+				if(boundsFeatures.size()>0) {
+					//			System.out.println("joining "+boundsFeatures.size());
+					boundsGeoms.addAll( boundsFeatures.parallelStream()
+							.map(i->i.getGeometry())					
+							.collect(Collectors.toList()));
+				}
 			}
 
-		} else {
-			//List<LaborItem> boundsFeatures = (List<LaborItem>)aUnir.cachedOutStoreQuery(bounds);
-			if(boundsFeatures.size()>0) {
-//			System.out.println("joining "+boundsFeatures.size());
-			boundsGeoms.addAll( boundsFeatures.parallelStream()
-					.map(i->i.getGeometry())					
-					.collect(Collectors.toList()));
+
+			//System.out.println("juntando "+boundsGeoms.size()+" geoms");
+			Geometry union = null; 
+			//toGeometryCollection(boundsGeoms).buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection
+			try {
+				union = unirGeometrias(boundsGeoms);
+
+			}catch(Exception e ) {
+				Double buffer = ProyectionConstants.metersToLongLat(0.25);
+				union = toGeometryCollection(boundsGeoms).buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection
+				e.printStackTrace();
 			}
-		}
-
-		
-		//System.out.println("juntando "+boundsGeoms.size()+" geoms");
-		Geometry union = null; 
-				//toGeometryCollection(boundsGeoms).buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection
-		try {
-			union = unirGeometrias(boundsGeoms);
-
-		}catch(Exception e ) {
-			Double buffer = ProyectionConstants.metersToLongLat(0.25);
-			union = toGeometryCollection(boundsGeoms).buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection
-			e.printStackTrace();
-		}
-		return union;
+			return union;
 		}catch(Exception e ) {
 			e.printStackTrace();
 			return null;
-			}	
-		}
+		}	
+	}
 
 
 
@@ -851,9 +852,9 @@ public class GeometryHelper {
 			List<Geometry> aUnird = aUnir.parallelStream().filter(g->g!=null&&!g.isEmpty()).map(g->{
 				try {
 					if(!g.isEmpty()) {
-				Densifier densifier = new Densifier(g);
-				densifier.setDistanceTolerance(ProyectionConstants.metersToLongLat(10));
-				g=densifier.getResultGeometry();//java.lang.ArrayIndexOutOfBoundsException: -1
+						Densifier densifier = new Densifier(g);
+						densifier.setDistanceTolerance(ProyectionConstants.metersToLongLat(10));
+						g=densifier.getResultGeometry();//java.lang.ArrayIndexOutOfBoundsException: -1
 					}
 				}catch(Exception e) {
 					System.err.println("fallo densifier con "+g);
@@ -889,30 +890,30 @@ public class GeometryHelper {
 			System.err.println("fallo collection buffer uniendo de a una "+aUnir);
 			//e.printStackTrace();
 			Geometry union=null;
-			
-//			Geometry[] unionContainer = aUnir.parallelStream().collect(
-//					()->new Geometry[1],
-//					(arr,g)->{
-//						if(arr[0]==null) {
-//							arr[0]=g;
-//						}else {
-//							try {
-//								arr[0]=arr[0].union(g);
-//							}catch(Exception e2) {
-//								e2.printStackTrace();
-//							}
-//						}
-//					},
-//					(arr1,arr2)->{
-//						try {
-//							arr1[0]=arr1[0].union(arr2[0]);
-//						}catch(Exception e2) {
-//							e2.printStackTrace();
-//						}
-//					}
-//					);
-//			union=unionContainer[0];
-			
+
+			//			Geometry[] unionContainer = aUnir.parallelStream().collect(
+			//					()->new Geometry[1],
+			//					(arr,g)->{
+			//						if(arr[0]==null) {
+			//							arr[0]=g;
+			//						}else {
+			//							try {
+			//								arr[0]=arr[0].union(g);
+			//							}catch(Exception e2) {
+			//								e2.printStackTrace();
+			//							}
+			//						}
+			//					},
+			//					(arr1,arr2)->{
+			//						try {
+			//							arr1[0]=arr1[0].union(arr2[0]);
+			//						}catch(Exception e2) {
+			//							e2.printStackTrace();
+			//						}
+			//					}
+			//					);
+			//			union=unionContainer[0];
+
 			for(Geometry g:aUnir) {
 				if(union==null) {
 					union=g;
@@ -947,38 +948,38 @@ public class GeometryHelper {
 	 * metodo llamado en labor.getContorno
 	 * @param labor
 	 */
-//	public static void extractContorno(Labor<?> labor) {
-//		//TODO compute contorno
-//		//		List<Geometry> geometriesCat = new ArrayList<Geometry>();
-//		//		SimpleFeatureIterator it = labor.outCollection.features();
-//
-//
-//
-//		//		while(it.hasNext()){
-//		//			SimpleFeature f=it.next();
-//		//			geometriesCat.add((Geometry)f.getDefaultGeometry());
-//		//		}
-//		//		it.close();		
-//
-//		try{					
-//			ReferencedEnvelope bounds = labor.outCollection.getBounds();
-//			//System.out.println("outCollectionBounds "+bounds);
-//			Geometry cascadedUnion = unirCascading(labor,bounds);
-//			//Geometry buffered = GeometryHelper.unirGeometrias(geometriesCat);
-//			//CascadedPolygonUnion.union(geometriesCat);
-//			//sino le pongo buffer al resumir geometrias me quedan rectangulos medianos
-//			//				buffered = buffered.buffer(
-//			//						ProyectionConstants.metersToLongLat(0.25),
-//			//						1,BufferParameters.CAP_SQUARE);
-//			//buffered =GeometryHelper.simplificarContorno(buffered);
-//			Poligono contorno =GeometryHelper.constructPoligono(cascadedUnion);
-//			//	simplificarPoligono(contorno);
-//			contorno.setNombre(labor.getNombre());
-//			//labor.setContorno(contorno);
-//		}catch(Exception e){
-//			e.printStackTrace();
-//		}
-//	}
+	//	public static void extractContorno(Labor<?> labor) {
+	//		//TODO compute contorno
+	//		//		List<Geometry> geometriesCat = new ArrayList<Geometry>();
+	//		//		SimpleFeatureIterator it = labor.outCollection.features();
+	//
+	//
+	//
+	//		//		while(it.hasNext()){
+	//		//			SimpleFeature f=it.next();
+	//		//			geometriesCat.add((Geometry)f.getDefaultGeometry());
+	//		//		}
+	//		//		it.close();		
+	//
+	//		try{					
+	//			ReferencedEnvelope bounds = labor.outCollection.getBounds();
+	//			//System.out.println("outCollectionBounds "+bounds);
+	//			Geometry cascadedUnion = unirCascading(labor,bounds);
+	//			//Geometry buffered = GeometryHelper.unirGeometrias(geometriesCat);
+	//			//CascadedPolygonUnion.union(geometriesCat);
+	//			//sino le pongo buffer al resumir geometrias me quedan rectangulos medianos
+	//			//				buffered = buffered.buffer(
+	//			//						ProyectionConstants.metersToLongLat(0.25),
+	//			//						1,BufferParameters.CAP_SQUARE);
+	//			//buffered =GeometryHelper.simplificarContorno(buffered);
+	//			Poligono contorno =GeometryHelper.constructPoligono(cascadedUnion);
+	//			//	simplificarPoligono(contorno);
+	//			contorno.setNombre(labor.getNombre());
+	//			//labor.setContorno(contorno);
+	//		}catch(Exception e){
+	//			e.printStackTrace();
+	//		}
+	//	}
 
 	public static void simplificarPoligono(Poligono p) {
 		Geometry g = p.toGeometry();
@@ -1072,6 +1073,35 @@ public class GeometryHelper {
 		//DouglasPeuckerSimplifier simp;
 		return DouglasPeuckerSimplifier.simplify(g, tolerance);
 
+	}
+
+	public static Poligono constructPolygon(PositionList coordinates) {		
+		System.out.println("convirtiendo PositionList a poligono "+coordinates);		
+		List<Position> positions = new ArrayList<Position>();
+		for(Position pos: coordinates.list) {
+			positions.add(pos);
+		}
+//		positions.add(positions.get(0));
+
+
+//		for(int r=0;r<pol.getNumInteriorRing();r++) {
+//			List<Position> hole =new ArrayList<Position>();	
+//			LineString ring = pol.getInteriorRingN(r);
+//			Coordinate[] ringCoords = ring.reverse().getCoordinates();
+//			for(int i=0;i<ringCoords.length;i++) {
+//				Coordinate c = ringCoords[i];
+//				hole.add(Position.fromDegrees(c.y, c.x));
+//			}
+//			//hole.add(hole.get(0));
+//			insertHole(positions,hole);
+//		}			
+
+
+
+		Poligono p = new Poligono();
+		p.setPositions(positions);		
+	//	p.setArea(GeometryHelper.getHas(g));
+		return p;
 	}
 
 
