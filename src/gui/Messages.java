@@ -103,6 +103,7 @@ public class Messages {
 		 locales.add(new Locale("ES"));
 		 locales.add(new Locale("EN"));
 		 locales.add(new Locale("PT"));
+		 locales.add(new Locale("FR"));
 		return locales;
 	}
 	

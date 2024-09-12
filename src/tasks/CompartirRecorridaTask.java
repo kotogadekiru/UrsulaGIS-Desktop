@@ -56,7 +56,10 @@ public class CompartirRecorridaTask extends Task<String> {
 	private static final String MMG_GUI_EVENT_CLOSE_PNG = "/gui/event-close.png";
 	public static final String ZOOM_TO_KEY = "ZOOM_TO";
 
-	public static final String INSERT_URL = "https://www.ursulagis.com/api/recorridas/insert/";
+	//public static final String BASE_URL="https://sheltered-mesa-69562-dev-514e4d674053.herokuapp.com/";
+	//public static final String BASE_URL="http://localhost:5000/";
+	public static final String BASE_URL="https://www.ursulagis.com/";
+	public static final String INSERT_URL = BASE_URL+"api/recorridas/insert/";
 	//public static final String INSERT_URL = "http://localhost:5000/api/recorridas/insert/";
 	private ProgressBar progressBarTask;
 	private Pane progressPane;

@@ -1,5 +1,6 @@
 package dao.recorrida;
 
+import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -41,7 +42,7 @@ import lombok.Setter;
 public class Muestra {
 	public static final String FIND_ALL = "Muestra.findAll";
 	public static final String FIND_NAME = "Muestra.findName";
-	
+
 	@Id @GeneratedValue//(strategy = GenerationType.IDENTITY)
 	private Long id;
 	/**
@@ -56,20 +57,20 @@ public class Muestra {
 	//public String posicion=new String();//json {long,lat}
 	public Double latitude= new Double(0.0);
 	public Double longitude=new Double(0.0);
-	
-	
+
+
 	@ManyToOne
 	private Recorrida recorrida=null;
-	
+
 	public Muestra() {
-		
+
 	}
 
 	public Position getPosition() {
 		Double elevacion = this.getProps().getOrDefault("Elevacion", 10.0);	
 		return Position.fromDegrees(this.latitude,this.longitude,elevacion);
 	}
-	
+
 	@Override
 	public String toString() {
 		return subNombre==null?nombre:nombre+" ("+subNombre+")";
@@ -85,16 +86,16 @@ public class Muestra {
 		map.put(SueloItem.PC_MO, "");
 		map.put(SueloItem.PROF_NAPA, "");
 		map.put(SueloItem.AGUA_PERFIL, "");
-		
+
 		String densidadDefault =  Messages.getNumberFormat().format(SueloItem.DENSIDAD_SUELO_KG);
 		map.put(SueloItem.DENSIDAD,densidadDefault);
-		
-		map.put(SueloItem.ELEVACION,"");
-		
+
+		map.put(SueloItem.ELEVACION,"10");
+
 		String observacion = new Gson().toJson(map);
 		this.setObservacion(observacion);		
 	}
-	
+
 	/**
 	 * metodo practico que convierte de obs a un map de numeros
 	 * @return
@@ -102,7 +103,7 @@ public class Muestra {
 	@Transient
 	public Map<String,Double> getProps(){
 		String obs = this.getObservacion();
-
+		NumberFormat nf = Messages.getNumberFormat();
 		@SuppressWarnings("unchecked")
 		Map<String,String> map = new Gson().fromJson(obs, Map.class);	 
 
@@ -111,9 +112,16 @@ public class Muestra {
 			Object value = map.get(k);
 			if(String.class.isAssignableFrom(value.getClass())) {				
 				Double dValue = new Double(0);
-				try { dValue=new Double((String)value);
+				try {					
+					if(value != null 
+							&& !"".equals(value)) {
+						dValue = nf.parse((String)value).doubleValue(); 
+					}
+					//dValue=new Double((String)value);
 				}catch(Exception e) {
-					System.err.println("error en k= "+k+" tratando de parsear \""+value+"\" reemplazo por 0");}
+					System.err.println("error en k: "+k+" tratando de parsear \""+value+"\" reemplazo por 0");
+					e.printStackTrace();
+				}
 				props.put(k, dValue);//ojo number format exception
 			} else if(Number.class.isAssignableFrom(value.getClass())) {
 				props.put(k, ((Number)value).doubleValue());

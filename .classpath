@@ -83,5 +83,16 @@
 	<classpathentry kind="lib" path="libs/pdfbox-app-2.0.27.jar"/>
 	<classpathentry kind="lib" path="libs/controlsfx-8.40.13.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/worldwind"/>
+	<classpathentry kind="lib" path="libs/google-http-client/google-cloud-translate-2.47.0.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/UrsulaGIS-Desktop/libs/google-http-client/google-cloud-translate-2.47.0-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="libs/google-http-client/google-auth-library-credentials-1.24.1.jar"/>
+	<classpathentry kind="lib" path="libs/google-http-client/google-cloud-translate-2.17.0.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/UrsulaGIS-Desktop/libs/google-http-client/google-cloud-translate-2.17.0-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

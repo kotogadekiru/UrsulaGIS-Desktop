@@ -112,7 +112,7 @@ public class CompartirCosechaLaborTask extends Task<String> {
 
 			System.out.println("convirtirndo CosechaLabor a json "+this.ordenCosecha);
 			String json_body = gson.toJson(this.ordenCosecha, OrdenCosecha.class);
-			System.out.println("sending FertilizacionLabor "+ json_body);
+			System.out.println("sending CosechaLabor "+ json_body);
 
 			final HttpContent content = new ByteArrayContent("application/json", json_body.getBytes("UTF8") );
 
@@ -177,12 +177,12 @@ public class CompartirCosechaLaborTask extends Task<String> {
 	}
 
 	public static OrdenCosecha constructOrdenCosecha(CosechaLabor fl) {	
-		OrdenCosecha of = new OrdenCosecha();
-				of.setNombre(fl.getNombre());
+		OrdenCosecha oCos = new OrdenCosecha();
+				oCos.setNombre(fl.getNombre());
 				Locale loc = new Locale("en", "US");
 				DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.DEFAULT, loc);
-				of.setFecha(dateFormat.format(fl.getFecha()));
-				of.setSuperficie(Messages.getNumberFormat().format(fl.getCantidadLabor()));
+				oCos.setFecha(dateFormat.format(fl.getFecha()));
+				oCos.setSuperficie(Messages.getNumberFormat().format(fl.getCantidadLabor()));
 
 				OrdenCosechaItem i = new OrdenCosechaItem();
 				Double has =fl.getCantidadLabor();				
@@ -202,24 +202,26 @@ public class CompartirCosechaLaborTask extends Task<String> {
 				if(has>0) {
 					i.setRinde(i.getCantidad()/has);
 				}				
-				of.getItems().add(i);
+				oCos.getItems().add(i);
 					
 				Geometry contornoG = GeometryHelper.extractContornoGeometry(fl);
 				
 				Poligono contornoP =GeometryHelper.constructPoligono(contornoG);
 				if(contornoP!=null) {
-					of.setPoligonoString(contornoP.getPositionsString());
+					oCos.setPoligonoString(contornoP.getPositionsString());
+				} else {
+					System.out.println("no se pudo extraer el contorno de la cosecha");
 				}
 				//FIXME remover esta linea cuando este labor.getContorno()
 				//of.setPoligonoString("{{-33.97004901,-61.97283410}{-33.96899577,-61.97077580}{-33.96843874,-61.97000910}{-33.96754022,-61.96826020}{-33.96388561,-61.96149850}{-33.96288863,-61.95616530}{-33.96700029,-61.95294330}{-33.96704333,-61.95303640}{-33.96700184,-61.95294300}{-33.97246661,-61.94866120}{-33.98082214,-61.96440070}{-33.97551342,-61.96855690}{-33.97550620,-61.96854050}{-33.97551187,-61.96855730}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283410}}");
 				
 			
-				Optional<OrdenCosecha> retOp = OrdenCosechaPaneController.config(of);
+				Optional<OrdenCosecha> retOp = OrdenCosechaPaneController.config(oCos);
 	
 
 		if(retOp.isPresent()) {
-			of=retOp.get();
-			return of;
+			oCos=retOp.get();
+			return oCos;
 		} else {return null;}
 		
 	}

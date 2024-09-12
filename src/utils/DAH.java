@@ -643,8 +643,13 @@ public class DAH {
 		TypedQuery<Producto> query = em().createNamedQuery(
 				Producto.FIND_NAME, Producto.class);
 		query.setParameter("name", productoNombre);
-		Producto results = query.getSingleResult();//Exception Description: Missing class indicator field from database row [ArrayRecord(PRODUCTO.DTYPE => null)].
-		return results;		
+		Producto result = null;
+		if(query.getResultList().size()>0){
+			result = query.getResultList().get(0);//getFirstResult();
+			//System.out.println("buscando "+nombre+" encontre "+result);
+		}  
+		//Producto results = query.getSingleResult();//Exception Description: Missing class indicator field from database row [ArrayRecord(PRODUCTO.DTYPE => null)].
+		return result;		
 	}
 
 	public static Semilla getSemilla(String nombre) {

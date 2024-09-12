@@ -7,8 +7,12 @@ import java.io.Reader;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.text.DateFormat;
+import java.text.NumberFormat;
 import java.util.Locale;
 import java.util.Optional;
+
+import org.geotools.data.simple.SimpleFeatureIterator;
+import org.opengis.feature.simple.SimpleFeature;
 
 import com.google.api.client.http.ByteArrayContent;
 import com.google.api.client.http.GenericUrl;
@@ -37,9 +41,12 @@ import api.OrdenSiembra;
 import api.OrdenSiembraItem;
 import api.StandardResponse;
 import dao.Labor;
+import dao.LaborItem;
 import dao.Poligono;
 import dao.config.Configuracion;
+import dao.config.Cultivo;
 import dao.config.Fertilizante;
+import dao.config.Semilla;
 import dao.ordenCompra.Producto;
 import dao.siembra.SiembraLabor;
 import gui.Messages;
@@ -58,6 +65,7 @@ import utils.DAH;
 import utils.FileHelper;
 import utils.GeometryHelper;
 import utils.JsonUtil;
+import utils.ProyectionConstants;
 import utils.TarjetaHelper;
 import utils.UnzipUtility;
 
@@ -80,9 +88,9 @@ public class CompartirSiembraLaborTask extends Task<String> {
 
 
 
-	public CompartirSiembraLaborTask(SiembraLabor siembraLabor,OrdenSiembra ordenPulv) {
+	public CompartirSiembraLaborTask(SiembraLabor siembraLabor,OrdenSiembra orden) {
 		this.siembraLabor = siembraLabor;
-		this.ordenSiembra = ordenPulv;
+		this.ordenSiembra = orden;
 		System.out.println("compartiendo SiembraLabor "+siembraLabor);
 		//System.out.println("items "+siembraLabor.getItems().size());
 	}
@@ -173,22 +181,86 @@ public class CompartirSiembraLaborTask extends Task<String> {
 		DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.DEFAULT, loc);
 		orden.setFecha(dateFormat.format(siembra.getFecha()));		
 		orden.setSuperficie(Messages.getNumberFormat().format(siembra.getCantidadLabor()));
-
-		OrdenSiembraItem i = new OrdenSiembraItem();
+		
+		
+		/*   viene de orden compra  */
+		Semilla producto =siembra.getSemilla();
+		
+		Cultivo cultivo = producto.getCultivo();
+		Double semBolsa = cultivo.getSemPorBolsa();
+		double kgBolsa=1;
+		if(semBolsa!=null && semBolsa>0) {
+			Double pMil = producto.getPesoDeMil();
+			kgBolsa=semBolsa*pMil/1000000;			
+		}
+		
+		double fertCTotal=0;
+		double fertLTotal=0;
+		double insumoTotal=0;
+		double laborTotal=0;
+		SimpleFeatureIterator it = siembra.outCollection.features();
+		fertCTotal =  siembra.getCantidadFertilizanteCostado();
+		fertLTotal = siembra.getCantidadFertilizanteLinea();
+		while(it.hasNext()){
+			SimpleFeature f = it.next();
+			Double rinde = LaborItem.getDoubleFromObj(f.getAttribute(siembra.colAmount.get()));//labor.colAmount.get()
+			Geometry geometry = (Geometry) f.getDefaultGeometry();
+			Double area = geometry.getArea() * ProyectionConstants.A_HAS();			
+			insumoTotal+=rinde*area;
+			laborTotal+=area;
+		}
+		it.close();			
+		//putItem(prodCantidadMap, siembra.getProductoLabor(), laborTotal,siembra.getPrecioLabor());
+		OrdenSiembraItem itemLabor = new OrdenSiembraItem();
+		itemLabor.setProducto(siembra.getProductoLabor());		
+		itemLabor.setCantidad(laborTotal);
+		itemLabor.setDosisHa(1.0);
+		orden.getItems().add(itemLabor);
+		
+		NumberFormat nf = Messages.getNumberFormat();
+		//putItem(prodCantidadMap, producto, insumoTotal/kgBolsa,siembra.getPrecioInsumo());
+		OrdenSiembraItem itemSemilla = new OrdenSiembraItem();
+		itemSemilla.setProducto(producto);		
+		itemSemilla.setCantidad(insumoTotal/kgBolsa);//kgBolsa no es cero
+		itemSemilla.setDosisHa(itemSemilla.getCantidad()/laborTotal);
+		itemSemilla.setObservaciones("Cantidad en bolsas de "
+									+nf.format(semBolsa)+" semilas por bolsa y "
+									+nf.format(kgBolsa)+"Kg");
+		orden.getItems().add(itemSemilla);
+		
+		//putItem(prodCantidadMap, siembra.getFertLinea(), fertLTotal,0.0);
+		OrdenSiembraItem itemFertL = new OrdenSiembraItem();
+		itemFertL.setProducto(siembra.getFertLinea());		
+		itemFertL.setCantidad(fertLTotal);//kgBolsa no es cero	
+		itemFertL.setDosisHa(fertLTotal/laborTotal);
+		orden.getItems().add(itemFertL);
+		
+		//putItem(prodCantidadMap, siembra.getFertCostado(), fertCTotal,0.0);
+		OrdenSiembraItem itemFertC = new OrdenSiembraItem();
+		itemFertC.setProducto(siembra.getFertCostado());		
+		itemFertC.setCantidad(fertCTotal);
+		itemFertC.setDosisHa(fertCTotal/laborTotal);
+		if(fertCTotal>0) {
+			orden.getItems().add(itemFertC);
+		}
+		
+		/**/
+/*
+		OrdenSiembraItem itemSemilla = new OrdenSiembraItem();
 		Double has =siembra.getCantidadLabor();		
 		System.out.println("cantidad labor oc= "+has);
-		i.setProducto(siembra.getSemilla());
-		i.setCantidad(siembra.getCantidadInsumo());				
+		itemSemilla.setProducto(siembra.getSemilla());
+		itemSemilla.setCantidad(siembra.getCantidadInsumo());				
 		if(has>0) {
-			i.setDosisHa(i.getCantidad()/has);
+			itemSemilla.setDosisHa(itemSemilla.getCantidad()/has);
 		}				
-		orden.getItems().add(i);
+		orden.getItems().add(itemSemilla);
 
 		OrdenSiembraItem costado = new OrdenSiembraItem();								
 		costado.setProducto(siembra.getFertLinea());
 		costado.setCantidad(siembra.getCantidadFertilizanteLinea());			
 		if(has>0) {
-			costado.setDosisHa(i.getCantidad()/has);
+			costado.setDosisHa(itemSemilla.getCantidad()/has);
 		}
 		if(costado.getProducto()!=null) {
 			orden.getItems().add(costado);				
@@ -198,18 +270,19 @@ public class CompartirSiembraLaborTask extends Task<String> {
 		linea.setProducto(siembra.getFertLinea());
 		linea.setCantidad(siembra.getCantidadFertilizanteLinea());				
 		if(has>0) {
-			linea.setDosisHa(i.getCantidad()/has);
+			linea.setDosisHa(itemSemilla.getCantidad()/has);
 		}				
 		if(linea.getProducto()!=null) {
 			orden.getItems().add(linea);				
 		}
-
+*/
 
 		//Poligono contorno = siembra.getContorno();
 		Geometry contornoG = GeometryHelper.extractContornoGeometry(siembra);
 
-		Poligono contornoP =GeometryHelper.constructPoligono(contornoG);
-		if(contornoP!=null) {
+		Poligono contornoP = GeometryHelper.constructPoligono(contornoG);		
+		
+		if(contornoP != null) {
 			orden.setPoligonoString(contornoP.getPositionsString());
 		}
 		Optional<OrdenSiembra> retOp = OrdenSiembraPaneController.config(orden);
@@ -260,6 +333,7 @@ public class CompartirSiembraLaborTask extends Task<String> {
 				String productoNombre = json.getAsJsonObject().get("nombre").getAsString();
 				try {
 					Producto p = DAH.findProducto(productoNombre);
+					//javax.persistence.NoResultException: getSingleResult() did not retrieve any entities.
 					return p;
 				}catch(Exception e) {
 					e.printStackTrace();

@@ -479,6 +479,11 @@ public class GeometryHelper {
 
 
 	public static Poligono constructPoligono(Geometry g) {
+		return ExtraerPoligonosDeLaborTask.geometryToPoligono((Geometry)g);
+	}
+	
+	@Deprecated //no maneja el caso de multipoligon
+	public static Poligono constructPoligonoOld(Geometry g) {
 		//ExtraerPoligonosDeLaborTask.geometryToPoligono((Geometry)g);
 		System.out.println("convirtiendo geometria a poligono "+g);		
 		List<Position> positions = new ArrayList<Position>();		
@@ -506,6 +511,31 @@ public class GeometryHelper {
 				//hole.add(hole.get(0));
 				insertHole(positions,hole);
 			}			
+		} else if(g instanceof MultiPolygon) {
+//			MultiPolygon mp =(MultiPolygon)g;
+//			
+//			for(int i=0;i<mp.getNumGeometries();i++) {
+//				Polygon pol = mp.getGeometryN(i);
+//			}
+//			Coordinate[] coords = pol.getExteriorRing().getCoordinates();
+//			for(int i=0;i<coords.length;i++) {
+//				Coordinate c = coords[i];
+//				positions.add(Position.fromDegrees(c.y, c.x));
+//			}
+//			positions.add(positions.get(0));
+//
+//
+//			for(int r=0;r<pol.getNumInteriorRing();r++) {
+//				List<Position> hole =new ArrayList<Position>();	
+//				LineString ring = pol.getInteriorRingN(r);
+//				Coordinate[] ringCoords = ring.reverse().getCoordinates();
+//				for(int i=0;i<ringCoords.length;i++) {
+//					Coordinate c = ringCoords[i];
+//					hole.add(Position.fromDegrees(c.y, c.x));
+//				}
+//				//hole.add(hole.get(0));
+//				insertHole(positions,hole);
+//			}	
 		}
 
 
@@ -940,8 +970,9 @@ public class GeometryHelper {
 			Geometry cascadedUnion = unirCascading(labor,bounds);
 			return cascadedUnion;
 		}catch(Exception e){
+			ReferencedEnvelope bounds = labor.outCollection.getBounds();			
 			e.printStackTrace();
-			return null;
+			return constructPolygon(bounds);
 		}
 	}
 	/**

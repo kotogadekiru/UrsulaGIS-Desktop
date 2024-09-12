@@ -27,7 +27,7 @@ public class Configuracion{
 	private final CustomProperties configProp = new CustomProperties();
 	
 	private String propertiesFileUrl = FILE_CONFIG_PROPERTIES;
-	public static String ursulaGISFolder;
+	public static String ursulaGISFolder = getUrsulaGISFolder();
 	//public static SimpleBooleanProperty modified = new SimpleBooleanProperty();
 
 	//private static final String GENERAR_MAPA_RENTABILIDAD_FROM_SHP = "generarMapaRentabilidadFromShp";
@@ -40,13 +40,20 @@ public class Configuracion{
 		loadProperties();
 	}
 
+	private static String getUrsulaGISFolder() {
+		String currentUsersHomeDir =System.getenv(APPDATA);
+		//System.out.println("obtuve la direccion de appData : "+currentUsersHomeDir);
+		//obtuve la direccion de appData : C:\Users\quero\AppData\Roaming
+		String ursulaGISFolder = currentUsersHomeDir + File.separator + URSULA_GIS_APPDATA_FOLDER;
+		 return ursulaGISFolder;
+	}
 	private Configuracion() {		
 		String currentUsersHomeDir =System.getenv(APPDATA);
 		//System.out.println("obtuve la direccion de appData : "+currentUsersHomeDir);
 		//obtuve la direccion de appData : C:\Users\quero\AppData\Roaming
 		 ursulaGISFolder = currentUsersHomeDir + File.separator + URSULA_GIS_APPDATA_FOLDER;
 		 //seteo el path para el log de objectdb
-		  System.setProperty("objectdb.home", ursulaGISFolder); 
+		  System.setProperty("objectdb.home", ursulaGISFolder); //TODO remove. no se usa mas
 		this.propertiesFileUrl=ursulaGISFolder+ File.separator +FILE_CONFIG_PROPERTIES;
 		File propF =new File(propertiesFileUrl);
 		try {

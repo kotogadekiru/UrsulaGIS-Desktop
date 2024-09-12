@@ -67,7 +67,7 @@ public class SnakesLayer extends RenderableLayer {
 		//millisecs=200;    
 		View view = ww.getView();
 		Position start = view.getEyePosition();
-		start =Snake.posWithElev(start, Snake.scale);
+		start = Snake.posWithElev(start, Snake.scale);
 		int viewportWith = view.getViewport().width;
 		Angle heading = view.getHeading();
 		//Snake.scale=viewportWith/10;
@@ -115,7 +115,7 @@ public class SnakesLayer extends RenderableLayer {
 			//	view.setOrientation(newEyePos, newCenterPos);
 			
 				//view.setHeading(redSnake.heading);
-				//ww.redrawNow();
+				ww.redrawNow();
 			}
 
 			// Here, we check to see if the snakes have collided with each other.

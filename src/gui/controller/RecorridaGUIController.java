@@ -47,6 +47,7 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import tasks.CompartirRecorridaTask;
 import tasks.ShowRecorridaDirigidaTask;
+import tasks.UpdateRecorridaTask;
 import tasks.importar.ImportarRecorridaTask;
 import tasks.importar.ProcessFertMapTask;
 import tasks.procesar.ExportarRecorridaTask;
@@ -241,6 +242,34 @@ public class RecorridaGUIController extends AbstractGUIController {
 		System.out.println("ejecutando Compartir Recorrida"); 
 		executorPool.execute(task);
 	}
+	
+	/**
+	 *  download recorrida from server and update local copy
+	 * @param recorrida
+	 */
+	public void doUpdateRecorrida(Recorrida recorrida) {		
+//		if(recorrida.getUrl()!=null && recorrida.getUrl().length()>0) {			
+//			main.configGUIController.showQR(recorrida.getUrl());
+//			//XXX editar la recorrida remota con la informacion actualizada de la local?
+//			//XXX recupero la recorrida remota?
+//			return;
+//		}
+		UpdateRecorridaTask task = new UpdateRecorridaTask(recorrida);
+		//System.out.println("procesando los datos entre "+ndviDpDLG.initialDate+" y "+ ndviDpDLG.finalDate);//hasta aca ok!
+		task.installProgressBar(progressBox);
+		task.setOnSucceeded(handler -> {
+			String ret = (String)handler.getSource().getValue();
+			recorrida.setUrl(ret);
+			DAH.save(recorrida);
+//			if(ret!=null) {
+//				main.configGUIController.showQR(ret);
+//			}
+			//XXX agregar boton de actualizar desde la nube?
+			task.uninstallProgressBar();			
+		});
+		System.out.println("ejecutando Compartir Recorrida"); 
+		executorPool.execute(task);
+	}
 
 //	// junta las muestras con mismo nombre y permite completar los datos de las objervaciones
 //	public void doAsignarValoresRecorrida(Recorrida recorrida) {
@@ -254,8 +283,8 @@ public class RecorridaGUIController extends AbstractGUIController {
 			
 			SmartTableView<Recorrida> table = new SmartTableView<Recorrida>(data,
 					Arrays.asList("Id","Posicion"),
-					Arrays.asList("Nombre","Observacion","Latitude","Longitude"),//orden
-					Arrays.asList("Nombre","Observacion","Latitud","Longitud")//nombres					
+					Arrays.asList("Nombre","Observacion","Latitude","Longitude","JsonAmb"),//orden
+					Arrays.asList("Nombre","Observacion","Latitud","Longitud","geoms")//nombres					
 					//,Arrays.asList(Messages.getString("Recorrida.Nombre",,,)
 					);
 			table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
@@ -268,6 +297,10 @@ public class RecorridaGUIController extends AbstractGUIController {
 			
 			table.addSecondaryClickConsumer(Messages.getString("JFXMain.editarLayer"),(r)-> {
 				doShowMuestrasTable(r.getMuestras());
+			});
+			//TODO add to messages.properties Update
+			table.addSecondaryClickConsumer("Update",(r)-> {
+				doUpdateRecorrida(r);
 			});
 
 			Scene scene = new Scene(table, 800, 600);

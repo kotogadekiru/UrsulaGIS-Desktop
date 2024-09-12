@@ -60,7 +60,7 @@ public class OrdenCosechaPaneController extends Dialog<OrdenCosecha>{
 
 	private static final String ORDEN_FERT_ING = "OrdenFert.ING";
 
-	private static final String ORDEN_FERT_NRO = "OrdenFert.Nro";
+	private static final String ORDEN_COS_NRO = "OrdenCos.Nro";
 
 	private static final String CONFIG_DIALOG_FXML = "OrdenCosechaPane.fxml"; //$NON-NLS-1$
 	
@@ -97,7 +97,7 @@ public class OrdenCosechaPaneController extends Dialog<OrdenCosecha>{
     @FXML
     private TextField tfIng;
 
-	private OrdenCosecha ordenFert;
+	private OrdenCosecha ordenCos;
 	
 	Locale loc = new Locale("en", "US");
 	DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.DEFAULT, loc);
@@ -136,29 +136,29 @@ public class OrdenCosechaPaneController extends Dialog<OrdenCosecha>{
 		Configuracion config = Configuracion.getInstance();
 		config.loadProperties();
 		String fecha = dateFormat.format(DateConverter.asDate(this.dPfecha.getValue()));
-		this.ordenFert.setFecha(fecha);
-		this.ordenFert.setNumeroOrden(tfNroOrden.getText());
-		config.setProperty(ORDEN_FERT_NRO, this.ordenFert.getNumeroOrden());
+		this.ordenCos.setFecha(fecha);
+		this.ordenCos.setNumeroOrden(tfNroOrden.getText());
+		config.setProperty(ORDEN_COS_NRO, this.ordenCos.getNumeroOrden());
 
-		this.ordenFert.setNombreIngeniero(tfIng.getText());
-		config.setProperty(ORDEN_FERT_ING, this.ordenFert.getNombreIngeniero());
+		this.ordenCos.setNombreIngeniero(tfIng.getText());
+		config.setProperty(ORDEN_FERT_ING, this.ordenCos.getNombreIngeniero());
 		
-		this.ordenFert.setProductor(this.tfProductor.getText());
-		config.setProperty(ORDEN_FERT_PRODUCTOR, this.ordenFert.getProductor());
+		this.ordenCos.setProductor(this.tfProductor.getText());
+		config.setProperty(ORDEN_FERT_PRODUCTOR, this.ordenCos.getProductor());
 		
-		this.ordenFert.setEstablecimiento(this.tfEstablecimiento.getText());
-		config.setProperty(ORDEN_FERT_ESTABLECIMIENTO, this.ordenFert.getEstablecimiento());
+		this.ordenCos.setEstablecimiento(this.tfEstablecimiento.getText());
+		config.setProperty(ORDEN_FERT_ESTABLECIMIENTO, this.ordenCos.getEstablecimiento());
 		
-		this.ordenFert.setContratista(this.tfContratista.getText());
-		config.setProperty(ORDEN_FERT_CONTRATISTA, this.ordenFert.getContratista());
+		this.ordenCos.setContratista(this.tfContratista.getText());
+		config.setProperty(ORDEN_FERT_CONTRATISTA, this.ordenCos.getContratista());
 
-		this.ordenFert.setCultivo(this.tfCultivo.getText());
-		config.setProperty(ORDEN_FERT_CULTIVO, this.ordenFert.getCultivo());
-		this.ordenFert.setDescription(this.taObservaciones.getText());
-		config.setProperty(ORDEN_FERT_DESCRIPCION, this.ordenFert.getDescription());
+		this.ordenCos.setCultivo(this.tfCultivo.getText());
+		config.setProperty(ORDEN_FERT_CULTIVO, this.ordenCos.getCultivo());
+		this.ordenCos.setDescription(this.taObservaciones.getText());
+		config.setProperty(ORDEN_FERT_DESCRIPCION, this.ordenCos.getDescription());
 		config.save();
 					
-		return this.ordenFert;//TODO read elements data from pane
+		return this.ordenCos;//TODO read elements data from pane
 	}
 	private boolean validarDialog() {
 //		List<String> cols = labor.getAvailableColumns();
@@ -183,7 +183,7 @@ public class OrdenCosechaPaneController extends Dialog<OrdenCosecha>{
 	}
 	
 	public void setLabor(OrdenCosecha l) {
-		this.ordenFert = l;		
+		this.ordenCos = l;		
 		try {
 			if(dateFormat != null && l.getFecha()!=null) {
 			Date d = dateFormat.parse(l.getFecha());
@@ -198,7 +198,7 @@ public class OrdenCosechaPaneController extends Dialog<OrdenCosecha>{
 		NumberFormat nf = Messages.getNumberFormat();
 		nf.setMaximumFractionDigits(0);
 		try {
-			Number nroOrden = nf.parse(config.getPropertyOrDefault(ORDEN_FERT_NRO, "0"));
+			Number nroOrden = nf.parse(config.getPropertyOrDefault(ORDEN_COS_NRO, "0"));
 			this.tfNroOrden.setText(nf.format(nroOrden.doubleValue()+1));
 		} catch (ParseException e) {			
 			e.printStackTrace();
@@ -217,7 +217,7 @@ public class OrdenCosechaPaneController extends Dialog<OrdenCosecha>{
 	}
 	
 	private void contructCaldoTable() {
-		 List<OrdenCosechaItem> caldo = ordenFert.getItems();
+		 List<OrdenCosechaItem> caldo = ordenCos.getItems();
 	
 		final ObservableList<OrdenCosechaItem> data =
 				FXCollections.observableArrayList(

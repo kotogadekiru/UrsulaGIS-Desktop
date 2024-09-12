@@ -113,7 +113,8 @@ import utils.FileHelper;
 
 public class ConfigGUI extends AbstractGUIController{
 	private static final String DD_MM_YYYY = "dd/MM/yyyy";
-	
+	private boolean snakeIsActive=false;
+
 
 	public ConfigGUI(JFXMain _main) {
 		super(_main);		
@@ -192,19 +193,19 @@ public class ConfigGUI extends AbstractGUIController{
 		addMenuItem(Messages.getString("JFXMain.configPulverizacionMI"),(a)->doShowOrdenesPulverizacionTable(),menuConfiguracion); //
 		addMenuItem(Messages.getString("JFXMain.configFertilizacionMI"),(a)->doShowOrdenesFertilizacionTable(),menuConfiguracion); //
 		addMenuItem(Messages.getString("JFXMain.configSiembraMI"),(a)->doShowOrdenesSiembraTable(),menuConfiguracion); //
-		
+
 		addMenuItem(Messages.getString("JFXMain.configConfigMI"),(a)->doShowConfiguracionTable(),menuConfiguracion); //
 
 		addMenuItem(Messages.getString("JFXMain.configIdiomaMI"),(a)->doChangeLocale(),menuConfiguracion); 
 		addMenuItem(Messages.getString("JFXMain.configHelpMI"),(a)->doShowAcercaDe(),menuConfiguracion);
-		
+
 		addMenuItem(Messages.getString("ConfigGUI.changeProject"),(a)->doSelectDB(),menuConfiguracion);	
 
 		MenuItem actualizarMI=addMenuItem(Messages.getString("JFXMain.configUpdate"),null,menuConfiguracion); 
 		actualizarMI.setOnAction((a)->doUpdate());
 		actualizarMI.setVisible(false);
 		checkIfactualizarMIEnabled(menuConfiguracion, actualizarMI);
-		
+
 		return menuConfiguracion;
 	}
 
@@ -233,15 +234,19 @@ public class ConfigGUI extends AbstractGUIController{
 		CorrelacionarCapas gui = new CorrelacionarCapas(main);
 		gui.show();		
 	}
-	
+
 	public void doJugarSnake() {
-	  	SnakesLayer layer = new SnakesLayer(getWwd());	     
-	  	insertBeforeCompass(getWwd(), layer);
+		if(!snakeIsActive) {
+			snakeIsActive = true;
+			SnakesLayer layer = new SnakesLayer(getWwd());	     
+			insertBeforeCompass(getWwd(), layer);
+		}
 	}
-	
+
 	public void doCerrarSnake() {
-	  	//SnakesLayer layer = new SnakesLayer(getWwd());	     
-	  	//insertBeforeCompass(getWwd(), layer);
+		snakeIsActive=false;
+		//SnakesLayer layer = new SnakesLayer(getWwd());	     
+		//insertBeforeCompass(getWwd(), layer);
 		System.out.println("cerrando snake");
 		List<SnakesLayer> snakes = (List<SnakesLayer>)main.getLayersOfClass(SnakesLayer.class);
 		if(snakes.size()==0) {
@@ -249,10 +254,10 @@ public class ConfigGUI extends AbstractGUIController{
 		}
 		for(SnakesLayer s:snakes) {
 			s.stop();
-			
+
 		}	  	
 	}
-	
+
 	public void startKeyBoardListener() {
 		JFXMain.stage.getScene().setOnKeyReleased(event->{
 			KeyCode key=event.getCode();
@@ -263,18 +268,18 @@ public class ConfigGUI extends AbstractGUIController{
 					doJugarSnake();
 				}
 				break;
-				}
+			}
 			case C:{
 				if(event.isControlDown()) {
 					doCerrarSnake();
 				}
 				break;
-				}			
+			}			
 			default :break;		  
 			}
 		});
 	}
-	
+
 	/**
 	 * metodo que toma las labores activas de siembra fertilizacion y pulverizacion y hace una lista con los insumos y cantidades para
 	 * cotizar precios online. Permite exporta a excel y cotizar precios online y guardar
@@ -294,7 +299,7 @@ public class ConfigGUI extends AbstractGUIController{
 		});
 		executorPool.execute(gOCTask);
 	}
-	
+
 	public void doResumirMargin(Margen aResumir) {
 		ResumirMargenMapTask uMmTask = new ResumirMargenMapTask(aResumir);
 
@@ -312,7 +317,7 @@ public class ConfigGUI extends AbstractGUIController{
 		executorPool.execute(uMmTask);
 	}
 
-	
+
 	public void doProcessMargin() {		
 		System.out.println(Messages.getString("JFXMain.319")); 
 
@@ -355,7 +360,7 @@ public class ConfigGUI extends AbstractGUIController{
 		});
 		executorPool.execute(uMmTask);
 	}
-	
+
 	public void doOpenMarginMap() {
 		List<FileDataStore> stores = FileHelper.chooseShapeFileAndGetMultipleStores(null);
 		if (stores != null) {
@@ -401,14 +406,14 @@ public class ConfigGUI extends AbstractGUIController{
 			return;
 		}
 	}
-	
+
 	/**
 	 * metodo que permite crear una base de datos en una ubicacion deseada
 	 * @return
 	 */
 	private String doSelectDB() {	
 		Configuracion c = JFXMain.config;
-		
+
 		String proyectoActual = c.getPropertyOrDefault(DAH.PROJECT_URL_KEY, null);
 		File f = FileHelper.chooseFile(proyectoActual, "*.h2");
 		if(f!=null && !f.exists()) {
@@ -589,10 +594,10 @@ public class ConfigGUI extends AbstractGUIController{
 	}
 
 	public static void doToggleAgroquimico(Agroquimico r) {
-//		System.out.println("Activando agroquimicos "+r);
-//		List<Object> toToggleActivate = new ArrayList<Object>();
-//		System.out.println("agregando a toToggleActivate "+r);
-//		toToggleActivate.add(r);
+		//		System.out.println("Activando agroquimicos "+r);
+		//		List<Object> toToggleActivate = new ArrayList<Object>();
+		//		System.out.println("agregando a toToggleActivate "+r);
+		//		toToggleActivate.add(r);
 		try {
 			// System.out.println("Toggleando activo " + r);
 			DAH.beginTransaction();
@@ -606,7 +611,7 @@ public class ConfigGUI extends AbstractGUIController{
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static void doConfigCampania() {
 		Platform.runLater(()->{
 			final ObservableList<Campania> data =
@@ -676,7 +681,7 @@ public class ConfigGUI extends AbstractGUIController{
 					SelectionMode.MULTIPLE
 					);
 			table.setOnDoubleClick(()->new Poligono());
-		
+
 			//PoligonoGUIController controller =  new PoligonoGUIController(main);
 			table.setOnShowClick((poli)->{
 				poli.setActivo(true);
@@ -827,7 +832,7 @@ public class ConfigGUI extends AbstractGUIController{
 		return ret;
 	}
 
-	
+
 
 
 
@@ -860,23 +865,23 @@ public class ConfigGUI extends AbstractGUIController{
 			//box.getChildren().add(myLabel);
 			//			TextField total=new TextField();
 			//			total.setEditable(false);
-			
+
 			oc.calcImporteTotal();
 			Double total = oc.getImporteTotal();
 			if(total == null) {
 				System.out.println("total es null");
 				total=0.0;
-				}
+			}
 			DoubleProperty dp = new SimpleDoubleProperty();
 			dp.set(total);
-		
+
 			NumberFormat numberFormat = Messages.getNumberFormat();
-	        // Dejar 2 decimales nada mas
-	        numberFormat.setMaximumFractionDigits(2);
+			// Dejar 2 decimales nada mas
+			numberFormat.setMaximumFractionDigits(2);
 
 			String totalString = numberFormat.format(total);
 			Label importeTotalLabel = new Label("Importe total: "+totalString);			
-		//TODO actualizar el importe total cuando se cambia el precio o la cantidad
+			//TODO actualizar el importe total cuando se cambia el precio o la cantidad
 			importeTotalLabel.setPadding(new Insets(5,5,5,5));//ar,d,ab,izq
 			hBoxTotal.getChildren().add(importeTotalLabel);		
 			v.getChildren().add(hBoxTotal);
@@ -958,7 +963,7 @@ public class ConfigGUI extends AbstractGUIController{
 			table.getSelectionModel().setSelectionMode(	SelectionMode.MULTIPLE	);
 			table.setOnShowClick((oc)->{
 				this.doShowOrdenCompraItems(oc);				
-					
+
 			});
 
 			table.setEliminarAction(
@@ -1034,8 +1039,8 @@ public class ConfigGUI extends AbstractGUIController{
 		//		});	
 
 	}
-	
-	
+
+
 
 	public void doShowOrdenesSiembraTable() {
 		Platform.runLater(()->{
@@ -1095,7 +1100,7 @@ public class ConfigGUI extends AbstractGUIController{
 			tablaStage.show();	 
 		});	
 	}
-	
+
 	private void doShowConfiguracionTable() {
 		List<Map<String,String>> data = new ArrayList<Map<String,String>>();
 		String CLAVE_COLUMN_NOMBRE=Messages.getString("ConfigGUI.configClave");//"Clave";
@@ -1107,8 +1112,8 @@ public class ConfigGUI extends AbstractGUIController{
 			map.put(VALOR_COLUMN_NOMBRE, config.getPropertyOrDefault(key, ""));
 			data.add(map);
 		}
-		
-	
+
+
 		TableView<Map<String,String>> tabla = new TableView<Map<String,String>>( FXCollections.observableArrayList(data));
 		tabla.setEditable(true);
 
@@ -1164,7 +1169,7 @@ public class ConfigGUI extends AbstractGUIController{
 		columnValor.setEditable(true);
 
 		tabla.getColumns().add(columnValor);		
-		
+
 
 		BorderPane bp = new BorderPane();
 		bp.setCenter(tabla);
@@ -1180,14 +1185,14 @@ public class ConfigGUI extends AbstractGUIController{
 
 
 		tablaStage.showAndWait();	 
-		
+
 		for(Map<String,String> ma : data) {
 			String k = (String) ma.get(CLAVE_COLUMN_NOMBRE);
 			String v = (String) ma.get(VALOR_COLUMN_NOMBRE);
 			config.setProperty(k, v);
 		}
 		config.save();
-		
+
 	}
 
 	public void doShowOrdenesPulverizacionTable() {
@@ -1249,7 +1254,7 @@ public class ConfigGUI extends AbstractGUIController{
 		});	
 	}
 
-	
+
 	public void doShowOrdenesFertilizacionTable() {
 		Platform.runLater(()->{
 			List<OrdenFertilizacion> ordenes = DAH.getAllOrdenesFertilizacion();
@@ -1291,9 +1296,9 @@ public class ConfigGUI extends AbstractGUIController{
 			});
 
 			//FIXME cambiar Editar por un mensaje con traduccion
-//			table.addSecondaryClickConsumer("Editar",(r)-> {
-//				//doShowMuestrasTable(r.getMuestras());
-//			});
+			//			table.addSecondaryClickConsumer("Editar",(r)-> {
+			//				//doShowMuestrasTable(r.getMuestras());
+			//			});
 
 			Scene scene = new Scene(table, 800, 600);
 			Stage tablaStage = new Stage();
@@ -1310,7 +1315,7 @@ public class ConfigGUI extends AbstractGUIController{
 		});	
 	}
 
-	
+
 
 
 	public void doShowNdviTable() {

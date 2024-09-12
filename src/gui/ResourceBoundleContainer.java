@@ -1,5 +1,8 @@
 package gui;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,6 +12,9 @@ import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.ResourceBundle;
+
+import dao.config.Configuracion;
+import tasks.GoogleTranslatorHelper;
 
 //Clase que permite tener el mismo resourceBoundle en toda la aplicacion y cambiar el lenguaje en tiempo de ejecucion
 public class ResourceBoundleContainer {
@@ -24,12 +30,14 @@ public class ResourceBoundleContainer {
 		// /gui/messages_en.properties
 		String resourceName = bUNDLE_NAME+"_"+locale.getLanguage().toLowerCase()+".properties";
 
-		System.out.println("searching for resourceBoundle in  "+resourceName);
+		System.out.println("searching for resourceBoundle in  "+resourceName);		
 
-		URL path = this.getClass().getResource(resourceName);
-		System.out.println("boundle file found at "+path);
+		//URL path = this.getClass().getResource(resourceName);
+		//System.out.println("boundle file found at "+path);
 		InputStream is = this.getClass().getResourceAsStream(resourceName);
 		if(is!=null) {
+			URL path = this.getClass().getResource(resourceName);
+			System.out.println("boundle file found at "+path);
 			try {
 				RESOURCE_BUNDLE=new TxtResourceBundle(is);
 				//RESOURCE_BUNDLE = ResourceBundle.getBundle(bUNDLE_NAME,locale, Messages.class.getClassLoader());
@@ -39,18 +47,40 @@ public class ResourceBoundleContainer {
 				//XXX podemos crear una api en ursula? de esa manera cacheamos los ya generados
 				e.printStackTrace();
 			}
-		} 
-
-			//RESOURCE_BUNDLE = ResourceBundle.getBundle(bUNDLE_NAME,locale,Messages.class.getClassLoader());
+		} else {//locale is not suported by default
+			//TODO try to load a local boundle or translate a base bundle
+			//TODO first look for messages in C:\Users\<user>\AppData\Roaming\UrsulaGIS\messages_fr.properties
+			String fileName = Configuracion.ursulaGISFolder+"\\messages_"+locale.getLanguage()+".properties";
+			File localFile = new File(fileName);
+			if(!localFile.exists()) {
+				ResourceBundle baseBoundle1 = Messages.getBoundle();//verificar que esto no explote
+				GoogleTranslatorHelper t = new GoogleTranslatorHelper(baseBoundle1,locale);
+				t.run();
+				//JFXMain.executorPool.submit(t);
+			}
+			TxtResourceBundle localBoundle =getLocalResourceBundle(fileName);
+			if(localBoundle != null) {
+				RESOURCE_BUNDLE = localBoundle;				
+			} 
+			
+		}
 	}
 
+	private static TxtResourceBundle getLocalResourceBundle(String fileName) {
+		try {
+			FileInputStream  fr = new FileInputStream (fileName);			
+			return new TxtResourceBundle(fr);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}		
+	}
 	private static class TxtResourceBundle extends ResourceBundle {
 		private Properties props;
 
 		public TxtResourceBundle(InputStream stream) throws IOException {
 			props = new Properties();
-
-
 			try {
 				props.load(stream);
 				System.out.println("finished loading language bundle");

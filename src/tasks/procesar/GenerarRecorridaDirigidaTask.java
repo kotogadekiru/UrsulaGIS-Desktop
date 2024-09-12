@@ -26,6 +26,7 @@ import dao.recorrida.Camino;
 import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
 import gov.nasa.worldwind.WorldWind;
+import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import gov.nasa.worldwind.render.BasicShapeAttributes;
@@ -105,6 +106,7 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 		double ancho = 5+Math.sqrt(superficieMinimaAMuestrear*ProyectionConstants.METROS2_POR_HA)/10;
 		System.out.println("ancho="+ancho); //ancho=86.60254037844386
 		Map<String,Color> colorCat = new HashMap<String, Color>();
+		Map<String,List<Geometry>> ambsRec = new HashMap<String, List<Geometry>>();
 
 		for(Labor<? extends LaborItem> c:aMuestrear){			
 			if(nombreRecorrida == null){				
@@ -130,6 +132,15 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 				
 				String nombre =c.getClasificador().getLetraCat(categoria);//""+Clasificador.abc[size-categoria-1];
 				colorCat.put(nombre,color);
+				if(ambsRec.containsKey(nombre)) {
+					List<Geometry> geomsAmb = ambsRec.get(nombre);
+					geomsAmb.add(geometry);						
+				} else {
+					List<Geometry> geomsAmb = new ArrayList<Geometry>();
+					geomsAmb.add(geometry);		
+					ambsRec.put(nombre, geomsAmb);
+				}
+				
 
 				boolean insertCentroid=true;
 				Point centroid = geometry.getCentroid();
@@ -205,9 +216,10 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 				updateProgress(count, featureCount);
 				System.out.println("Termine de generar todos los puntos "+recorrida.muestras.size());
 			}//termino de recorrer el while de una labor
-			c.getLayer().setEnabled(false);
+			//c.getLayer().setEnabled(false);
+			c.getLayer().setOpacity(0.18);
 		}//termino de recorrer todas las labores
-
+		recorrida.setAmbsGeoms(ambsRec);
 		recorrida.setNombre(nombreRecorrida);
 
 		//TODO crear un PathLayer con los puntos de itemsToShow
@@ -246,17 +258,14 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 				PointPlacemark pmStandard = new PointPlacemark(pointPosition);
 
 				pmStandard.setLabelText(m.toString());//
-				pmStandard.setAltitudeMode(WorldWind.RELATIVE_TO_GROUND);
+				pmStandard.setAltitudeMode(WorldWind.CLAMP_TO_GROUND);
 				
 				int index = Clasificador.cba.indexOf(m.getNombre())-Clasificador.cba.indexOf(first);						
 				Color color = Clasificador.getColorForCategoria(index , categorias.size());
 				
 				if(color==null)color = Color.WHITE;
 				//int alfa = new Double(color.getOpacity()*255).intValue();
-				int red = new Double(color.getRed()*255).intValue();
-				int green = new Double(color.getGreen()*255).intValue();
-				int blue = new Double(color.getBlue()*255).intValue();
-				java.awt.Color awtColor= new java.awt.Color (red,green,blue);
+				java.awt.Color awtColor = fxColorToAwtColor(color);
 				
 				PointPlacemarkAttributes pointAttribute = new PointPlacemarkAttributes();
 				//pointAttribute.setLabelMaterial(Material.LIGHT_GRAY);
@@ -272,14 +281,22 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 			});
 
 			ShapeAttributes attrs = new BasicShapeAttributes();
-			attrs.setOutlineMaterial(new Material(java.awt.Color.BLUE));
-			attrs.setOutlineWidth(10d);
-			attrs.setOutlineOpacity(1);
+			attrs.setOutlineMaterial(new Material(java.awt.Color.white));
+			attrs.setOutlineWidth(5d);
+			attrs.setOutlineOpacity(0.9);
+			attrs.setEnableAntialiasing(true);
+			attrs.setDrawOutline(true);
+			
 
 			Path path = new Path(recorrida.muestras.stream().map(m->m.getPosition()).collect(Collectors.toList()));
-			path.setAltitudeMode(WorldWind.RELATIVE_TO_GROUND);
+			path.setAltitudeMode(WorldWind.CLAMP_TO_GROUND);
 			path.setFollowTerrain(true);
-
+			path.setNumSubsegments(1);
+			path.setPathType(AVKey.LINEAR);
+			path.setExtrude(true);
+//			path.setPathType(AVKey.GREAT_CIRCLE);
+//			path.setPathType(AVKey.LOXODROME);
+//			path.setPathType(AVKey.RHUMB_LINE);
 			path.setAttributes(attrs);
 			//path.setShowPositionsScale(2);
 			layer.addRenderable(path);
@@ -288,6 +305,14 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static java.awt.Color fxColorToAwtColor(Color color) {
+		int red = new Double(color.getRed()*255).intValue();
+		int green = new Double(color.getGreen()*255).intValue();
+		int blue = new Double(color.getBlue()*255).intValue();
+		java.awt.Color awtColor= new java.awt.Color (red,green,blue);
+		return awtColor;
 	}	
 
 
