@@ -33,6 +33,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.vividsolutions.jts.geom.Geometry;
 
+import api.OrdenCosecha;
 import api.OrdenPulverizacion;
 import api.OrdenPulverizacionItem;
 import api.StandardResponse;
@@ -46,6 +47,7 @@ import dao.siembra.SiembraLabor;
 import dao.utils.PropertyHelper;
 import gui.Messages;
 import gui.OrdenPulverizacionPaneController;
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -193,26 +195,24 @@ public class CompartirPulverizacionLaborTask extends Task<String> {
 
 					op.getItems().add(i);
 				}//);
-
 		
-				
-				Geometry contornoG = GeometryHelper.extractContornoGeometry(pl);
-				
-				Poligono contornoP =GeometryHelper.constructPoligono(contornoG);
-				if(contornoP!=null) {
-					op.setPoligonoString(contornoP.getPositionsString());
-				}
-				//FIXME remover esta linea cuando este labor.getContorno()
-				//op.setPoligonoString("{{-33.97004901,-61.97283410}{-33.96899577,-61.97077580}{-33.96843874,-61.97000910}{-33.96754022,-61.96826020}{-33.96388561,-61.96149850}{-33.96288863,-61.95616530}{-33.96700029,-61.95294330}{-33.96704333,-61.95303640}{-33.96700184,-61.95294300}{-33.97246661,-61.94866120}{-33.98082214,-61.96440070}{-33.97551342,-61.96855690}{-33.97550620,-61.96854050}{-33.97551187,-61.96855730}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283410}}");
-				
-			
 				Optional<OrdenPulverizacion> retOp = OrdenPulverizacionPaneController.config(op);
 	
 
-		if(retOp.isPresent()) {
-			op=retOp.get();
-			return op;
-		} else {return null;}
+				if(retOp.isPresent()) {
+					OrdenPulverizacion ret = retOp.get();
+					Platform.runLater(()->{
+						
+						Geometry contornoG = GeometryHelper.extractContornoGeometry(pl);
+						Poligono contornoP =GeometryHelper.constructPoligono(contornoG);
+						if(contornoP!=null) {
+							ret.setPoligonoString(contornoP.getPositionsString());
+						} else {
+							System.out.println("no se pudo extraer el contorno de la cosecha");
+						}
+					});
+					return ret;
+				} else {return null;}
 		
 	}
 

@@ -37,6 +37,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.vividsolutions.jts.geom.Geometry;
 
+import api.OrdenCosecha;
 import api.OrdenSiembra;
 import api.OrdenSiembraItem;
 import api.StandardResponse;
@@ -51,6 +52,7 @@ import dao.ordenCompra.Producto;
 import dao.siembra.SiembraLabor;
 import gui.Messages;
 import gui.OrdenSiembraPaneController;
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -277,19 +279,23 @@ public class CompartirSiembraLaborTask extends Task<String> {
 		}
 */
 
-		//Poligono contorno = siembra.getContorno();
-		Geometry contornoG = GeometryHelper.extractContornoGeometry(siembra);
-
-		Poligono contornoP = GeometryHelper.constructPoligono(contornoG);		
-		
-		if(contornoP != null) {
-			orden.setPoligonoString(contornoP.getPositionsString());
-		}
+	
 		Optional<OrdenSiembra> retOp = OrdenSiembraPaneController.config(orden);
+		
 		if(retOp.isPresent()) {
-			orden=retOp.get();
-			return orden;
-		} else {return null;}
+			OrdenSiembra ret = retOp.get();
+			Platform.runLater(()->{				
+				Geometry contornoG = GeometryHelper.extractContornoGeometry(siembra);
+				Poligono contornoP =GeometryHelper.constructPoligono(contornoG);
+				if(contornoP!=null) {
+					ret.setPoligonoString(contornoP.getPositionsString());
+				} else {
+					System.out.println("no se pudo extraer el contorno de la cosecha");
+				}
+			});
+			return ret;
+		} else {return null;}		
+	
 
 	}
 

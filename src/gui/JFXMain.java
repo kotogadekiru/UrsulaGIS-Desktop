@@ -583,7 +583,7 @@ public class JFXMain extends Application {
 		 * Accion que permite extraer los poligonos de una cosecha para guardar
 		 */
 		laboresP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.extraerPoligonoAction"),(layer)->{
-			doExtraerPoligonos((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+			poligonoGUIController.doExtraerPoligonos((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 			return "poligonos Extraidos " + layer.getName(); 
 		}));
 		
@@ -995,29 +995,20 @@ public class JFXMain extends Application {
 	
 	
 	
-//	private void doExtraerContorno(Labor<?> labor ) {	
-//			Poligono contorno = labor.getContorno();
-//			
-//			this.poligonoGUIController.showPoligonos(Collections.singletonList(contorno));			
-//		
+//	private void doExtraerPoligonos(Labor<?> labor ) {	
+//		ExtraerPoligonosDeLaborTask umTask = new ExtraerPoligonosDeLaborTask(labor);
+//		umTask.installProgressBar(progressBox);
+//		umTask.setOnSucceeded(handler -> {
+//			@SuppressWarnings("unchecked")
+//			List<Poligono> poligonos = (List<Poligono>)handler.getSource().getValue();
+//			this.poligonoGUIController.showPoligonos(poligonos);			
+//			umTask.uninstallProgressBar();
 //			this.wwjPanel.repaint();
-//
+//			System.out.println(Messages.getString("JFXMain.280")); 
+//			playSound();
+//		});//fin del OnSucceeded						
+//		JFXMain.executorPool.execute(umTask);
 //	}
-	
-	private void doExtraerPoligonos(Labor<?> labor ) {	
-		ExtraerPoligonosDeLaborTask umTask = new ExtraerPoligonosDeLaborTask(labor);
-		umTask.installProgressBar(progressBox);
-		umTask.setOnSucceeded(handler -> {
-			@SuppressWarnings("unchecked")
-			List<Poligono> poligonos = (List<Poligono>)handler.getSource().getValue();
-			this.poligonoGUIController.showPoligonos(poligonos);			
-			umTask.uninstallProgressBar();
-			this.wwjPanel.repaint();
-			System.out.println(Messages.getString("JFXMain.280")); 
-			playSound();
-		});//fin del OnSucceeded						
-		JFXMain.executorPool.execute(umTask);
-	}
 
 	private void doGuardarLabor(Labor<?> labor) {
 		File zipFile = FileHelper.zipLaborToTmpDir(labor);//ok funciona

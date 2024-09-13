@@ -53,6 +53,7 @@ import dao.utils.PropertyHelper;
 import gui.Messages;
 import gui.OrdenCosechaPaneController;
 import gui.OrdenFertilizacionPaneController;
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -64,6 +65,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import tasks.procesar.ExportarPrescripcionFertilizacionTask;
 import tasks.procesar.ExportarPrescripcionSiembraTask;
+import tasks.procesar.ExtraerPoligonosDeLaborTask;
 import utils.DAH;
 import utils.FileHelper;
 import utils.GeometryHelper;
@@ -178,52 +180,57 @@ public class CompartirCosechaLaborTask extends Task<String> {
 
 	public static OrdenCosecha constructOrdenCosecha(CosechaLabor fl) {	
 		OrdenCosecha oCos = new OrdenCosecha();
-				oCos.setNombre(fl.getNombre());
-				Locale loc = new Locale("en", "US");
-				DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.DEFAULT, loc);
-				oCos.setFecha(dateFormat.format(fl.getFecha()));
-				oCos.setSuperficie(Messages.getNumberFormat().format(fl.getCantidadLabor()));
+		oCos.setNombre(fl.getNombre());
+		Locale loc = new Locale("en", "US");
+		DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.DEFAULT, loc);
+		oCos.setFecha(dateFormat.format(fl.getFecha()));
+		oCos.setSuperficie(Messages.getNumberFormat().format(fl.getCantidadLabor()));
 
-				OrdenCosechaItem i = new OrdenCosechaItem();
-				Double has =fl.getCantidadLabor();				
+		OrdenCosechaItem i = new OrdenCosechaItem();
+		Double has =fl.getCantidadLabor();				
+
+		Cultivo cultivo = fl.getCultivo();
+		List<Grano> granos = DAH.findGranos(cultivo);
+		Grano granoCosecha = null;
+		if(granos ==null) {
+			granoCosecha = new Grano(cultivo.getNombre(),cultivo);
+			DAH.save(granoCosecha);
+		}else {
+			granoCosecha = granos.get(0);
+		}
+		i.setProducto(granoCosecha);
+
+		i.setCantidad(fl.getCantidadInsumo());				
+		if(has>0) {
+			i.setRinde(i.getCantidad()/has);
+		}				
+		oCos.getItems().add(i);
+
+		
+	
+		//FIXME remover esta linea cuando este labor.getContorno()
+		//of.setPoligonoString("{{-33.97004901,-61.97283410}{-33.96899577,-61.97077580}{-33.96843874,-61.97000910}{-33.96754022,-61.96826020}{-33.96388561,-61.96149850}{-33.96288863,-61.95616530}{-33.96700029,-61.95294330}{-33.96704333,-61.95303640}{-33.96700184,-61.95294300}{-33.97246661,-61.94866120}{-33.98082214,-61.96440070}{-33.97551342,-61.96855690}{-33.97550620,-61.96854050}{-33.97551187,-61.96855730}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283410}}");
+
+		//interfaz de usuario
+		Optional<OrdenCosecha> retOp = OrdenCosechaPaneController.config(oCos);
+
+
+		if(retOp.isPresent()) {
+			OrdenCosecha ret = retOp.get();
+			Platform.runLater(()->{
+				//ExtraerPoligonosDeLaborTask extractTask = new ExtraerPoligonosDeLaborTask(fl);
 				
-				Cultivo cultivo = fl.getCultivo();
-				List<Grano> granos = DAH.findGranos(cultivo);
-				Grano granoCosecha = null;
-				if(granos ==null) {
-					granoCosecha = new Grano(cultivo.getNombre(),cultivo);
-					DAH.save(granoCosecha);
-				}else {
-					granoCosecha = granos.get(0);
-				}
-				i.setProducto(granoCosecha);
-				
-				i.setCantidad(fl.getCantidadInsumo());				
-				if(has>0) {
-					i.setRinde(i.getCantidad()/has);
-				}				
-				oCos.getItems().add(i);
-					
 				Geometry contornoG = GeometryHelper.extractContornoGeometry(fl);
-				
 				Poligono contornoP =GeometryHelper.constructPoligono(contornoG);
 				if(contornoP!=null) {
-					oCos.setPoligonoString(contornoP.getPositionsString());
+					ret.setPoligonoString(contornoP.getPositionsString());
 				} else {
 					System.out.println("no se pudo extraer el contorno de la cosecha");
 				}
-				//FIXME remover esta linea cuando este labor.getContorno()
-				//of.setPoligonoString("{{-33.97004901,-61.97283410}{-33.96899577,-61.97077580}{-33.96843874,-61.97000910}{-33.96754022,-61.96826020}{-33.96388561,-61.96149850}{-33.96288863,-61.95616530}{-33.96700029,-61.95294330}{-33.96704333,-61.95303640}{-33.96700184,-61.95294300}{-33.97246661,-61.94866120}{-33.98082214,-61.96440070}{-33.97551342,-61.96855690}{-33.97550620,-61.96854050}{-33.97551187,-61.96855730}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283400}{-33.97004901,-61.97283410}}");
-				
-			
-				Optional<OrdenCosecha> retOp = OrdenCosechaPaneController.config(oCos);
-	
-
-		if(retOp.isPresent()) {
-			oCos=retOp.get();
-			return oCos;
+			});
+			return ret;
 		} else {return null;}
-		
+
 	}
 
 	/**
@@ -250,7 +257,7 @@ public class CompartirCosechaLaborTask extends Task<String> {
 		File zipFile = UnzipUtility.zipFiles(FileHelper.selectAllFiles(dir),dir.toFile());
 		return zipFile;
 	}
-	
+
 	public static  JsonDeserializer<Producto> getProductoDeserializer() {
 		return new JsonDeserializer<Producto>() {
 

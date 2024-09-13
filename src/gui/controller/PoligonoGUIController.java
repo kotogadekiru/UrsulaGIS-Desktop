@@ -800,6 +800,21 @@ public class PoligonoGUIController extends AbstractGUIController{
 		insertBeforeCompass(this.getWwd(), measureTool.getApplicationLayer());
 		this.getLayerPanel().update(this.getWwd());	
 	}
+	
+	public void doExtraerPoligonos(Labor<?> labor ) {	
+		ExtraerPoligonosDeLaborTask umTask = new ExtraerPoligonosDeLaborTask(labor);
+		umTask.installProgressBar(progressBox);
+		umTask.setOnSucceeded(handler -> {
+			@SuppressWarnings("unchecked")
+			List<Poligono> poligonos = (List<Poligono>)handler.getSource().getValue();
+			showPoligonos(poligonos);			
+			umTask.uninstallProgressBar();
+			this.wwjPanel.repaint();
+			System.out.println(Messages.getString("JFXMain.280")); 
+			playSound();
+		});//fin del OnSucceeded						
+		JFXMain.executorPool.execute(umTask);
+	}
 
 
 	/**
