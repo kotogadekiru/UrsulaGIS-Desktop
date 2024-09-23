@@ -16,6 +16,7 @@ import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
+import dao.utils.PropertyHelper;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import tasks.ProcessMapTask;
 import utils.ProyectionConstants;
@@ -28,7 +29,6 @@ public class ConvertirSueloACosechaTask extends ProcessMapTask<CosechaItem,Cosec
 		super(cosechaLabor);
 		mmLluviaEstimados = _mm;
 		suelo=_suelo;
-
 	}
 
 	public void doProcess() throws IOException {		
@@ -44,21 +44,23 @@ public class ConvertirSueloACosechaTask extends ProcessMapTask<CosechaItem,Cosec
 			ci.setGeometry(si.getGeometry());
 			ci.setElevacion(10.0);
 			System.out.println("observaciones en doProcess "+ci.getObservaciones());
-			SimpleFeature nf=ci.getFeature(labor.featureBuilder);
+			labor.insertFeature(ci);
+			//SimpleFeature nf=ci.getFeature(labor.featureBuilder);
 
-			System.out.println("insertando "+nf);
-			boolean ret = labor.outCollection.add(nf);
+			//System.out.println("insertando "+nf);
+			//boolean ret = labor.outCollection.add(nf);
 			featureNumber++;
 			updateProgress(featureNumber, featureCount);
-			if(!ret){
-				System.out.println("no se pudo agregar la feature "+f);
-			}
+			//if(!ret){
+			//	System.out.println("no se pudo agregar la feature "+f);
+			//}
 		}
 
 		reader.close();
 		labor.constructClasificador();
-
+		System.out.println("antes de run later");
 		runLater(this.getItemsList());
+		System.out.println("despues de run later");
 		updateProgress(0, featureCount);
 	}
 	
@@ -72,21 +74,21 @@ public class ConvertirSueloACosechaTask extends ProcessMapTask<CosechaItem,Cosec
 		Double encharcamiento = Math.min(2000, mmDispo)/2000;
 		
 		Double rindeAgua=(encharcamiento>0.5?(1-encharcamiento):1)*kgAgua;
-		System.out.println("mmDispo="+mmDispo+" => rindeAgua= "+rindeAgua);
+		//System.out.println("mmDispo="+mmDispo+" => rindeAgua= "+rindeAgua);
 	
 		String observaciones ="agua";
-		
+	
 		Double kgP=Suelo.getKgPHa(si);
 		Double rindeP = cultivo.getAbsP()!=0?kgP/cultivo.getAbsP():0;
-		System.out.println("kgP="+kgP+" => rindeP= "+rindeP);
-		if(rindeAgua<rindeP) {//factor limitante es fosforo
+		//System.out.println("kgP="+kgP+" => rindeP= "+rindeP);
+		if(rindeAgua < rindeP) {//factor limitante es fosforo
 			observaciones="fosforo";
 		}
 		
-		Double kgN= Suelo.getKgNHa(si) 
+		Double kgN = Suelo.getKgNHa(si) 
 				+(cultivo.isEstival()?2/3:1/3) * suelo.getKgNOrganicoHa(si);
 		Double rindeN = cultivo.getAbsN()!=0?kgN/cultivo.getAbsN():0;
-		System.out.println("kgN="+kgN+" => rindeN: "+rindeN);
+		//System.out.println("kgN="+kgN+" => rindeN: "+rindeN);
 		
 		
 		List<Double> rindes = Arrays.asList(rindeAgua,rindeP,rindeN);
@@ -95,47 +97,69 @@ public class ConvertirSueloACosechaTask extends ProcessMapTask<CosechaItem,Cosec
 //				Math.min(rindeAgua,rindeP),
 //				rindeN);
 		ci.setRindeTnHa(rindeLimitante);
-		ci.setObservaciones("rinde no limitado");
+		ci.setObservaciones("Rinde no limitado");
 		if(rindeLimitante == rindeAgua) {
 			if(rindeN<rindeP) {
-				ci.setObservaciones("rinde limitado por agua "+mmDispo+"mm despues por kgN y finalmente por kgP");
+				Double difRinde = rindeP-rindeAgua;
+				Double mmFaltan =difRinde*cultivo.getAbsAgua();
+				ci.setObservaciones("Rinde limitado por agua (faltan"
+						+PropertyHelper.formatDouble(mmFaltan)
+						+"mm), despues por N y finalmente por P");
 			}else {
-				ci.setObservaciones("rinde limitado por agua "+mmDispo+"mm despues por kgP y finalmente por kgN");
+				Double difRinde = rindeN-rindeAgua;
+				Double mmFaltan =difRinde*cultivo.getAbsAgua();
+				ci.setObservaciones("Rinde limitado por agua (faltan"
+						+PropertyHelper.formatDouble(mmFaltan)
+						+"mm), despues por P y finalmente por N");
+			}
+			if(encharcamiento>0.5) {
+				String obs = ci.getObservaciones()+" encharcamiento "+PropertyHelper.formatDouble(encharcamiento);
+				ci.setObservaciones(obs);
 			}
 		} else if(rindeLimitante == rindeN) {
 			if(rindeAgua<rindeP) {
 				Double difRinde = rindeAgua-rindeN;
 				Double kgNFaltan = difRinde*cultivo.getAbsN();
-				ci.setObservaciones("rinde limitado por kgN faltan "+kgNFaltan+" kgN despues por Agua y finalmente por kgP");
+				ci.setObservaciones("Rinde limitado por N (faltan "
+									+PropertyHelper.formatDouble(kgNFaltan)
+									+" kgN), despues por Agua y finalmente por kgP");
 			}else {
 				Double difRinde = rindeP-rindeN;
 				Double kgNFaltan = difRinde*cultivo.getAbsN();
-				ci.setObservaciones("rinde limitado porkgN faltan "+kgNFaltan+" kgN despues por kgP y finalmente por Agua");
+				ci.setObservaciones("Rinde limitado por N (faltan "
+				+PropertyHelper.formatDouble(kgNFaltan)
+				+"kgN), despues por P y finalmente por Agua");
 			}
 		}else if(rindeLimitante == rindeP) {
 			if(rindeAgua<rindeN) {
 				Double difRinde = rindeAgua-rindeP;
 				Double kgPFaltan = difRinde*cultivo.getAbsP();
-				ci.setObservaciones("rinde limitado por kgP faltan "+kgPFaltan+" kgP despues por Agua y finalmente por kgN");
+				ci.setObservaciones("Rinde limitado por P faltan "+PropertyHelper.formatDouble(kgPFaltan)+" kgP despues por Agua y finalmente por N");
 			}else {
 				Double difRinde = rindeN-rindeP;
 				Double kgPFaltan = difRinde*cultivo.getAbsP();
-				ci.setObservaciones("rinde limitado por kgP faltan "+kgPFaltan+" kgP despues por kgN y finalmente por Agua");
+				ci.setObservaciones("Rinde limitado por P (faltan "+PropertyHelper.formatDouble(kgPFaltan)+" kgP) despues por N y finalmente por Agua");
 			}
 		}
 
-		return ci;
-		
+		return ci;		
 	}
 		
+//	@Override
+//	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem,ExtrudedPolygon  renderablePolygon) {
+//		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+//		String tooltipText = CrearCosechaMapTask.buildTooltipText(cosechaItem, area);
+//		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,"tooltip de convertir suelo a cosecha",renderablePolygon);
+//
+//	}
+	
 	@Override
 	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem,ExtrudedPolygon  renderablePolygon) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		String tooltipText = CrearCosechaMapTask.buildTooltipText(cosechaItem, area);
-		tooltipText+="\n "+cosechaItem.getObservaciones();
-		
+		tooltipText+="\n Observaciones: "+cosechaItem.getObservaciones();
+		//System.out.println("observaciones en getPathTooltip de convertir A suelo es "+tooltipText);
 		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText,renderablePolygon);
-
 	}
 
 	protected int getAmountMin() {

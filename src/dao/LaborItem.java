@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import utils.ProyectionConstants;
 
+import java.util.Arrays;
+
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.Entity;
@@ -42,7 +44,7 @@ public abstract class LaborItem implements Comparable<Object>{
 
 	protected Double areaSinSup= new Double(0);
 
-	protected String observaciones=new String();
+	protected String observaciones=new String("default obs");
 	public LaborItem() {
 	}
 	
@@ -243,33 +245,33 @@ public abstract class LaborItem implements Comparable<Object>{
 
 	//abstract public SimpleFeature getFeature(SimpleFeatureBuilder featureBuilder);
 /**
- * metodo llamado para convertir un simple LaborItem a un SimpleFeature para ser inertado en el data store
+ * metodo llamado para convertir un simple LaborItem a un SimpleFeature para ser insertado en el data store
  * @param featureBuilder
  * @return SimpleFeature representando este LaborItem
  */
 	public  SimpleFeature getFeature(SimpleFeatureBuilder featureBuilder) {
 
 		Object[] basicElements = new Object[]{
-				this.getGeometry(),
-				distancia,
-				rumbo,
-				ancho,
-				elevacion,
-				getCategoria(),
-				getObservaciones()
-				};
+				this.getGeometry(),//0
+				distancia,//1
+				rumbo,//2
+				ancho,//3
+				elevacion,//3
+				getCategoria(),//5
+				getObservaciones()//6
+				};//7 elements
 
 		Object[] specialElements= getSpecialElementsArray();
 		//System.out.println("creando un array para "+basicElements.length+specialElements.length);//creando un array para 711
 		Object[] completeElements = new Object[basicElements.length+specialElements.length];
-		for(int i =0;i<basicElements.length;i++){
+		for(int i =0;i<basicElements.length;i++){// de 0 a 6 ; 7 elementos
 			completeElements[i]=basicElements[i];
 		}
 
 		for(int i=0;i<specialElements.length;i++){
-			completeElements[i+basicElements.length]=
+			completeElements[i+basicElements.length]=//7+i
 					specialElements[i];
-		}
+		}		
 		
 		SimpleFeature feature =null;
 		synchronized(featureBuilder){
@@ -282,7 +284,7 @@ public abstract class LaborItem implements Comparable<Object>{
 				e.printStackTrace();
 			}
 
-			//System.out.println("construyendo el simplefeature para el id:"+this.getId());//construuendo el simplefeature para el id:0.0
+			//System.out.println("construyendo el simplefeature para el id:"+this.getId());//construyendo el simplefeature para el id:0.0
 			 
 			return feature;
 		}

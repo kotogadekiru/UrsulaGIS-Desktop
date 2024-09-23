@@ -37,16 +37,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.vividsolutions.jts.geom.Geometry;
 
-import api.OrdenCosecha;
 import api.OrdenSiembra;
 import api.OrdenSiembraItem;
 import api.StandardResponse;
-import dao.Labor;
 import dao.LaborItem;
 import dao.Poligono;
 import dao.config.Configuracion;
 import dao.config.Cultivo;
-import dao.config.Fertilizante;
 import dao.config.Semilla;
 import dao.ordenCompra.Producto;
 import dao.siembra.SiembraLabor;
@@ -72,23 +69,21 @@ import utils.TarjetaHelper;
 import utils.UnzipUtility;
 
 public class CompartirSiembraLaborTask extends Task<String> {
-
 	//private static final String GET_RECORRIDAS_BY_ID_URL = "https://www.ursulagis.com/api/recorridas/id/";
 	private static final String MMG_GUI_EVENT_CLOSE_PNG = "/gui/event-close.png";
 	public static final String ZOOM_TO_KEY = "ZOOM_TO";
-
-	public static final String INSERT_URL = "https://www.ursulagis.com/api/orden_siembra/insert/";
-	//public static final String INSERT_URL = "http://localhost:5000/api/recorridas/insert/";
+	public static final String BASE_URL = "https://www.ursulagis.com";
+	//public static final String BASE_URL = "http://localhost:5000";
+	//public static final String BASE_URL = "https://sheltered-mesa-69562-dev-514e4d674053.herokuapp.com";
+	public static final String INSERT_URL = BASE_URL+"/api/orden_siembra/insert/";
+	
 	private ProgressBar progressBarTask;
 	private Pane progressPane;
 	private Label progressBarLabel;
 	private HBox progressContainer;
 
-
-	private SiembraLabor siembraLabor =null;
-	private OrdenSiembra ordenSiembra;
-
-
+	private SiembraLabor siembraLabor = null;
+	private OrdenSiembra ordenSiembra = null;
 
 	public CompartirSiembraLaborTask(SiembraLabor siembraLabor,OrdenSiembra orden) {
 		this.siembraLabor = siembraLabor;
@@ -121,25 +116,34 @@ public class CompartirSiembraLaborTask extends Task<String> {
 			this.updateProgress(3, 10);
 			InputStream resContent = response.getContent();
 			Reader reader = new InputStreamReader(resContent);
-
+			this.updateProgress(4, 10);
 			StandardResponse standarResponse =  new Gson().fromJson(reader, StandardResponse.class);
 			System.out.println("standarResponse = "+standarResponse);
+			this.updateProgress(5, 10);
 			//StandardResponse standarResponse = response.parseAs(StandardResponse.class);
 			//Recorrida r = new Gson().fromJson((String) resContent.get("data"), Recorrida.class);
 			StandardResponse.StatusResponse status = standarResponse.getStatus();
 			System.out.println("response status = "+status);
 			if(StandardResponse.StatusResponse.SUCCESS.equals(status)) {
+				this.updateProgress(6, 10);
 				//com.google.api.client.util.ArrayMap data =(ArrayMap) resContent.get("data");
 				JsonElement data = standarResponse.getData();
 				//Map<String,String> message = (Map<String, String>) resContent.get("data");
 				//System.out.println("message "+message);
 				if(data !=null) {
+					this.updateProgress(7, 10);
 					OrdenSiembra dbSiembraLabor = gson.fromJson(data, OrdenSiembra.class);
 					//DAH.save(dbSiembraLabor);//merge local recorrida
 					//	Long id = dbRecorrida.getId();
 					String dbUrl = dbSiembraLabor.getUrl();
 					this.ordenSiembra.setUrl(dbUrl);
+					this.updateProgress(8, 10);
+					System.out.println("guardando siembra");
+					long ini = System.currentTimeMillis();
 					DAH.save(ordenSiembra);
+					long time = System.currentTimeMillis()-ini;
+					System.out.println("guarde siembra en "+time+"ms");
+					this.updateProgress(9, 10);
 					//java.math.BigDecimal id = (java.math.BigDecimal) data.get("id");
 					//String prettyresponse = resContent.toPrettyString();
 					//System.out.println("prettyresponse "+prettyresponse);
@@ -160,7 +164,7 @@ public class CompartirSiembraLaborTask extends Task<String> {
 					 */
 					//String urlGoto = "https://www.ursulagis.com/api/recorridas/4/";
 					//TODO cambiar esta url por una url mobile que permita hacer la recorrida via web.
-					String urlGoto =dbUrl;// GET_RECORRIDAS_BY_ID_URL+id+"/";
+					String urlGoto = dbUrl;// GET_RECORRIDAS_BY_ID_URL+id+"/";
 					this.updateProgress(10, 10);
 					return urlGoto;
 				}
@@ -201,14 +205,20 @@ public class CompartirSiembraLaborTask extends Task<String> {
 		double insumoTotal=0;
 		double laborTotal=0;
 		SimpleFeatureIterator it = siembra.outCollection.features();
-		fertCTotal =  siembra.getCantidadFertilizanteCostado();
-		fertLTotal = siembra.getCantidadFertilizanteLinea();
+		//fertCTotal =  siembra.getCantidadFertilizanteCostado();
+		//fertLTotal = siembra.getCantidadFertilizanteLinea();
 		while(it.hasNext()){
 			SimpleFeature f = it.next();
 			Double rinde = LaborItem.getDoubleFromObj(f.getAttribute(siembra.colAmount.get()));//labor.colAmount.get()
+			Double fertL = LaborItem.getDoubleFromObj(f.getAttribute(SiembraLabor.COLUMNA_DOSIS_LINEA));
+			Double fertC = LaborItem.getDoubleFromObj(f.getAttribute(SiembraLabor.COLUMNA_DOSIS_COSTADO));
+			
 			Geometry geometry = (Geometry) f.getDefaultGeometry();
-			Double area = geometry.getArea() * ProyectionConstants.A_HAS();			
+			Double area = ProyectionConstants.A_HAS(geometry.getArea());			
 			insumoTotal+=rinde*area;
+			fertLTotal+=fertL*area;
+			fertCTotal+=fertC*area;
+			
 			laborTotal+=area;
 		}
 		it.close();			
@@ -226,16 +236,19 @@ public class CompartirSiembraLaborTask extends Task<String> {
 		itemSemilla.setCantidad(insumoTotal/kgBolsa);//kgBolsa no es cero
 		itemSemilla.setDosisHa(itemSemilla.getCantidad()/laborTotal);
 		itemSemilla.setObservaciones("Cantidad en bolsas de "
-									+nf.format(semBolsa)+" semilas por bolsa y "
+									+nf.format(semBolsa)+" semilas y "
 									+nf.format(kgBolsa)+"Kg");
 		orden.getItems().add(itemSemilla);
 		
 		//putItem(prodCantidadMap, siembra.getFertLinea(), fertLTotal,0.0);
 		OrdenSiembraItem itemFertL = new OrdenSiembraItem();
 		itemFertL.setProducto(siembra.getFertLinea());		
+		//TODO fix no fertLineaProducto
 		itemFertL.setCantidad(fertLTotal);//kgBolsa no es cero	
 		itemFertL.setDosisHa(fertLTotal/laborTotal);
-		orden.getItems().add(itemFertL);
+		if(fertLTotal>0) {
+			orden.getItems().add(itemFertL);
+		}
 		
 		//putItem(prodCantidadMap, siembra.getFertCostado(), fertCTotal,0.0);
 		OrdenSiembraItem itemFertC = new OrdenSiembraItem();
@@ -286,6 +299,8 @@ public class CompartirSiembraLaborTask extends Task<String> {
 			OrdenSiembra ret = retOp.get();
 			Platform.runLater(()->{				
 				Geometry contornoG = GeometryHelper.extractContornoGeometry(siembra);
+				
+				System.out.println("contorno siembra es "+contornoG.toText());
 				Poligono contornoP =GeometryHelper.constructPoligono(contornoG);
 				if(contornoP!=null) {
 					ret.setPoligonoString(contornoP.getPositionsString());
@@ -338,7 +353,9 @@ public class CompartirSiembraLaborTask extends Task<String> {
 				 * */
 				String productoNombre = json.getAsJsonObject().get("nombre").getAsString();
 				try {
+					System.out.println("buscando producto local con nombre "+productoNombre);
 					Producto p = DAH.findProducto(productoNombre);
+					System.out.println("encontre "+p);
 					//javax.persistence.NoResultException: getSingleResult() did not retrieve any entities.
 					return p;
 				}catch(Exception e) {

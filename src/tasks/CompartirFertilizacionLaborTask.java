@@ -203,9 +203,11 @@ public class CompartirFertilizacionLaborTask extends Task<String> {
 						Geometry contornoG = GeometryHelper.extractContornoGeometry(fl);
 						Poligono contornoP =GeometryHelper.constructPoligono(contornoG);
 						if(contornoP!=null) {
-							ret.setPoligonoString(contornoP.getPositionsString());
+							String posString = contornoP.getPositionsString();
+							System.out.println("contorno: "+posString);
+							ret.setPoligonoString(posString);
 						} else {
-							System.out.println("no se pudo extraer el contorno de la cosecha");
+							System.err.println("no se pudo extraer el contorno de la cosecha");
 						}
 					});
 					return ret;

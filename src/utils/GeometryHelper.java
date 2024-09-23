@@ -278,7 +278,10 @@ public class GeometryHelper {
 	}
 
 	public static Geometry simplificarContorno(Geometry g) {
-		g=g.buffer(ProyectionConstants.metersToLongLat(10));
+		g=GeometryHelper.removeSmallTriangles(g, (0.005)/ProyectionConstants.A_HAS());
+
+		g=GeometryHelper.douglassPeuckerSimplify(g,ProyectionConstants.metersToLongLat(5));
+		//g=g.buffer(ProyectionConstants.metersToLongLat(10));
 		//		g=GeometryHelper.removeClosePoints(g, ProyectionConstants.metersToLongLat(2));
 		//		g=GeometryHelper.removeSinglePoints(g, ProyectionConstants.metersToLongLat(2));
 		//		g=GeometryHelper.reduceAlignedPoints(g, 0.2);
@@ -968,6 +971,11 @@ public class GeometryHelper {
 		try{					
 			ReferencedEnvelope bounds = labor.outCollection.getBounds();
 			Geometry cascadedUnion = unirCascading(labor,bounds);
+			cascadedUnion = cascadedUnion.buffer(ProyectionConstants.metersToLongLat(20));
+			Geometry boundary = cascadedUnion.getBoundary();
+			boundary = boundary.buffer(ProyectionConstants.metersToLongLat(20));
+			cascadedUnion = cascadedUnion.difference(boundary);
+			cascadedUnion= simplificarContorno(cascadedUnion);
 			return cascadedUnion;
 		}catch(Exception e){
 			ReferencedEnvelope bounds = labor.outCollection.getBounds();			

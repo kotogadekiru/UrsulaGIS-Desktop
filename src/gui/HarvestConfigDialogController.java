@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.FieldPosition;
 import java.text.Format;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.ParsePosition;
 import java.util.HashMap;
@@ -400,16 +401,17 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		//textCorrimientoPesada
 		Bindings.bindBidirectional(this.textCorrimientoPesada.textProperty(), labor.getConfigLabor().valorCorreccionPesadaProperty(), converter);
 
-
+		
 		StringConverter<Number> nsConverter = new NumberStringConverter(Messages.getLocale()){
 			@Override
 			public Number fromString(String s){
 				Number d=new Double(0);
 				try {
 					//s.substring(0, s.length()-1);
-					d = converter.parse(s);
+					d= PropertyHelper.parseDouble(s);
+					//d = converter.parse(s);
 					return d.doubleValue()/100;
-				} catch (ParseException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 				return 0;
@@ -417,7 +419,8 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 
 			@Override 
 			public String toString(Number n){
-				return converter.format(n.doubleValue()*100);//+"%";
+				return PropertyHelper.formatDouble(n.doubleValue()*100);
+				//return converter.format(n.doubleValue()*100);//+"%";
 			}
 		};
 		//textToleranciaCV
@@ -457,6 +460,8 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 				Labor.FECHA_KEY);
 	}
 
+
+	
 	public void init() {
 		this.getDialogPane().setContent(content);
 	}

@@ -1,39 +1,29 @@
 package dao.utils;
 
-import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.function.Consumer;
-import java.util.function.DoubleConsumer;
-import java.util.function.DoubleSupplier;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
-import dao.Labor;
 import dao.config.Configuracion;
-import dao.cosecha.CosechaConfig;
-import dao.cosecha.CosechaLabor;
 import gui.Messages;
 import gui.utils.DateConverter;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public class PropertyHelper {
 	
-	private static DecimalFormat converter=null;
+	private static DecimalFormat converter=getDoubleConverter();
 	
 	public static Number parseDouble(String s) {
+		s=fixDecimalSeparator(s);
 		Number ret = new Double(0);
 		try {		ret = getDoubleConverter().parse(s);//Double.valueOf(ppmPOptional.get());
 		}catch(Exception e){e.printStackTrace();}
@@ -48,8 +38,28 @@ public class PropertyHelper {
 	}
 	
 	public static DecimalFormat getDoubleConverter() {
-		if(converter==null) {
+		if(converter == null) {
+			
+//			DecimalFormat df = new DecimalFormat() {
+//				public String format(Number n) {
+//					return PropertyHelper.formatDouble(n.doubleValue());				
+//				}
+//				
+//				public Number parse(String s) {
+//					Number d = new Double(0);
+//					try {
+//						d= PropertyHelper.parseDouble(s);
+//						return d.doubleValue();
+//					} catch (Exception e) {
+//						e.printStackTrace();
+//					}
+//					return 0;			
+//				}
+//			};
+		
+			
 			NumberFormat nf = Messages.getNumberFormat();
+			
 			converter = (DecimalFormat)nf;
 			converter.setMinimumFractionDigits(2);
 			converter.setGroupingUsed(true);
@@ -88,7 +98,7 @@ public class PropertyHelper {
 	public static Double initDouble(String key,String def,Configuracion properties){	
 		Double ret = new Double(0);
 		try {
-			ret = converter.parse(properties.getPropertyOrDefault(key, def)).doubleValue();
+			ret = parseDouble(properties.getPropertyOrDefault(key, def)).doubleValue();
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -165,12 +175,44 @@ public class PropertyHelper {
 			Supplier<Date> getDate,	Consumer<Date> setDate,
 			ObjectProperty<LocalDate> valueProperty,
 			Configuracion config, String fechaKey) {
-		valueProperty.setValue(DateConverter.asLocalDate(getDate.get()));
-		DateConverter dc = new DateConverter(); 
-		valueProperty.addListener((obs, bool1, n) -> {
-			setDate.accept(DateConverter.asDate(n));			
-			config.setProperty(fechaKey,dc.toString(n));			
-		});		
+				valueProperty.setValue(DateConverter.asLocalDate(getDate.get()));
+				DateConverter dc = new DateConverter(); 
+				valueProperty.addListener((obs, bool1, n) -> {
+					setDate.accept(DateConverter.asDate(n));			
+					config.setProperty(fechaKey,dc.toString(n));			
+				});		
+	}
+
+	/**
+	 * metodo que detecta si el usuario quiso agregar un decimal con el caracter equivocado y lo cambia
+	 * 
+	 * @param s un string que representa un numero
+	 * @return un string que representa el mismo numero pero con el caracter de decimales acorde al locale seleccionado
+	 */
+	public static String fixDecimalSeparator(String s) {		
+		DecimalFormat format=PropertyHelper.getDoubleConverter();
+		DecimalFormatSymbols symbols=format.getDecimalFormatSymbols();
+		char decimal=symbols.getDecimalSeparator();
+		char grouping = symbols.getGroupingSeparator();
+		String ret = s;
+		int decIndex = s.lastIndexOf(decimal); //-1 si no existe
+		int groupIndex = s.lastIndexOf(grouping);
+		String [] groups =s.split(Character.toString(grouping)); 
+		int groupCount = groups.length;
+		//caso mas simple. si groupIndex es > dec Index estan invertidos
+		if(groupIndex>decIndex || 
+				(decIndex==-1 && groupIndex>-1 && groupCount==2 )) {//solo tiene grouping
+			ret = replaceGroupingDecimal(decimal, grouping, ret);
+		}
+		
+		return ret;
+	}
+
+	public static String replaceGroupingDecimal(char decimal, char grouping, String ret) {
+		ret = ret.replace(decimal, 'd');
+		ret = ret.replace(grouping,decimal);
+		ret = ret.replace('d', grouping);
+		return ret;
 	}
 	
 //	public static void initDateProperty(String key,String def,Configuracion properties) {

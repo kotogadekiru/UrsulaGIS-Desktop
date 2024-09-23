@@ -88,7 +88,8 @@ public class TarjetaHelper {
 	                    String.format("form-data; name=\"file\"; filename=\"%s\"", f.getName()) // TODO: escape fileName?
 	            ));
 	    MultipartContent content = new MultipartContent()
-	            .setMediaType(new HttpMediaType("multipart/form-data").setParameter("boundary", UUID.randomUUID().toString()))
+	            .setMediaType(new HttpMediaType("multipart/form-data")
+	            .setParameter("boundary", UUID.randomUUID().toString()))
 	            .addPart(part);
 	    
 		HttpResponse response = makeBinaryPostRequest(url,content,f.getName());

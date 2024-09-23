@@ -2,9 +2,6 @@ package gui.controller;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -13,13 +10,11 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLStreamException;
@@ -28,7 +23,6 @@ import org.geotools.data.FileDataStore;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.geotools.math.Fraction;
 import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.densify.Densifier;
@@ -37,7 +31,6 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 
 import dao.Labor;
-import dao.LaborItem;
 import dao.Ndvi;
 import dao.Poligono;
 import dao.cosecha.CosechaLabor;
@@ -48,16 +41,11 @@ import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
 import dao.siembra.SiembraLabor;
 import dao.suelo.Suelo;
-import dao.suelo.SueloItem;
-import dao.utils.PropertyHelper;
-import gov.nasa.worldwind.WorldWindow;
-import gov.nasa.worldwind.avlist.AVList;
 import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Position.PositionList;
 import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.LayerList;
-import gov.nasa.worldwind.layers.RenderableLayer;
 import gov.nasa.worldwind.ogc.kml.KMLAbstractFeature;
 import gov.nasa.worldwind.ogc.kml.KMLBoundary;
 import gov.nasa.worldwind.ogc.kml.KMLDocument;
@@ -78,7 +66,6 @@ import gui.PulverizacionConfigDialogController;
 import gui.SiembraConfigDialogController;
 import gui.nww.LaborLayer;
 import gui.nww.LayerAction;
-import gui.nww.LayerPanel;
 import gui.utils.DateConverter;
 import gui.utils.NumberInputDialog;
 import javafx.application.Platform;
@@ -88,22 +75,17 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import tasks.GetNdviForLaborTask4;
-import tasks.ShowRecorridaDirigidaTask;
 import tasks.crear.CrearCosechaMapTask;
 import tasks.crear.CrearFertilizacionMapTask;
 import tasks.crear.CrearPulverizacionMapTask;
 import tasks.crear.CrearSiembraMapTask;
 import tasks.crear.CrearSueloMapTask;
-import tasks.procesar.CortarCosechaMapTask;
 import tasks.procesar.CortarLaborMapTask;
 import tasks.procesar.ExtraerPoligonosDeLaborTask;
 import tasks.procesar.SimplificarCaminoTask;
-import tasks.procesar.GenerarRecorridaDirigidaTask;
 import utils.DAH;
 import utils.FileHelper;
 import utils.GeometryHelper;
@@ -816,7 +798,17 @@ public class PoligonoGUIController extends AbstractGUIController{
 		JFXMain.executorPool.execute(umTask);
 	}
 
+	public void doExtraerContorno(Labor<?> labor ) {	
+	
+		JFXMain.executorPool.submit(()->{
+			Geometry contornoG = GeometryHelper.extractContornoGeometry(labor);
+			Poligono contornoP =GeometryHelper.constructPoligono(contornoG);
+			GeometryHelper.simplificarPoligono(contornoP);
+			showPoligonos(Collections.singletonList(contornoP));
+		});
 
+	}
+	
 	/**
 	 * metodo que reemplaza los puntos por una version interpolada
 	 */
@@ -1168,12 +1160,12 @@ public class PoligonoGUIController extends AbstractGUIController{
 			CosechaLabor ret = (CosechaLabor)handler.getSource().getValue();
 			//cosechas.add(ret);
 			insertBeforeCompass(getWwd(), ret.getLayer());
-			this.getLayerPanel().update(this.getWwd());
+			getLayerPanel().update(getWwd());
 			//poli.getLayer().setEnabled(false);
 			polis.stream().forEach(p->p.getLayer().setEnabled(false));
 			umTask.uninstallProgressBar();
 			viewGoTo(ret);
-			umTask.uninstallProgressBar();
+
 			System.out.println(Messages.getString("JFXMain.270")); //$NON-NLS-1$
 			playSound();
 		});//fin del OnSucceeded
@@ -1371,7 +1363,9 @@ public class PoligonoGUIController extends AbstractGUIController{
 	public void importPlacemarkPoligon(KMLPlacemark placemark) {
 		try {
 			String name = placemark.getName();
+			//TODO implementar para importar puntos como medicion
 			KMLBoundary boundary = (KMLBoundary)placemark.getGeometry().getField("outerBoundaryIs");
+			if(boundary ==null)return;
 			PositionList coordinates = boundary.getLinearRing().getCoordinates();
 			Poligono poli = GeometryHelper.constructPolygon(coordinates);
 			poli.setNombre(name);		

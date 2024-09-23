@@ -47,9 +47,7 @@ public class Messages {
 			locale =  new Locale("ES");
 		}
 		setLocale(locale);
-		nf=NumberFormat.getInstance(locale);
-		nf.setGroupingUsed(true);
-		nf.setMaximumFractionDigits(2);
+		
 		
 	}
 
@@ -64,7 +62,9 @@ public class Messages {
 	
 	public static void setLocale(Locale loc) {
 		locale=loc;
-		
+		nf=NumberFormat.getInstance(locale);
+		nf.setGroupingUsed(true);
+		nf.setMaximumFractionDigits(2);
 		
 		RESOURCE_BUNDLE_CONTAINER.set(BUNDLE_NAME, locale);
 		conf.loadProperties();

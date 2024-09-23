@@ -112,6 +112,9 @@ public class CrearCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 				+df.format(cosechaItem.getImporteHa() ) 
 				+ Messages.getString("OpenMargenMapTask.16"));
 		
+//		sb.append("Observaciones: "
+//				+cosechaItem.getObservaciones()
+//				+"\n");
 		
 		//superficie
 		if(area<1){

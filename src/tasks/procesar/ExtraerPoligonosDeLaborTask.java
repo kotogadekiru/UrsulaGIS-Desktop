@@ -1,38 +1,26 @@
 package tasks.procesar;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.feature.DefaultFeatureCollection;
-import org.geotools.referencing.GeodeticCalculator;
 import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.CoordinateFilter;
-import com.vividsolutions.jts.geom.CoordinateSequence;
-import com.vividsolutions.jts.geom.CoordinateSequenceFilter;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineSegment;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
-import com.vividsolutions.jts.operation.buffer.BufferParameters;
 import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 
 import dao.Labor;
 import dao.LaborItem;
 import dao.Poligono;
-import dao.config.Configuracion;
-import dao.cosecha.CosechaLabor;
-import dao.fertilizacion.FertilizacionItem;
-import dao.fertilizacion.FertilizacionLabor;
-import dao.utils.PropertyHelper;
 import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
 import gui.Messages;
@@ -45,7 +33,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import utils.PolygonValidator;
 import utils.ProyectionConstants;
 
 public class ExtraerPoligonosDeLaborTask extends Task<List<Poligono>> {

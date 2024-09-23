@@ -11,12 +11,10 @@ import java.util.concurrent.Executor;
 
 import org.geotools.data.FileDataStore;
 
-import api.OrdenPulverizacion;
 import api.OrdenSiembra;
 import dao.Labor;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
-import dao.pulverizacion.PulverizacionLabor;
 import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.WorldWindow;
 import gui.JFXMain;
@@ -31,7 +29,6 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.layout.Pane;
-import tasks.CompartirPulverizacionLaborTask;
 import tasks.CompartirSiembraLaborTask;
 import tasks.crear.ConvertirASiembraTask;
 import tasks.importar.ProcessSiembraMapTask;
@@ -320,16 +317,42 @@ public class SiembraGUIController {
 		DAH.save(op);
 		CompartirSiembraLaborTask task = new CompartirSiembraLaborTask(value,op);			
 			task.installProgressBar(main.progressBox);
+			task.setOnFailed((handler)->{
+				System.out.println("task failed");
+			});
 			task.setOnSucceeded(handler -> {
+				System.out.println("task succeeded");
 				String ret = (String)handler.getSource().getValue();
-
-				if(ret!=null) {
+				System.out.println("showing qr for "+ret);
+				if(ret!=null && !ret.isEmpty() ) {
 					main.configGUIController.showQR(ret);
+				} else { 
+					System.out.println("ret es null asi que no hay url para mostrar qr");
 				}
 				task.uninstallProgressBar();			
 			});
+			
+			task.stateProperty().addListener((ob,ov,nv)->{//observable, oldValue, newValue
+				System.out.println("state changed to "+nv);
+			});
+		    //stateProperty for Task:
+//		    task.stateProperty().addListener(new ChangeListener<Worker.State>() {
+//
+//		        @Override
+//		        public void changed(ObservableValue<? extends State> observable,
+//		                State oldValue, Worker.State newState) {
+//		            if(newState==Worker.State.SUCCEEDED){
+//		                loadPanels(root);
+//		            }
+//		        }
+//		    });
+
+		    //start Task
+		    new Thread(task).start();
+		    
 			System.out.println("ejecutando Compartir Siembra");
-			JFXMain.executorPool.submit(task);		
+			//task.run();
+			//JFXMain.executorPool.submit(task);		
 	}
 	/**
 	 * toma una cosecha, pregunta las densidades deseadas para cada ambiente

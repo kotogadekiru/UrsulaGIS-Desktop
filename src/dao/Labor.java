@@ -27,17 +27,27 @@ import javax.persistence.Transient;
 import org.geotools.data.DataUtilities;
 import org.geotools.data.FileDataStore;
 import org.geotools.data.ServiceInfo;
+import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.feature.SchemaException;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
+import org.geotools.referencing.CRS;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeDescriptor;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.NoSuchAuthorityCodeException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
 import dao.config.Configuracion;
+import dao.cosecha.CosechaItem;
+import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.ordenCompra.ProductoLabor;
 import dao.utils.LaborDataStore;
@@ -73,6 +83,7 @@ import utils.GeometryHelper;
 	@NamedQuery(name=Labor.FIND_ACTIVOS, query="SELECT o FROM Labor o where o.activo = true") ,
 }) 
 public abstract class Labor<E extends LaborItem>  {
+	private static final String THE_GEOM_OLUMN = "the_geom";
 	@Transient public static final String FIND_ALL="Labor.findAll";
 	@Transient public static final String FIND_NAME = "Labor.findName";
 	@Transient public static final String FIND_ACTIVOS = "Labor.findActivos";
@@ -171,7 +182,7 @@ public abstract class Labor<E extends LaborItem>  {
 	}
 
 	//constructor de copia superficial de la labor
-	public Labor(FertilizacionLabor l) {
+	public Labor(Labor<?> l) {
 		super();
 		clasificador=new Clasificador();
 		outCollection = new DefaultFeatureCollection("internal",getType());
@@ -193,8 +204,6 @@ public abstract class Labor<E extends LaborItem>  {
 		this.colAncho.set(l.colAncho.get());
 		this.colCurso.set(l.colCurso.get());
 		this.colDistancia.set(l.colDistancia.get());
-
-
 	}
 
 	private void initConfigLabor() {
@@ -674,6 +683,72 @@ public abstract class Labor<E extends LaborItem>  {
 		this.inCollection = inCollection;
 	}
 
+	@Transient
+	@Deprecated //es una funcion de prueba
+	public SimpleFeatureType buildType() {
+		SimpleFeatureType type = null;
+		SimpleFeatureTypeBuilder b = new SimpleFeatureTypeBuilder();
+
+		//set the name
+		b.setName( "LABOR" );		
+		//add a geometry property	
+		try {
+			CoordinateReferenceSystem crs = CRS.decode("EPSG:4326");
+			b.setCRS( crs);//DefaultGeographicCRS.WGS84_3D ); // set crs first
+			b.add( THE_GEOM_OLUMN, MultiPolygon.class ); // then add geometry
+			b.setDefaultGeometry(THE_GEOM_OLUMN);
+		} catch (Exception e) {		
+			e.printStackTrace();
+		} 		
+
+		//add some properties
+		b.add( "COLUMNA_DISTANCIA", Double.class );
+		b.add( "COLUMNA_CURSO", Double.class );
+		b.add( "COLUMNA_ANCHO", Double.class );
+		b.add( "COLUMNA_ELEVACION", Double.class );
+		b.add( "COLUMNA_CATEGORIA", Double.class );
+		b.add( "COLUMNA_OBSERVACIONES", String.class );
+		//FIXME faltan las columnas especificas de la labor
+		type = b.buildFeatureType();		
+		return type;
+	}
+	
+	public static void main(String[] args) {
+		System.out.println("testing build type");
+		CosechaLabor l = new CosechaLabor();
+		CosechaItem item = new CosechaItem();
+		item.setObservaciones("observo una observacion");
+		l.insertFeature(item);
+		SimpleFeature sf = item.getFeature(l.featureBuilder);
+		if(!l.outCollection.add(sf)) {
+			System.err.println("No se pudo insertar la feature "+sf);
+		}
+		
+		SimpleFeatureIterator features = l.outCollection.features();
+		
+		
+		for(SimpleFeature f=null ; features.hasNext();f=features.next()) {
+			System.out.println(f.toString());
+		}
+		/*
+		 * "building descriptor 
+		 * the_geom:MultiPolygon:srid=4326,
+		 * Distancia:Double,
+		 * Curso(deg):Double,
+		 * Ancho:Double,
+		 * Elevacion:Double,
+		 * Categoria:Integer,
+		 * Observaciones:String,
+		 * Rendimient:Double,
+		 * DesvRendim:Double,
+		 * CostoLbTn:Double,
+		 * CostoLbHa:Double,
+		 * precio_gra:Double,
+		 * importe_ha:Double"
+		 */
+
+		
+	}
 
 	@Transient
 	public SimpleFeatureType getType() {
@@ -684,9 +759,9 @@ public abstract class Labor<E extends LaborItem>  {
 				+ COLUMNA_ANCHO + ":Double,"
 				+ COLUMNA_ELEVACION + ":Double,"
 				+ COLUMNA_CATEGORIA + ":Integer,"
-		+ COLUMNA_OBSERVACIONES + ":String,";
+				+ COLUMNA_OBSERVACIONES + ":String,";
 		typeDescriptor+= getTypeDescriptors();
-
+		System.out.println("building descriptor "+typeDescriptor);
 		try {
 			type = DataUtilities.createType("LABOR", typeDescriptor);
 		} catch (SchemaException e) {
@@ -743,7 +818,7 @@ public abstract class Labor<E extends LaborItem>  {
 		ci.elevacion = LaborItem.getDoubleFromObj(harvestFeature
 				.getAttribute(COLUMNA_ELEVACION));
 		String obs = (String) harvestFeature.getAttribute(COLUMNA_OBSERVACIONES);
-		//System.out.println("obs es "+obs);
+		//System.out.println("obs es "+obs);//obs es 
 		ci.observaciones =obs!=null?obs:""; 
 	}
 
@@ -751,12 +826,12 @@ public abstract class Labor<E extends LaborItem>  {
 	 * 
 	 * @param feature
 	 * @param attribute
-	 * @return devuelve true si el feature tiene el attrinute
+	 * @return devuelve true si el feature tiene el attribute
 	 */
 	public boolean contieneAtributte(SimpleFeature feature,String attribute) {
 		if( attribute==null)return false;
-		for(AttributeDescriptor att:feature.getType().getAttributeDescriptors()) {
-			if(att!=null&&attribute.equals(att.getLocalName())) {
+		for(AttributeDescriptor att : feature.getType().getAttributeDescriptors()) {
+			if(att != null && attribute.equals(att.getLocalName())) {
 				return true;
 			}
 		}

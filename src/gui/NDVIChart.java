@@ -103,6 +103,7 @@ public class NDVIChart extends VBox {
 			.map((layer)->(Ndvi)layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR))
 			.sorted((n1,n2)->n1.compareTo(n2))
 			.forEachOrdered(lNdvi->{
+				try {
 				LocalDate fecha = lNdvi.getFecha();
 				long dias=0;
 				if(lastFecha[0]==null) {
@@ -122,7 +123,10 @@ public class NDVIChart extends VBox {
 				BigDecimal bd = new BigDecimal(ndviAcumProp.get()).setScale(2, RoundingMode.HALF_EVEN);
 				
 				sr.getData().add(new XYChart.Data<Number, Number>(lNdvi.getFecha().toEpochDay(), bd.doubleValue()));
-				
+				}catch(Exception e) {
+					System.err.println("Excepcion para "+lNdvi.getNombre());
+					e.printStackTrace();
+				}
 			});
 			data.add(sr);	
 		});

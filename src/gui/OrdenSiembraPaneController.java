@@ -58,48 +58,48 @@ public class OrdenSiembraPaneController extends Dialog<OrdenSiembra>{
 	private static final String CONFIG_DIALOG_FXML = "OrdenSiembraPane.fxml"; //$NON-NLS-1$
 
 	private static final String ORDEN_SIEMBRA_UNIDAD = "OrdenSiembra.Unidad";
-	
+
 	@FXML
 	private VBox content;
 
-    @FXML
-    private BorderPane bpItems;
+	@FXML
+	private BorderPane bpItems;
 
-    @FXML
-    private DatePicker dPfecha;
-    
-    @FXML
-    private Label lblNombre;    
+	@FXML
+	private DatePicker dPfecha;
 
-    @FXML
-    private TextArea taObservaciones;
+	@FXML
+	private Label lblNombre;    
 
-    @FXML
-    private TextField tfContratista;
-    
-    @FXML
-    private TextField tfCultivo;
+	@FXML
+	private TextArea taObservaciones;
 
-    @FXML
-    private TextField tfEstablecimiento;
+	@FXML
+	private TextField tfContratista;
 
-    @FXML
-    private TextField tfNroOrden;
+	@FXML
+	private TextField tfCultivo;
 
-    @FXML
-    private TextField tfProductor;
+	@FXML
+	private TextField tfEstablecimiento;
 
-    @FXML
-    private TextField tfIng;
-    
-    @FXML
-    private ComboBox<String> cb;// = new ComboBox<String>();
+	@FXML
+	private TextField tfNroOrden;
+
+	@FXML
+	private TextField tfProductor;
+
+	@FXML
+	private TextField tfIng;
+
+	@FXML
+	private ComboBox<String> cb;// = new ComboBox<String>();
 
 	private OrdenSiembra ordenSiembra;
-	
+
 	Locale loc = new Locale("en", "US");
 	DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.DEFAULT, loc);
-    
+
 	public OrdenSiembraPaneController() {
 		super();
 		System.out.println("construyendo el controller"); //$NON-NLS-1$
@@ -129,7 +129,7 @@ public class OrdenSiembraPaneController extends Dialog<OrdenSiembra>{
 			}
 		});
 	}
-	
+
 	private OrdenSiembra updateOrdenSiembra() {
 		Configuracion config = Configuracion.getInstance();
 		config.loadProperties();
@@ -141,13 +141,13 @@ public class OrdenSiembraPaneController extends Dialog<OrdenSiembra>{
 		this.ordenSiembra.setNombreIngeniero(tfIng.getText());
 		//XXX el ingeniero deberia ser el mismo en todas las ordenes?
 		config.setProperty(ORDEN_SIEMBRA_ING, this.ordenSiembra.getNombreIngeniero());
-		
+
 		this.ordenSiembra.setProductor(this.tfProductor.getText());
 		config.setProperty(ORDEN_SIEMBRA_PRODUCTOR, this.ordenSiembra.getProductor());
-		
+
 		this.ordenSiembra.setEstablecimiento(this.tfEstablecimiento.getText());
 		config.setProperty(ORDEN_SIEMBRA_ESTABLECIMIENTO, this.ordenSiembra.getEstablecimiento());
-		
+
 		this.ordenSiembra.setContratista(this.tfContratista.getText());
 		config.setProperty(ORDEN_SIEMBRA_CONTRATISTA, this.ordenSiembra.getContratista());
 
@@ -155,26 +155,26 @@ public class OrdenSiembraPaneController extends Dialog<OrdenSiembra>{
 		config.setProperty(ORDEN_SIEMBRA_CULTIVO, this.ordenSiembra.getCultivo());
 		this.ordenSiembra.setDescription(this.taObservaciones.getText());
 		config.setProperty(ORDEN_SIEMBRA_DESCRIPCION, this.ordenSiembra.getDescription());
-		
+
 		String unidadKey = cb.getSelectionModel().getSelectedItem();
 		String unidadValue =SiembraGUIController.getUnidadesPrescripcionSiembra().get(unidadKey);
 		this.ordenSiembra.setUnidad(unidadValue);
 		config.setProperty(ORDEN_SIEMBRA_UNIDAD, this.ordenSiembra.getUnidad());
 		config.save();
-					
+
 		return this.ordenSiembra;//TODO read elements data from pane
 	}
 	private boolean validarDialog() {
-//		List<String> cols = labor.getAvailableColumns();
+		//		List<String> cols = labor.getAvailableColumns();
 		StringBuilder message = new StringBuilder();
 		boolean isValid =true;
-		
-//		if(cols.indexOf(comboDosis.getValue())==-1){
-//			message.append(Messages.getString("PulverizacionConfigDialogController.select")); //$NON-NLS-1$
-//			isValid=false;
-//		}
 
-		
+		//		if(cols.indexOf(comboDosis.getValue())==-1){
+		//			message.append(Messages.getString("PulverizacionConfigDialogController.select")); //$NON-NLS-1$
+		//			isValid=false;
+		//		}
+
+
 		if(!isValid){
 			Alert alert = new Alert(AlertType.ERROR, message.toString(), ButtonType.OK);
 			alert.initOwner(this.getDialogPane().getScene().getWindow());
@@ -182,17 +182,17 @@ public class OrdenSiembraPaneController extends Dialog<OrdenSiembra>{
 			alert.showAndWait();
 
 		}
-		
+
 		return isValid;
 	}
-	
+
 	public void setLabor(OrdenSiembra l) {
 		this.ordenSiembra = l;		
 		try {
 			if(dateFormat != null && l.getFecha()!=null) {
-			Date d = dateFormat.parse(l.getFecha());
-			LocalDate ld =DateConverter.asLocalDate(d);
-			this.dPfecha.setValue(ld);
+				Date d = dateFormat.parse(l.getFecha());
+				LocalDate ld =DateConverter.asLocalDate(d);
+				this.dPfecha.setValue(ld);
 			}
 		} catch (ParseException e) {			
 			e.printStackTrace();
@@ -207,25 +207,25 @@ public class OrdenSiembraPaneController extends Dialog<OrdenSiembra>{
 		} catch (ParseException e) {			
 			e.printStackTrace();
 		}
-		
+
 		this.tfIng.setText(config.getPropertyOrDefault(ORDEN_SIEMBRA_ING, ""));
 		this.tfProductor.setText(config.getPropertyOrDefault(ORDEN_SIEMBRA_PRODUCTOR, ""));
 		this.tfEstablecimiento.setText(config.getPropertyOrDefault(ORDEN_SIEMBRA_ESTABLECIMIENTO, ""));
 		this.tfContratista.setText(config.getPropertyOrDefault(ORDEN_SIEMBRA_CONTRATISTA, ""));		
-		
+
 		this.tfCultivo.setText(config.getPropertyOrDefault(ORDEN_SIEMBRA_CULTIVO, ""));	
 		this.taObservaciones.setText(config.getPropertyOrDefault(ORDEN_SIEMBRA_DESCRIPCION, ""));		
-		
+
 		Map<String,String> availableColums = SiembraGUIController.getUnidadesPrescripcionSiembra();
 		this.cb.setItems(FXCollections.observableArrayList(availableColums.keySet()));
 		this.cb.getSelectionModel().select(0);	
-		
+
 		this.contructCaldoTable();
 	}
-	
+
 	private void contructCaldoTable() {
-		 List<OrdenSiembraItem> caldo = ordenSiembra.getItems();
-	
+		List<OrdenSiembraItem> caldo = ordenSiembra.getItems();
+
 		final ObservableList<OrdenSiembraItem> data =
 				FXCollections.observableArrayList(
 						caldo
@@ -244,12 +244,12 @@ public class OrdenSiembraPaneController extends Dialog<OrdenSiembra>{
 			bpItems.setCenter(table);
 		}
 	}
-	
+
 	public void init() {
 		System.out.println("iniciando OrdenSiembraController");
 		//VBox v= new VBox(new ImageView(new Image(JFXMain.ICON)));
 		this.getDialogPane().setContent(content);
-	
+
 		this.getDialogPane().heightProperty().addListener((o,old,nu)->{
 			content.setPrefSize(this.getWidth(), nu.doubleValue());	
 		});
@@ -258,25 +258,25 @@ public class OrdenSiembraPaneController extends Dialog<OrdenSiembra>{
 		});
 		this.getDialogPane().setPrefSize(711,390);
 	}
-	
+
 	public static Optional<OrdenSiembra> config(OrdenSiembra labor2) {
 		Optional<OrdenSiembra> ret = Optional.empty();
-		
+
 		try{
 			FXMLLoader myLoader = new FXMLLoader(OrdenSiembraPaneController.class.getResource(
 					CONFIG_DIALOG_FXML));
 			myLoader.setResources(Messages.getBoundle());
 			myLoader.load();//aca se crea el constructor
-			
+
 			OrdenSiembraPaneController controller = ((OrdenSiembraPaneController) myLoader.getController());
 			if(controller==null) {
 				System.out.println("controller es null "+CONFIG_DIALOG_FXML);
 			} else {
 				controller.setLabor(labor2);
-			controller.init();//null pointer
-			
-		
-			ret = controller.showAndWait();
+				controller.init();//null pointer
+
+
+				ret = controller.showAndWait();
 			}
 		} catch (Exception e1) {
 			System.err.println("no se pudo levantar el fxml "+CONFIG_DIALOG_FXML); //$NON-NLS-1$

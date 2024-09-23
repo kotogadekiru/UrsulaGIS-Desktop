@@ -252,19 +252,20 @@ public class DAH {
 				}
 				em.getTransaction().commit();
 			}catch(javax.persistence.RollbackException rbe){
-				
-				em.getTransaction().begin();		
-				em.merge(entidad);
-				em.getTransaction().commit();			
+				//Exception Description: No transaction is currently active
+				em.getTransaction().rollback();
+//				em.getTransaction().begin();		
+//				em.merge(entidad);
+//				em.getTransaction().commit();			
 			}finally {
 
 			}
 		} else{
 			if(em.contains(entidad)) {
 				em.merge(entidad);
-				//System.out.println("merging entidad "+entidad);
+				System.out.println("merging entidad "+entidad);
 			}else {
-				//System.out.println("persistiendo entidad "+entidad);
+				System.out.println("persistiendo entidad "+entidad);
 				em.persist(entidad);			
 			}
 		}

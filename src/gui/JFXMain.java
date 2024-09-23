@@ -481,7 +481,11 @@ public class JFXMain extends Application {
 				Ndvi ndvi = (Ndvi) layerObject;
 				ndvi.setActivo(false);
 				if(ndvi.getId()!=null){
-					DAH.save(ndvi);
+					try {
+						DAH.save(ndvi);
+					}catch(Exception e) {
+						e.printStackTrace();
+					}
 				}
 			}
 			MeasureTool mt = (MeasureTool)layer.getValue(PoligonLayerFactory.MEASURE_TOOL);		
@@ -592,10 +596,10 @@ public class JFXMain extends Application {
 		 * Accion que permite extraer el contorno de una cosecha
 		 * es solo de prueba. se puede realizar extrayendo poligonos y uniendolos
 		 */
-//		laboresP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.extraerContornoAction"),(layer)->{
-//			doExtraerContorno((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-//			return "poligonos Extraidos " + layer.getName(); 
-//		}));
+		laboresP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.extraerContornoAction"),(layer)->{
+			poligonoGUIController.doExtraerContorno((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+			return "poligonos Extraidos " + layer.getName(); 
+		}));
 		
 		/**
 		 * Accion que permite cortar una labor por el poligono/s seleccionado

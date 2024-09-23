@@ -494,7 +494,13 @@ public class RecorridaGUIController extends AbstractGUIController {
 				ma.remove("Nombre");
 				m.setObservacion(new Gson().toJson(ma));
 				//System.out.println("setting observaciones "+m.getObservacion());
-				DAH.save(m);
+				try {
+					if(m.getId()!=null) {
+						DAH.save(m);
+					}
+				}catch(Exception e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}

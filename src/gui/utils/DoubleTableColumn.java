@@ -1,12 +1,14 @@
 package gui.utils;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Comparator;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import dao.utils.PropertyHelper;
 import gui.Messages;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Pos;
@@ -22,7 +24,7 @@ public class DoubleTableColumn<T> extends TableColumn<T,String> {
 		setEditable(setMethod != null);
 		NumberFormat nf = Messages.getNumberFormat();
 		nf.setGroupingUsed(true);
-		nf.setMaximumFractionDigits(3);//DosisHa necita 3 decimales
+		nf.setMaximumFractionDigits(3);//DosisHa necesita 3 decimales
 		//DecimalFormat df = new DecimalFormat("###,###.##");
 
 		//	 this.setCellValueFactory(new PropertyValueFactory<T, Date>("date"));
@@ -61,11 +63,14 @@ public class DoubleTableColumn<T> extends TableColumn<T,String> {
 			T p = cellEditingEvent.getRowValue();
 			try {
 				Double newVal;
-				newVal = nf.parse(cellEditingEvent.getNewValue()).doubleValue();
+				//TODO fix si tiene coma pero el separador de decimales es .
+				String newStringVal = cellEditingEvent.getNewValue();
+				
+				//newVal = nf.parse(newStringVal).doubleValue();
+				newVal = PropertyHelper.parseDouble(newStringVal).doubleValue();
 				setMethod.accept(p,newVal);//Double.valueOf( cellEditingEvent.getNewValue()));		
 				//DAH.save(p);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
+			} catch (Exception e) {				
 				e.printStackTrace();
 			}
 		});
@@ -87,4 +92,6 @@ public class DoubleTableColumn<T> extends TableColumn<T,String> {
 			}
 		});
 	}
+	
+
 }
