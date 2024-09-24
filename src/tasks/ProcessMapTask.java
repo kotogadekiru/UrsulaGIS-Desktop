@@ -999,48 +999,49 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	 * @return
 	 */
 	protected List<Polygon> getPolygons(FC dao){
-		List<Polygon> polygons = new ArrayList<Polygon>();
-		Object geometry = dao.getGeometry();
-		//	System.out.println("obteniendo los poligonos de "+geometry);
-
-		if (geometry instanceof MultiPolygon) {		
-			MultiPolygon mp = (MultiPolygon) geometry;
-			for (int i = 0; i < mp.getNumGeometries(); i++) {
-				Geometry g = mp.getGeometryN(i);
-				if(g instanceof Polygon){
-					polygons.add((Polygon) g);
-				}				
-			}
-
-		} else if (geometry instanceof Polygon) {
-			polygons.add((Polygon) geometry);
-		} else if(geometry instanceof Point){ 
-			//si es una capa de puntos lo cambio por una capa de cuadrados de lado 5mts
-			Point p = (Point) geometry;
-			GeometryFactory fact = p.getFactory();
-			Double r = 100*ProyectionConstants.metersToLat();
-
-			Coordinate D = new Coordinate(p.getX() - r , p.getY() + r ); // x-l-d
-			Coordinate C = new Coordinate(p.getX() + r , p.getY()+ r);// X+l-d
-			Coordinate B = new Coordinate(p.getX() + r , p.getY() - r );// X+l+d
-			Coordinate A = new Coordinate(p.getX() - r , p.getY() -r );// X-l+d
-
-			Coordinate[] coordinates = { A, B, C, D, A };// Tiene que ser cerrado.
-
-			// PrecisionModel pm = new PrecisionModel(PrecisionModel.FLOATING);
-			// fact= new GeometryFactory(pm);
-
-			LinearRing shell = fact.createLinearRing(coordinates);
-			LinearRing[] holes = null;
-			Polygon poly = new Polygon(shell, holes, fact);
-
-			polygons.add(poly);
-			System.out.println("creando polygon default");//Las geometrias son POINT. que hago?
-			//TODO crear un poligono default
-
-		}
-		//System.out.println("devolviendo los polygons "+polygons);
-		return polygons;
+		return PolygonValidator.geometryToFlatPolygons(dao.getGeometry());
+//		List<Polygon> polygons = new ArrayList<Polygon>();
+//		Object geometry = dao.getGeometry();
+//		//	System.out.println("obteniendo los poligonos de "+geometry);
+//
+//		if (geometry instanceof MultiPolygon) {		
+//			MultiPolygon mp = (MultiPolygon) geometry;
+//			for (int i = 0; i < mp.getNumGeometries(); i++) {
+//				Geometry g = mp.getGeometryN(i);
+//				if(g instanceof Polygon){
+//					polygons.add((Polygon) g);
+//				}				
+//			}
+//
+//		} else if (geometry instanceof Polygon) {
+//			polygons.add((Polygon) geometry);
+//		} else if(geometry instanceof Point){ 
+//			//si es una capa de puntos lo cambio por una capa de cuadrados de lado 5mts
+//			Point p = (Point) geometry;
+//			GeometryFactory fact = p.getFactory();
+//			Double r = 100*ProyectionConstants.metersToLat();
+//
+//			Coordinate D = new Coordinate(p.getX() - r , p.getY() + r ); // x-l-d
+//			Coordinate C = new Coordinate(p.getX() + r , p.getY()+ r);// X+l-d
+//			Coordinate B = new Coordinate(p.getX() + r , p.getY() - r );// X+l+d
+//			Coordinate A = new Coordinate(p.getX() - r , p.getY() -r );// X-l+d
+//
+//			Coordinate[] coordinates = { A, B, C, D, A };// Tiene que ser cerrado.
+//
+//			// PrecisionModel pm = new PrecisionModel(PrecisionModel.FLOATING);
+//			// fact= new GeometryFactory(pm);
+//
+//			LinearRing shell = fact.createLinearRing(coordinates);
+//			LinearRing[] holes = null;
+//			Polygon poly = new Polygon(shell, holes, fact);
+//
+//			polygons.add(poly);
+//			System.out.println("creando polygon default");//Las geometrias son POINT. que hago?
+//			//TODO crear un poligono default
+//
+//		}
+//		//System.out.println("devolviendo los polygons "+polygons);
+//		return polygons;
 	}
 	protected abstract gov.nasa.worldwind.render.ExtrudedPolygon getPathTooltip(Geometry p, FC  fc,gov.nasa.worldwind.render.ExtrudedPolygon  renderablePolygon);
 
@@ -1064,7 +1065,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	}
 
 	private void updateStatsLabor(Collection<FC> itemsToShow){
-		labor.minAmount= Double.MAX_VALUE;
+		labor.minAmount = Double.MAX_VALUE;
 		labor.maxAmount = -Double.MAX_VALUE;
 
 		labor.setCantidadLabor(new Double(0.0));

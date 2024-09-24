@@ -150,11 +150,15 @@ public class ConvertirASiembraTask extends ProcessMapTask<SiembraItem,SiembraLab
 		if(labor.getEntreSurco()>0) {
 			Double seedsSup= siembraFeature.getDosisML()/labor.getEntreSurco();
 			if(seedsSup<100) {//plantas por ha
-				tooltipText=tooltipText.concat(df.format(seedsSup*ProyectionConstants.METROS2_POR_HA) + " s/"+ Messages.getString("ProcessSiembraMapTask.12")); //$NON-NLS-1$ //$NON-NLS-2$
+				tooltipText=tooltipText.concat(df.format(seedsSup*ProyectionConstants.METROS2_POR_HA) 
+						+ " s/"+ Messages.getString("ProcessSiembraMapTask.12")); // "Has\n"
 
 			}else {
-				tooltipText=tooltipText.concat(df.format(seedsSup) + " s/"+Messages.getString("ProcessSiembraMapTask.10")); //s/m2
+				tooltipText=tooltipText.concat(df.format(seedsSup) 
+						+ " s/"+Messages.getString("ProcessSiembraMapTask.10")); // "s/m2"
 			}
+		}else {
+			System.out.println("Enrtesurco es cero o menos "+labor.getEntreSurco());
 		}
 		//kg semillas por ha
 		tooltipText=tooltipText.concat(Messages.getString("ProcessSiembraMapTask.3") + df.format(siembraFeature.getDosisHa()) + Messages.getString("ProcessSiembraMapTask.4")); //$NON-NLS-1$ //$NON-NLS-2$

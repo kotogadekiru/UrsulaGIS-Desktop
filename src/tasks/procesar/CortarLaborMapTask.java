@@ -85,7 +85,16 @@ public class CortarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem
 			return new CosechaLabor();
 		});
 		constructor.put(SiembraLabor.class, l->{
-			return new SiembraLabor();
+			SiembraLabor os = (SiembraLabor)l;
+			SiembraLabor ns =  new SiembraLabor();
+			ns.setEntreSurco(os.getEntreSurco());
+			ns.setSemilla(os.getSemilla());
+			ns.setPrecioInsumo(os.getPrecioInsumo());
+			ns.setPrecioLabor(os.getPrecioLabor());
+			ns.setFecha(os.getFecha());
+			ns.setFertLinea(os.getFertLinea());
+			ns.setFertCostado(os.getFertCostado());
+			return ns;
 		});
 		constructor.put(FertilizacionLabor.class, l->{
 			return new FertilizacionLabor();

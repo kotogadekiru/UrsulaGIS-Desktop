@@ -166,7 +166,10 @@ public abstract class Labor<E extends LaborItem>  {
 	@Transient public Position minY = null;//Position.fromDegrees(Double.MAX_VALUE, Double.MAX_VALUE);// null; //Double.MAX_VALUE;
 	@Transient public Position maxX = null;//Position.fromDegrees(Double.MIN_VALUE, Double.MIN_VALUE);//null; //-Double.MAX_VALUE;
 	@Transient public Position maxY = null;//Position.fromDegrees(-Double.MIN_VALUE, Double.MIN_VALUE);// null;//-Double.MAX_VALUE;
-
+	/**
+	 * usar getType()
+	 */
+	@Transient private SimpleFeatureType type = null;
 
 	public Labor(){
 		clasificador=new Clasificador();
@@ -752,7 +755,7 @@ public abstract class Labor<E extends LaborItem>  {
 
 	@Transient
 	public SimpleFeatureType getType() {
-		SimpleFeatureType type = null;
+		if(type==null) {
 		String typeDescriptor = "the_geom:MultiPolygon:srid=4326,"//"*geom:Polygon,"the_geom
 				+ COLUMNA_DISTANCIA + ":Double,"
 				+ COLUMNA_CURSO + ":Double,"
@@ -767,6 +770,7 @@ public abstract class Labor<E extends LaborItem>  {
 		} catch (SchemaException e) {
 
 			e.printStackTrace();
+		}
 		}
 		return type;
 	}

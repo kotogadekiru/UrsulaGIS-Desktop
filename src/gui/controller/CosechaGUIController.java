@@ -8,14 +8,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Executor;
 
 import org.geotools.data.FileDataStore;
 
 import api.OrdenCosecha;
-import api.OrdenFertilizacion;
 import dao.Labor;
-import dao.Poligono;
 import dao.cosecha.CosechaConfig;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
@@ -24,7 +21,6 @@ import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
 import dao.suelo.Suelo;
 import dao.utils.PropertyHelper;
-import gov.nasa.worldwind.WorldWindow;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import gui.AmountVsElevacionChart;
 import gui.FertilizacionConfigDialogController;
@@ -35,29 +31,24 @@ import gui.Messages;
 import gui.PulverizacionConfigDialogController;
 import gui.nww.LaborLayer;
 import gui.nww.LayerAction;
-import gui.nww.LayerPanel;
 import gui.utils.NumberInputDialog;
 import javafx.concurrent.Task;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.image.Image;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import tasks.CompartirCosechaLaborTask;
-import tasks.CompartirFertilizacionLaborTask;
-import tasks.ExportLaborMapTask;
 import tasks.crear.ConvertirAFertilizacionTask;
 import tasks.crear.ConvertirAPulverizacionTask;
 import tasks.crear.ConvertirASueloTask;
 import tasks.importar.ProcessHarvestMapTask;
-import tasks.procesar.CortarCosechaMapTask;
 import tasks.procesar.ExportarCosechaDePuntosTask;
 import tasks.procesar.GenerarRecorridaDirigidaTask;
 import tasks.procesar.GrillarCosechasMapTask;
@@ -440,13 +431,15 @@ public class CosechaGUIController extends AbstractGUIController {
 		}
 		ancho = NumberInputDialog.showAndWait(
 				Messages.getString("JFXMain.289"), 
-						Messages.getString("JFXMain.cosechaNumHeader"),  
-						Messages.getString("JFXMain.cosechaNumLabel"),
+						Messages.getString("JFXMain.289"), //Configure el ancho de la grilla 
+						Messages.getString("JFXMain.290"),//JFXMain.290
 						anchoDefaultString, 
 						Messages.getString("JFXMain.SeparatorWarningTooltip"));
 		if (ancho.isNaN()) {
-			System.out.println("ancho default");
-			ancho = 10.0;
+			//si ancho is NaN el usuario salio sin ingresar un valor
+			return;
+			//System.out.println("ancho default");
+			//ancho = 10.0;
 		} else {
 			JFXMain.config.loadProperties();
 			JFXMain.config.setProperty(CosechaConfig.ANCHO_GRILLA_KEY,format.format(ancho));

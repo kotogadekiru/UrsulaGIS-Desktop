@@ -32,8 +32,13 @@ import dao.config.Configuracion;
 public class TarjetaHelper {
 	private static final String UUID_TARJETA = "UuidTarjeta";
 	private static final String NONEFOUND = "nonefound";
-	public static String REGISTRAR_TARJETA_URL="http://www.ursulagis.com/api/file_server/registrar_tarjeta/";
-	public static String REGISTRAR_ARCHIVO_URL="http://www.ursulagis.com/api/file_server/upload_file/";
+	public static final String BASE_URL = "https://www.ursulagis.com";
+	//public static final String BASE_URL = "http://localhost:5000";	
+	//public static final String BASE_URL = "https://sheltered-mesa-69562-dev-514e4d674053.herokuapp.com";
+	
+	public static String REGISTRAR_TARJETA_URL=BASE_URL+"/api/file_server/registrar_tarjeta/";	
+	public static String REGISTRAR_ARCHIVO_URL=BASE_URL+"/api/file_server/upload_file/";
+	
 	public static void initTarjeta() {	//ok funciona	
 		//TODO registrar una tarjeta si no tiene una actualmente
 		//1 llamar a REGISTRAR_TARJETA_URL con post param "token"=userNumber
@@ -93,7 +98,11 @@ public class TarjetaHelper {
 	            .addPart(part);
 	    
 		HttpResponse response = makeBinaryPostRequest(url,content,f.getName());
-		System.out.println("file uploaded to "+f.getName()+" "+response.parseAsString());
+		if(response != null) {
+			System.out.println("file uploaded to "+f.getName()+" "+response.parseAsString());
+		}else {
+			System.err.println("no se pudo insertar la tarjeta el response fue null");
+		}
 		}catch(Exception e) {
 			e.printStackTrace();
 		}

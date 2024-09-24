@@ -5,6 +5,7 @@ import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
 import java.util.Optional;
 
+import dao.utils.PropertyHelper;
 import gui.JFXMain;
 import gui.Messages;
 import javafx.scene.control.Alert;
@@ -15,7 +16,15 @@ import javafx.scene.control.Tooltip;
 
 public class NumberInputDialog {
     private static Double value = 0.0;
-    
+    /**
+     * 
+     * @param title titulo del dialog
+     * @param header texto que aparece arriba describiendo la accion a realizar
+     * @param label nombre de la variable a ingresar
+     * @param prompt valor por defecto de la variable
+     * @param tooltip mensaje de error que se muestra si se uso mal el separador de decimales
+     * @return el Double ingresado por el usuario
+     */
     public static Double showAndWait(String title, String header, String label, String prompt, String tooltip) {
     	boolean inputIsValid = false;
 		
@@ -33,30 +42,20 @@ public class NumberInputDialog {
 		while(!inputIsValid) {
 			Optional<String> result = dialog.showAndWait();
 			// Validavion que sea un Double  
-			if (result.isPresent())
-				try {
-					DecimalFormat format = (DecimalFormat) DecimalFormat.getInstance(Messages.getLocale());
-					DecimalFormatSymbols symbols = format.getDecimalFormatSymbols();
-					char sep =symbols.getDecimalSeparator();
-					
-					Number number = format.parse(result.get());
+			if (result.isPresent()) {					
+					Number number = PropertyHelper.parseDouble(result.get()) ;
 					value = number.doubleValue();
 					
-					// y mayor a 0
-					if (value >= 0.0) {
-						inputIsValid = true;
-						return value;
-					}
-					else {
-						throw new ParseException(null, sep);
-					}
-				}
-				catch (ParseException e) {
-					Alert inputFieldAlert = new Alert(AlertType.INFORMATION,Messages.getString("JFXMain.IngreseNumValido")); 
-					inputFieldAlert.showAndWait();
-				}
-			else
+					inputIsValid = true;
+					return value;
+					
+//				}catch (ParseException e) {
+//					Alert inputFieldAlert = new Alert(AlertType.INFORMATION,Messages.getString("JFXMain.IngreseNumValido")); 
+//					inputFieldAlert.showAndWait();
+//				}
+			}else {
 				return Double.NaN;
+			}
 		}
 		return value;
     }

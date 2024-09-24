@@ -9,18 +9,15 @@ import org.geotools.data.FeatureReader;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
-import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeType;
-import org.opengis.geometry.BoundingBox;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.operation.buffer.BufferParameters;
@@ -87,12 +84,12 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 				String colName = att.getName().toString();
 
 				System.out.println(att.getBinding().getName()+": "+colName);
-				if("Mappable".equalsIgnoreCase(colName)){ //$NON-NLS-1$
+				if("Mappable".equalsIgnoreCase(colName)){ 
 					mappableColumn=colName;	
 				}
 			}
 
-		} else{
+		} else {//editando
 			if(labor.getInCollection() == null){//solo cambio la inCollection por la outCollection la primera vez
 				labor.setInCollection(labor.outCollection);
 				labor.outCollection=  new DefaultFeatureCollection("internal",labor.getType()); //$NON-NLS-1$
@@ -196,9 +193,20 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 				}
 
 			} else { // no es point. Estoy abriendo una cosecha de poligonos.
+				
+				double area = ci.getGeometry().getArea();
+				double has = ProyectionConstants.A_HAS(area);
+
+				if(has>supMinimaHas){
+					labor.insertFeature(ci);//es posible que no se inserte si ya existe el id
+				}else{
+					System.out.println("descarto el punto por area menor al minimo. "+ci);
+				}
+				/*
 				List<Polygon> mp = getPolygons(ci);	
 				if(mp.size()>0) {
-					Polygon p = mp.get(0);
+					for(Polygon p:mp) {
+					//Polygon p = mp.get(0);//porque solo el cero?
 
 					for(Coordinate c :p.getCoordinates()){
 						c.z=ci.getElevacion();
@@ -213,7 +221,8 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 					}else{
 						System.out.println("descarto el punto por area menor al minimo. "+ci);
 					}
-				}
+					}
+				}*/
 			}
 
 		}// fin del while que recorre las features	

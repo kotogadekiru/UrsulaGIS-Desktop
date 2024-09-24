@@ -3,11 +3,7 @@ package dao.siembra;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.ToDoubleFunction;
-import java.util.stream.Stream;
 
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 
@@ -75,10 +71,10 @@ public class SiembraLabor extends Labor<SiembraItem> {
 	private Semilla semilla=null;
 	@ManyToOne
 	private Fertilizante fertLinea=null;
-	private Double cantidadFertilizanteLinea=new Double(0);
+	//private Double cantidadFertilizanteLinea=new Double(0);
 	@ManyToOne
 	private Fertilizante fertCostado=null;
-	private Double cantidadFertilizanteCostado=new Double(0);
+	//private Double cantidadFertilizanteCostado=new Double(0);
 	
 	private Double entreSurco = new Double(0.42);
 	private Double plantasPorMetro = new Double(300);

@@ -83,13 +83,17 @@ public class GenerarOrdenCompraTask  extends Task<OrdenCompra>{
 			double insumoTotal=0;
 			double laborTotal=0;
 			SimpleFeatureIterator it = l.outCollection.features();
-			fertCTotal =  l.getCantidadFertilizanteCostado();
-			fertLTotal = l.getCantidadFertilizanteLinea();
+//			fertCTotal =  l.getCantidadFertilizanteCostado();
+//			fertLTotal = l.getCantidadFertilizanteLinea();
 			while(it.hasNext()){
 				SimpleFeature f = it.next();
 				Double rinde = LaborItem.getDoubleFromObj(f.getAttribute(l.colAmount.get()));//labor.colAmount.get()
+				Double fertL = LaborItem.getDoubleFromObj(f.getAttribute(l.COLUMNA_DOSIS_LINEA));
+				Double fertC = LaborItem.getDoubleFromObj(f.getAttribute(l.COLUMNA_DOSIS_COSTADO));
 				Geometry geometry = (Geometry) f.getDefaultGeometry();
-				Double area = geometry.getArea() * ProyectionConstants.A_HAS();			
+				Double area = geometry.getArea() * ProyectionConstants.A_HAS();		
+				fertLTotal+=fertL*area;
+				fertCTotal+=fertC*area;
 				insumoTotal+=rinde*area;
 				laborTotal+=area;
 			}

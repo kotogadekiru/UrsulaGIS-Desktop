@@ -1,12 +1,8 @@
 package tasks.importar;
 import java.io.IOException;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Function;
 
 import org.geotools.data.FeatureReader;
-import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.feature.DefaultFeatureCollection;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -18,24 +14,11 @@ import dao.siembra.SiembraConfig;
 import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
-import gui.Messages;
 import tasks.ProcessMapTask;
 import tasks.crear.ConvertirASiembraTask;
 import utils.ProyectionConstants;
 
 public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLabor> {	
-	//	private int featureCount;
-	//	private int featureNumber;
-
-	//	private FileDataStore store = null;
-	//	Quadtree featureTree = null;
-
-	private Double precioPasada;
-	private Double precioBolsaSemilla;
-
-	//ArrayList<ArrayList<Object>> pathTooltips = new ArrayList<ArrayList<Object>>();
-
-	//public Group map = new Group();
 
 	public ProcessSiembraMapTask(SiembraLabor siembra) {
 		super(siembra);
@@ -59,14 +42,7 @@ public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLab
 			//		 storeCRS = labor.getInStore().getSchema().getCoordinateReferenceSystem();
 			//convierto los features en cosechas
 			featureCount=labor.getInStore().getFeatureSource().getFeatures().size();
-		}
-//		else{//XXX cuando es una grilla los datos estan en outstore y instore es null
-//			reader = labor.outCollection.reader();
-//			//	 storeCRS = labor.outCollection.getSchema().getCoordinateReferenceSystem();
-//			//convierto los features en cosechas
-//			featureCount=labor.outCollection.size();
-//		}
-		else{//editando
+		} else {//editando
 			if(labor.getInCollection() == null){//solo cambio la inCollection por la outCollection la primera vez
 				labor.setInCollection(labor.outCollection);
 				labor.outCollection=  new DefaultFeatureCollection("internal",labor.getType()); //$NON-NLS-1$
@@ -77,8 +53,6 @@ public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLab
 			labor.outCollection.clear();
 			featureCount=labor.getInCollection().size();
 		}
-
-		//initCrsTransform(storeCRS);
 
 		int divisor = 1;
 
@@ -138,15 +112,14 @@ public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLab
 		while (reader.hasNext()) {
 			SimpleFeature simpleFeature = reader.next();
 			SiembraItem si = labor.constructFeatureContainer(simpleFeature);
-			//System.out.println("dosis antes "+si.getDosisHa());//dosis antes 3.9999001026153564
+			
 			si.setDosisHa(dosisToKgHa.apply(si.getDosisHa()));
-		//	System.out.println("dosis despues "+si.getDosisHa());//dosis despues 24.614769862248348
+
 			Double kgM2 = si.getDosisHa()/ProyectionConstants.METROS2_POR_HA;//kg/m2
 			double semM2= (1000*1000*kgM2)/labor.getSemilla().getPesoDeMil();//sem/m2
 			si.setDosisML(semM2*labor.getEntreSurco());// 1/entresurco=ml/m2 => sem/m2
-			//System.out.println("dosisML despues "+si.getDosisML());//dosisML despues 3.9999001026153564
-			featureNumber++;
 
+			featureNumber++;
 			updateProgress(featureNumber/divisor, featureCount);
 			Object geometry = si.getGeometry();
 
@@ -249,7 +222,7 @@ public class ProcessSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLab
 				//						//	System.out.println("no inserto el feature "+featureNumber+" porque tiene una geometria invalida empty="+empty+" valid ="+valid+" area="+big+" "+geom);
 				//					}
 
-			} else { // no es point. Estoy abriendo una cosecha de poligonos.
+			} else { // no es point. Estoy abriendo una siembra de poligonos.
 				labor.insertFeature(si);
 			}
 		}// fin del for que recorre las cosechas por indice
