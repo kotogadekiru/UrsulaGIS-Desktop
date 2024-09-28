@@ -278,7 +278,8 @@ public class GeometryHelper {
 	}
 
 	public static Geometry simplificarContorno(Geometry g) {
-		g=GeometryHelper.removeSmallTriangles(g, (0.005)/ProyectionConstants.A_HAS());
+		double toleranciaLongLat = (0.005)/ProyectionConstants.A_HAS();
+	//	g=GeometryHelper.removeSmallTriangles(g, toleranciaLongLat);
 
 		g=GeometryHelper.douglassPeuckerSimplify(g,ProyectionConstants.metersToLongLat(5));
 		//g=g.buffer(ProyectionConstants.metersToLongLat(10));

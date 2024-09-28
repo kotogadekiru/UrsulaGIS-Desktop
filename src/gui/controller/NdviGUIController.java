@@ -42,6 +42,7 @@ import gui.nww.LaborLayer;
 import gui.nww.LayerAction;
 import gui.nww.LayerPanel;
 import gui.utils.DateConverter;
+import gui.utils.NumberInputDialog;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -64,6 +65,7 @@ import tasks.ProcessMapTask;
 import tasks.ShowNDVITifFileTask;
 import tasks.crear.ConvertirNdviACosechaTask;
 import tasks.crear.ConvertirNdviAFertilizacionTask;
+import tasks.crear.ConvertirNdviAcumuladoACosechaTask;
 import tasks.importar.ProcessHarvestMapTask;
 import utils.DAH;
 import utils.FileHelper;
@@ -88,14 +90,20 @@ public class NdviGUIController extends AbstractGUIController{
 		rootNodeNDVI.add(LayerAction.constructPredicate(
 				Messages.getString("JFXMain.show_ndvi_chart"),
 				(layer)->{ 
-			return doShowNdviChart();
-		}));
+					return doShowNdviChart();
+				}));
 
 		rootNodeNDVI.add(LayerAction.constructPredicate(Messages.getString("JFXMain.show_ndvi_acum_chart"),
 				(layer)->{
-			return doShowNdviAcumChart();
-		}));
+					return doShowNdviAcumChart();
+				}));
 
+		//Exporta todos los ndvi cargados a un archivo excel donde las filas son las coordenadas y las columnas son los valores en esa fecha
+		rootNodeNDVI.add(LayerAction.constructPredicate(Messages.getString("NdviGUIController.ConvertirNdviAcumuladoACosecha.title"),(layer)->{ 
+			doConvertirNdviAcumuladoACosecha();
+
+			return "converti a cosecha acumulando";
+		}));
 
 		//Exporta todos los ndvi cargados a un archivo excel donde las filas son las coordenadas y las columnas son los valores en esa fecha
 		rootNodeNDVI.add(LayerAction.constructPredicate(Messages.getString("JFXMain.expoNDVI"),(layer)->{ 
@@ -103,33 +111,33 @@ public class NdviGUIController extends AbstractGUIController{
 			sEvo.exportToExcel();
 			return "mostre la evolucion del ndvi";
 		}));
-				
+
 		/**
 		 * Save NDVI action
 		 * guarda todos los ndvi activos en la rama de ndvi
 		 */
 		rootNodeNDVI.add(LayerAction.constructPredicate(Messages.getString("JFXMain.saveAction"),
 				(layer)->{	executorPool.submit(()->{
-						try {
-							LayerList layers = this.getWwd().getModel().getLayers();
-							for (Layer l : layers) {
-								Object o =  l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-								if(o instanceof Ndvi){									
-									Ndvi ndvi = (Ndvi)o;	
-									try {
+					try {
+						LayerList layers = this.getWwd().getModel().getLayers();
+						for (Layer l : layers) {
+							Object o =  l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+							if(o instanceof Ndvi){									
+								Ndvi ndvi = (Ndvi)o;	
+								try {
 									DAH.save(ndvi);
-									}catch(Exception e) {
-										System.err.println("Error al guardar el ndvi "+ndvi.getNombre()); 
-										e.printStackTrace();
-									}
+								}catch(Exception e) {
+									System.err.println("Error al guardar el ndvi "+ndvi.getNombre()); 
+									e.printStackTrace();
 								}
 							}
-						}catch(Exception e) {
-							System.err.println("Error al guardar los poligonos"); 
-							e.printStackTrace();
 						}
-					});
-					return "Guarde los poligonos"; 
+					}catch(Exception e) {
+						System.err.println("Error al guardar los poligonos"); 
+						e.printStackTrace();
+					}
+				});
+				return "Guarde los poligonos"; 
 				}));
 		getLayerPanel().addAccionesClase(rootNodeNDVI,Ndvi.class);
 	}
@@ -165,8 +173,8 @@ public class NdviGUIController extends AbstractGUIController{
 		});
 		return "mostre el grafico del ndvi";
 	}
-	
-	
+
+
 	public void addAccionesNdvi(Map<Class<?>, List<LayerAction>> predicates) {
 		List<LayerAction> ndviP = new ArrayList<LayerAction>();
 		predicates.put(Ndvi.class, ndviP);
@@ -255,13 +263,13 @@ public class NdviGUIController extends AbstractGUIController{
 			if(o instanceof Ndvi){
 				Ndvi ndvi = (Ndvi)o;
 				ExportNDVIToKMZ toKMZ= new ExportNDVIToKMZ(this.getWwd(),this.getLayerPanel());				
-					toKMZ.exportToKMZ(ndvi);
+				toKMZ.exportToKMZ(ndvi);
 			}
 			return "exporte" + layer.getName(); 
 		}));
 	}
-	
-	
+
+
 	private void doExportarTiffFile(Ndvi ndvi) {
 		File dir =FileHelper.getNewTiffFile(ndvi.getFileName());
 		try{
@@ -272,7 +280,7 @@ public class NdviGUIController extends AbstractGUIController{
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void showHistoNDVI(Ndvi  ndvi) {
 		Task<Parent> pfMapTask = new Task<Parent>(){
 			@Override
@@ -300,7 +308,7 @@ public class NdviGUIController extends AbstractGUIController{
 		});
 		executorPool.submit(pfMapTask);
 	}
-	
+
 	private void doConvertirNdviACosecha(Ndvi ndvi) {
 		CosechaLabor labor = new CosechaLabor();
 		labor.setNombre(ndvi.getNombre());
@@ -370,6 +378,79 @@ public class NdviGUIController extends AbstractGUIController{
 			pmtask.run();
 		});//fin del OnSucceeded
 		JFXMain.executorPool.execute(umTask);		
+	}
+
+	private void doConvertirNdviAcumuladoACosecha() {
+		List<Ndvi> ndvis = main.getNdviSeleccionados();
+		Ndvi ndvi = ndvis.get(0);
+		Ndvi lNdvi = ndvis.get(ndvis.size()-1);
+		CosechaLabor labor = new CosechaLabor();
+		labor.setNombre(ndvi.getNombre()+" -> "+lNdvi.getFecha());
+
+		Date date = java.util.Date.from(ndvi.getFecha().atStartOfDay()
+				.atZone(ZoneId.systemDefault())
+				.toInstant());
+
+		labor.setFecha(date);
+		labor.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
+		LaborLayer layer = new LaborLayer();
+		labor.setLayer(layer);
+		Optional<CosechaLabor> cosechaConfigured= HarvestConfigDialogController.config(labor);
+		if(!cosechaConfigured.isPresent()){//
+			//System.out.println("el dialogo termino con cancel asi que no continuo con la cosecha"); 
+			labor.dispose();//libero los recursos reservados
+			return;
+		}							
+
+		Double diasNdviPorTn = null;
+
+		Double diasNdviPorTnEsperado = 10.0;//cosechaConfigured.get().getCultivo().getRindeEsperado();
+		diasNdviPorTn = NumberInputDialog.showAndWait(
+				Messages.getString("NdviGUIController.ConvertirNdviAcumuladoACosecha.diasNdvi.title"), //titulo: "Ingrese dias por ndvi por Tn"
+				Messages.getString("NdviGUIController.ConvertirNdviAcumuladoACosecha.diasNdvi.text"), //"Dias NDVI por TN"
+				Messages.getString("NdviGUIController.ConvertirNdviAcumuladoACosecha.diasNdvi.var"),//"Dias NDVI por TN"
+				PropertyHelper.formatDouble(diasNdviPorTnEsperado), 
+				Messages.getString("JFXMain.SeparatorWarningTooltip"));
+		if(diasNdviPorTn.isNaN())return;
+
+		ConvertirNdviAcumuladoACosechaTask umTask = 
+				new ConvertirNdviAcumuladoACosechaTask(
+						cosechaConfigured.get(),
+						ndvis,
+						diasNdviPorTn);
+		umTask.installProgressBar(progressBox);
+
+		umTask.setOnSucceeded(handler -> {
+			for(Ndvi n:ndvis) {
+				n.getLayer().setEnabled(false);
+			}
+			CosechaLabor ret = (CosechaLabor)handler.getSource().getValue();
+			insertBeforeCompass(getWwd(), ret.getLayer());
+			this.getLayerPanel().update(this.getWwd());
+			umTask.uninstallProgressBar();
+			main.viewGoTo(ret);
+			umTask.uninstallProgressBar();
+			System.out.println("crear ndvis a cosecha acumulada exito"); 
+			playSound();
+	
+			
+	
+			
+			/* se reprocesa el mapa para ejecutar los filtros si se configuro alguno*/
+//			ProcessHarvestMapTask pmtask = new ProcessHarvestMapTask(ret);
+//			pmtask.installProgressBar(progressBox);
+//			pmtask.setOnSucceeded(handler2 -> {
+//				this.getLayerPanel().update(this.getWwd());
+//				pmtask.uninstallProgressBar();
+//				main.wwjPanel.repaint();
+//				System.out.println(Messages.getString("JFXMain.279")); 
+//				playSound();
+//				main.viewGoTo(ret);
+//			});
+//			pmtask.run();
+		});//fin del OnSucceeded
+		JFXMain.executorPool.execute(umTask);		
+
 	}
 
 
@@ -514,11 +595,11 @@ public class NdviGUIController extends AbstractGUIController{
 		});//fin del OnSucceeded
 		JFXMain.executorPool.execute(umTask);		
 	}
-	
+
 	public void showNdvi( Object placementObject,Ndvi _ndvi) {
 		showNdvi(placementObject,_ndvi,true);
 	}
-	
+
 	public void showNdvi( Object placementObject,Ndvi _ndvi,boolean goTo) {
 		if(_ndvi!=null)System.out.println("showing ndvi "+_ndvi.getNombre());
 		ShowNDVITifFileTask task = new ShowNDVITifFileTask(_ndvi);
@@ -536,14 +617,14 @@ public class NdviGUIController extends AbstractGUIController{
 				insertBeforeCompass(getWwd(), ndviLayer);
 				this.getLayerPanel().update(this.getWwd());
 				if(goTo) {
-				viewGoTo(ndviLayer);
-				playSound();
+					viewGoTo(ndviLayer);
+					playSound();
 				}
 			}
 		});
 		executorPool.execute(task);
 	}
-	
+
 	/**
 	 * tomar un Ndvi y mostrarlo como layer
 	 * @param ndvi
@@ -553,7 +634,7 @@ public class NdviGUIController extends AbstractGUIController{
 			showNdvi(null,ndvi);
 		});
 	}
-	
+
 	public void showNdviActivos() {
 		List<Ndvi> ndviActivos = DAH.getNdviActivos();
 		for(int i=0;i<ndviActivos.size();i++) {
@@ -565,7 +646,7 @@ public class NdviGUIController extends AbstractGUIController{
 		}
 	}
 
-	
+
 	public void showNdviTiffFile(File file, Object placementObject) {
 		//if(_ndvi!=null)System.out.println("showing ndvi "+_ndvi.getNombre());
 		ShowNDVITifFileTask task = new ShowNDVITifFileTask(file);
@@ -583,7 +664,7 @@ public class NdviGUIController extends AbstractGUIController{
 		});
 		executorPool.execute(task);
 	}
-	
+
 	/**
 	 * descargar los tiff correspondientes a un polygono y mostrarlos como ndvi
 	 * @param placementObject
@@ -611,16 +692,16 @@ public class NdviGUIController extends AbstractGUIController{
 			});
 			if(placementObject !=null && Labor.class.isAssignableFrom(placementObject.getClass())){
 				Labor<?> l =(Labor<?>)placementObject;
-				
-			
+
+
 				Geometry contornoG = GeometryHelper.extractContornoGeometry(l);
 				Poligono contornoP = GeometryHelper.constructPoligono(contornoG);
-				
+
 				placementObject =  contornoP;
-//				ReferencedEnvelope bounds =
-//				Polygon pol = GeometryHelper.constructPolygon(bounds);
-//				placementObject =GeometryHelper.constructPoligono(pol);
-				
+				//				ReferencedEnvelope bounds =
+				//				Polygon pol = GeometryHelper.constructPolygon(bounds);
+				//				placementObject =GeometryHelper.constructPoligono(pol);
+
 			} 
 			GetNdviForLaborTask4 task = new GetNdviForLaborTask4((Poligono)placementObject, observableList);
 			task.setBeginDate(ndviDpDLG.initialDate);
@@ -659,26 +740,26 @@ public class NdviGUIController extends AbstractGUIController{
 		BulkNdviDownloadGUI gui = new BulkNdviDownloadGUI();
 		gui.show();
 	}
-	
-//metodos de conveniencia para el refactor
+
+	//metodos de conveniencia para el refactor
 
 
-//	private LayerPanel getLayerPanel() {		
-//		return main.getLayerPanel();
-//	}
-//
-//	private WorldWindow getWwd() {		
-//		return main.getWwd();
-//	}
-//	
-//	private void viewGoTo(Position position) {
-//		main.viewGoTo(position);
-//	}
-	
+	//	private LayerPanel getLayerPanel() {		
+	//		return main.getLayerPanel();
+	//	}
+	//
+	//	private WorldWindow getWwd() {		
+	//		return main.getWwd();
+	//	}
+	//	
+	//	private void viewGoTo(Position position) {
+	//		main.viewGoTo(position);
+	//	}
 
-	
-//	private void playSound() {
-//		main.playSound();
-//		
-//	}
+
+
+	//	private void playSound() {
+	//		main.playSound();
+	//		
+	//	}
 }

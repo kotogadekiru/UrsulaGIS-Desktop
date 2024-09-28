@@ -138,7 +138,7 @@ public abstract class Labor<E extends LaborItem>  {
 
 
 	@Transient public Clasificador clasificador=null;	
-	@Transient public SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(getType());
+	//@Transient public SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(getType());
 
 	@Transient  public StringProperty colAmount=new SimpleStringProperty();	; //usada por el clasificador para leer el outstore tiene que ser parte de TYPE
 	//columnas configuradas para leer el instore
@@ -686,43 +686,14 @@ public abstract class Labor<E extends LaborItem>  {
 		this.inCollection = inCollection;
 	}
 
-	@Transient
-	@Deprecated //es una funcion de prueba
-	public SimpleFeatureType buildType() {
-		SimpleFeatureType type = null;
-		SimpleFeatureTypeBuilder b = new SimpleFeatureTypeBuilder();
 
-		//set the name
-		b.setName( "LABOR" );		
-		//add a geometry property	
-		try {
-			CoordinateReferenceSystem crs = CRS.decode("EPSG:4326");
-			b.setCRS( crs);//DefaultGeographicCRS.WGS84_3D ); // set crs first
-			b.add( THE_GEOM_OLUMN, MultiPolygon.class ); // then add geometry
-			b.setDefaultGeometry(THE_GEOM_OLUMN);
-		} catch (Exception e) {		
-			e.printStackTrace();
-		} 		
-
-		//add some properties
-		b.add( "COLUMNA_DISTANCIA", Double.class );
-		b.add( "COLUMNA_CURSO", Double.class );
-		b.add( "COLUMNA_ANCHO", Double.class );
-		b.add( "COLUMNA_ELEVACION", Double.class );
-		b.add( "COLUMNA_CATEGORIA", Double.class );
-		b.add( "COLUMNA_OBSERVACIONES", String.class );
-		//FIXME faltan las columnas especificas de la labor
-		type = b.buildFeatureType();		
-		return type;
-	}
-	
 	public static void main(String[] args) {
 		System.out.println("testing build type");
 		CosechaLabor l = new CosechaLabor();
 		CosechaItem item = new CosechaItem();
 		item.setObservaciones("observo una observacion");
 		l.insertFeature(item);
-		SimpleFeature sf = item.getFeature(l.featureBuilder);
+		SimpleFeature sf = item.getFeature(l.getFeatureBuilder());
 		if(!l.outCollection.add(sf)) {
 			System.err.println("No se pudo insertar la feature "+sf);
 		}
@@ -752,7 +723,12 @@ public abstract class Labor<E extends LaborItem>  {
 
 		
 	}
-
+	
+	@Transient 
+	public SimpleFeatureBuilder getFeatureBuilder() {
+		return new SimpleFeatureBuilder(getType());
+	}
+	
 	@Transient
 	public SimpleFeatureType getType() {
 		if(type==null) {
@@ -843,6 +819,7 @@ public abstract class Labor<E extends LaborItem>  {
 	}
 
 	/**
+	 * este metodo es llamado desde la labor para inicializar LaborItem con los datos del SimpleFeature
 	 * read from simple feature with defined columns to LaborItem
 	 * @param ci
 	 * @param harvestFeature
@@ -888,6 +865,10 @@ public abstract class Labor<E extends LaborItem>  {
 		} else{
 			ci.setElevacion(1.0);
 		}
+		if(contieneAtributte(harvestFeature,COLUMNA_OBSERVACIONES)) {
+			String obs = (String) harvestFeature.getAttribute(COLUMNA_OBSERVACIONES);
+			ci.setObservaciones(obs);
+		}		
 	}
 	
 

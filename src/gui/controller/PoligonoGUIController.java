@@ -1260,6 +1260,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 	public void doImportarPoligonos(List<File> files) {
 		if(files == null) {
 			files = FileHelper.chooseFiles("kml,shp", "*.kml; *.shp");
+			if(files ==null)return;
 			List<File> klmFiles = files.stream().filter(f->f.getName().endsWith("kml")).collect(Collectors.toList());
 			for(File source :klmFiles) {
 

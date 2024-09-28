@@ -16,12 +16,14 @@ import com.vividsolutions.jts.geom.Polygon;
 import dao.Labor;
 import dao.config.Cultivo;
 import dao.config.Fertilizante;
+import dao.config.Nutriente;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.suelo.Suelo;
 import dao.suelo.Suelo.SueloParametro;
+import dao.utils.PropertyHelper;
 import dao.suelo.SueloItem;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.nww.LaborLayer;
@@ -242,7 +244,8 @@ public class ProcessBalanceDeNutrientes2 extends ProcessMapTask<SueloItem,Suelo>
 		Double newPpmNsuelo=labor.calcPpmNHaKg(newDensSuelo,newKgHaNSuelo);
 		Double newPpmPsuelo=labor.calcPpm_0_20(newDensSuelo,newKgHaPSuelo);
 		Double newPpmKsuelo=labor.calcPpm_0_20(newDensSuelo,newKgHaKsuelo);
-		Double newPpmSsuelo=labor.calcPpmSHaKg(newDensSuelo,newKgHaSsuelo);//dice isabel que va 0-60 es SO4
+		Double newPpmSsuelo=labor.calcPpmSHaKg(newDensSuelo,newKgHaSsuelo);//dice isabel que va 0-60 es SO4		
+		
 		Double newPMoSuelo = labor.calcPorcMoHaKg(newDensSuelo,newKgHaMOSuelo);
 		
 		SueloItem sueloItem = new SueloItem();
@@ -257,6 +260,19 @@ public class ProcessBalanceDeNutrientes2 extends ProcessMapTask<SueloItem,Suelo>
 		sueloItem.setPpmP(newPpmPsuelo);
 		sueloItem.setPpmK(newPpmKsuelo);
 		sueloItem.setPpmS(newPpmSsuelo);
+	
+		List<SueloParametro> microNutrientes = Nutriente.getMicroNutrientes();
+		final double areaQueryF = areaQuery;
+		final double newDensSueloF = newDensSuelo;
+		microNutrientes.forEach((sp)->{
+			Nutriente n = Nutriente.getNutrientesDefault().get(sp);
+			Double kgNutrienteSuelo = kgNutrienteSuelos.parametros.get(sp);
+			if(kgNutrienteSuelo!=null) {
+			double newKgHaNutriente= kgNutrienteSuelo/ (areaQueryF);			
+			double newPpmNutriente =  Suelo.kgToPpm(newDensSueloF, newKgHaNutriente,n.getProfundidad());
+			Suelo.setPpm(sp, sueloItem, newPpmNutriente);
+			}
+		});
 		
 		sueloItem.setPorcMO(newPMoSuelo);
 		sueloItem.setElevacion(elev>10?elev:10.0);//10.0);//para que aparezca en el mapa
@@ -396,6 +412,7 @@ public class ProcessBalanceDeNutrientes2 extends ProcessMapTask<SueloItem,Suelo>
 					addValueToMap(sueloItem.parametros,SueloParametro.Potasio,-1*rinde * cultivo.getExtK() * area);
 					addValueToMap(sueloItem.parametros,SueloParametro.Azufre,-1*rinde * cultivo.getExtS() * area);
 
+					//TODO add extraccion de micronutrientes cosecha
 					addValueToMap(sueloItem.parametros,SueloParametro.MateriaOrganica,rinde * cultivo.getAporteMO() * area);	
 					//if(item.getElevacion()>1) {
 					addValueToMap(sueloItem.parametros,SueloParametro.Elevacion,cosechaItem.getElevacion() * area);				
@@ -492,7 +509,10 @@ public class ProcessBalanceDeNutrientes2 extends ProcessMapTask<SueloItem,Suelo>
 					Double dosis = fertItem.getDosistHa();//kg/ha
 					if(cFert!=null) {
 					for(SueloParametro k :cFert.keySet()) {					
-						addValueToMap(n.parametros,k,dosis*cFert.get(k)*area/100);						
+						addValueToMap(n.parametros,k,dosis*cFert.get(k)*area/100);				
+//						if(SueloParametro.Zinc==k) {
+//							System.out.println("el contenido de zinc de la fertilizacion es "+n.parametros.get(k));
+//						}
 					}				
 					}else {
 						System.out.println("cFert es null para "+fertilizante.getNombre());

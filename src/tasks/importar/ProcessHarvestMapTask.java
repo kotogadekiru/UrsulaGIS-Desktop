@@ -413,7 +413,7 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 					ci.setGeometry(g);
 
 					itemsCategoria.add(ci);
-					SimpleFeature f = ci.getFeature(labor.featureBuilder);
+					SimpleFeature f = ci.getFeature(labor.getFeatureBuilder());
 					newOutcollection.add(f);
 				}
 			}	
@@ -506,7 +506,8 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 						Polygon poly = createGeomPoint(X,ancho,ancho,0,0);
 						List<CosechaItem> features = labor.cachedOutStoreQuery(poly.getEnvelopeInternal());
 						if(features.size()>0){						
-							outlayerCV(cosechaFeature, poly,features);						
+							outlayerCV(cosechaFeature, poly,features);		
+							//XXX porque creo un featureBuilder por cada feature? sera para que pueda hacerlo en paralelo?
 							SimpleFeatureBuilder fBuilder = new SimpleFeatureBuilder(labor.getType());
 							SimpleFeature f = cosechaFeature.getFeature(fBuilder);
 							list.add(f);	

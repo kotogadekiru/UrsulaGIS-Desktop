@@ -55,7 +55,9 @@ import tasks.procesar.GrillarCosechasMapTask;
 import tasks.procesar.RecomendFertNFromHarvestMapTask;
 import tasks.procesar.RecomendFertPAbsFromHarvestMapTask;
 import tasks.procesar.RecomendFertPFromHarvestMapTask;
+import tasks.procesar.SumarCosechasMapTask;
 import tasks.procesar.UnirCosechasMapTask;
+import tasks.procesar.UnirFertilizacionesMapTask;
 import utils.DAH;
 import utils.FileHelper;
 
@@ -77,6 +79,13 @@ public class CosechaGUIController extends AbstractGUIController {
 				Messages.getString("JFXMain.unirCosechas"),
 				(layer)->{
 					this.doUnirCosechas(null);
+					return "joined";	
+				},
+				2));
+		rootNodeP.add(new LayerAction(
+				Messages.getString("JFXMain.sumarCosechas"),
+				(layer)->{
+					this.doSumarCosechas();
 					return "joined";	
 				},
 				2));
@@ -342,6 +351,24 @@ public class CosechaGUIController extends AbstractGUIController {
 		executorPool.execute(pfMapTask);
 	}
 	
+	private void doSumarCosechas() {
+		List<CosechaLabor> cosechasASumar = main.getCosechasSeleccionadas();//si no hago esto me da un concurrent modification exception al modificar layers en paralelo
+		SumarCosechasMapTask umTask = new SumarCosechasMapTask(cosechasASumar);
+		umTask.installProgressBar(progressBox);
+		umTask.setOnSucceeded(handler -> {
+			CosechaLabor ret = (CosechaLabor)handler.getSource().getValue();
+			if(ret.getLayer()!=null){
+				insertBeforeCompass(getWwd(), ret.getLayer());
+				this.getLayerPanel().update(this.getWwd());
+			}
+			umTask.uninstallProgressBar();
+			viewGoTo(ret);
+			System.out.println(Messages.getString("JFXMain.287")); 
+			playSound();
+		});//fin del OnSucceeded						
+		JFXMain.executorPool.execute(umTask);
+	}
+	
 	// junta 2 o mas cosechas en una 
 	private void doUnirCosechas(CosechaLabor cosechaLabor) {
 		List<CosechaLabor> cosechasAUnir = new ArrayList<CosechaLabor>();
@@ -420,12 +447,12 @@ public class CosechaGUIController extends AbstractGUIController {
 		} else {
 			cosechasAUnir.add(cosechaAGrillar);
 		}
-		NumberFormat format = Messages.getNumberFormat();
+		
 		String anchoDefaultString =JFXMain.config.getPropertyOrDefault(CosechaConfig.ANCHO_GRILLA_KEY,
 				Messages.getString("JFXMain.288"));
 		Double ancho = 10.0;
 		try {
-			ancho = format.parse(anchoDefaultString).doubleValue();
+			ancho = PropertyHelper.parseDouble(anchoDefaultString).doubleValue();
 		}catch(Exception e ) {
 			e.printStackTrace();
 		}
@@ -442,7 +469,7 @@ public class CosechaGUIController extends AbstractGUIController {
 			//ancho = 10.0;
 		} else {
 			JFXMain.config.loadProperties();
-			JFXMain.config.setProperty(CosechaConfig.ANCHO_GRILLA_KEY,format.format(ancho));
+			JFXMain.config.setProperty(CosechaConfig.ANCHO_GRILLA_KEY,PropertyHelper.formatDouble(ancho));
 			JFXMain.config.save();
 		}
 		

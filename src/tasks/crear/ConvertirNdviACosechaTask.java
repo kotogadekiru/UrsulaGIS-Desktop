@@ -16,13 +16,10 @@ import org.opengis.feature.simple.SimpleFeature;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Polygon;
 
-import dao.LaborConfig;
 import dao.Ndvi;
 import dao.Poligono;
 import dao.config.Configuracion;
-import dao.config.Cultivo;
 import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
 import dao.utils.PropertyHelper;
@@ -35,7 +32,6 @@ import tasks.ShowNDVITifFileTask;
 import utils.GeometryHelper;
 import utils.LinearRegression;
 import utils.ProyectionConstants;
-import utils.Logistic.Data;
 
 public class ConvertirNdviACosechaTask extends ProcessMapTask<CosechaItem,CosechaLabor> {
 	private static  double NDVI_RINDE_CERO = ShowNDVITifFileTask.MIN_VALUE;//0.2;

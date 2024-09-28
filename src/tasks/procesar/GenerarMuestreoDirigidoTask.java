@@ -50,7 +50,7 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 		this.aMuestrear=cosechas;
 
 		super.labor = new Suelo();
-		super.labor.featureBuilder = new SimpleFeatureBuilder(super.labor.getPointType());
+		//super.labor.featureBuilder = new SimpleFeatureBuilder(super.labor.getPointType());
 		this.superficieMinimaAMuestrear=supMinima;
 		this.densidadDeMuestrasDeseada=1/densidad;
 		this.cantidadMinimaDeMuestrasPoligonoAMuestrear=cantMaxPoly;

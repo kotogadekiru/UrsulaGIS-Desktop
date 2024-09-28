@@ -33,7 +33,7 @@ public class SueloItem extends LaborItem { //suelo item no es labor item. le sob
 	
 	public static final String Calcio = PPM+" Ca";
 	public static final String Magnecio = PPM+" Mg";
-	public static final String Boro = PPM+" Br";
+	public static final String Boro = PPM+" B";
 	public static final String Cloro = PPM+" Cl";
 	public static final String Cobalto = PPM+" Co";
 	public static final String Cobre = PPM+" Cu";
@@ -66,6 +66,8 @@ public class SueloItem extends LaborItem { //suelo item no es labor item. le sob
 	private Double ppmP=new Double(0);	
 	private Double ppmK=new Double(0);	
 	private Double ppmS=new Double(0);	
+	private Double ppmCa,ppmMg,ppmB,ppmCl,ppmCo,ppmCu,ppmFe,ppmMn,ppmMo,ppmZn;
+	
 	
 	private Double porcMO=new Double(0);	//puede ser labil o permanente
 	private Double densAp=new Double(DENSIDAD_SUELO_KG);//Densidad aparente 0-60

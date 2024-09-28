@@ -41,16 +41,16 @@ public class Fertilizante extends Producto implements Comparable<Fertilizante>{
 	public static Map<String,Fertilizante> getFertilizantesDefault(){
 		Map<String,Fertilizante> fertilizantes = new HashMap<String,Fertilizante>();
 		//Nitrogenados
-		fertilizantes.put("Amoníaco anhidro",new Fertilizante("Amoníaco anhidro",82,0.0,0.0,0.0));//ok
+		fertilizantes.put("Amoniaco anhidro",new Fertilizante("Amoniaco anhidro",82,0.0,0.0,0.0));//ok
 		fertilizantes.put("Nitrato de amonio",new Fertilizante("Nitrato de amonio",35,0.0,0.0,0.0));//ok
 		fertilizantes.put("Sulfato de amonio",new Fertilizante("Sulfato de amonio",20.5,0.0,0.0,24.0));//ok
 		fertilizantes.put("UAN",new Fertilizante("UAN",31,0.0,0.0,0.0));//ok
 		fertilizantes.put("Urea",new Fertilizante("Urea",46,0.0,0.0,0.0));//ok
 		//Fosfatados
 		//acido fosforico
-		fertilizantes.put("Fosfato diamónico",new Fertilizante("Fosfato diamónico",18,20,0.0,0));//ok
-		fertilizantes.put("Fosfato monoamónico",new Fertilizante("Fosfato monoamónico",11,23,0.0,0));//ok
-		fertilizantes.put("Fosfato monopotásico",new Fertilizante("Fosfato monopotásico",0,23,29,0));//ok
+		fertilizantes.put("Fosfato diamonico",new Fertilizante("Fosfato diamónico",18,20,0.0,0));//ok
+		fertilizantes.put("Fosfato monoamonico",new Fertilizante("Fosfato monoamonico",11,23,0.0,0));//ok
+		fertilizantes.put("Fosfato monopotasico",new Fertilizante("Fosfato monopotasico",0,23,29,0));//ok
 		fertilizantes.put("Superfosfato simple",new Fertilizante("Superfosfato simple",0.0,9,0.0,12));//ok
 		fertilizantes.put("Superfosfato triple",new Fertilizante("Superfosfato triple",0.0,20,0.0,0.0));//ok
 		//Potasicos
@@ -70,6 +70,7 @@ public class Fertilizante extends Producto implements Comparable<Fertilizante>{
 	double porcP= 0.0;
 	double porcK= 0.0;
 	double porcS= 0.0;
+	double porcCa, porcMg, porcB, porcCl, porcCo, porcCu, porcFe, porcMn, porcMo, porcZn;
 	
 	private Map<SueloParametro,Double> cNutrientes = null;
 	
@@ -101,6 +102,16 @@ public class Fertilizante extends Producto implements Comparable<Fertilizante>{
 			 cNutrientes.put(SueloParametro.Fosforo, porcP);
 			 cNutrientes.put(SueloParametro.Potasio, porcK);
 			 cNutrientes.put(SueloParametro.Azufre, porcS);
+			 cNutrientes.put(SueloParametro.Calcio, porcCa);
+			 cNutrientes.put(SueloParametro.Magnecio, porcMg);
+			 cNutrientes.put(SueloParametro.Boro, porcB);
+			 cNutrientes.put(SueloParametro.Cloro, porcCl);
+			 cNutrientes.put(SueloParametro.Cobalto, porcCo);
+			 cNutrientes.put(SueloParametro.Cobre, porcCu);
+			 cNutrientes.put(SueloParametro.Hierro, porcFe);
+			 cNutrientes.put(SueloParametro.Manganeso, porcMn);
+			 cNutrientes.put(SueloParametro.Molibdeno, porcMo);
+			 cNutrientes.put(SueloParametro.Zinc, porcZn);
 		}
 		return cNutrientes;
 	}

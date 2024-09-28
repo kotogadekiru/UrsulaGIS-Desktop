@@ -105,7 +105,7 @@ public class CortarCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabo
 					e.printStackTrace();
 				}				
 				ci.setGeometry(buffered);
-				SimpleFeature nf=ci.getFeature(labor.featureBuilder);
+				SimpleFeature nf=ci.getFeature(labor.getFeatureBuilder());
 
 				boolean ret = labor.outCollection.add(nf);
 				//featuresInsertadas++;

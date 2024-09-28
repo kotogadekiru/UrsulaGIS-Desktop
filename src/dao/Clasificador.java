@@ -568,7 +568,7 @@ public class Clasificador {
 
 			LaborItem li=labor.constructFeatureContainerStandar(fIn,false);
 			li.setCategoria(this.getCategoryFor(li.getAmount()));
-			SimpleFeature f = li.getFeature(labor.featureBuilder);
+			SimpleFeature f = li.getFeature(labor.getFeatureBuilder());
 			boolean res = newOutcollection.add(f);
 
 		}

@@ -1,6 +1,5 @@
 package dao.suelo;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,14 +13,12 @@ import dao.Labor;
 import dao.LaborConfig;
 import dao.LaborItem;
 import dao.config.Configuracion;
-import dao.config.Cultivo;
 import dao.config.Fertilizante;
 import dao.config.Nutriente;
 import dao.utils.PropertyHelper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.AccessLevel;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import utils.ProyectionConstants;
@@ -131,6 +128,8 @@ public class Suelo extends Labor<SueloItem>{
 		si.setPpmK(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_K)));
 		si.setPpmS(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_S)));
 		
+		//TODO agregar micronutrientes
+		
 		si.setPorcMO(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_MO)));
 		si.setDensAp(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DENSIDAD)));
 		if(!(si.getDensAp()>0)) {
@@ -180,7 +179,7 @@ public class Suelo extends Labor<SueloItem>{
 		si.setPorosidad(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_POROSIDAD)));
 		si.setPorcCC(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_CAPACIDAD_CAMPO)));
 		
-		//}
+		
 		return si;
 	}
 
@@ -235,7 +234,7 @@ public class Suelo extends Labor<SueloItem>{
 		return kgNHa;
 	}
 	
-	public double kgToPpm(double densidad,double kg,double prof) {
+	public static double kgToPpm(double densidad,double kg,double prof) {
 		double kgSueloHa = ProyectionConstants.METROS2_POR_HA*prof*densidad;
 		Double ppm= (Double) kg*1000000/(kgSueloHa);//por un millon
 		return ppm;
@@ -349,12 +348,15 @@ public class Suelo extends Labor<SueloItem>{
 				System.out.println("el nutriente para el parametro "+p+" es null");
 				continue;}
 			//System.out.println("Obteniendo los kg de Nutriente para "+n.getNombre());
+			Double ppm =Suelo.getPpm(p, item);
+			if(ppm!=null) {
 			nutrientesSuelo.put(p,  
 					ppmToKg(item.getDensAp(),
-							Suelo.getPpm(p, item),
+							ppm,
 							n.getProfundidad())
 					* n.getPorcNutrienteEnMolecula()
 					);//n es null
+			}
 		}
 	
 		return nutrientesSuelo;
@@ -367,10 +369,43 @@ public class Suelo extends Labor<SueloItem>{
 		case Fosforo: return item.getPpmP();
 		case Potasio: return item.getPpmK();
 		case Azufre: return item.getPpmS();
+		case Calcio: return item.getPpmCa();
+		case Magnecio: return item.getPpmMg();
+		case Boro: return item.getPpmB();
+		case Cloro: return item.getPpmCl();
+		case Cobalto: return item.getPpmCo();
+		case Cobre: return item.getPpmCu();
+		case Hierro: return item.getPpmFe();
+		case Manganeso: return item.getPpmMn();
+		case Molibdeno: return item.getPpmMo();
+		case Zinc: return item.getPpmZn();
+	
+		
 		default: break;		
 		}
 		//XXX si se agregan nuevos nutrientes a suelo agregarlos a este switch
 		return ppm;
+	}
+	
+	public static void setPpm(SueloParametro p,SueloItem item,Double ppm) {		
+		switch(p) {
+		case Nitrogeno:  item.setPpmNO3(ppm);
+		case Fosforo:  item.setPpmP(ppm);
+		case Potasio:  item.setPpmK(ppm);
+		case Azufre:  item.setPpmS(ppm);
+		case Calcio:  item.setPpmCa(ppm);
+		case Magnecio:  item.setPpmMg(ppm);
+		case Boro:  item.setPpmB(ppm);
+		case Cloro:  item.setPpmCl(ppm);
+		case Cobalto:  item.setPpmCo(ppm);
+		case Cobre:  item.setPpmCu(ppm);
+		case Hierro:  item.setPpmFe(ppm);
+		case Manganeso:  item.setPpmMn(ppm);
+		case Molibdeno:  item.setPpmMo(ppm);
+		case Zinc:  item.setPpmZn(ppm);	
+
+		default: break;		
+		}		
 	}
 	
 	public double calcPpm_0_20(Double densidad,Double kgPHa) {
@@ -378,13 +413,18 @@ public class Suelo extends Labor<SueloItem>{
 		//Double ppmP= (Double) kgPHa*1000000/(kgSueloHa*Fertilizante.porcP_PO4);
 		return  kgToPpm(densidad, kgPHa,0.2);// /Fertilizante.porcP_PO4;	
 	}
-	
+	/**
+	 * metodo usado para relacionar una propiedad de una muestra con un SueloParametro
+	 * @param s el nombre del sueloItem a encontrar
+	 * @return devuelve el SueloParametro que correponde al sueloItem cuyo nombre sea s
+	 */
 	public static SueloParametro getSueloParametro(String s) {		
 		switch(s) {
 		case SueloItem.PPM_N: return SueloParametro.Nitrogeno;
 		case SueloItem.PPM_FOSFORO: return SueloParametro.Fosforo;
 		case SueloItem.PPM_POTASIO: return SueloParametro.Potasio;
 		case SueloItem.PPM_ASUFRE: return SueloParametro.Azufre;
+		
 		case SueloItem.Calcio: return SueloParametro.Calcio;
 		case SueloItem.Magnecio: return SueloParametro.Magnecio;
 		case SueloItem.Boro: return SueloParametro.Boro;
@@ -395,6 +435,7 @@ public class Suelo extends Labor<SueloItem>{
 		case SueloItem.Manganeso: return SueloParametro.Manganeso;
 		case SueloItem.Molibdeno: return SueloParametro.Molibdeno;
 		case SueloItem.Zinc: return SueloParametro.Zinc;
+		
 		case SueloItem.PC_MO: return SueloParametro.MateriaOrganica;
 		case SueloItem.DENSIDAD: return SueloParametro.Densidad;
 		case SueloItem.PROF_NAPA: return SueloParametro.Napa;

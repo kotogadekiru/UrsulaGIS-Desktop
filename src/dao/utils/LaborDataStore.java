@@ -12,6 +12,7 @@ import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.factory.GeoTools;
+import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -265,8 +266,10 @@ public class LaborDataStore<E> {
 		Geometry cosechaGeom = laborItem.getGeometry();
 		Envelope geomEnvelope=cosechaGeom.getEnvelopeInternal();
 
-		synchronized(labor.featureBuilder){
-			SimpleFeature fe = laborItem.getFeature(labor.featureBuilder);
+		//synchronized(labor.featureBuilder){
+			SimpleFeatureBuilder fBuilder = new SimpleFeatureBuilder(labor.getType());
+			SimpleFeature fe = laborItem.getFeature(fBuilder);
+			//SimpleFeature fe = laborItem.getFeature(labor.featureBuilder);
 
 			if(labor.treeCache!=null){
 				//if treeCache is too big clearCache. it only clears on insert.
@@ -282,14 +285,14 @@ public class LaborDataStore<E> {
 
 			}
 			labor.insertFeature(fe);
-		}
+		//}//fin del synchronized
 		locked.remove(labor);
 	}
 	
 	public static void changeFeature(SimpleFeature old, LaborItem ci, Labor<? extends LaborItem> labor) {
 		checkLock(labor);
 		labor.outCollection.remove(old);
-		labor.outCollection.add(ci.getFeature(labor.featureBuilder));
+		labor.outCollection.add(ci.getFeature(labor.getFeatureBuilder()));
 		locked.remove(labor);
 	}
 }

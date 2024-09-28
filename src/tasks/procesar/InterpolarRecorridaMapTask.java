@@ -6,7 +6,6 @@ import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.geotools.geometry.jts.ReferencedEnvelope;
@@ -21,8 +20,8 @@ import dao.cosecha.CosechaConfig;
 import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
 import dao.suelo.Suelo;
-import dao.suelo.SueloItem;
 import dao.suelo.Suelo.SueloParametro;
+import dao.suelo.SueloItem;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.JFXMain;
 import gui.Messages;
@@ -121,6 +120,7 @@ public class InterpolarRecorridaMapTask extends ProcessMapTask<SueloItem,Suelo> 
 			sueloItem.setPpmP(sueloProps.get(SueloParametro.Fosforo));
 			sueloItem.setPpmK(sueloProps.get(SueloParametro.Potasio));
 			sueloItem.setPpmS(sueloProps.get(SueloParametro.Azufre));
+			//TODO agregar micronutrientes
 			sueloItem.setPorcMO(sueloProps.get(SueloParametro.MateriaOrganica));	
 			Geometry g=p;
 			synchronized(contornoG) {

@@ -105,7 +105,7 @@ public class NDVIChart extends VBox {
 			.forEachOrdered(lNdvi->{
 				try {
 				LocalDate fecha = lNdvi.getFecha();
-				long dias=0;
+				long dias=5;//el minimo aporte que deberia tener una imagen es 5 dias
 				if(lastFecha[0]==null) {
 					lastFecha[0]=fecha;					
 				} else {					

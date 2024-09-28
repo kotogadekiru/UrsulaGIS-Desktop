@@ -1,6 +1,8 @@
 package dao.config;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -44,7 +46,7 @@ public class Nutriente {
 	public static final String BORO = "Boro";
 	public static final String MAGNECIO = "Magnecio";
 	public static final String CALCIO = "Calcio";
-	public static final String AZUFRE = "Azufre";
+	public static final String AZUFRE = "Azufre";//Azufre de sulfato?
 	public static final String POTASIO = "Potasio";
 	public static final String FOSFORO = "Fosforo";
 	public static final String NITROGENO = "Nitrogeno";
@@ -57,6 +59,7 @@ public class Nutriente {
 	public static final Double porcS_SO4=1.0;// 32.06/(32.06+4*15.99);//=0.3338;
 	
 	private static Map<SueloParametro,Nutriente> nutrientesDefault=null;
+	private static List<SueloParametro> microNutrientesDefault=null;
 	static{
 		nutrientesDefault = new ConcurrentHashMap<SueloParametro,Nutriente>();
 		
@@ -64,9 +67,9 @@ public class Nutriente {
 		nutrientesDefault.put(SueloParametro.Fosforo,new Nutriente("Fosforo de Fosfato","P",1.0,0.2));
 		nutrientesDefault.put(SueloParametro.Potasio,new Nutriente(POTASIO,"K",1.0,0.2));
 		nutrientesDefault.put(SueloParametro.Azufre,new Nutriente(AZUFRE,"S-SO4",porcS_SO4,0.2));//S04
-		nutrientesDefault.put(SueloParametro.Calcio,new Nutriente(CALCIO,"Ca",1.0,0.2));
-		nutrientesDefault.put(SueloParametro.Magnecio,new Nutriente(MAGNECIO,"Mg",1.0,0.2));
 		
+		nutrientesDefault.put(SueloParametro.Calcio,new Nutriente(CALCIO,"Ca",1.0,0.2));
+		nutrientesDefault.put(SueloParametro.Magnecio,new Nutriente(MAGNECIO,"Mg",1.0,0.2));		
 		nutrientesDefault.put(SueloParametro.Boro,new Nutriente(BORO,"B",1.0,0.2));
 		nutrientesDefault.put(SueloParametro.Cloro,new Nutriente(CLORO,"Cl",1.0,0.2));
 		nutrientesDefault.put(SueloParametro.Cobalto,new Nutriente(COBALTO,"Co",1.0,0.2));
@@ -75,6 +78,18 @@ public class Nutriente {
 		nutrientesDefault.put(SueloParametro.Manganeso,new Nutriente(MANGANESO,"Mn",1.0,0.2));
 		nutrientesDefault.put(SueloParametro.Molibdeno,new Nutriente(MOLIBDENO,"Mo",1.0,0.2));
 		nutrientesDefault.put(SueloParametro.Zinc,new Nutriente(ZINC,"Zn",1.0,0.2));
+		
+		microNutrientesDefault = new ArrayList<SueloParametro>();
+		microNutrientesDefault.add(SueloParametro.Calcio);
+		microNutrientesDefault.add(SueloParametro.Magnecio);	
+		microNutrientesDefault.add(SueloParametro.Boro);
+		microNutrientesDefault.add(SueloParametro.Cloro);
+		microNutrientesDefault.add(SueloParametro.Cobalto);
+		microNutrientesDefault.add(SueloParametro.Cobre);
+		microNutrientesDefault.add(SueloParametro.Hierro);
+		microNutrientesDefault.add(SueloParametro.Manganeso);
+		microNutrientesDefault.add(SueloParametro.Molibdeno);
+		microNutrientesDefault.add(SueloParametro.Zinc);
 	}
 	
 	@Id @GeneratedValue
@@ -82,7 +97,7 @@ public class Nutriente {
 	
 	private String nombre;
 	private String simbolo;
-	private Double porcNutrienteEnMolecula=100.0;//sirve para convertir de ppm molecular a kg de nutriente
+	private Double porcNutrienteEnMolecula=1.0;//sirve para convertir de ppm molecular a kg de nutriente
 	private Double profundidad=0.2;
 	
 	Nutriente(){
@@ -94,6 +109,9 @@ public class Nutriente {
 		this.simbolo=simbolo;
 		this.porcNutrienteEnMolecula=porcNutriente;
 		this.profundidad=profundidad;
+	}
+	public static List<SueloParametro> getMicroNutrientes(){
+		return microNutrientesDefault;
 	}
 	
 	public static Map<SueloParametro,Nutriente> getNutrientesDefault(){

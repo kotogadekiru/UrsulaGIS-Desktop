@@ -104,7 +104,7 @@ public class UnirSiembrasMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 				//TODO multiplicar ci.rinde por el coeficiente de conversion
 			
 				ci.setDosisML(ci.getDosisML()*10);//XXX verificar que ande para otras unidades
-				SimpleFeature nf=ci.getFeature(labor.featureBuilder);
+				SimpleFeature nf=ci.getFeature(labor.getFeatureBuilder());
 				
 				boolean ret = labor.outCollection.add(nf);
 				featuresInsertadas++;

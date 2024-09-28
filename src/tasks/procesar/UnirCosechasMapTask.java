@@ -104,7 +104,7 @@ public class UnirCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 				//TODO multiplicar ci.rinde por el coeficiente de conversion
 			
 				ci.setRindeTnHa(ci.getRindeTnHa()*coeficienteConversion);
-				SimpleFeature nf=ci.getFeature(labor.featureBuilder);
+				SimpleFeature nf=ci.getFeature(labor.getFeatureBuilder());
 				
 				boolean ret = labor.outCollection.add(nf);
 				featuresInsertadas++;

@@ -283,7 +283,7 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 					ci.setGeometry(g);
 
 					itemsCategoria.add(ci);
-					SimpleFeature f = ci.getFeature(labor.featureBuilder);
+					SimpleFeature f = ci.getFeature(labor.getFeatureBuilder());
 					boolean res = newOutcollection.add(f);
 				}
 			}	
