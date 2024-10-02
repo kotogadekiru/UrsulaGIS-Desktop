@@ -61,6 +61,7 @@ public class ConvertirNdviAcumuladoACosechaTask extends ProcessMapTask<CosechaIt
 		//XXX esto da error si mezclo ndvi de diferentes lotes. podria agrupar por contorno antes.
 		ndvis.sort((n1,n2)->n1.compareTo(n2));
 		for(Ndvi ndvi : ndvis) {
+			if(ndvi.getMeanNDVI()<0.2)continue;//solo procesar los datos con el surco cerrado
 			LocalDate fecha = ndvi.getFecha();
 			long dias=5;//esto no asigna valor a la primera imagen porque multiplica por cero
 			if(lastFecha!=null) {								

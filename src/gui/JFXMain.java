@@ -11,11 +11,9 @@ import java.net.URL;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -26,19 +24,13 @@ import java.util.stream.Stream;
 
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
-
-import org.geotools.data.FileDataStore;
 
 import dao.Labor;
 import dao.Ndvi;
-import dao.Poligono;
 import dao.config.Configuracion;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
-import dao.margen.Margen;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.recorrida.Recorrida;
 import dao.siembra.SiembraLabor;
@@ -68,11 +60,12 @@ import gov.nasa.worldwind.layers.SurfaceImageLayer;
 import gov.nasa.worldwind.render.SurfaceImage;
 import gov.nasa.worldwind.terrain.ZeroElevationModel;
 import gov.nasa.worldwind.util.StatusBar;
-import gov.nasa.worldwind.util.measure.MeasureTool;
 import gov.nasa.worldwindx.examples.util.ExampleUtil;
 import gui.controller.ConfigGUI;
 import gui.controller.CosechaGUIController;
 import gui.controller.FertilizacionGUIController;
+import gui.controller.GenericLaborGUIController;
+import gui.controller.MargenGUIController;
 import gui.controller.NdviGUIController;
 import gui.controller.PoligonoGUIController;
 import gui.controller.PulverizacionGUIController;
@@ -82,7 +75,6 @@ import gui.controller.SueloGUIController;
 import gui.nww.LayerAction;
 import gui.nww.LayerPanel;
 import gui.nww.WWPanel;
-import gui.utils.SmartTableView;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.Property;
@@ -99,13 +91,11 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.MenuBar;
-import javafx.scene.control.Slider;
 import javafx.scene.control.SplitPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -115,11 +105,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import tasks.ExportLaborMapTask;
 import tasks.ProcessMapTask;
-import tasks.importar.OpenMargenMapTask;
-import tasks.procesar.ExtraerPoligonosDeLaborTask;
-import tasks.procesar.JuntarShapefilesTask;
 import utils.DAH;
 import utils.FileHelper;
 import utils.TarjetaHelper;
@@ -160,6 +146,8 @@ public class JFXMain extends Application {
 	public NdviGUIController ndviGUIController= new NdviGUIController(this);
 	public RecorridaGUIController recorridaGUIController= new RecorridaGUIController(this);
 	public SueloGUIController sueloGUIController= new SueloGUIController(this);
+	public MargenGUIController margenGUIController = new MargenGUIController(this);
+	public GenericLaborGUIController genericGUIController = new GenericLaborGUIController(this);
 
 	@Override
 	public void start(Stage primaryStage) {
@@ -448,198 +436,199 @@ public class JFXMain extends Application {
 		recorridaGUIController.addAccionesRecorridas(predicates);
 		ndviGUIController.addAccionesNdvi(predicates);
 
-		addAccionesMargen(predicates);
+		margenGUIController.addAccionesMargen(predicates);
+		
 		sueloGUIController.addAccionesSuelos(predicates);		
-
-		addAccionesLabor(predicates);
-		addAccionesGenericas(predicates);
+//TODO mover acciones a un nuevo controller
+		genericGUIController.addAccionesLabor(predicates);
+		genericGUIController.addAccionesGenericas(predicates);
 
 		layerPanel.setMenuItems(predicates);
 	}
 	
-	private void addAccionesGenericas(Map<Class<?>, List<LayerAction>> predicates) {
-		List<LayerAction> todosP = new ArrayList<LayerAction>();
-		predicates.put(Object.class, todosP);
-		/**
-		 * Accion que permite quitar un item del arbol
-		 */
-		todosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.removeLayerAction"),(layer)->{
-			getWwd().getModel().getLayers().remove(layer);
-			Object layerObject =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-			if(layerObject!=null && Labor.class.isAssignableFrom(layerObject.getClass())){
-				Labor<?> l = (Labor<?>)layerObject;	
-				l.dispose();
-			}
-			if(layerObject instanceof Poligono){
-				Poligono poli = (Poligono) layerObject;
-				poli.setActivo(false);
-				if(poli.getId()!=null){
-					DAH.save(poli);
-				}
-			}
-			if(layerObject instanceof Ndvi){
-				Ndvi ndvi = (Ndvi) layerObject;
-				ndvi.setActivo(false);
-				if(ndvi.getId()!=null){
-					try {
-						DAH.save(ndvi);
-					}catch(Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
-			MeasureTool mt = (MeasureTool)layer.getValue(PoligonLayerFactory.MEASURE_TOOL);		
-			if(mt!=null) {
-				mt.setArmed(false);
-				mt.dispose();
-			}
+//	private void addAccionesGenericas(Map<Class<?>, List<LayerAction>> predicates) {
+//		List<LayerAction> todosP = new ArrayList<LayerAction>();
+//		predicates.put(Object.class, todosP);
+//		/**
+//		 * Accion que permite quitar un item del arbol
+//		 */
+//		todosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.removeLayerAction"),(layer)->{
+//			getWwd().getModel().getLayers().remove(layer);
+//			Object layerObject =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+//			if(layerObject!=null && Labor.class.isAssignableFrom(layerObject.getClass())){
+//				Labor<?> l = (Labor<?>)layerObject;	
+//				l.dispose();
+//			}
+//			if(layerObject instanceof Poligono){
+//				Poligono poli = (Poligono) layerObject;
+//				poli.setActivo(false);
+//				if(poli.getId()!=null){
+//					DAH.save(poli);
+//				}
+//			}
+//			if(layerObject instanceof Ndvi){
+//				Ndvi ndvi = (Ndvi) layerObject;
+//				ndvi.setActivo(false);
+//				if(ndvi.getId()!=null){
+//					try {
+//						DAH.save(ndvi);
+//					}catch(Exception e) {
+//						e.printStackTrace();
+//					}
+//				}
+//			}
+//			MeasureTool mt = (MeasureTool)layer.getValue(PoligonLayerFactory.MEASURE_TOOL);		
+//			if(mt!=null) {
+//				mt.setArmed(false);
+//				mt.dispose();
+//			}
+//
+//			layer.dispose();
+//			getLayerPanel().update(getWwd());
+//			return "layer removido" + layer.getName(); 
+//		}));
+//		
+//		//editar opacidad
+//		//JFXMain.layerTransparencia=Transparencia
+//		todosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.layerTransparencia"),(layer)->{
+//			//TODO show stage with slider
+//	//		Object layerObject =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+//			double op = layer.getOpacity();
+//			//double newOp = op*0.5;
+//			
+//			 Slider slider = new Slider(0, 1, op);
+//			 slider.setShowTickMarks(true);
+//			 slider.setShowTickLabels(true);
+//			 slider.setMajorTickUnit(0.25f);
+//			 slider.setBlockIncrement(0.1f);
+//			 Scene sc = new Scene(slider,600,50);
+//			 //TODO fixme no se ve un layer a travez del otro
+//			 slider.valueProperty().addListener((obs,n,o)->{
+//				 
+//					layer.setOpacity(n.doubleValue());//newOp>0.1?newOp:1);
+//					this.getWwd().redraw();
+//					System.out.println("layer transparente" + layer.getName()+" "+layer.getOpacity());
+//			 });
+//			 Stage stage = new Stage();
+//			 stage.setScene(sc);
+//			 stage.initOwner(JFXMain.stage);
+//			 stage.getIcons().addAll(JFXMain.stage.getIcons());
+//			 stage.setTitle(Messages.getString("JFXMain.layerTransparencia")+" "+layer.getName());
+//			 stage.show();
+//			 
+//					 
+//			 
+//
+//			return "layer transparente" + layer.getName()+" "+layer.getOpacity(); 
+//		}));
+//	}	
 
-			layer.dispose();
-			getLayerPanel().update(getWwd());
-			return "layer removido" + layer.getName(); 
-		}));
-		
-		//editar opacidad
-		//JFXMain.layerTransparencia=Transparencia
-		todosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.layerTransparencia"),(layer)->{
-			//TODO show stage with slider
-	//		Object layerObject =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-			double op = layer.getOpacity();
-			//double newOp = op*0.5;
-			
-			 Slider slider = new Slider(0, 1, op);
-			 slider.setShowTickMarks(true);
-			 slider.setShowTickLabels(true);
-			 slider.setMajorTickUnit(0.25f);
-			 slider.setBlockIncrement(0.1f);
-			 Scene sc = new Scene(slider,600,50);
-			 //TODO fixme no se ve un layer a travez del otro
-			 slider.valueProperty().addListener((obs,n,o)->{
-				 
-					layer.setOpacity(n.doubleValue());//newOp>0.1?newOp:1);
-					this.getWwd().redraw();
-					System.out.println("layer transparente" + layer.getName()+" "+layer.getOpacity());
-			 });
-			 Stage stage = new Stage();
-			 stage.setScene(sc);
-			 stage.initOwner(JFXMain.stage);
-			 stage.getIcons().addAll(JFXMain.stage.getIcons());
-			 stage.setTitle(Messages.getString("JFXMain.layerTransparencia")+" "+layer.getName());
-			 stage.show();
-			 
-					 
-			 
+//	private void addAccionesMargen(Map<Class<?>, List<LayerAction>> predicates) {
+//		List<LayerAction> margenesP = new ArrayList<LayerAction>();
+//		predicates.put(Margen.class, margenesP);
+//		/**
+//		 *Accion que permite editar un mapa de rentabilidad
+//		 */
+//		margenesP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.editMargenAction"),(layer)->{	
+//			doEditMargin((Margen) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+//			return "margen editado" + layer.getName(); 
+//		}));
+//		
+//		/**
+//		 *Accion que permite resumir por categoria un mapa de rentabilidad
+//		 */
+//		margenesP.add(LayerAction.constructPredicate(Messages.getString("ResumirMargenMapTask.resumirAction"),(layer)->{	
+//			configGUIController.doResumirMargin((Margen) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+//			return "margen resumido" + layer.getName(); 
+//		}));
+//	}
 
-			return "layer transparente" + layer.getName()+" "+layer.getOpacity(); 
-		}));
-	}	
-
-	private void addAccionesMargen(Map<Class<?>, List<LayerAction>> predicates) {
-		List<LayerAction> margenesP = new ArrayList<LayerAction>();
-		predicates.put(Margen.class, margenesP);
-		/**
-		 *Accion que permite editar un mapa de rentabilidad
-		 */
-		margenesP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.editMargenAction"),(layer)->{	
-			doEditMargin((Margen) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-			return "margen editado" + layer.getName(); 
-		}));
-		
-		/**
-		 *Accion que permite resumir por categoria un mapa de rentabilidad
-		 */
-		margenesP.add(LayerAction.constructPredicate(Messages.getString("ResumirMargenMapTask.resumirAction"),(layer)->{	
-			configGUIController.doResumirMargin((Margen) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-			return "margen resumido" + layer.getName(); 
-		}));
-	}
-
-	private void addAccionesLabor(Map<Class<?>, List<LayerAction>> predicates) {
-		List<LayerAction> laboresP = new ArrayList<LayerAction>();
-		predicates.put(Labor.class, laboresP);
-		laboresP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.goToLayerAction"),(layer)->{	
-			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-			if (layerObject!=null && Labor.class.isAssignableFrom(layerObject.getClass())){
-				viewGoTo((Labor<?>) layerObject);
-			}
-			return "went to " + layer.getName(); 
-		}));
-
-		laboresP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.GuardarLabor"),(layer)->{
-			enDesarrollo();
-			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-			if (layerObject==null){
-			}else if(Labor.class.isAssignableFrom(layerObject.getClass())){
-				doGuardarLabor((Labor<?>) layerObject);
-			}
-			return "guarde labor " + layer.getName();
-		}));
-
-		/**
-		 * Accion que muesta el histograma
-		 */
-		laboresP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.showHistogramaLaborAction"),(layer)->{//	this::applyHistogramaCosecha);//(layer)->applyHistogramaCosecha(layer));
-			showHistoLabor((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-			return "histograma mostrado" + layer.getName(); 
-		}));
-
-		/**
-		 * Accion que permite extraer los poligonos de una cosecha para guardar
-		 */
-		laboresP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.extraerPoligonoAction"),(layer)->{
-			poligonoGUIController.doExtraerPoligonos((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-			return "poligonos Extraidos " + layer.getName(); 
-		}));
-		
-		
-		/**
-		 * Accion que permite extraer el contorno de una cosecha
-		 * es solo de prueba. se puede realizar extrayendo poligonos y uniendolos
-		 */
-		laboresP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.extraerContornoAction"),(layer)->{
-			poligonoGUIController.doExtraerContorno((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-			return "poligonos Extraidos " + layer.getName(); 
-		}));
-		
-		/**
-		 * Accion que permite cortar una labor por el poligono/s seleccionado
-		 */
-		laboresP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.cortarCosechaAction"),(layer)->{			
-			poligonoGUIController.doCortarLaborPorPoligono((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-			return "labor cortada" + layer.getName(); 
- 
-		}));
-
-		/**
-		 * Accion permite exportar la labor como shp
-		 */
-		laboresP.add(new LayerAction((layer)->{
-			if(layer==null){
-				return Messages.getString("JFXMain.exportLaborAction");  
-			} else{
-				doExportLabor((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-				return "labor Exportada" + layer.getName(); 
-			}},Messages.getString("JFXMain.exportLaborAction")));
-
-		/**
-		 * Accion muestra una tabla con los datos de la cosecha
-		 */
-		laboresP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.showTableLayerAction"),(layer)->{
-			doShowDataTable((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-			return "Tabla mostrada" + layer.getName(); 
-		}));
-
-		/**
-		 * Accion permite obtener ndvi
-		 */
-		laboresP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.downloadNDVI"),(layer)->{
-			Object o =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);			
-			if(o instanceof Labor){
-				ndviGUIController.doGetNdviTiffFile(o);
-			}
-			return "ndvi obtenido" + layer.getName();	 
-		}));
-	}
+//	private void addAccionesLabor(Map<Class<?>, List<LayerAction>> predicates) {
+//		List<LayerAction> laboresP = new ArrayList<LayerAction>();
+//		predicates.put(Labor.class, laboresP);
+//		laboresP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.goToLayerAction"),(layer)->{	
+//			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+//			if (layerObject!=null && Labor.class.isAssignableFrom(layerObject.getClass())){
+//				viewGoTo((Labor<?>) layerObject);
+//			}
+//			return "went to " + layer.getName(); 
+//		}));
+//
+//		laboresP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.GuardarLabor"),(layer)->{
+//			enDesarrollo();
+//			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+//			if (layerObject==null){
+//			}else if(Labor.class.isAssignableFrom(layerObject.getClass())){
+//				doGuardarLabor((Labor<?>) layerObject);
+//			}
+//			return "guarde labor " + layer.getName();
+//		}));
+//
+//		/**
+//		 * Accion que muesta el histograma
+//		 */
+//		laboresP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.showHistogramaLaborAction"),(layer)->{//	this::applyHistogramaCosecha);//(layer)->applyHistogramaCosecha(layer));
+//			showHistoLabor((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+//			return "histograma mostrado" + layer.getName(); 
+//		}));
+//
+//		/**
+//		 * Accion que permite extraer los poligonos de una cosecha para guardar
+//		 */
+//		laboresP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.extraerPoligonoAction"),(layer)->{
+//			poligonoGUIController.doExtraerPoligonos((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+//			return "poligonos Extraidos " + layer.getName(); 
+//		}));
+//		
+//		
+//		/**
+//		 * Accion que permite extraer el contorno de una cosecha
+//		 * es solo de prueba. se puede realizar extrayendo poligonos y uniendolos
+//		 */
+//		laboresP.add(LayerAction.constructPredicate(Messages.getString("PoligonGUIController.extraerContornoAction"),(layer)->{
+//			poligonoGUIController.doExtraerContorno((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+//			return "poligonos Extraidos " + layer.getName(); 
+//		}));
+//		
+//		/**
+//		 * Accion que permite cortar una labor por el poligono/s seleccionado
+//		 */
+//		laboresP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.cortarCosechaAction"),(layer)->{			
+//			poligonoGUIController.doCortarLaborPorPoligono((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+//			return "labor cortada" + layer.getName(); 
+// 
+//		}));
+//
+//		/**
+//		 * Accion permite exportar la labor como shp
+//		 */
+//		laboresP.add(new LayerAction((layer)->{
+//			if(layer==null){
+//				return Messages.getString("JFXMain.exportLaborAction");  
+//			} else{
+//				doExportLabor((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+//				return "labor Exportada" + layer.getName(); 
+//			}},Messages.getString("JFXMain.exportLaborAction")));
+//
+//		/**
+//		 * Accion muestra una tabla con los datos de la cosecha
+//		 */
+//		laboresP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.showTableLayerAction"),(layer)->{
+//			doShowDataTable((Labor<?>) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+//			return "Tabla mostrada" + layer.getName(); 
+//		}));
+//
+//		/**
+//		 * Accion permite obtener ndvi
+//		 */
+//		laboresP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.downloadNDVI"),(layer)->{
+//			Object o =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);			
+//			if(o instanceof Labor){
+//				ndviGUIController.doGetNdviTiffFile(o);
+//			}
+//			return "ndvi obtenido" + layer.getName();	 
+//		}));
+//	}
 
 
 	public void enDesarrollo() {
@@ -876,18 +865,7 @@ public class JFXMain extends Application {
 		view.goTo(position, 3000d);
 	}
 
-	private void showHistoLabor(Labor<?> cosechaLabor) {	
-		Platform.runLater(()->{
-			CosechaHistoChart histoChart = new CosechaHistoChart(cosechaLabor);
-			Stage histoStage = new Stage();
-			histoStage.setTitle(Messages.getString("CosechaHistoChart.Title"));
-			histoStage.getIcons().add(new Image(ICON));
-			Scene scene = new Scene(histoChart, 800,450);
-			histoStage.setScene(scene);
-			histoStage.initOwner(JFXMain.stage);
-			histoStage.show();
-		});
-	}
+
 	
 	public void importImagery()  {
 		List<File>	files =FileHelper.chooseFiles("TIF","*.tif");  
@@ -1014,63 +992,25 @@ public class JFXMain extends Application {
 //		JFXMain.executorPool.execute(umTask);
 //	}
 
-	private void doGuardarLabor(Labor<?> labor) {
-		File zipFile = FileHelper.zipLaborToTmpDir(labor);//ok funciona
-		byte[] byteArray = FileHelper.fileToByteArray(zipFile);		
-		labor.setContent(byteArray);
-		DAH.save(labor);
+//	private void doEditMargin(Margen margen) {		
+//		System.out.println(Messages.getString("JFXMain.324")); 
+//		Optional<Margen> margenConfigured= MargenConfigDialogController.config(margen);
+//		if(!margenConfigured.isPresent()){//
+//			System.out.println(Messages.getString("JFXMain.325")); 
+//			return;
+//		}							
+//		OpenMargenMapTask uMmTask = new OpenMargenMapTask(margen);
+//		uMmTask.installProgressBar(progressBox);
+//		uMmTask.setOnSucceeded(handler -> {
+//			this.getLayerPanel().update(this.getWwd());
+//			uMmTask.uninstallProgressBar();
+//			this.wwjPanel.repaint();
+//			System.out.println(Messages.getString("JFXMain.326")); 
+//			playSound();
+//		});
+//		executorPool.execute(uMmTask);
+//	}
 
-	}
-
-	
-
-
-	public void doJuntarShapefiles() {
-		List<FileDataStore> stores = FileHelper.chooseShapeFileAndGetMultipleStores(null);
-		File shapeFile = FileHelper.getNewShapeFile("union");
-		executorPool.execute(()->JuntarShapefilesTask.process(stores,shapeFile));
-	}
-
-	private void doEditMargin(Margen margen) {		
-		System.out.println(Messages.getString("JFXMain.324")); 
-		Optional<Margen> margenConfigured= MargenConfigDialogController.config(margen);
-		if(!margenConfigured.isPresent()){//
-			System.out.println(Messages.getString("JFXMain.325")); 
-			return;
-		}							
-		OpenMargenMapTask uMmTask = new OpenMargenMapTask(margen);
-		uMmTask.installProgressBar(progressBox);
-		uMmTask.setOnSucceeded(handler -> {
-			this.getLayerPanel().update(this.getWwd());
-			uMmTask.uninstallProgressBar();
-			this.wwjPanel.repaint();
-			System.out.println(Messages.getString("JFXMain.326")); 
-			playSound();
-		});
-		executorPool.execute(uMmTask);
-	}
-
-	private void doExportLabor(Labor<?> laborToExport) {
-		String nombre = laborToExport.getNombre();
-		File shapeFile =  FileHelper.getNewShapeFile(nombre);
-
-		ExportLaborMapTask ehTask = new ExportLaborMapTask(laborToExport,shapeFile);
-		ehTask.installProgressBar(progressBox);
-
-		ehTask.setOnSucceeded(handler -> {
-			playSound();
-			ehTask.uninstallProgressBar();
-		});
-		executorPool.execute(ehTask);
-	}
-	
-	/**
-	 * metodo que toma una labor y muestra una tabla con los campos de la labor
-	 * @param labor
-	 */
-	private void doShowDataTable(Labor<?> labor) {		   
-		SmartTableView.showLaborTable(labor);
-	}
 
 	public void doSnapshot(){
 		SnapshotParameters params = new SnapshotParameters();

@@ -154,7 +154,7 @@ public class ConfigGUI extends AbstractGUIController{
 		final Menu menuHerramientas = new Menu(Messages.getString("JFXMain.herramientas")); 		
 		addMenuItem(Messages.getString("JFXMain.distancia"),(a)->main.poligonoGUIController.doMedirDistancia(),menuHerramientas); 
 		addMenuItem(Messages.getString("JFXMain.superficie"),(a)->main.poligonoGUIController.doCrearPoligono(),menuHerramientas); 
-		addMenuItem(Messages.getString("JFXMain.unirShapes"),(a)->main.doJuntarShapefiles(),menuHerramientas); 
+		addMenuItem(Messages.getString("JFXMain.unirShapes"),(a)->main.genericGUIController.doJuntarShapefiles(),menuHerramientas); 
 		addMenuItem(Messages.getString("JFXMain.rentabilidad"),(a)->doProcessMargin(),menuHerramientas); 
 		addMenuItem(Messages.getString("JFXMain.balanceNutrientes"),(a)->main.sueloGUIController.doProcesarBalanceNutrientes(),menuHerramientas); 
 		addMenuItem(Messages.getString("JFXMain.generarOrdenCompra"),(a)->doGenerarOrdenDeCompra(),menuHerramientas); 
