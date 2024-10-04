@@ -2,6 +2,6 @@
 /build
 #ignora los archivos compilados de java
 *.class
-
+.classpath
 #ignora los logs
 *.log
