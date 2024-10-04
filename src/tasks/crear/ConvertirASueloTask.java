@@ -106,6 +106,18 @@ public class ConvertirASueloTask extends ProcessMapTask<SueloItem,Suelo > {
 				if(ppmN!=null)si.setPpmNO3(ppmN.doubleValue());
 				if(ppmS!=null)si.setPpmS(ppmS.doubleValue());
 				if(ppmK!=null)si.setPpmK(ppmK.doubleValue());
+				
+				si.setPpmCa(props.get(SueloItem.Calcio));
+				si.setPpmMg(props.get(SueloItem.Magnecio));
+				si.setPpmB(props.get(SueloItem.Boro));
+				si.setPpmCl(props.get(SueloItem.Cloro));
+				si.setPpmCo(props.get(SueloItem.Cobalto));
+				si.setPpmCu(props.get(SueloItem.Cobre));
+				si.setPpmFe(props.get(SueloItem.Hierro));
+				si.setPpmMn(props.get(SueloItem.Manganeso));
+				si.setPpmMo(props.get(SueloItem.Molibdeno));
+				si.setPpmZn(props.get(SueloItem.Zinc));	
+				
 				if(ppmMO!=null)si.setPorcMO(ppmMO.doubleValue());
 				if(elevacion!=null)si.setElevacion(elevacion.doubleValue());
 				labor.setPropiedadesLabor(si);
