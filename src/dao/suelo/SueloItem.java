@@ -106,6 +106,17 @@ public class SueloItem extends LaborItem { //suelo item no es labor item. le sob
 				getPpmK(),
 				getPpmS(),
 				
+				getPpmCa(),
+				getPpmMg(),
+				getPpmB(),
+				getPpmCl(),
+				getPpmCo(),
+				getPpmCu(),
+				getPpmFe(),
+				getPpmMn(),
+				getPpmMo(),
+				getPpmZn(),	
+				
 				getPorcMO(),
 				getDensAp(),
 				

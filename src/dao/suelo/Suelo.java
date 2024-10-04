@@ -28,6 +28,7 @@ import utils.ProyectionConstants;
 //@Entity
 public class Suelo extends Labor<SueloItem>{
 	
+	private static final String DOUBLE_TYPE = ":Double,";
 	//utilizando una densidad aparente promedio para todos los sitios de 1,3. 
 	//los nombres de las columnas estandar
 	public static final String COLUMNA_N = "PPM_N";
@@ -90,21 +91,32 @@ public class Suelo extends Labor<SueloItem>{
 
 	@Override
 	public String getTypeDescriptors() {
-		String type = Suelo.COLUMNA_N + ":Double,"
-				+ Suelo.COLUMNA_P + ":Double,"
-				+ Suelo.COLUMNA_K + ":Double,"
-				+ Suelo.COLUMNA_S + ":Double,"
+		String type = Suelo.COLUMNA_N + DOUBLE_TYPE
+				+ Suelo.COLUMNA_P + DOUBLE_TYPE
+				+ Suelo.COLUMNA_K + DOUBLE_TYPE
+				+ Suelo.COLUMNA_S + DOUBLE_TYPE
 				
-				+ Suelo.COLUMNA_MO + ":Double,"		
-				+ Suelo.COLUMNA_DENSIDAD + ":Double,"
+				+ SueloItem.Calcio.replace(" ","_") + DOUBLE_TYPE
+				+ SueloItem.Magnecio.replace(" ","_") + DOUBLE_TYPE
+				+ SueloItem.Boro.replace(" ","_") + DOUBLE_TYPE
+				+ SueloItem.Cloro.replace(" ","_") + DOUBLE_TYPE
+				+ SueloItem.Cobalto.replace(" ","_") + DOUBLE_TYPE
+				+ SueloItem.Cobre.replace(" ","_") + DOUBLE_TYPE
+				+ SueloItem.Hierro.replace(" ","_") + DOUBLE_TYPE
+				+ SueloItem.Manganeso.replace(" ","_") + DOUBLE_TYPE
+				+ SueloItem.Molibdeno.replace(" ","_") + DOUBLE_TYPE
+				+ SueloItem.Zinc.replace(" ","_") + DOUBLE_TYPE
 				
-				+ Suelo.COLUMNA_PROF_NAPA + ":Double,"
-				+ Suelo.COLUMNA_AGUA_PERFIL + ":Double,"
+				+ Suelo.COLUMNA_MO + DOUBLE_TYPE		
+				+ Suelo.COLUMNA_DENSIDAD + DOUBLE_TYPE
+				
+				+ Suelo.COLUMNA_PROF_NAPA + DOUBLE_TYPE
+				+ Suelo.COLUMNA_AGUA_PERFIL + DOUBLE_TYPE
 		
 				+ Suelo.COLUMNA_TEXTURA + ":String,"//getTextura(),
-				+ Suelo.COLUMNA_POROSIDAD + ":Double,"//	getPorosidad(),
-				+ Suelo.COLUMNA_CAPACIDAD_CAMPO + ":Double,";//	getPorcCC()
-
+				+ Suelo.COLUMNA_POROSIDAD + DOUBLE_TYPE
+				+ Suelo.COLUMNA_CAPACIDAD_CAMPO + DOUBLE_TYPE;//	getPorcCC()
+		System.out.println("cree suelo type "+type);
 		return type;
 	}
 
@@ -128,7 +140,16 @@ public class Suelo extends Labor<SueloItem>{
 		si.setPpmK(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_K)));
 		si.setPpmS(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_S)));
 		
-		//TODO agregar micronutrientes
+		si.setPpmCa(LaborItem.getDoubleFromObj(next.getAttribute(SueloItem.Calcio.replace(" ","_"))));//los attributes estan en null
+		si.setPpmMg(LaborItem.getDoubleFromObj(next.getAttribute(SueloItem.Magnecio.replace(" ","_"))));
+		si.setPpmB(LaborItem.getDoubleFromObj(next.getAttribute(SueloItem.Boro.replace(" ","_"))));
+		si.setPpmCl(LaborItem.getDoubleFromObj(next.getAttribute(SueloItem.Cloro.replace(" ","_"))));
+		si.setPpmCo(LaborItem.getDoubleFromObj(next.getAttribute(SueloItem.Cobalto.replace(" ","_"))));
+		si.setPpmCu(LaborItem.getDoubleFromObj(next.getAttribute(SueloItem.Cobre.replace(" ","_"))));
+		si.setPpmFe(LaborItem.getDoubleFromObj(next.getAttribute(SueloItem.Hierro.replace(" ","_"))));
+		si.setPpmMn(LaborItem.getDoubleFromObj(next.getAttribute(SueloItem.Manganeso.replace(" ","_"))));
+		si.setPpmMo(LaborItem.getDoubleFromObj(next.getAttribute(SueloItem.Molibdeno.replace(" ","_"))));
+		si.setPpmZn(LaborItem.getDoubleFromObj(next.getAttribute(SueloItem.Zinc.replace(" ","_"))));	
 		
 		si.setPorcMO(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_MO)));
 		si.setDensAp(LaborItem.getDoubleFromObj(next.getAttribute(COLUMNA_DENSIDAD)));
@@ -165,6 +186,17 @@ public class Suelo extends Labor<SueloItem>{
 		si.setPpmP(LaborItem.getDoubleFromObj(next.getAttribute(this.colPProperty.get())));
 		si.setPpmK(LaborItem.getDoubleFromObj(next.getAttribute(this.colKProperty.get())));
 		si.setPpmS(LaborItem.getDoubleFromObj(next.getAttribute(this.colSProperty.get())));
+		
+		si.setPpmCa(LaborItem.getDoubleFromObj(next.getAttribute(SueloItem.Calcio.replace(" ","_"))));
+		si.setPpmMg(LaborItem.getDoubleFromObj(next.getAttribute(SueloItem.Magnecio.replace(" ","_"))));
+		si.setPpmB(LaborItem.getDoubleFromObj(next.getAttribute(SueloItem.Boro.replace(" ","_"))));
+		si.setPpmCl(LaborItem.getDoubleFromObj(next.getAttribute(SueloItem.Cloro.replace(" ","_"))));
+		si.setPpmCo(LaborItem.getDoubleFromObj(next.getAttribute(SueloItem.Cobalto.replace(" ","_"))));
+		si.setPpmCu(LaborItem.getDoubleFromObj(next.getAttribute(SueloItem.Cobre.replace(" ","_"))));
+		si.setPpmFe(LaborItem.getDoubleFromObj(next.getAttribute(SueloItem.Hierro.replace(" ","_"))));
+		si.setPpmMn(LaborItem.getDoubleFromObj(next.getAttribute(SueloItem.Manganeso.replace(" ","_"))));
+		si.setPpmMo(LaborItem.getDoubleFromObj(next.getAttribute(SueloItem.Molibdeno.replace(" ","_"))));
+		si.setPpmZn(LaborItem.getDoubleFromObj(next.getAttribute(SueloItem.Zinc.replace(" ","_"))));	
 		
 		si.setPorcMO(LaborItem.getDoubleFromObj(next.getAttribute(this.colMOProperty.get())));
 		si.setDensAp(LaborItem.getDoubleFromObj(next.getAttribute(this.colDensidadProperty.get())));

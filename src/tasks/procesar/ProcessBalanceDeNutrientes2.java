@@ -411,8 +411,28 @@ public class ProcessBalanceDeNutrientes2 extends ProcessMapTask<SueloItem,Suelo>
 					addValueToMap(sueloItem.parametros,SueloParametro.Fosforo,-1*rinde * cultivo.getExtP() * area);
 					addValueToMap(sueloItem.parametros,SueloParametro.Potasio,-1*rinde * cultivo.getExtK() * area);
 					addValueToMap(sueloItem.parametros,SueloParametro.Azufre,-1*rinde * cultivo.getExtS() * area);
-
-					//TODO add extraccion de micronutrientes cosecha
+					try {
+					addValueToMap(sueloItem.parametros,SueloParametro.Calcio,-1*rinde * cultivo.getExtCa() * area);
+					}catch(Exception e ) {}try {
+					addValueToMap(sueloItem.parametros,SueloParametro.Magnecio,-1*rinde * cultivo.getExtMg() * area);
+					}catch(Exception e ) {}try {
+					addValueToMap(sueloItem.parametros,SueloParametro.Boro,-1*rinde * cultivo.getExtB() * area);
+					}catch(Exception e ) {}try {
+					addValueToMap(sueloItem.parametros,SueloParametro.Cloro,-1*rinde * cultivo.getExtCl() * area);
+					}catch(Exception e ) {}try {
+					addValueToMap(sueloItem.parametros,SueloParametro.Cobalto,-1*rinde * cultivo.getExtCo() * area);
+					}catch(Exception e ) {}try {
+					addValueToMap(sueloItem.parametros,SueloParametro.Cobre,-1*rinde * cultivo.getExtCu() * area);
+					}catch(Exception e ) {}try {
+					addValueToMap(sueloItem.parametros,SueloParametro.Hierro,-1*rinde * cultivo.getExtFe() * area);
+					}catch(Exception e ) {}try {
+					addValueToMap(sueloItem.parametros,SueloParametro.Manganeso,-1*rinde * cultivo.getExtMn() * area);
+					}catch(Exception e ) {}try {
+					addValueToMap(sueloItem.parametros,SueloParametro.Molibdeno,-1*rinde * cultivo.getExtMo() * area);
+					}catch(Exception e ) {}try {
+					addValueToMap(sueloItem.parametros,SueloParametro.Zinc,-1*rinde * cultivo.getExtZn() * area);
+					}catch(Exception e ) {}				
+					
 					addValueToMap(sueloItem.parametros,SueloParametro.MateriaOrganica,rinde * cultivo.getAporteMO() * area);	
 					//if(item.getElevacion()>1) {
 					addValueToMap(sueloItem.parametros,SueloParametro.Elevacion,cosechaItem.getElevacion() * area);				

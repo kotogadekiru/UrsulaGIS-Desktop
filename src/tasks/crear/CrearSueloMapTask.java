@@ -65,27 +65,40 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		rec.getMuestras().stream().forEach(m->{
 			Map<String, Double> props = m.getProps();
 			SueloItem si = new SueloItem();
-			Number ppmP = props.get(SueloItem.PPM_FOSFORO);
-			Number ppmN = props.get(SueloItem.PPM_N);
-			Number pcMO = props.get(SueloItem.PC_MO);
-			Number ppmS = props.get(SueloItem.PPM_ASUFRE);
-			Number ppmK = props.get(SueloItem.PPM_POTASIO);
+			Double ppmP = props.get(SueloItem.PPM_FOSFORO);
+			Double ppmN = props.get(SueloItem.PPM_N);
+			Double pcMO = props.get(SueloItem.PC_MO);
+			Double ppmS = props.get(SueloItem.PPM_ASUFRE);
+			Double ppmK = props.get(SueloItem.PPM_POTASIO);			
+			
 
-			Number aguaPerf = props.get(SueloItem.AGUA_PERFIL);
-			Number profNapa = props.get(SueloItem.PROF_NAPA);
+			Double aguaPerf = props.get(SueloItem.AGUA_PERFIL);
+			Double profNapa = props.get(SueloItem.PROF_NAPA);
 
-			Number densidad = props.get(SueloItem.DENSIDAD);
-			Number elevacion = props.get(SueloItem.ELEVACION);
+			Double densidad = props.get(SueloItem.DENSIDAD);
+			Double elevacion = props.get(SueloItem.ELEVACION);
 
 			//agua perfil
 			//prof napa
 
-			si.setDensAp(densidad.doubleValue());
-			si.setPpmP(ppmP.doubleValue());
-			si.setPpmNO3(ppmN.doubleValue());
-			si.setPorcMO(pcMO.doubleValue());
-			si.setPpmS(ppmS.doubleValue());
-			si.setPpmK(ppmK.doubleValue());
+			si.setDensAp(densidad);
+			si.setPpmP(ppmP);
+			si.setPpmNO3(ppmN);
+			si.setPorcMO(pcMO);
+			si.setPpmS(ppmS);
+			si.setPpmK(ppmK);
+			
+			si.setPpmCa(props.get(SueloItem.Calcio));
+			si.setPpmMg(props.get(SueloItem.Magnecio));
+			si.setPpmB(props.get(SueloItem.Boro));
+			si.setPpmCl(props.get(SueloItem.Cloro));
+			si.setPpmCo(props.get(SueloItem.Cobalto));
+			si.setPpmCu(props.get(SueloItem.Cobre));
+			si.setPpmFe(props.get(SueloItem.Hierro));
+			si.setPpmMn(props.get(SueloItem.Manganeso));
+			si.setPpmMo(props.get(SueloItem.Molibdeno));
+			si.setPpmZn(props.get(SueloItem.Zinc));	
+			
 
 			if(elevacion.doubleValue()>10) {
 				si.setElevacion(elevacion.doubleValue());		
@@ -112,7 +125,6 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 
 	public static String buildTooltipText(SueloItem si,double area) {
 		NumberFormat df = Messages.getNumberFormat();//new DecimalFormat("#,###.##");//$NON-NLS-2$
-		df.setMaximumFractionDigits(2);
 
 		StringBuilder sb = new StringBuilder();
 		//Fosforo		
@@ -132,18 +144,22 @@ public class CrearSueloMapTask extends ProcessMapTask<SueloItem,Suelo> {
 		sb.append(df.format(si.getPpmS()));
 		sb.append(" Ppm S 0-20cm \n");
 
-		df.setMaximumFractionDigits(0);
+		
 		List<SueloParametro> microNutrientes = Nutriente.getMicroNutrientes();
 		microNutrientes.forEach((sp)->{
 			Nutriente n = Nutriente.getNutrientesDefault().get(sp);
 			Double ppm = Suelo.getPpm(sp, si);
-			if(ppm != null ) {
-				sb.append(PropertyHelper.formatDouble(ppm));
-				String prof = df.format( n.getProfundidad()*100);				
+			if(ppm != null ) {				
+				sb.append(df.format(ppm));
+				df.setMaximumFractionDigits(0);
+				Double profundidad = n.getProfundidad()*100;				
+				String prof = df.format(profundidad);
+				df.setMaximumFractionDigits(2);
+				df.setMinimumFractionDigits(2);
 				sb.append(" Ppm "+n.getSimbolo()+" 0-"+prof+"cm \n");
 			}
 		});
-		df.setMaximumFractionDigits(2);
+		
 
 
 		sb.append(df.format(si.getPorcMO()));

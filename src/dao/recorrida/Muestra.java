@@ -83,6 +83,18 @@ public class Muestra {
 		map.put(SueloItem.PPM_N, "");
 		map.put(SueloItem.PPM_ASUFRE, "");
 		map.put(SueloItem.PPM_POTASIO, "");
+		
+		map.put(SueloItem.Calcio, "");
+		map.put(SueloItem.Magnecio, "");
+		map.put(SueloItem.Boro, "");
+		map.put(SueloItem.Cloro, "");
+		map.put(SueloItem.Cobalto, "");
+		map.put(SueloItem.Cobre, "");
+		map.put(SueloItem.Hierro, "");
+		map.put(SueloItem.Manganeso, "");
+		map.put(SueloItem.Molibdeno, "");
+		map.put(SueloItem.Zinc, "");
+		
 		map.put(SueloItem.PC_MO, "");
 		map.put(SueloItem.PROF_NAPA, "");
 		map.put(SueloItem.AGUA_PERFIL, "");

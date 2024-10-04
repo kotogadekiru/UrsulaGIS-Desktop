@@ -48,7 +48,16 @@ public class Cultivo implements Comparable<Cultivo>{
 	private Double absP=new Double(0);
 	private Double absK=new Double(0);
 	private Double absS=new Double(0);
-	private Double absCa, absMg, absB, absCl, absCo, absCu, absFe, absMn, absMo, absZn;
+	private Double absCa=new Double(0), 
+			absMg=new Double(0), 
+			absB=new Double(0), 
+			absCl=new Double(0),
+			absCo=new Double(0),
+			absCu=new Double(0),
+			absFe=new Double(0),
+			absMn=new Double(0),
+			absMo=new Double(0),
+			absZn=new Double(0);
 	
 	
 	//mm absorvidos de agua por tn de grano producido
@@ -60,7 +69,16 @@ public class Cultivo implements Comparable<Cultivo>{
 	private Double extP=new Double(0);
 	private Double extK=new Double(0);
 	private Double extS=new Double(0);
-	private Double extCa, extMg, extB, extCl, extCo, extCu, extFe, extMn, extMo, extZn;
+	private Double extCa=new Double(0),
+			extMg=new Double(0), 
+			extB=new Double(0),
+			extCl=new Double(0), 
+			extCo=new Double(0), 
+			extCu=new Double(0), 
+			extFe=new Double(0), 
+			extMn=new Double(0),
+			extMo=new Double(0),
+			extZn=new Double(0);
 	
 	private Double rindeEsperado=new Double(0);
 	private Double ndviRindeCero=new Double(0);
