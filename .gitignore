@@ -5,3 +5,5 @@
 .classpath
 #ignora los logs
 *.log
+.settings/*
+target/
