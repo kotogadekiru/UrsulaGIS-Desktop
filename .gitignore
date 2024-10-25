@@ -5,3 +5,4 @@
 
 #ignora los logs
 *.log
+/target/
