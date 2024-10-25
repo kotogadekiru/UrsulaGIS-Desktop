@@ -75,6 +75,7 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 		}
 		labor.setLayer(new LaborLayer());
 		labor.setEntreSurco(siembra.getEntreSurco());
+		System.out.println("asignando entresurco a siembra fert con valor "+siembra.getEntreSurco()+" queda en "+labor.getEntreSurco());
 		labor.colAmount.set(SiembraLabor.COLUMNA_KG_SEMILLA);
 		labor.setClasificador(siembra.getClasificador().clone());
 
@@ -119,7 +120,8 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 					featureIterator.close();
 				},	(env1, env2) -> env1.addAll(env2));
 
-		Set<Geometry> partes = GeometryHelper.obtenerIntersecciones(geometriasActivas);
+		Set<Geometry> partes = GeometryHelper.obtenerIntersecciones(geometriasActivas);//quito los duplicados
+		//quito los nulls y las multypoligons
 		List<Polygon> grillaCover =  partes.parallelStream().collect(
 				()->new ArrayList<Polygon>(),
 				(activas, poly) ->{					
@@ -144,18 +146,21 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 						LaborItem fertilizacionItem = construirFertilizacionItem(fertilizacionesPoly,poly);						
 
 						Double fertHa = fertilizacionItem.getAmount();
-
-						int claseFert = fertilizacion.clasificador.getCategoryFor(fertHa) ;
-						int claseSiembra = siembra.clasificador.getCategoryFor(siembraItem.getDosisHa());
-						Integer index = clasesSiembra*claseFert + claseSiembra;
-
-						List<SiembraItem> catFeatures = map.get(index);
-						if(catFeatures==null)catFeatures=new ArrayList<SiembraItem>();
+					
 						if(esFertLinea) {
 							siembraItem.setDosisFertLinea(fertHa);
 						}else {
 							siembraItem.setDosisFertCostado(fertHa);
 						}
+						
+						int claseFert = fertilizacion.clasificador.getCategoryFor(fertHa) ;
+						int claseSiembra = siembra.clasificador.getCategoryFor(siembraItem.getDosisHa());
+					
+						Integer index = clasesSiembra*claseFert + claseSiembra;
+						System.out.println("clase "+claseSiembra+" valor"+siembraItem.getDosisHa()+" index "+index);//TODO remove syso
+					
+						List<SiembraItem> catFeatures = map.get(index);
+						if(catFeatures==null)catFeatures=new ArrayList<SiembraItem>();
 						catFeatures.add(siembraItem);
 
 						map.put(index, catFeatures);
@@ -234,11 +239,12 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 		double fertCpoly=0;
 
 		double areaTotal=poly.getArea();
+		double areaIntersection=0.0;
 		for(SiembraItem li : siembrasPoly){
 			Geometry inter = GeometryHelper.getIntersection(li.getGeometry(), poly);				
 			if(inter != null) {
 				double intersection = inter.getArea();					
-
+				areaIntersection+=intersection;
 				SiembraItem si = (SiembraItem)li;
 				//					System.out.println("agregando al promedio s="+si.getDosisHa()
 				//					+" costado="+si.getDosisFertCostado()
@@ -248,13 +254,13 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 				fertCpoly+=si.getDosisFertCostado()*intersection;
 
 			} else {
-				System.err.println("la interseccion devuelve null");
+				//System.err.println("la interseccion devuelve null");
 			}
 		}
-		if(areaTotal>0 || semillasPoly<0) {
-			semillasPoly=semillasPoly/areaTotal;
-			fertLPoly=fertLPoly/areaTotal;
-			fertCpoly=fertCpoly/areaTotal;
+		if(areaIntersection>0 || semillasPoly<0) {
+			semillasPoly=semillasPoly/areaIntersection;
+			fertLPoly=fertLPoly/areaIntersection;
+			fertCpoly=fertCpoly/areaIntersection;
 		} 
 		//			else {
 		//				semillasPoly=-1;
@@ -292,7 +298,7 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 				//				+" dosis="+fi.getDosistHa());				
 				fertLPoly+=fi.getDosistHa()*intersection;
 			} else {
-				System.err.println("la interseccion devuelve null");
+				//System.err.println("la interseccion devuelve null");
 			}
 		}	
 
