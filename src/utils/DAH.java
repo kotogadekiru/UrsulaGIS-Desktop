@@ -51,7 +51,7 @@ import dao.ordenCompra.Producto;
 import dao.ordenCompra.ProductoLabor;
 import dao.recorrida.Recorrida;
 import gui.JFXMain;
-import sun.security.krb5.Config;
+
 
 public class DAH {
 	private static final String NO = "NO";
