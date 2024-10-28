@@ -87,18 +87,22 @@ public class GenerarOrdenCompraTask  extends Task<OrdenCompra>{
 //			fertLTotal = l.getCantidadFertilizanteLinea();
 			while(it.hasNext()){
 				SimpleFeature f = it.next();
-				Double rinde = LaborItem.getDoubleFromObj(f.getAttribute(l.colAmount.get()));//labor.colAmount.get()
-				Double fertL = LaborItem.getDoubleFromObj(f.getAttribute(l.COLUMNA_DOSIS_LINEA));
-				Double fertC = LaborItem.getDoubleFromObj(f.getAttribute(l.COLUMNA_DOSIS_COSTADO));
+				Double kgHa = LaborItem.getDoubleFromObj(f.getAttribute(l.colAmount.get()));//labor.colAmount.get()
+				Double fertL = LaborItem.getDoubleFromObj(f.getAttribute(SiembraLabor.COLUMNA_DOSIS_LINEA));
+				Double fertC = LaborItem.getDoubleFromObj(f.getAttribute(SiembraLabor.COLUMNA_DOSIS_COSTADO));
 				Geometry geometry = (Geometry) f.getDefaultGeometry();
 				Double area = geometry.getArea() * ProyectionConstants.A_HAS();		
 				fertLTotal+=fertL*area;
 				fertCTotal+=fertC*area;
-				insumoTotal+=rinde*area;
+				insumoTotal+=kgHa*area;
 				laborTotal+=area;
 			}
 			it.close();			
+			if(kgBolsa==0) {
+				putItem(prodCantidadMap, producto, insumoTotal,l.getPrecioInsumo());
+			}else {
 			putItem(prodCantidadMap, producto, insumoTotal/kgBolsa,l.getPrecioInsumo());
+			}
 			putItem(prodCantidadMap, l.getProductoLabor(), laborTotal,l.getPrecioLabor());
 			
 			putItem(prodCantidadMap, l.getFertLinea(), fertLTotal,0.0);
