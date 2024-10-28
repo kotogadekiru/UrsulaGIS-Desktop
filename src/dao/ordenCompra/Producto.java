@@ -43,4 +43,5 @@ public abstract class Producto {
 		if(p==null)return -1;		
 		return this.getNombre().compareTo(p.getNombre());	
 	}
+
 }

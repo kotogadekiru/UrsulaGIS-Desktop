@@ -65,6 +65,7 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 
 	private void initConfig() {
 		this.productoLabor=DAH.getProductoLabor(ProductoLabor.LABOR_DE_FERTILIZACION);
+		
 		List<String> availableColums = this.getAvailableColumns();		
 		Configuracion properties = getConfigLabor().getConfigProperties();
 
