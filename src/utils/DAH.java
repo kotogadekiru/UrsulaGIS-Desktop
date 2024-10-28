@@ -242,6 +242,10 @@ public class DAH {
 				if(em.getTransaction().isActive()) {
 					em.getTransaction().rollback();
 				}
+			}catch(javax.persistence.RollbackException rbe){
+				System.err.println("error al hacer rollback de la transaccion activa");
+			}
+			try{
 				em.getTransaction().begin();		
 				if(em.contains(entidad)) {
 					em.merge(entidad);
@@ -252,8 +256,9 @@ public class DAH {
 				}
 				em.getTransaction().commit();
 			}catch(javax.persistence.RollbackException rbe){
+				rbe.printStackTrace();
 				//Exception Description: No transaction is currently active
-				em.getTransaction().rollback();
+				//em.getTransaction().rollback();
 //				em.getTransaction().begin();		
 //				em.merge(entidad);
 //				em.getTransaction().commit();			
@@ -306,11 +311,11 @@ public class DAH {
 	 * @return el producto existente en la base de datos o crea uno nuevo con ese nombre y lo devuelve
 	 */
 	public static ProductoLabor getProductoLabor(String laborName) {	
-		Number count = (Number)em().createNamedQuery(ProductoLabor.COUNT_ALL).getSingleResult();
-		//System.out.print("hay "+count+" productos en la base de datos");
-		if(count.intValue() ==0) {
-			List<ProductoLabor> results = getAllProductosLabores(DAH.em());//getAll crea los cultivos default
-		}
+//		Number count = (Number)em().createNamedQuery(ProductoLabor.COUNT_ALL).getSingleResult();
+//		//System.out.print("hay "+count+" productos en la base de datos");
+//		if(count.intValue() == 0) {
+//			List<ProductoLabor> results = getAllProductosLabores(DAH.em());//getAll crea los cultivos default
+//		}
 
 		TypedQuery<ProductoLabor> query = em().createNamedQuery(
 				ProductoLabor.FIND_NAME, ProductoLabor.class);
@@ -319,11 +324,10 @@ public class DAH {
 		ProductoLabor result = null;
 		if(query.getResultList().size()>0){
 			result = query.getResultList().get(0);
-		}  
-		//		else {
-		//			result = new Cultivo(cultivoName);
-		//			DAH.save(result);
-		//		}
+		} else {
+			result = new ProductoLabor(laborName);
+			DAH.save(result);
+		}
 		return result;
 	}
 
