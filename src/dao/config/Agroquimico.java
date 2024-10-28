@@ -10,10 +10,15 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
 import dao.ordenCompra.Producto;
+import dao.ordenCompra.ProductoLabor;
 import lombok.AccessLevel;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
+@Data
+@EqualsAndHashCode(callSuper=true)
 @Getter
 @Setter(value = AccessLevel.PUBLIC)
 @Entity @Access(AccessType.FIELD)

@@ -5,8 +5,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
@@ -15,7 +13,7 @@ import dao.suelo.Suelo.SueloParametro;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 @Data
-@EqualsAndHashCode(callSuper=false)
+@EqualsAndHashCode(callSuper=true)
 @Entity
 @NamedQueries({
 	@NamedQuery(name=Fertilizante.FIND_ALL, query="SELECT o FROM Fertilizante o ORDER BY lower(o.nombre)") ,

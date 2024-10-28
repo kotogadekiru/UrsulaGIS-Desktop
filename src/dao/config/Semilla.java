@@ -11,11 +11,14 @@ import javax.persistence.NamedQuery;
 
 import dao.ordenCompra.Producto;
 import lombok.AccessLevel;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import utils.CultivoHelper;
 
-//@Data
+@Data
+@EqualsAndHashCode(callSuper=true)
 @Getter
 @Setter(value = AccessLevel.PUBLIC)
 @Entity //@Access(AccessType.PROPERTY)

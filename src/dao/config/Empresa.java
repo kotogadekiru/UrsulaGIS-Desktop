@@ -1,18 +1,15 @@
 package dao.config;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 @Data
+@EqualsAndHashCode(callSuper=false)
 @Entity
 @NamedQueries({
 	@NamedQuery(name=Empresa.FIND_ALL, query="SELECT o FROM Empresa o ORDER BY lower(o.nombre)"),

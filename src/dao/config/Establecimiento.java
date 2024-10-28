@@ -14,7 +14,9 @@ import javax.persistence.OneToMany;
 
 import dao.Poligono;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 @Data
+@EqualsAndHashCode(callSuper=false)
 @Entity
 @NamedQueries({
 	@NamedQuery(name=Establecimiento.FIND_ALL, query="SELECT o FROM Establecimiento o ORDER BY lower(o.nombre)"),
