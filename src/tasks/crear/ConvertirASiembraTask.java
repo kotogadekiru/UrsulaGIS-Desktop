@@ -150,8 +150,11 @@ public class ConvertirASiembraTask extends ProcessMapTask<SiembraItem,SiembraLab
 		if(labor.getEntreSurco()>0) {
 			Double seedsSup= siembraFeature.getDosisML()/labor.getEntreSurco();
 			if(seedsSup<100) {//plantas por ha
+				int digits =df.getMaximumFractionDigits();
+				df.setMaximumFractionDigits(2);
 				tooltipText=tooltipText.concat(df.format(seedsSup*ProyectionConstants.METROS2_POR_HA) 
 						+ " s/"+ Messages.getString("ProcessSiembraMapTask.12")); // "Has\n"
+				df.setMaximumFractionDigits(digits);
 
 			}else {
 				tooltipText=tooltipText.concat(df.format(seedsSup) 
