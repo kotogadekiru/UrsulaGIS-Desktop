@@ -414,7 +414,10 @@ public class ProcessHarvestMapTask extends ProcessMapTask<CosechaItem,CosechaLab
 
 					itemsCategoria.add(ci);
 					SimpleFeature f = ci.getFeature(labor.getFeatureBuilder());
-					newOutcollection.add(f);
+					boolean ret = newOutcollection.add(f);
+					if(!ret) {
+						System.err.println("no se pudo agregar la feature id "+ci.getId()+" en ProcessHarvestMapTask.resumirGeometrias" );
+					}
 				}
 			}	
 

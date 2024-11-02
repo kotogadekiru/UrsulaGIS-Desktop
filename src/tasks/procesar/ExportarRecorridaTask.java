@@ -92,7 +92,10 @@ public class ExportarRecorridaTask extends ProgresibleTask<File>{
 		for(int i=0;i<items.size();i++) {//Muestra m:items) {//(it.hasNext()){
 			
 			SimpleFeature pointFeature = constructPointFeature(items, map, fb, i);
-			exportFeatureCollection.add(pointFeature);
+			boolean ret = exportFeatureCollection.add(pointFeature);
+			if(!ret) {
+				System.err.println("no se pudo agregar feature "+i+" en ExportarRecorridaTask");
+			}
 			
 			//SimpleFeature lineFeature = constructLineFeature(items, map, fb, i);
 			//exportFeatureCollection.add(lineFeature);

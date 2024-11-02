@@ -161,7 +161,7 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 				if(partes>50) {
 					System.err.println("error tiene mas de 50 partes!!");
 				}
-				fb.add(p);
+//				fb.add(p);
 //				availableColums.add(SiembraLabor.COLUMNA_SEM_10METROS);//("Sem10ml");
 //				availableColums.add(SiembraLabor.COLUMNA_DOSIS_SEMILLA);//("kgSemHa");
 //				availableColums.add(SiembraLabor.COLUMNA_MILES_SEM_HA);//("MilSemHa");
@@ -178,11 +178,14 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 				Double costado = fi.getDosisFertCostado();
 
 				//System.out.println("presc Dosis ="+semilla); //$NON-NLS-1$
-				fb.add(linea);
-				fb.add(costado);
-				fb.add(semilla);
+				
+				
+//				fb.add(linea);
+//				fb.add(costado);
+//				fb.add(semilla);
 				id++;
-				SimpleFeature exportFeature = fb.buildFeature(id.toString());//aca pierdo una geometria porque dublico el id
+				//SimpleFeature exportFeature = fb.buildFeature(id.toString());//aca pierdo una geometria porque dublico el id
+				SimpleFeature exportFeature = fb.buildFeature(id.toString(), new Object[]{p,linea,costado,semilla});
 				exportFeatureCollection.add(exportFeature);
 			}
 		}

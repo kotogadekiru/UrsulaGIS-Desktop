@@ -292,7 +292,10 @@ public class LaborDataStore<E> {
 	public static void changeFeature(SimpleFeature old, LaborItem ci, Labor<? extends LaborItem> labor) {
 		checkLock(labor);
 		labor.outCollection.remove(old);
-		labor.outCollection.add(ci.getFeature(labor.getFeatureBuilder()));
+		boolean ret = labor.outCollection.add(ci.getFeature(labor.getFeatureBuilder()));
+		if(!ret) {
+			System.err.println("no se pudo agregar la feature id "+ci.getId()+" en LaborDataStore.changeFeatyre" );
+		}
 		locked.remove(labor);
 	}
 }

@@ -192,7 +192,12 @@ public class JuntarShapefilesTask {
 							},
 							(map1, map2) -> map1.putAll(map2));
 
-			byPolygon.values().forEach(o->outCollection.add(o));
+			byPolygon.values().forEach(o->{
+				boolean ret = outCollection.add(o);
+				if(!ret) {
+					System.err.println("no se pudo ingresar el feature "+o.getID());
+				}
+			});
 
 			//todo grabar el nuevo shapefile del nuevo tipo en el directorio ingresado
 			

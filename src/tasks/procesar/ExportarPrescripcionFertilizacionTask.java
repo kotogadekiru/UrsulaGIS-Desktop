@@ -117,6 +117,7 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 		SimpleFeatureBuilder fb = new SimpleFeatureBuilder(type);//ok
 		super.updateTitle("exportando");
 		updateProgress(0, items.size());
+		Integer id = 0;
 		for(LaborItem i:items) {//(it.hasNext()){
 			FertilizacionItem fi=(FertilizacionItem) i;
 			Geometry itemGeometry=fi.getGeometry();
@@ -131,17 +132,21 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 				//p=(Polygon)GeometryHelper.removeSmallTriangles(p, (0.00005)/ProyectionConstants.A_HAS());	
 				p=(Polygon)GeometryHelper.douglassPeuckerSimplify(p);
 				
-				fb.add(p);
+			//	fb.add(p);
 				Double dosisHa = fi.getDosistHa();
 
 			
-				fb.add(dosisHa.longValue());//fertL
-				fb.add(0);//fertC
-				fb.add(0);//semillas10m
+			//	fb.add(dosisHa.longValue());//fertL
+			//	fb.add(0);//fertC
+			//	fb.add(0);//semillas10m
 				
-
-				SimpleFeature exportFeature = fb.buildFeature(fi.getId().toString());
-				exportFeatureCollection.add(exportFeature);
+				id++;
+				//SimpleFeature exportFeature = fb.buildFeature(fi.getId().toString());				
+				SimpleFeature exportFeature = fb.buildFeature(id.toString(), new Object[]{p,dosisHa,0,0});
+				boolean ret = exportFeatureCollection.add(exportFeature);
+				if(!ret) {
+					System.err.println("no se pudo ingresar la feature "+id.toString()+" ");
+				}
 			}
 			updateProgress(exportFeatureCollection.size(), items.size());
 		}
