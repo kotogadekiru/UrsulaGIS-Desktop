@@ -191,6 +191,7 @@ public class SiembraGUIController {
 		boolean esFertLinea=true;
 		Alert selectTipoFert = new Alert(Alert.AlertType.CONFIRMATION);
 		selectTipoFert.initOwner(JFXMain.stage);
+		//TODO traducir
 		selectTipoFert.setTitle("Seleccione tipo fertilizacion");
 		selectTipoFert.setContentText("Seleccione OK si es fertilizacion en la linea");
 		Optional<ButtonType> esFertLineaOP = selectTipoFert.showAndWait();
