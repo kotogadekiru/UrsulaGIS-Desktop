@@ -996,7 +996,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	/**
 	 * metodo usado por las capas de siembra fertilizacion, pulverizacion y suelo para obtener los poligonos
 	 * @param dao
-	 * @return
+	 * @return una lista de Polygon simples
 	 */
 	protected List<Polygon> getPolygons(FC dao){
 		return PolygonValidator.geometryToFlatPolygons(dao.getGeometry());
@@ -1008,7 +1008,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 //			MultiPolygon mp = (MultiPolygon) geometry;
 //			for (int i = 0; i < mp.getNumGeometries(); i++) {
 //				Geometry g = mp.getGeometryN(i);
-//				if(g instanceof Polygon){
+//				if(g instanceof Polygon){//aca fallaba porque la geometrias podia ser multipoligon
 //					polygons.add((Polygon) g);
 //				}				
 //			}
