@@ -90,48 +90,62 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	protected void doProcess() throws IOException {
-		//	long init = System.currentTimeMillis();
-		// TODO 1 obtener el bounds general que cubre a todas las siembras y fertilizaciones
-		//ReferencedEnvelope unionEnvelope = siembra.outCollection.getBounds();
-		//unionEnvelope.expandToInclude(fertilizacion.outCollection.getBounds());
-		//double anchoGrilla = labor.getConfiguracion().getAnchoGrilla();
+		//	long init = System.currentTimeMillis();		
 
-		List<Labor<?>> labores = new LinkedList<Labor<?>>();
-		labores.add(siembra);
-		labores.add(fertilizacion);
-
-
-		// 2 generar una grilla de ancho ="ancho" que cubra bounds
-		//TODO no construir una grilla, explotar todos los poligonos de las siembras y cosechas como en balance de nutrientes
-		//		List<Polygon>  grilla = construirGrilla(unionEnvelope, anchoGrilla);
-		//System.out.println("creando una grilla con "+grilla.size()+" elementos");
-		// 3 recorrer cada pixel de la grilla promediando los valores y generando los nuevos items de la cosecha
+//		List<Labor<?>> labores = new LinkedList<Labor<?>>();
+//		labores.add(siembra);
+//		labores.add(fertilizacion);
 
 		//obtener una lista con todas las geometrias de las labores
-		List<Geometry> geometriasActivas = labores.parallelStream().collect(
-				()->new ArrayList<Geometry>(),
-				(activas, labor) ->{		
-					//List<LaborItem> features = (List<LaborItem>) labor.outStoreQuery(unionEnvelope);					 
-					SimpleFeatureIterator featureIterator = labor.getOutCollection().features();
-					while(featureIterator.hasNext()) {
-						SimpleFeature next = featureIterator.next();
-						activas.add((Geometry)next.getDefaultGeometry());
-					}
-					featureIterator.close();
-				},	(env1, env2) -> env1.addAll(env2));
+//		List<Geometry> geometriasActivas = labores.parallelStream().collect(
+//				()->new ArrayList<Geometry>(),
+//				(activas, labor) ->{		
+//					//List<LaborItem> features = (List<LaborItem>) labor.outStoreQuery(unionEnvelope);					 
+//					SimpleFeatureIterator featureIterator = labor.getOutCollection().features();
+//					while(featureIterator.hasNext()) {
+//						SimpleFeature next = featureIterator.next();
+//						activas.add((Geometry)next.getDefaultGeometry());
+//					}
+//					featureIterator.close();
+//				},	(env1, env2) -> env1.addAll(env2));
 
-		Set<Geometry> partes = GeometryHelper.obtenerIntersecciones(geometriasActivas);//quito los duplicados
+		//FIXME partes pierde los bordes
+//		Set<Geometry> partes = GeometryHelper.obtenerIntersecciones(geometriasActivas);//quito los duplicados
+		
 		//quito los nulls y las multypoligons
-		List<Polygon> grillaCover =  partes.parallelStream().collect(
-				()->new ArrayList<Polygon>(),
-				(activas, poly) ->{					
-					if(poly!=null) {
-						activas.addAll(PolygonValidator.geometryToFlatPolygons(poly));
-					}
-				},	(env1, env2) -> env1.addAll(env2));
+//		List<Polygon> grillaCover1 =  partes.parallelStream().collect(
+//				()->new ArrayList<Polygon>(),
+//				(activas, poly) ->{					
+//					if(poly!=null) {
+//						activas.addAll(PolygonValidator.geometryToFlatPolygons(poly));
+//					}
+//				},	(env1, env2) -> env1.addAll(env2));
+		
+		// TODO 1 obtener el bounds general que cubre a todas las siembras y fertilizaciones
+		ReferencedEnvelope unionEnvelope = siembra.outCollection.getBounds();
+		unionEnvelope.expandToInclude(fertilizacion.outCollection.getBounds());
+		double anchoGrilla = labor.getConfiguracion().getAnchoGrilla();
+				// 2 generar una grilla de ancho ="ancho" que cubra bounds
+				//TODO no construir una grilla, explotar todos los poligonos de las siembras y cosechas como en balance de nutrientes
+		List<Polygon>  grillaCover = construirGrilla(unionEnvelope, anchoGrilla);
+				//System.out.println("creando una grilla con "+grilla.size()+" elementos");
+				// 3 recorrer cada pixel de la grilla promediando los valores y generando los nuevos items de la cosecha
+		Geometry contornoSiembra = GeometryHelper.extractContornoGeometry(siembra);
+		Geometry contornoFert = GeometryHelper.extractContornoGeometry(siembra);
 
+		
+		grillaCover =  grillaCover.parallelStream().collect(
+		()->new ArrayList<Polygon>(),
+		(activas, poly) ->{					
+			if(poly!=null) {
+				Geometry intSiembra = contornoSiembra.intersection(poly);
+				Geometry intFert = contornoFert.intersection(intSiembra);
+				activas.addAll(PolygonValidator.geometryToFlatPolygons(intFert));
+			}
+		},	(env1, env2) -> env1.addAll(env2));
+		
 		featureCount = grillaCover.size();
-
+		System.out.println("termine de crear la grilla con "+grillaCover.size()+" elementos");
 		int clasesSiembra = siembra.clasificador.getNumClasses();
 		//int clasesB = fertilizacion.clasificador.getNumClasses();
 		//claseAB = clasesA*claseB(r)+claseA(r)
@@ -139,10 +153,17 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 				() -> new  ConcurrentHashMap< Integer,List<SiembraItem>>(),
 				(map, poly) -> {
 					try{
+						//XXX podria ahorrarme estas querys si primero filtro los poligonos que no entran en el contorno
 						List siembrasPoly=this.siembra.cachedOutStoreQuery(poly.getEnvelopeInternal()); 
 						List fertilizacionesPoly=this.fertilizacion.cachedOutStoreQuery(poly.getEnvelopeInternal()); 
 
+						if(siembrasPoly.size()==0 && fertilizacionesPoly.size()==0) {
+							return;//salteo los poligonos que no tiene interseccion
+						} else {
+							//System.out.println("tengo siembras para poly");
+						}
 						SiembraItem siembraItem = construirSiembraItem(siembrasPoly,poly);     //geometry y amount
+						if(siembraItem == null )return;
 						LaborItem fertilizacionItem = construirFertilizacionItem(fertilizacionesPoly,poly);						
 
 						Double fertHa = fertilizacionItem.getAmount();
@@ -157,7 +178,7 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 						int claseSiembra = siembra.clasificador.getCategoryFor(siembraItem.getDosisHa());
 					
 						Integer index = clasesSiembra*claseFert + claseSiembra;
-						System.out.println("clase "+claseSiembra+" valor"+siembraItem.getDosisHa()+" index "+index);//TODO remove syso
+						//System.out.println("clase "+claseSiembra+" valor"+siembraItem.getDosisHa()+" index "+index);//TODO remove syso
 					
 						List<SiembraItem> catFeatures = map.get(index);
 						if(catFeatures==null)catFeatures=new ArrayList<SiembraItem>();
@@ -225,13 +246,13 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 
 	private SiembraItem construirSiembraItem(List<SiembraItem> siembrasPoly, Polygon poly) {
 		SiembraItem ret = new SiembraItem();//[4];
-		ret.setGeometry(poly);
+		
 		//			ret[FEAURE_POLYGON_INDEX]=poly;
 		//			ret[SIEMBRA_SEMILLAS_INDEX]=-1d;
 		//			ret[SIEMBRA_FERTL_INDEX]=-1d;
 		//			ret[SIEMBRA_FERTC_INDEX]=-1d;
 		if(poly==null || siembrasPoly==null || siembrasPoly.size()<1){
-			return ret;
+			return null;
 		}
 
 		double semillasPoly=0;
@@ -240,9 +261,11 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 
 		double areaTotal=poly.getArea();
 		double areaIntersection=0.0;
+		List<Geometry> intersecciones = new ArrayList<Geometry>();
 		for(SiembraItem li : siembrasPoly){
 			Geometry inter = GeometryHelper.getIntersection(li.getGeometry(), poly);				
 			if(inter != null) {
+				intersecciones.add(inter);
 				double intersection = inter.getArea();					
 				areaIntersection+=intersection;
 				SiembraItem si = (SiembraItem)li;
@@ -257,6 +280,11 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 				//System.err.println("la interseccion devuelve null");
 			}
 		}
+		Geometry union =GeometryHelper.unirGeometrias(intersecciones);
+//		if(union == null) {
+//			System.out.println("union es null");
+//		}
+		ret.setGeometry(union);
 		if(areaIntersection>0 || semillasPoly<0) {
 			semillasPoly=semillasPoly/areaIntersection;
 			fertLPoly=fertLPoly/areaIntersection;
@@ -394,6 +422,7 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 		double siembraProm=0,fertPromL = 0,fertPromC = 0;
 		List<Geometry> aUnir = new ArrayList<Geometry>();
 		for(SiembraItem f : cluster){			
+			if(f.getGeometry()==null)continue;
 			Double gArea = f.getGeometry().getArea();
 			aUnir.add(f.getGeometry());
 
