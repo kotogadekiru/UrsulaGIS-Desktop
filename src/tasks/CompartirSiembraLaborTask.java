@@ -46,6 +46,7 @@ import dao.config.Configuracion;
 import dao.config.Cultivo;
 import dao.config.Semilla;
 import dao.ordenCompra.Producto;
+import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
 import gui.Messages;
 import gui.OrdenSiembraPaneController;
@@ -209,13 +210,20 @@ public class CompartirSiembraLaborTask extends Task<String> {
 		//fertLTotal = siembra.getCantidadFertilizanteLinea();
 		while(it.hasNext()){
 			SimpleFeature f = it.next();
-			Double rinde = LaborItem.getDoubleFromObj(f.getAttribute(siembra.colAmount.get()));//labor.colAmount.get()
+			SiembraItem si = siembra.constructFeatureContainerStandar(f,false);
+			
+			Double kgHa =si.getDosisHa(); 
+			System.out.println("sumando un item con dosis "+kgHa);
+			//76.11764705882352
+//			si.getDosisFertCostado();
+//			si.getDosisFertLinea();
+					//LaborItem.getDoubleFromObj(f.getAttribute(siembra.colAmount.get()));//labor.colAmount.get()
 			Double fertL = LaborItem.getDoubleFromObj(f.getAttribute(SiembraLabor.COLUMNA_DOSIS_LINEA));
 			Double fertC = LaborItem.getDoubleFromObj(f.getAttribute(SiembraLabor.COLUMNA_DOSIS_COSTADO));
 			
 			Geometry geometry = (Geometry) f.getDefaultGeometry();
 			Double area = ProyectionConstants.A_HAS(geometry.getArea());			
-			insumoTotal+=rinde*area;
+			insumoTotal+=kgHa*area;
 			fertLTotal+=fertL*area;
 			fertCTotal+=fertC*area;
 			
@@ -233,11 +241,18 @@ public class CompartirSiembraLaborTask extends Task<String> {
 		//putItem(prodCantidadMap, producto, insumoTotal/kgBolsa,siembra.getPrecioInsumo());
 		OrdenSiembraItem itemSemilla = new OrdenSiembraItem();
 		itemSemilla.setProducto(producto);		
-		itemSemilla.setCantidad(insumoTotal/kgBolsa);//kgBolsa no es cero
-		itemSemilla.setDosisHa(itemSemilla.getCantidad()/laborTotal);
-		itemSemilla.setObservaciones("Cantidad en bolsas de "
-									+nf.format(semBolsa)+" semilas y "
-									+nf.format(kgBolsa)+"Kg");
+		
+		if(kgBolsa != 1.0 && kgBolsa>0 ) {//si semBolsa ==1 o semBolsa ==0
+			System.out.println("kgBolsa es "+kgBolsa);//kgBolsa es 1.4780000000000001E-4
+			itemSemilla.setCantidad(insumoTotal/kgBolsa);//kgBolsa no es cero
+			itemSemilla.setObservaciones("Cantidad en bolsas de "
+									+nf.format(semBolsa)+" semillas y "//1semBolsa
+									+nf.format(kgBolsa)+" Kg");//0 kgBolsa
+		} else {
+			itemSemilla.setCantidad(insumoTotal);//kgBolsa no es cero
+			itemSemilla.setObservaciones("Cantidad en kg de semilla");
+		}
+		itemSemilla.setDosisHa(itemSemilla.getCantidad()/laborTotal);//tiene que ir abajo de set cantidad
 		orden.getItems().add(itemSemilla);
 		
 		//putItem(prodCantidadMap, siembra.getFertLinea(), fertLTotal,0.0);
