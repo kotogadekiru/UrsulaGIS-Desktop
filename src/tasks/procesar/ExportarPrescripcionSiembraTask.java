@@ -2,6 +2,7 @@ package tasks.procesar;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -32,6 +33,8 @@ import dao.fertilizacion.FertilizacionItem;
 import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
 import gui.Messages;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
 import tasks.ProgresibleTask;
 import utils.FileHelper;
 import utils.GeometryHelper;
@@ -89,7 +92,7 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 				+unidad+":"+dosisClass;//$NON-NLS-1$ semilla siempre tiene que ser la 3ra columna
 
 		System.out.println("creando type con: "+typeDescriptor); //$NON-NLS-1$ the_geom:Polygon:srid=4326,Fert L:java.lang.Long,Fert C:java.lang.Long,seeding:java.lang.Long
-		System.out.println("Long.SIZE="+Long.SIZE);//64bits=16bytes. ok!! //$NON-NLS-1$
+		//System.out.println("Long.SIZE="+Long.SIZE);//64bits=16bytes. ok!! //$NON-NLS-1$
 		try {
 			//type = DataUtilities.createType(Messages.getString("JFXMain.349"), typeDescriptor); //$NON-NLS-1$
 			type = DataUtilities.createType("PrescType", typeDescriptor); //$NON-NLS-1$
@@ -120,11 +123,11 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 		//TODO si una geometria tiene mas de 50 sub zonas descartar las chicas
 		//TODO simplificar las geometrias con presicion de 0.0001grados
 		for(LaborItem item:items) {
-			System.out.println("procesando geometry con "+item.getGeometry().getNumGeometries()+" geometrias");
+		
 			if(item.getGeometry().getNumGeometries()>50){
-				
+				System.out.println("procesando geometry con "+item.getGeometry().getNumGeometries()+" geometrias");
 				Geometry g50 = item.getGeometry();
-				System.out.println("reduciendo item "+item+ "porque tiene mas de 50 partes "+g50.toString());
+				System.err.println("reduciendo item "+item+ "porque tiene mas de 50 partes "+g50.toString());
 				//TODO reducir geometry
 				List<Geometry> simples = new ArrayList<Geometry>();
 				for(int i=0;i<g50.getNumGeometries();i++) {
@@ -143,14 +146,18 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 		
 		DefaultFeatureCollection exportFeatureCollection =  new DefaultFeatureCollection("PrescType",type); //$NON-NLS-1$
 		SimpleFeatureBuilder fb = new SimpleFeatureBuilder(type);//ok
-
+		Integer id = 0;
 		for(LaborItem i:items) {//(it.hasNext()){
 			SiembraItem fi=(SiembraItem) i;
 			Geometry itemGeometry=fi.getGeometry();
 			List<Polygon> flatPolygons = PolygonValidator.geometryToFlatPolygons(itemGeometry);
+			if(flatPolygons.size()>1) {
+				System.out.println("el item "+i.getId()+" tiene "+flatPolygons.size()+" poligonos "+itemGeometry.toText());
+			}
+			
 			for(Polygon p : flatPolygons){
 				int partes = p.getNumGeometries();
-				System.out.println("exportando item con "+partes+" partes");
+				System.out.println("exportando item con "+partes+" partes "+p.toText());
 				if(partes>50) {
 					System.err.println("error tiene mas de 50 partes!!");
 				}
@@ -174,8 +181,8 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 				fb.add(linea);
 				fb.add(costado);
 				fb.add(semilla);
-
-				SimpleFeature exportFeature = fb.buildFeature(fi.getId().toString());
+				id++;
+				SimpleFeature exportFeature = fb.buildFeature(id.toString());//aca pierdo una geometria porque dublico el id
 				exportFeatureCollection.add(exportFeature);
 			}
 		}
@@ -221,7 +228,22 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 				e1.printStackTrace();
 			}
 		}		
-
+		try {
+			long bytes = Files.size(shapeFile.toPath());
+			long kilobytes = bytes/1024;
+			if(kilobytes > 500) {
+				
+				Platform.runLater(()->//esto hace que quede abajo del dialogo de importar				
+				{
+					Alert a = new Alert(Alert.AlertType.ERROR);
+					a.setContentText(String.format("El archivo generado pesa %,dKB,  en algunos monitores 512KB es lo maximo", kilobytes));
+					a.showAndWait();
+					});
+				
+			}
+	        System.out.println(String.format("%,d kilobytes", bytes / 1024));//61 kilobytes
+		}catch(Exception e) {e.printStackTrace();}
+		
 		if(guardarConfig) {
 			//TODO guardar un archivo txt con la configuracion de la labor para que quede como registro de las operaciones
 			 Configuracion config = Configuracion.getInstance();
