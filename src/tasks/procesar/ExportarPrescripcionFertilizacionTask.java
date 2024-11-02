@@ -83,7 +83,7 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 				+ FertilizacionLabor.COLUMNA_DOSIS + ":java.lang.Long";
 		*/
 		System.out.println("creando type con: "+typeDescriptor); //$NON-NLS-1$ the_geom:Polygon:srid=4326,Fert L:java.lang.Long,Fert C:java.lang.Long,seeding:java.lang.Long
-		System.out.println("Long.SIZE="+Long.SIZE);//64bits=16bytes. ok!! //$NON-NLS-1$
+		//System.out.println("Long.SIZE="+Long.SIZE);//64bits=16bytes. ok!! //$NON-NLS-1$
 		try {
 			type = DataUtilities.createType("PrescType", typeDescriptor); //$NON-NLS-1$
 		} catch (SchemaException e) {
@@ -194,9 +194,17 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 		long bytes = Files.size(shapeFile.toPath());
         System.out.println(String.format("%,d kilobytes", bytes / 1024));
 		}catch(Exception e) {e.printStackTrace();}
-		Configuracion config = Configuracion.getInstance();
-		config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
-		config.save();
+		if(guardarConfig) {
+			//TODO guardar un archivo txt con la configuracion de la labor para que quede como registro de las operaciones
+			 Configuracion config = Configuracion.getInstance();
+			 	config.loadProperties();
+				config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
+				config.save();
+			}
+		
+//		Configuracion config = Configuracion.getInstance();
+//		config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
+//		config.save();
 		updateProgress(100, 100);//all done;
 	}
 	
