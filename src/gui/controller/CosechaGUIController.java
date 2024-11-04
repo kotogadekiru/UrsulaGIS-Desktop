@@ -701,7 +701,7 @@ public class CosechaGUIController extends AbstractGUIController {
 			
 			try {
 				ppmObjD=df.parse(ppmObj.getText()).doubleValue();
-				if(ppmObjD==0)ppmObjD=null;
+				//if(ppmObjD==0)ppmObjD=null;
 			} catch (ParseException e) {
 				e.printStackTrace();
 			}
