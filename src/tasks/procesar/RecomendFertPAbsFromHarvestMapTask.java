@@ -233,7 +233,9 @@ public class RecomendFertPAbsFromHarvestMapTask extends ProcessMapTask<Fertiliza
 	}
 
 	public void setPpmPObj(Double _ppmObjD) {
-		this.ppmObj=_ppmObjD;
-		
+		if(_ppmObjD==null) {
+			this.ppmObj=0.0;
+		}
+		this.ppmObj=_ppmObjD;		
 	}
 }
