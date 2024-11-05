@@ -28,6 +28,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import dao.Labor;
 import dao.Ndvi;
+import dao.Poligono;
 import dao.config.Configuracion;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
@@ -767,6 +768,11 @@ public class JFXMain extends Application {
 	public List<Ndvi> getNdviSeleccionados() {
 		return (List<Ndvi>) getObjectFromEnabledLayersOfClass(Ndvi.class);
 	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Poligono> getPoligonosSeleccionados() {
+		return (List<Poligono>) getObjectFromEnabledLayersOfClass(Poligono.class);
+	}
 
 	@SuppressWarnings("unchecked")
 	public List<SiembraLabor> getSiembrasSeleccionadas() {
@@ -1148,4 +1154,8 @@ public class JFXMain extends Application {
 			}
 		}
 	}
+
+
+
+	
 }
