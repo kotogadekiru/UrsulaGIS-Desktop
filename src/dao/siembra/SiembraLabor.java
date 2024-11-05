@@ -211,8 +211,9 @@ public class SiembraLabor extends Labor<SiembraItem> {
 	
 	public Double getCantLabor(ToDoubleFunction<SiembraItem> get) {
 		Double ret = new Double(0);
-		Geometry contorno = GeometryHelper.extractContornoGeometry(this);
-		List<SiembraItem> items = this.cachedOutStoreQuery(contorno.getEnvelopeInternal());
+		//Geometry contorno = GeometryHelper.extractContornoGeometry(this);
+		
+		List<SiembraItem> items = this.cachedOutStoreQuery(this.outCollection.getBounds());
 		try {
 		ret = items.parallelStream().collect(
 				()->new Double(0),
