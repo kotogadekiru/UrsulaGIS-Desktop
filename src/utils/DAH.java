@@ -119,7 +119,7 @@ public class DAH {
   <property name="eclipselink.ddl-generation" value="drop-and-create-tables" />
   <property name="eclipselink.ddl-generation.output-mode" value="database" />
 			 */
-			
+
 			String db_url = JFXMain.config.getPropertyOrDefault(PROJECT_URL_KEY, "NOT_SET");
 			if("NOT_SET".equals(db_url)) {
 				String currentUsersHomeDir =System.getenv(APPDATA);
@@ -228,13 +228,23 @@ public class DAH {
 	//		return em;
 	//	}
 
+	public static void saveAll(List<? extends Object> objects) {
+		DAH.beginTransaction();
+		try {
+			objects.forEach(p->DAH.save(p));
+		}catch(Exception e) {
+			e.printStackTrace();
+		}finally {
+			DAH.commitTransaction();
+		}
+	}
 
 	public static void save(Object entidad) {	
 		if (entidad.getClass().getAnnotation(Entity.class) == null) {	
 			System.out.println("no se guardan las clases que no son entidades "+entidad);
 			return;
 		}
-		
+
 		EntityManager em = em();
 		if(DAH.transaction == null){
 			//	DAH.transaction = em.getTransaction();
@@ -259,9 +269,9 @@ public class DAH {
 				rbe.printStackTrace();
 				//Exception Description: No transaction is currently active
 				//em.getTransaction().rollback();
-//				em.getTransaction().begin();		
-//				em.merge(entidad);
-//				em.getTransaction().commit();			
+				//				em.getTransaction().begin();		
+				//				em.merge(entidad);
+				//				em.getTransaction().commit();			
 			}finally {
 
 			}
@@ -311,11 +321,11 @@ public class DAH {
 	 * @return el producto existente en la base de datos o crea uno nuevo con ese nombre y lo devuelve
 	 */
 	public static ProductoLabor getProductoLabor(String laborName) {	
-//		Number count = (Number)em().createNamedQuery(ProductoLabor.COUNT_ALL).getSingleResult();
-//		//System.out.print("hay "+count+" productos en la base de datos");
-//		if(count.intValue() == 0) {
-//			List<ProductoLabor> results = getAllProductosLabores(DAH.em());//getAll crea los cultivos default
-//		}
+		//		Number count = (Number)em().createNamedQuery(ProductoLabor.COUNT_ALL).getSingleResult();
+		//		//System.out.print("hay "+count+" productos en la base de datos");
+		//		if(count.intValue() == 0) {
+		//			List<ProductoLabor> results = getAllProductosLabores(DAH.em());//getAll crea los cultivos default
+		//		}
 
 		TypedQuery<ProductoLabor> query = em().createNamedQuery(
 				ProductoLabor.FIND_NAME, ProductoLabor.class);
@@ -555,24 +565,24 @@ public class DAH {
 			Configuracion conf = Configuracion.getInstance();
 			String ini = conf.getPropertyOrDefault(DAH_AGROQUIMICOS_INICIALIZADOS, NO);
 			if(NO.equals(ini)) {
-			//results = new ArrayList<Agroquimico>();
-			System.out.println("guardando los agroquimicos default");
-			DAH.beginTransaction();
-			ExcelHelper h = new ExcelHelper();
-			h.readAgroquimicosFile();
-//			for(Agroquimico d:Agroquimico.getAgroquimicosDefault().values()) {
-//				DAH.save(d);	
-//				results.add(d);
-//			}
-			DAH.commitTransaction();
-			results = getAllAgroquimicos();
-			conf.setProperty(DAH_AGROQUIMICOS_INICIALIZADOS, "SI");
-			conf.save();
+				//results = new ArrayList<Agroquimico>();
+				System.out.println("guardando los agroquimicos default");
+				DAH.beginTransaction();
+				ExcelHelper h = new ExcelHelper();
+				h.readAgroquimicosFile();
+				//			for(Agroquimico d:Agroquimico.getAgroquimicosDefault().values()) {
+				//				DAH.save(d);	
+				//				results.add(d);
+				//			}
+				DAH.commitTransaction();
+				results = getAllAgroquimicos();
+				conf.setProperty(DAH_AGROQUIMICOS_INICIALIZADOS, "SI");
+				conf.save();
 			}
 		}
-		
-//		List<Agroquimico> results = new ArrayList<Agroquimico>();
-//		results.addAll(Agroquimico.getAgroquimicosDefault().values());
+
+		//		List<Agroquimico> results = new ArrayList<Agroquimico>();
+		//		results.addAll(Agroquimico.getAgroquimicosDefault().values());
 
 		return  results;
 	}
@@ -583,9 +593,9 @@ public class DAH {
 				em().createNamedQuery(Agroquimico.FIND_ACTIVOS, Agroquimico.class);
 		List<Agroquimico> results = query.getResultList();
 		return results;
-		}
-	
-	
+	}
+
+
 	public static List<Semilla> getAllSemillas() {
 		TypedQuery<Semilla> query = em().createNamedQuery(
 				Semilla.FIND_ALL, Semilla.class);
@@ -616,7 +626,7 @@ public class DAH {
 		List<OrdenCompra> results = (List<OrdenCompra> ) query.getResultList();
 		return results;
 	}
-	
+
 	public static List<OrdenPulverizacion> getAllOrdenesPulverizacion() {
 		TypedQuery<OrdenPulverizacion> query = em().createNamedQuery(
 				OrdenPulverizacion.FIND_ALL, OrdenPulverizacion.class);
@@ -636,7 +646,7 @@ public class DAH {
 		List<OrdenSiembra> results = (List<OrdenSiembra> ) query.getResultList();
 		return results;
 	}
-	
+
 	public static List<Asignacion> getAllAsignaciones() {
 		TypedQuery<Asignacion> query = em().createNamedQuery(
 				Asignacion.FIND_ALL, Asignacion.class);
@@ -702,10 +712,12 @@ public class DAH {
 			result = query.getResultList();
 		}  
 		return result;	
-		
+
 	}
 
-	
+
+
+
 	//	public static void main(String[] args) throws Exception {
 	//	       // Open a database connection
 	//     // (create a new database if it doesn't exist yet):
