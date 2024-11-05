@@ -128,15 +128,15 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 						(map, poly) -> {
 							
 						try{
-							List<FertilizacionItem>  cosechasPoly = fertilizaciones.parallelStream().collect(
+							List<FertilizacionItem>  fertsPoly = fertilizaciones.parallelStream().collect(
 									()->new  ArrayList<FertilizacionItem>(),
-									(list, cosecha) ->{			
-										list.addAll(cosecha.cachedOutStoreQuery(poly.getEnvelopeInternal()));	
+									(list, ferts) ->{			
+										list.addAll(ferts.cachedOutStoreQuery(poly.getEnvelopeInternal()));	
 									},
 									(list1, list2) -> list1.addAll(list2)
 									);
 
-							FertilizacionItem item = construirFeature(cosechasPoly,poly);                    			
+							FertilizacionItem item = construirFeature(fertsPoly,poly);                    			
 
 							if(item!=null){
 								map.put(poly,item);
