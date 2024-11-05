@@ -255,24 +255,18 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 		// sumar todas las supferficies,
 		//y calcular el promedio ponderado de
 		// cada una de las variables por la superficie superpuesta
-		Geometry union = null;
-		double areaPoly = 0;
+		//Geometry union = null;
+		double areaItersectadaTotal = 0;
 		Map<CosechaItem,Double> areasIntersecciones = new HashMap<CosechaItem,Double>();
-		for(CosechaItem cPoly : cosechasPoly){			
+		for(CosechaItem cPoly : cosechasPoly){	//de cada cosecha obtengo que area se intersecta con la query		
 			//XXX si es una cosecha de ambientes el area es importante
 			Geometry g = cPoly.getGeometry();
-			try{
-				
+			try{				
 				g= GeometryHelper.getIntersection(poly, g);//EnhancedPrecisionOp.intersection(poly,g);
 				Double areaInterseccion = g.getArea();
-				areaPoly+=areaInterseccion;
+				areaItersectadaTotal+=areaInterseccion;
 				areasIntersecciones.put(cPoly,areaInterseccion);
-				
-				if(union==null){
-					union = g;		//union no se usa
-				}
-				intersections.add(g);
-			
+				intersections.add(g);			
 			}catch(Exception e){
 				System.err.println(Messages.getString("GrillarCosechasMapTask.14")+poly+Messages.getString("GrillarCosechasMapTask.15")+g); //$NON-NLS-1$ //$NON-NLS-2$
 			}		
@@ -280,7 +274,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 
 		CosechaItem c = null;
 
-		if(areaPoly>getAreaMinimaLongLat()){
+		if(areaItersectadaTotal>getAreaMinimaLongLat()){
 			double rindeProm=0,desvioPromedio=0,ancho=0,distancia=0,elev=0,rumbo=0;// , pesos=0;
 			ancho=labor.getConfiguracion().getAnchoGrilla();
 			distancia=ancho;
@@ -293,7 +287,7 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 				if(gArea==null){
 					//System.out.println("g es null asi que no lo incluyo en la suma "+cPoly);
 					continue;}
-				double peso = gArea/areaPoly;
+				double peso = gArea/areaItersectadaTotal;
 		//		pesoTotal+=peso;
 				rindeProm+=cPoly.getRindeTnHa()*peso;
 				//ancho+=cPoly.getAncho()*peso;
@@ -330,18 +324,20 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 //			GeometryFactory fact = intersections.get(0).getFactory();
 //			Geometry[] geomArray = new Geometry[intersections.size()];
 //			GeometryCollection colectionCat = fact.createGeometryCollection(intersections.toArray(geomArray));
-			GeometryCollection colectionCat = GeometryHelper.toGeometryCollection(intersections);
-			if(!rellenarHuecos) {
+
+			Geometry union2 = null;
+			if(!rellenarHuecos) {				
 			try{
-				union = colectionCat.convexHull();//esto hace que no se cubra el area entre polygonos a menos que la grilla sea mas grande que el area
+				GeometryCollection colectionCat = GeometryHelper.toGeometryCollection(intersections);
+				union2 = colectionCat.convexHull();//esto hace que no se cubra el area entre polygonos a menos que la grilla sea mas grande que el area
 				}catch(Exception e){
 
 				}
 			} else { 
-				union = poly;
+				union2 = poly;
 			}
 			
-			c.setGeometry(union);
+			c.setGeometry(union2);
 			c.setRindeTnHa(rindeProm);
 			c.setDesvioRinde(desvioPromedio);
 			c.setAncho(ancho);
