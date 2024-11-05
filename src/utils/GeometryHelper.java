@@ -814,7 +814,8 @@ public class GeometryHelper {
 	public static Geometry unirCascading(Labor<?> aUnir,Envelope bounds) {
 		try {
 			List<Geometry> boundsGeoms = new ArrayList<Geometry>();
-			List<LaborItem> boundsFeatures = (List<LaborItem>)aUnir.cachedOutStoreQuery(bounds);
+			List<? extends LaborItem> boundsFeatures = (List<? extends LaborItem>)aUnir.cachedOutStoreQuery(bounds);
+			if(boundsFeatures.size()==1)return boundsFeatures.get(0).getGeometry();
 			if(ProyectionConstants.A_HAS(bounds.getArea()) > 1				
 					&& boundsFeatures.size()>1000) {//divido hasta que cubre 1has
 				//			System.out.println("bounds area = "+ProyectionConstants.A_HAS(bounds.getArea()));
@@ -882,13 +883,22 @@ public class GeometryHelper {
 	}
 
 	public static Geometry unirGeometrias(List<Geometry> aUnir) {
+		if(aUnir!=null && aUnir.size()==1) {
+			return aUnir.get(0);
+		}
 		try {
-			List<Geometry> aUnird = aUnir.parallelStream().filter(g->g!=null&&!g.isEmpty()).map(g->{
+			double dTolerance = ProyectionConstants.metersToLongLat(10);
+			
+			List<Geometry> aUnird = aUnir.stream().filter( g-> 
+							g!=null && !g.isEmpty()
+					).map(g->{
 				try {
 					if(!g.isEmpty()) {
-						Densifier densifier = new Densifier(g);
-						densifier.setDistanceTolerance(ProyectionConstants.metersToLongLat(10));
-						g=densifier.getResultGeometry();//java.lang.ArrayIndexOutOfBoundsException: -1
+//						Densifier densifier = new Densifier(g);
+//						//densifier.setValidate(false);
+//						densifier.setDistanceTolerance();
+						g=Densifier.densify(g, dTolerance); 
+						//densifier.getResultGeometry();//si la geometria es grande esto devuelve POLYGON EMPTY?
 					}
 				}catch(Exception e) {
 					System.err.println("fallo densifier con "+g);
@@ -896,6 +906,7 @@ public class GeometryHelper {
 				}
 				return  g;			
 			}).collect(Collectors.toList());
+			//XXX cuando llega aca de una siembra que tiene solo un poligono devuelve POLYGON EMPTY
 
 			//		GeometryFactory fact = ProyectionConstants.getGeometryFactory();		
 			//		Geometry[] geomArray = aUnir.toArray(new Geometry[aUnir.size()]);//put into an array
@@ -969,15 +980,26 @@ public class GeometryHelper {
 	 * @return
 	 */
 	public static synchronized Geometry extractContornoGeometry(Labor<?> labor) {
+		System.out.println("extrayendo contorno de labor "+labor);
 		try{					
 			ReferencedEnvelope bounds = labor.outCollection.getBounds();
+			//hace la union de todas las geometrias
 			Geometry cascadedUnion = unirCascading(labor,bounds);
+			if(cascadedUnion.getNumGeometries()==1) {
+				return cascadedUnion;
+			}
+			//hago un buffer de las que quedan
 			cascadedUnion = cascadedUnion.buffer(ProyectionConstants.metersToLongLat(20));
+			//extrae el boundary del buffer
 			Geometry boundary = cascadedUnion.getBoundary();
+			//hace un buffer del bundary
 			boundary = boundary.buffer(ProyectionConstants.metersToLongLat(20));
+			//le saco el bundary al buffer de la union
 			cascadedUnion = cascadedUnion.difference(boundary);
+			//lo simplifico
 			cascadedUnion= simplificarContorno(cascadedUnion);
-			return cascadedUnion;
+			return PolygonValidator.validate(cascadedUnion);
+			//return cascadedUnion;
 		}catch(Exception e){
 			ReferencedEnvelope bounds = labor.outCollection.getBounds();			
 			e.printStackTrace();
