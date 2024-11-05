@@ -624,6 +624,10 @@ public abstract class Labor<E extends LaborItem>  {
 
 
 	public void insertFeature(E laborItem) {
+		if(0.0 == laborItem.getId()) {
+			laborItem.setId(this.getNextID());
+			System.out.println("actualizando el item con id "+laborItem.getId());			
+		}
 		LaborDataStore.insertFeature(laborItem,this);
 		//		Geometry cosechaGeom = laborItem.getGeometry();
 		//		Envelope geomEnvelope=cosechaGeom.getEnvelopeInternal();
@@ -636,7 +640,12 @@ public abstract class Labor<E extends LaborItem>  {
 		//			this.insertFeature(fe);
 		//		}
 	}
-
+	/**
+	 * 
+	 * @param f feature para ser insertado
+	 * Metodo que inserta el feature en outCollection.
+	 * usar labor.add(feature) que lo agrega antes al cache
+	 */
 	public void insertFeature(SimpleFeature f){
 		if(!outCollection.add(f)) {
 			System.err.println("No se pudo insertar la feature "+f);
