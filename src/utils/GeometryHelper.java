@@ -2,6 +2,7 @@ package utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -20,7 +21,9 @@ import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.util.LineStringExtracter;
 import com.vividsolutions.jts.operation.buffer.BufferParameters;
+import com.vividsolutions.jts.operation.polygonize.Polygonizer;
 import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
 import com.vividsolutions.jts.util.GeometricShapeFactory;
@@ -682,32 +685,50 @@ public class GeometryHelper {
 		}
 		return intersection;
 	}
+	
+	/**
+	 * Metodo que toma un grupo de geometrias y las parte en sus partes basicas
+	 * @param aIntersectar
+	 * @return un grupo de geometrias que no se intersectan y cubren la superficie de la union de las geometrias de entrada
+	 */
+	public static Set<Geometry> obtenerIntersecciones(List<Geometry> aIntersectar){
+		Polygonizer polygonizer = new Polygonizer();
+
+		List<Geometry> boundaries = aIntersectar.stream().map(g->g.getBoundary()).collect(Collectors.toList());
+		Geometry unitedBoundary = toGeometryCollection(boundaries).union();
+		List<?> lines = LineStringExtracter.getLines(unitedBoundary);
+		System.out.println("agregando lines "+lines.size()+" para poligonizer");
+		polygonizer.add(lines);
+
+		Collection polys = polygonizer.getPolygons();
+		System.out.println("cree "+polys.size()+" poligonos");
+		Set<Geometry> geometriasOutput = new HashSet<Geometry>();
+		geometriasOutput.addAll(polys);
+		return geometriasOutput;
+	}
 	/**
 	 * metodo que recorre todas las geometrias haciendo las intersecciones de todos con todos.
 	 * @param aIntersectar: Lista de geometrias a intersectar 
 	 * @return el Set de las partes de las geometrias intersectadas
 	 */
-	public static Set<Geometry> obtenerIntersecciones(List<Geometry> aIntersectar){
-		//	import org.locationtech.jts.densify.Densifier;
+	@Deprecated //perdia superficie entre los poligonos
+	public static Set<Geometry> obtenerIntersecciones2(List<Geometry> aIntersectar){		
+		//obtengo una collection con los boundarys
+		List<Geometry> boundaryList =  aIntersectar.stream().map(g->g.getBoundary()).collect(Collectors.toList());		
+		GeometryCollection boundarysCol = toGeometryCollection(boundaryList);
+		//Obtengo un buffer de las boundarys
+		Double buffer25=ProyectionConstants.metersToLongLat(0.25);//0.25 es lo mas chico que me permite mi precision model
+		Geometry boundary_buffer = boundarysCol.buffer(buffer25,1,BufferParameters.CAP_SQUARE);
 
-		// unir todas las geometrias.
-		//crear un poligono con los exterior rings de todas las geometrias
-		//obtener la diferencia entre la union y los vertices
+		//obtengo un buffer que una a todas las geometrias a intersectar
+		GeometryCollection colectionCat = toGeometryCollection(aIntersectar);
 
-		Geometry[] boundaryArr =  aIntersectar.stream().map(g->g.getBoundary()).toArray(s->new Geometry[s]);
-
-		GeometryFactory fact = ProyectionConstants.getGeometryFactory();
-		GeometryCollection boundarysCol = fact.createGeometryCollection(boundaryArr);
-		Double buffer25=ProyectionConstants.metersToLongLat(0.25);
-		Geometry boundary_buffer = boundarysCol.buffer(buffer25,1,BufferParameters.CAP_FLAT);
-
-		GeometryCollection colectionCat = fact.createGeometryCollection(
-				aIntersectar.toArray(new Geometry[aIntersectar.size()]));
 		//(buffer0,1,BufferParameters.CAP_SQUARE);
 		Double buffer0=ProyectionConstants.metersToLongLat(0);
-		Geometry convexHull = colectionCat.buffer(buffer0,1,BufferParameters.CAP_FLAT);
+		Geometry unionBuffer = colectionCat.buffer(buffer0,1,BufferParameters.CAP_FLAT);
 
-		Geometry diff = convexHull.difference(boundary_buffer);
+		//obtengo la diferencia entre el todo y los bordes de las geometrias
+		Geometry diff = unionBuffer.difference(boundary_buffer);
 		Set<Geometry> geometriasOutput = new HashSet<Geometry>();
 		//double tolerance = ProyectionConstants.metersToLongLat(1);
 		double bufferWidth = 2*buffer25;
@@ -811,6 +832,12 @@ public class GeometryHelper {
 		return collection;
 	}
 
+	/**
+	 * metofo que se usa en extraer contorno de labor.
+	 * @param aUnir la labor que contiene las geometrias a unir
+	 * @param bounds el sector de la labor a inspeccionar
+	 * @return
+	 */
 	public static Geometry unirCascading(Labor<?> aUnir,Envelope bounds) {
 		try {
 			List<Geometry> boundsGeoms = new ArrayList<Geometry>();
@@ -984,7 +1011,15 @@ public class GeometryHelper {
 		try{					
 			ReferencedEnvelope bounds = labor.outCollection.getBounds();
 			//hace la union de todas las geometrias
-			Geometry cascadedUnion = unirCascading(labor,bounds);
+			List<? extends LaborItem> items = labor.cachedOutStoreQuery(bounds);
+			Geometry cascadedUnion =null;
+			long init =System.currentTimeMillis();
+			 cascadedUnion = convexHull(items);
+			long endConvexHull =System.currentTimeMillis();
+			cascadedUnion = unirCascading(labor,bounds);
+			long endUnirCascading =System.currentTimeMillis();
+			System.out.println("tarde "+(endConvexHull-init)+" s en hacer convexHull");
+			System.out.println("tarde "+(endUnirCascading-endConvexHull)+" s en hacer unirCascading");
 			if(cascadedUnion.getNumGeometries()==1) {
 				return cascadedUnion;
 			}
@@ -1005,6 +1040,18 @@ public class GeometryHelper {
 			e.printStackTrace();
 			return constructPolygon(bounds);
 		}
+	}
+
+	/**
+	 * metodo que devuelve el poligono convexo mas chico que engloba los items.
+	 * @param items
+	 * @return devuelve el poligono convexo mas chico que contiene los items.
+	 */
+	public static Geometry convexHull(List<? extends LaborItem> items) {
+		List<Geometry> geoms = items.stream().map(i->i.getGeometry()).collect(Collectors.toList());
+		GeometryCollection colectionCat = GeometryHelper.toGeometryCollection(geoms);
+		Geometry cascadedUnion = colectionCat.convexHull();
+		return cascadedUnion;
 	}
 	/**
 	 * metodo llamado en labor.getContorno
