@@ -206,7 +206,8 @@ public class PoligonoGUIController extends AbstractGUIController{
 		//guardar poligono
 		rootNodeP.add(new LayerAction((layer)->{
 			List<Poligono> poligonos = main.getPoligonosSeleccionados();
-			executorPool.submit(()->{			   
+			executorPool.submit(()->{			
+				poligonos.stream().forEach(p->p.setActivo(true));
 				DAH.saveAll(poligonos);
 //				try {
 //					LayerList layers = this.getWwd().getModel().getLayers();
