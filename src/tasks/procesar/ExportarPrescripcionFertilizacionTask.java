@@ -41,6 +41,8 @@ import dao.fertilizacion.FertilizacionLabor;
 import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
 import gui.Messages;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
 import tasks.ProgresibleTask;
 import utils.FileHelper;
 import utils.GeometryHelper;
@@ -183,8 +185,6 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 				}finally {
 					try {
 						transaction.close();
-						//TODO chequear que pese menos de 512KB
-						//System.out.println("closing transaction");
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -197,6 +197,17 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 		System.out.println("despues de guardar el shp el schema es: "+ shapeFile); //$NON-NLS-1$
 		try {
 		long bytes = Files.size(shapeFile.toPath());
+		long kilobytes = bytes/1024;
+		if(kilobytes > 500) {
+			
+			Platform.runLater(()->//esto hace que quede abajo del dialogo de importar				
+			{
+				Alert a = new Alert(Alert.AlertType.ERROR);
+				a.setContentText(String.format("El archivo generado pesa %,dKB,  en algunos monitores 512KB es lo maximo", kilobytes));
+				a.showAndWait();
+				});
+			
+		}
         System.out.println(String.format("%,d kilobytes", bytes / 1024));
 		}catch(Exception e) {e.printStackTrace();}
 		if(guardarConfig) {
