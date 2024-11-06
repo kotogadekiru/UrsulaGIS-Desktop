@@ -31,7 +31,7 @@ import gui.Messages;
 @Inheritance(strategy=javax.persistence.InheritanceType.TABLE_PER_CLASS)
 public abstract class LaborItem implements Comparable<Object>{
 	@javax.persistence.Id @GeneratedValue
-	protected Double id=new Double(0);
+	protected Double id=new Double(-1);
 	protected Geometry geometry=null;
 
 	//solo es importante en las labores de puntos

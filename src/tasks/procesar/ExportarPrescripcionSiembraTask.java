@@ -185,7 +185,7 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 //				fb.add(semilla);
 				id++;
 				//SimpleFeature exportFeature = fb.buildFeature(id.toString());//aca pierdo una geometria porque dublico el id
-				SimpleFeature exportFeature = fb.buildFeature(id.toString(), new Object[]{p,linea,costado,semilla});
+				SimpleFeature exportFeature = fb.buildFeature(null, new Object[]{p,linea,costado,semilla});
 				exportFeatureCollection.add(exportFeature);
 			}
 		}

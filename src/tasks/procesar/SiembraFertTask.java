@@ -522,7 +522,7 @@ public class SiembraFertTask extends ProcessMapTask<SiembraItem,SiembraLabor> {
 		}
 
 		Geometry union = GeometryHelper.unirGeometrias(aUnir);
-		Double unionArea = union.getArea();
+		Double unionArea = union.getArea();//no da igual el area de la interseccion que el area de la union
 		if(unionArea==0) {
 			System.err.println("area union es null");
 			return catFeatures;}

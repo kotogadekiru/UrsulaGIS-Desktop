@@ -115,7 +115,7 @@ public class ExportarPrescripcionPulverizacionTask extends ProgresibleTask<File>
 				Double dosisHa = fi.getDosis();			
 				//fb.add(dosisHa.longValue());
 
-				SimpleFeature exportFeature = fb.buildFeature(id.toString(),new Object[] {p,dosisHa.longValue()});
+				SimpleFeature exportFeature = fb.buildFeature(null,new Object[] {p,dosisHa.longValue()});
 				boolean ret = exportFeatureCollection.add(exportFeature);
 				if(!ret) {
 					System.err.println("no se pudo agregar id "+id.toString()+" en ExportarPrescripcionPulverizacionTask");

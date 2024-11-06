@@ -624,7 +624,7 @@ public abstract class Labor<E extends LaborItem>  {
 
 
 	public void insertFeature(E laborItem) {
-		if(0.0 == laborItem.getId()) {
+		if(-1.0 == laborItem.getId()) {
 			laborItem.setId(this.getNextID());
 			System.out.println("actualizando el item con id "+laborItem.getId());			
 		}

@@ -164,7 +164,7 @@ public class ExportarCosechaDePuntosTask  extends ProgresibleTask<File>{
 			fb.addAll(attributes);//Can handle 12 attributes only, index is 12
 
 
-			SimpleFeature pointFeature = fb.buildFeature(LaborItem.getID(sf));
+			SimpleFeature pointFeature = fb.buildFeature(null);
 			boolean ret = pointFeatureCollection.add(pointFeature);
 			if(!ret) {
 				System.err.println("no se pudo agregar la feature id "+LaborItem.getID(sf)+" en ExportarCosechaDePuntos" );

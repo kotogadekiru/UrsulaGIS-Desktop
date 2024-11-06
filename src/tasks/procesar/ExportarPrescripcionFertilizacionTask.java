@@ -142,7 +142,7 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 				
 				id++;
 				//SimpleFeature exportFeature = fb.buildFeature(fi.getId().toString());				
-				SimpleFeature exportFeature = fb.buildFeature(id.toString(), new Object[]{p,dosisHa,0,0});
+				SimpleFeature exportFeature = fb.buildFeature(null, new Object[]{p,dosisHa,0,0});
 				boolean ret = exportFeatureCollection.add(exportFeature);
 				if(!ret) {
 					System.err.println("no se pudo ingresar la feature "+id.toString()+" ");
@@ -464,7 +464,7 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 		
 		Clasificador clasificador = laborToExport.getClasificador();
 		List<LaborItem> done = new ArrayList<LaborItem>();		
-		while(itemsAReducir.size() > 0 && n < 10000) {//trato de reducirlos 10000 veces
+		while(itemsAReducir.size() > 0 && n < 10) {//trato de reducirlos 10000 veces
 		
 			for(LaborItem ar : itemsAReducir) {
 				Geometry gAr = ar.getGeometry();
@@ -494,7 +494,7 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 				//List<LaborItem> idemClaseIntersects = vecinosIntersects.stream().filter(v->v.getGeometry().intersects(gAr)).collect(Collectors.toList());
 				
 				if(idemClaseIntersects.size()>0) {
-					System.out.println("encontre el vecino de la misma clase mas grande que intersecta");
+					//System.out.println("encontre el vecino de la misma clase mas grande que intersecta");
 					List<LaborItem> masGrande = idemClaseIntersects.stream().sorted((v1,v2)-> Double.compare(v1.getGeometry().getArea(), v2.getGeometry().getArea())).collect(Collectors.toList());
 					vecinoIdemCatIntersect = masGrande.get(masGrande.size()-1);// esto es lo que buscamos
 				} else if(vecinosIntersects.size()>0) {
@@ -502,7 +502,7 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 					List<LaborItem> masGrande = vecinosIntersects.stream().sorted((v1,v2)-> Double.compare(v1.getGeometry().getArea(), v2.getGeometry().getArea())).collect(Collectors.toList());
 					vecinoIntersectMasGrande = masGrande.get(masGrande.size()-1);// esto es lo que buscamos
 				} else {
-					System.out.println("encontre el vecino que no intersecta mas cercano");
+					//System.out.println("encontre el vecino que no intersecta mas cercano");
 					List<LaborItem> masCercano = vecinos.stream().sorted((v1,v2)-> Double.compare(v1.getGeometry().distance(gAr), v2.getGeometry().distance(gAr))).collect(Collectors.toList());
 					vecinoMasCercano = masCercano.get(0);// esto es lo que buscamos
 				}
