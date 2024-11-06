@@ -31,8 +31,10 @@ import com.vividsolutions.jts.util.GeometricShapeFactory;
 import dao.Labor;
 import dao.LaborItem;
 import dao.Poligono;
+import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Position.PositionList;
+import gov.nasa.worldwind.geom.Sector;
 import gov.nasa.worldwind.util.measure.MeasureTool;
 import gui.PoligonLayerFactory;
 import tasks.procesar.ExtraerPoligonosDeLaborTask;
@@ -825,21 +827,24 @@ public class GeometryHelper {
 		return area;
 	}
 	public static GeometryCollection toGeometryCollection(List<Geometry> list) {
-		list = list.stream().filter(g->g!=null).collect(Collectors.toList());
+		Geometry[] array = list.stream().filter(g->g!=null).toArray(size->new Geometry[size]);
 		GeometryFactory fact = ProyectionConstants.getGeometryFactory();
-		Geometry[] array =list.toArray(new Geometry[list.size()]);
+		//Geometry[] array =list.toArray(new Geometry[list.size()]);
 		GeometryCollection collection = fact.createGeometryCollection(array );
 		return collection;
 	}
 
 	/**
-	 * metofo que se usa en extraer contorno de labor.
+	 * metodo que se usa en extraer contorno de labor.
 	 * @param aUnir la labor que contiene las geometrias a unir
 	 * @param bounds el sector de la labor a inspeccionar
 	 * @return
 	 */
 	public static Geometry unirCascading(Labor<?> aUnir,Envelope bounds) {
 		try {
+//			Sector s = boundsToSector(bounds);
+//			Sector[] parts = s.subdivide(2);//divide el sector en 4
+			
 			List<Geometry> boundsGeoms = new ArrayList<Geometry>();
 			List<? extends LaborItem> boundsFeatures = (List<? extends LaborItem>)aUnir.cachedOutStoreQuery(bounds);
 			if(boundsFeatures.size()==1)return boundsFeatures.get(0).getGeometry();
@@ -848,15 +853,17 @@ public class GeometryHelper {
 				//			System.out.println("bounds area = "+ProyectionConstants.A_HAS(bounds.getArea()));
 				//si es mayor a 100m2 divido en 4
 				List<Envelope> envelopes = splitEnvelope(bounds);
-
-				for(Envelope e:envelopes) {
-
+				List<Geometry> geomsEnvelopes = envelopes.parallelStream().map(e->{
 					Geometry eGeom = unirCascading(aUnir,e);
-					if(eGeom !=null) {
-						boundsGeoms.add(eGeom);
-					} 
-
-				}
+					return eGeom;
+				}).collect(Collectors.toList());
+				boundsGeoms.addAll(geomsEnvelopes);
+//				for(Envelope e:envelopes) {
+//					Geometry eGeom = unirCascading(aUnir,e);
+//					if(eGeom !=null) {
+//						boundsGeoms.add(eGeom);
+//					}
+//				}
 
 			} else {
 				//List<LaborItem> boundsFeatures = (List<LaborItem>)aUnir.cachedOutStoreQuery(bounds);
@@ -871,13 +878,13 @@ public class GeometryHelper {
 
 			//System.out.println("juntando "+boundsGeoms.size()+" geoms");
 			Geometry union = null; 
-			//toGeometryCollection(boundsGeoms).buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection
+			//union = toGeometryCollection(boundsGeoms).buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection
 			try {
-				union = unirGeometrias(boundsGeoms);
-
-			}catch(Exception e ) {
+				//union = unirGeometrias(boundsGeoms);
 				Double buffer = ProyectionConstants.metersToLongLat(0.25);
 				union = toGeometryCollection(boundsGeoms).buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection
+				
+			}catch(Exception e ) {
 				e.printStackTrace();
 			}
 			return union;
@@ -887,12 +894,32 @@ public class GeometryHelper {
 		}	
 	}
 
+	public static Sector boundsToSector(Envelope bounds) {
+		Sector s = Sector.fromDegrees(bounds.getMinY(),
+							  bounds.getMaxY(),
+							  bounds.getMinX(),
+							  bounds.getMaxX());
+		return s;
+	}
+
 
 
 	public static List<Envelope> splitEnvelope(Envelope e){
 		List<Envelope> result = new ArrayList<Envelope>();
 		double ancho = e.getWidth()/2;
-		double alto = e.getHeight()/2;
+		double alto = e.getHeight()/2;		
+	
+//		for (int row = 0; row < 2; row++) {
+//			for (int col = 0; col < 2; col++) {
+//				result.add(new Envelope(
+//						e.getMinX() + ancho * col,
+//						e.getMinX() + ancho * col + ancho,
+//						e.getMinY() + alto * row,
+//						e.getMinY() + alto * row + alto
+//						));
+//			}
+//		}
+	        
 		for(double x = e.getMinX(); x <= e.getMaxX()-ancho; x+=ancho) {
 			for(double y = e.getMinY(); y <= e.getMaxY()-alto; y+=alto) {			
 				result.add(new Envelope(x,x+ancho,y,y+ancho));
@@ -1011,19 +1038,27 @@ public class GeometryHelper {
 		try{					
 			ReferencedEnvelope bounds = labor.outCollection.getBounds();
 			//hace la union de todas las geometrias
-			List<? extends LaborItem> items = labor.cachedOutStoreQuery(bounds);
+			List<? extends LaborItem> items = labor.cachedOutStoreQuery(bounds);//demora
 			Geometry cascadedUnion =null;
-			long init =System.currentTimeMillis();
-			 cascadedUnion = convexHull(items);
-			long endConvexHull =System.currentTimeMillis();
+		//	long init =System.currentTimeMillis();
+		//	 cascadedUnion = convexHull(items);//demora
+		//	 System.out.println("termine convex hull");
+		//	long endConvexHull =System.currentTimeMillis();
 			cascadedUnion = unirCascading(labor,bounds);
-			long endUnirCascading =System.currentTimeMillis();
-			System.out.println("tarde "+(endConvexHull-init)+" s en hacer convexHull");
-			System.out.println("tarde "+(endUnirCascading-endConvexHull)+" s en hacer unirCascading");
+			//List<Geometry> boundaries = items.stream().map(i->i.getGeometry()).collect(Collectors.toList());//rapido
+			//cascadedUnion = toGeometryCollection(boundaries).buffer(ProyectionConstants.metersToLongLat(1), 1, BufferParameters.CAP_FLAT);
+			//no termina nunca
+			
+		//	long endUnirCascading =System.currentTimeMillis();
+		//	System.out.println("tarde "+(endConvexHull-init)+" s en hacer convexHull");
+		//	System.out.println("tarde "+(endUnirCascading-endConvexHull)+" s en hacer unirCascading");
 			if(cascadedUnion.getNumGeometries()==1) {
 				return cascadedUnion;
+			} else {
+				System.out.println("despues de hacer unir cascading sigue teniendo mas de una geometria "+cascadedUnion.getNumGeometries());
 			}
 			//hago un buffer de las que quedan
+			// un buffer de 20mts es bastante
 			cascadedUnion = cascadedUnion.buffer(ProyectionConstants.metersToLongLat(20));
 			//extrae el boundary del buffer
 			Geometry boundary = cascadedUnion.getBoundary();

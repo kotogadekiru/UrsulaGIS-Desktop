@@ -172,7 +172,7 @@ public class LaborDataStore<E> {
 		while(locked.contains(labor)) {
 			//System.out.println("locked contains "+labor.nombre);
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(10);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
