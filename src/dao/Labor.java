@@ -770,7 +770,7 @@ public abstract class Labor<E extends LaborItem>  {
 				+ COLUMNA_ELEVACION + ":Double,"
 				+ COLUMNA_CATEGORIA + ":Integer,";
 		typeDescriptor+= getTypeDescriptors();
-
+		//typeDescriptor.split(",");
 		try {
 			type = DataUtilities.createType("LABOR", typeDescriptor);
 		} catch (SchemaException e) {
