@@ -52,6 +52,7 @@ import utils.ProyectionConstants;
  */
 
 public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
+	private static final int MAX_ITEMS = 100;
 	private SiembraLabor laborToExport=null;
 	private File shapeFile=null;
 	private String unidad=null;
@@ -273,13 +274,13 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 		// tomar las 100 zonas mas grandes y reabsorver las otras en estas
 
 		items.sort((i1,i2)->-1*Double.compare(i1.getGeometry().getArea(), i2.getGeometry().getArea()));					
-		List<LaborItem> itemsAgrandar =items.subList(0,100-1);
+		List<LaborItem> itemsAgrandar =items.subList(0,MAX_ITEMS-1);
 		Quadtree tree=new Quadtree();
 		for(LaborItem ar : itemsAgrandar) {
 			Geometry gAr =ar.getGeometry();
 			tree.insert(gAr.getEnvelopeInternal(), ar);
 		}
-		List<LaborItem> itemsAReducir =items.subList(99, items.size()-1);//99 es el indice de la zona numero 100
+		List<LaborItem> itemsAReducir =items.subList(MAX_ITEMS-1, items.size()-1);//99 es el indice de la zona numero 100
 		int n=0;
 		while(itemsAReducir.size()>0 || n>10) {
 			List<LaborItem> done = new ArrayList<LaborItem>();		

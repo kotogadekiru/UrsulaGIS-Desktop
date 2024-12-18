@@ -69,6 +69,7 @@ public class CorrelacionarCapas {
 		ObservableList<Labor<?>> observableLabores = FXCollections.observableArrayList(labores);
 		
 		ChoiceBox<Labor<?>> choiceX = new ChoiceBox<Labor<?>>();
+		choiceX.setPrefWidth(400);
 		choiceX.setItems(observableLabores);
 		ObservableList<String> observableColumnsX = FXCollections.observableArrayList(new ArrayList<String>());
 		choiceX.setOnAction(a->{
@@ -78,9 +79,12 @@ public class CorrelacionarCapas {
 			observableColumnsX.addAll(columns);
 		});
 		ChoiceBox<String> choiceXColumn = new ChoiceBox<String>();
+		choiceXColumn.setPrefWidth(100);
 		choiceXColumn.setItems(observableColumnsX);
 		
 		ChoiceBox<Labor<?>> choiceY = new ChoiceBox<Labor<?>>();
+	
+		choiceY.setPrefWidth(400);
 		choiceY.setItems(observableLabores);
 		ObservableList<String> observableColumnsY = FXCollections.observableArrayList(new ArrayList<String>());
 		choiceY.setOnAction(a->{
@@ -91,7 +95,7 @@ public class CorrelacionarCapas {
 		});
 		ChoiceBox<String> choiceYColumn = new ChoiceBox<String>();
 		choiceYColumn.setItems(observableColumnsY);
-		
+		choiceYColumn.setPrefWidth(100);
 		Button accept = new Button(Messages.getString("Recorrida.Aceptar"));//"Aceptar");
 	
 		//TODO arreglar layout
@@ -116,8 +120,9 @@ public class CorrelacionarCapas {
 		BorderPane hb3 = new BorderPane();
 		VBox.setMargin(hb3, outerMargin);
 		hb3.setRight(accept);
+		VBox.setMargin(hb3, outerMargin);
 		vb.getChildren().addAll(hb1,hb2,hb3);
-		Scene sc = new Scene(vb, 500, 400);
+		Scene sc = new Scene(vb, 800, 200);
 		
 		Stage s= new Stage();
 		accept.setOnAction((ae)->{

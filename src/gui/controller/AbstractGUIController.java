@@ -1,10 +1,8 @@
 package gui.controller;
 
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
 import dao.Labor;
-import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.WorldWindow;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.layers.Layer;
