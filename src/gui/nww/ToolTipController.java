@@ -11,6 +11,9 @@ import gov.nasa.worldwind.*;
 import gov.nasa.worldwind.avlist.*;
 import gov.nasa.worldwind.event.*;
 import gov.nasa.worldwindx.examples.ApplicationTemplate;
+import gui.JFXMain;
+import gui.LaborItemGUIController;
+import javafx.scene.control.Dialog;
 import tasks.ProcessMapTask;
 import gov.nasa.worldwind.layers.*;
 import gov.nasa.worldwind.util.*;
@@ -83,7 +86,7 @@ public class ToolTipController implements SelectListener, Disposable
             if (event.isRollover() && this.rolloverKey != null) {
             	
             } else if (event.isHover() ) {//&& this.hoverKey != null) {
-            	 System.out.println("event.isHover");
+            	// System.out.println("event.isHover");
             	this.handleRollover(event);
             }
                 
@@ -109,20 +112,23 @@ public class ToolTipController implements SelectListener, Disposable
 	}
 
 	protected void handleRigthClick(SelectEvent event)  {
-        if (this.lastRightClickObject != null) {
-            if (this.lastRightClickObject == event.getTopObject() && !WWUtil.isEmpty(getRolloverText(event)))
-                return;
-
-            this.hideToolTip();
-            this.lastRightClickObject = null;
-            this.wwd.redraw();
-        }
+//        if (this.lastRightClickObject != null) {
+//            if (this.lastRightClickObject == event.getTopObject() && !WWUtil.isEmpty(getRolloverText(event)))
+//                return;
+//
+//            this.hideToolTip();
+//            this.lastRightClickObject = null;
+//            this.wwd.redraw();
+//        }
 
         if (event.getTopObject() != null && event.getTopObject() instanceof AVList) {
             this.lastRightClickObject = event.getTopObject();
+            
             LaborItem item = ((LaborItem)  ((AVList) this.lastRightClickObject).getValue(ProcessMapTask.LABOR_ITEM_AVKey) );	
-            this.showToolTip(event, "Borrar item "+item.getId()+"?"); 
-            this.wwd.redraw();
+            //this.showToolTip(event, "Borrar item "+item.getId()+"?"); 
+            //this.wwd.redraw();
+            LaborItemGUIController.showDialog(item,this.wwd);
+
         }
     }
     
