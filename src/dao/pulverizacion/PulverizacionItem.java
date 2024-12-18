@@ -86,7 +86,9 @@ public class PulverizacionItem extends LaborItem{
 	public Double getAmount() {
 		return getDosis();
 	}
-
+	public void setAmount(Double amount) {		
+		setDosis(amount);		
+}
 
 	@Override
 	public Object[] getSpecialElementsArray() {

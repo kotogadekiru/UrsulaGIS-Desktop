@@ -787,6 +787,7 @@ public abstract class Labor<E extends LaborItem>  {
 	 * @param newIDS
 	 */
 	public void constructFeatureContainerStandar(LaborItem ci, SimpleFeature harvestFeature, Boolean newIDS) {
+		ci.labor=this;
 		ci.id = LaborItem.getDoubleFromObj(LaborItem.getID(harvestFeature));
 		if(ci.id ==null || newIDS){// flag que me permita ignorar el id del feature y asignar uno nuevo
 			ci.id= this.getNextID();
@@ -882,6 +883,7 @@ public abstract class Labor<E extends LaborItem>  {
 	 * @return devuelve true si el item esta en outCollection
 	 */
 	public boolean owns(LaborItem item) {
+		//FIXME si tengo un clon y una original se confunde
 		Boolean ret =false;
 		Class<? extends LaborItem> itemClass = item.getClass();
 		List<E> queryRes = this.cachedOutStoreQuery(item.geometry.getEnvelopeInternal());

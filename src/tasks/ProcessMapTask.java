@@ -37,6 +37,12 @@ import dao.Clasificador;
 import dao.Labor;
 import dao.LaborItem;
 import dao.Poligono;
+import dao.cosecha.CosechaItem;
+import dao.fertilizacion.FertilizacionItem;
+import dao.margen.MargenItem;
+import dao.pulverizacion.PulverizacionItem;
+import dao.siembra.SiembraItem;
+import dao.suelo.SueloItem;
 import gov.nasa.worldwind.WorldWind;
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Extent;
@@ -73,6 +79,12 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
+import tasks.crear.ConvertirASiembraTask;
+import tasks.crear.CrearCosechaMapTask;
+import tasks.crear.CrearFertilizacionMapTask;
+import tasks.crear.CrearPulverizacionMapTask;
+import tasks.crear.CrearSueloMapTask;
+import tasks.importar.OpenMargenMapTask;
 import utils.GeometryHelper;
 import utils.PolygonValidator;
 import utils.ProyectionConstants;
@@ -1043,9 +1055,29 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 //		//System.out.println("devolviendo los polygons "+polygons);
 //		return polygons;
 	}
-	protected abstract gov.nasa.worldwind.render.ExtrudedPolygon getPathTooltip(Geometry p, FC  fc,gov.nasa.worldwind.render.ExtrudedPolygon  renderablePolygon);
+	
+	//protected abstract gov.nasa.worldwind.render.ExtrudedPolygon getPathTooltip(Geometry p, FC  fc,gov.nasa.worldwind.render.ExtrudedPolygon  renderablePolygon);
 
-
+	
+	protected ExtrudedPolygon getPathTooltip(Geometry p, FC fc, ExtrudedPolygon renderablePolygon) {
+		double area = p.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+		String tooltipText = "";
+		if(fc instanceof CosechaItem) {
+			tooltipText = CrearCosechaMapTask.buildTooltipText((dao.cosecha.CosechaItem)fc, area);			
+		} else 	if(fc instanceof SiembraItem) {
+			tooltipText = ConvertirASiembraTask.buildTooltipText((SiembraItem)fc, area); 
+		} else 	if(fc instanceof FertilizacionItem) {
+			tooltipText = CrearFertilizacionMapTask.buildTooltipText((FertilizacionItem)fc, area); 
+		} else 	if(fc instanceof PulverizacionItem) {
+			tooltipText = CrearPulverizacionMapTask.buildTooltipText((PulverizacionItem)fc, area);
+		} else 	if(fc instanceof SueloItem) {
+			tooltipText = CrearSueloMapTask.buildTooltipText((SueloItem)fc, area);
+		}else 	if(fc instanceof MargenItem) {
+			tooltipText = OpenMargenMapTask.buildTooltipText((MargenItem)fc, area);
+		}
+		return getExtrudedPolygonFromGeom(p, fc,tooltipText,renderablePolygon);
+	} 
+	
 	protected List<FC> getItemsList(){
 		List<FC> cItems = new ArrayList<FC>();
 		try {

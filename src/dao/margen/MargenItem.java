@@ -101,6 +101,10 @@ public class MargenItem extends LaborItem{
 		}
 		return getRentabilidadHa();
 	}
+	
+	public void setAmount(Double amount) {		
+			setMargenPorHa(amount);		
+	}
 
 //	public void setImporteCosechaHa(Double importeCosechaPorHa) {
 //		this.importeCosechaHa =importeCosechaPorHa; 

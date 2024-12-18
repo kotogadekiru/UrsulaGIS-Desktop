@@ -260,7 +260,10 @@ public class LaborDataStore<E> {
 	}
 	
 	public static void insertFeature(LaborItem laborItem, Labor<? extends LaborItem> labor) {
-		checkLock(labor);
+		if(laborItem == null) {
+			return;
+		}	
+		checkLock(labor);//wait until lock released
 		Geometry cosechaGeom = laborItem.getGeometry();
 		Envelope geomEnvelope=cosechaGeom.getEnvelopeInternal();
 
@@ -288,19 +291,22 @@ public class LaborDataStore<E> {
 	}
 	
 	public static void changeFeature(SimpleFeature old, LaborItem ci, Labor<? extends LaborItem> labor) {
-		checkLock(labor);
+		checkLock(labor);//wait until feature released
+		try {
 		if(old!=null) {
 			boolean removed = labor.outCollection.remove(old);
 			Geometry g= (Geometry) old.getDefaultGeometry();
-			labor.treeCache.remove(g.getEnvelopeInternal(), labor);
+			if(labor.treeCache!=null) {
+				labor.treeCache.remove(g.getEnvelopeInternal(), labor);
+			}
 			if(removed) {
 				System.out.println("removi el feature "+old);
 			}
 		}
-		if(ci == null) {
-			return;
+		}finally {
+			locked.remove(labor);
 		}
-		locked.remove(labor);
+		
 		insertFeature(ci, labor);//insertFeature tiene su propio lock
 
 		

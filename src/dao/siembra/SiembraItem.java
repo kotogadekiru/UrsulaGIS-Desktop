@@ -90,6 +90,9 @@ public class SiembraItem extends LaborItem {
 		return getDosisHa();
 	}
 
+	public void setAmount(Double amount) {		
+		setDosisHa(amount);		
+}
 	@Override
 	public Object[] getSpecialElementsArray() {
 		Object[] elements = new Object[]{
