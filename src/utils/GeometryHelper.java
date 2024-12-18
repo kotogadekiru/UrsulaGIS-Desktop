@@ -40,6 +40,12 @@ import gui.PoligonLayerFactory;
 import tasks.procesar.ExtraerPoligonosDeLaborTask;
 
 public class GeometryHelper {
+	
+	/**
+	 * metodo que une los poligonos mostrados como medicion de area
+	 * @param pActivos
+	 * @return
+	 */
 	public static Poligono unirPoligonos(List<Poligono> pActivos) {
 
 		StringJoiner joiner = new StringJoiner("-");
@@ -1020,6 +1026,12 @@ public class GeometryHelper {
 					try {
 						union=union.union(g);
 					}catch(Exception e2) {
+//						try{
+//							buffered = EnhancedPrecisionOp.buffer(colectionCat, buffer);//java.lang.IllegalArgumentException: Comparison method violates its general contract!
+//						}catch(Exception e2){
+//							e2.printStackTrace();
+//						}
+						
 						e2.printStackTrace();
 					}
 				}
