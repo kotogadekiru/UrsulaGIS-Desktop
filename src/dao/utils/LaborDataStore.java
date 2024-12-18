@@ -289,11 +289,20 @@ public class LaborDataStore<E> {
 	
 	public static void changeFeature(SimpleFeature old, LaborItem ci, Labor<? extends LaborItem> labor) {
 		checkLock(labor);
-		labor.outCollection.remove(old);
-		boolean ret = labor.outCollection.add(ci.getFeature(labor.getFeatureBuilder()));
-		if(!ret) {
-			System.err.println("no se pudo agregar la feature id "+ci.getId()+" en LaborDataStore.changeFeatyre" );
+		if(old!=null) {
+			boolean removed = labor.outCollection.remove(old);
+			Geometry g= (Geometry) old.getDefaultGeometry();
+			labor.treeCache.remove(g.getEnvelopeInternal(), labor);
+			if(removed) {
+				System.out.println("removi el feature "+old);
+			}
+		}
+		if(ci == null) {
+			return;
 		}
 		locked.remove(labor);
+		insertFeature(ci, labor);//insertFeature tiene su propio lock
+
+		
 	}
 }

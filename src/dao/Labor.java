@@ -83,7 +83,7 @@ import utils.GeometryHelper;
 	@NamedQuery(name=Labor.FIND_ACTIVOS, query="SELECT o FROM Labor o where o.activo = true") ,
 }) 
 public abstract class Labor<E extends LaborItem>  {
-	private static final String THE_GEOM_OLUMN = "the_geom";
+	//private static final String THE_GEOM_OLUMN = "the_geom";
 	@Transient public static final String FIND_ALL="Labor.findAll";
 	@Transient public static final String FIND_NAME = "Labor.findName";
 	@Transient public static final String FIND_ACTIVOS = "Labor.findActivos";
@@ -210,6 +210,7 @@ public abstract class Labor<E extends LaborItem>  {
 	}
 
 	private void initConfigLabor() {
+		
 		List<String> availableColums = this.getAvailableColumns();		
 		LaborConfig laborConfig = getConfigLabor();
 		Configuracion properties = laborConfig.getConfigProperties();
@@ -253,12 +254,7 @@ public abstract class Labor<E extends LaborItem>  {
 		clasificador.clasesClasificadorProperty.addListener((obs,bool1,bool2)->{
 			properties.setProperty(Clasificador.NUMERO_CLASES_CLASIFICACION, bool2.toString());
 		});
-
-
 	}
-
-
-
 
 	/**
 	 * @return the precioLaborProperty
@@ -880,6 +876,28 @@ public abstract class Labor<E extends LaborItem>  {
 		}		
 	}
 	
+	/**
+	 * 
+	 * @param item
+	 * @return devuelve true si el item esta en outCollection
+	 */
+	public boolean owns(LaborItem item) {
+		Boolean ret =false;
+		Class<? extends LaborItem> itemClass = item.getClass();
+		List<E> queryRes = this.cachedOutStoreQuery(item.geometry.getEnvelopeInternal());
+		if(queryRes.size()>0) {
+			for(E i:queryRes) {
+				if(i.getClass().isAssignableFrom(itemClass)) {
+					if(i.equals(item)) {
+						return true;
+					}
+				}else {
+					return false;//no es de la misma clase
+				}
+			}
+		}
+		return ret;
+	}
 
 //	public Poligono getContorno() {
 //		if(contorno==null) {
