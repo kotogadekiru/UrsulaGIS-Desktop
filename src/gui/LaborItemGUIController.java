@@ -1,16 +1,21 @@
 package gui;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
 import org.opengis.feature.simple.SimpleFeature;
 
+import com.vividsolutions.jts.geom.Geometry;
+
 import dao.Labor;
 import dao.LaborItem;
+import dao.Poligono;
 import gov.nasa.worldwind.WorldWindow;
 import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.LayerList;
+import gui.controller.AbstractGUIController;
 import gui.utils.SmartTableView;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -29,11 +34,17 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import tasks.procesar.RedrawMapTask;
+import utils.GeometryHelper;
 
 /**
  * Clase que maneja los eventos directos sobre los items
  */
-public class LaborItemGUIController {
+public class LaborItemGUIController extends AbstractGUIController{
+
+	public LaborItemGUIController(JFXMain _main) {
+		super(_main);
+		// TODO Auto-generated constructor stub
+	}
 
 	public static List<Labor<?>> getLaboresCargadas(WorldWindow wwd) {
 		List<Labor<?>> recorridasActivas =new ArrayList<Labor<?>>();
@@ -84,7 +95,7 @@ public class LaborItemGUIController {
 	}
 
 	//Llamado desde tootlipController al hacer right click sobre el item
-	public static void showDialog( LaborItem item, WorldWindow wwd) {
+	public void showDialog( LaborItem item) {
 		Platform.runLater(()->{
 			try {
 				Dialog<Boolean> d= new Dialog<Boolean>();
@@ -103,21 +114,29 @@ public class LaborItemGUIController {
 				Button delete = new Button(Messages.getString("LaborItemGUIController.Borrar"));
 				delete.setOnAction(a->{
 					System.out.println("borrar item "+item.getId());
-					doDeleteAction(item, wwd);
+					doDeleteAction(item, this.getWwd());
 					window.hide();				
 				});
-
 				VBox.setMargin(delete, new Insets(5,10, 5, 5));
+				
 				Button edit =new Button(Messages.getString("LaborItemGUIController.Editar"));
 				edit.setOnAction(a->{
 					System.out.println("editar item "+item.getId());	
-					doEditAction(item,wwd);
+					doEditAction(item,this.getWwd());
 					window.hide();				
 				});
-
 				VBox.setMargin(edit, new Insets(5,10, 5, 5));
+				
+				Button extractPoligono =new Button(Messages.getString("LaborItemGUIController.ExtraerPoligono"));
+				extractPoligono.setOnAction(a->{
+					System.out.println("editar item "+item.getId());	
+					doExtraerPoligonoAction(item,this.getWwd());
+					window.hide();				
+				});
+				VBox.setMargin(extractPoligono, new Insets(5,10, 5, 5));
+				
 				VBox v= new VBox();
-				v.getChildren().addAll(delete,edit);
+				v.getChildren().addAll(delete,edit,extractPoligono);
 				v.setPadding(new Insets(10, 10, 10, 10));
 
 				d.getDialogPane().setContent(v);
@@ -132,6 +151,13 @@ public class LaborItemGUIController {
 				e.printStackTrace();
 			}
 		});
+	}
+
+	private void doExtraerPoligonoAction(LaborItem item, WorldWindow wwd) {
+		Geometry g = item.getGeometry();
+		Poligono p = GeometryHelper.constructPoligono(g);
+		this.main.poligonoGUIController.showPoligonos(Arrays.asList(p));
+		
 	}
 
 	private static void doEditAction(LaborItem item, WorldWindow wwd) {

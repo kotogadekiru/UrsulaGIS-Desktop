@@ -292,7 +292,7 @@ public class JFXMain extends Application {
 		// SwingUtilities.invokeLater(()-> {			                	 
 		try {
 			// Create the WorldWindow.
-			wwjPanel =	new WWPanel(canvasSize, true);
+			wwjPanel =	new WWPanel(canvasSize, true,this);
 			wwSwingNode.setContent(wwjPanel);
 		}catch(Exception e) {
 			Platform.runLater(()->{
