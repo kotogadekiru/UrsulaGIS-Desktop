@@ -85,7 +85,7 @@ public class MargenGUIController extends AbstractGUIController {
 		uMmTask.setOnSucceeded(handler -> {
 			this.getLayerPanel().update(this.getWwd());
 			uMmTask.uninstallProgressBar();
-			this.wwjPanel.repaint();
+			this.main.wwjPanel.repaint();
 			System.out.println(Messages.getString("JFXMain.326")); 
 			playSound();
 		});

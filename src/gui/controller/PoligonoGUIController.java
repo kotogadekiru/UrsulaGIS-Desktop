@@ -806,7 +806,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 			List<Poligono> poligonos = (List<Poligono>)handler.getSource().getValue();
 			showPoligonos(poligonos);			
 			umTask.uninstallProgressBar();
-			this.wwjPanel.repaint();
+			this.main.wwjPanel.repaint();
 			System.out.println(Messages.getString("JFXMain.280")); 
 			playSound();
 		});//fin del OnSucceeded						

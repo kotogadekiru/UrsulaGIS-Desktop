@@ -274,6 +274,7 @@ public class SumarMargenesMapTask extends ProcessMapTask<MargenItem,Margen> {
 				importeCosechaHa+=cPoly.getImporteCosechaHa()*peso;
 				margenPorHa+=cPoly.getMargenPorHa()*peso;
 				costoFijoPorHa+=cPoly.getCostoFijoPorHa()*peso;
+				
 
 				elev+=cPoly.getElevacion()*peso;
 			}

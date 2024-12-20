@@ -17,15 +17,13 @@ public abstract class AbstractGUIController {
 	public JFXMain main=null;
 	public Pane progressBox;
 	public ExecutorService executorPool;
-	public WWPanel wwjPanel;
+	//public WWPanel wwjPanel;
 	public LayerPanel layerPanel;
 
 	public AbstractGUIController(JFXMain _main) {
 		this.main=_main;		
 		this.progressBox=main.progressBox;
-		this.executorPool=JFXMain.executorPool;
-		this.wwjPanel=main.wwjPanel;
-		
+		this.executorPool=JFXMain.executorPool;		
 	}
 	public void insertBeforeCompass(WorldWindow wwd, RenderableLayer applicationLayer) {
 		JFXMain.insertBeforeCompass(wwd, applicationLayer);		
