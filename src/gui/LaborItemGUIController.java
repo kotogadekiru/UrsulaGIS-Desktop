@@ -91,11 +91,16 @@ public class LaborItemGUIController {
 				Window window = d.getDialogPane().getScene().getWindow();
 				window.setOnCloseRequest((e) -> d.hide());
 				d.initOwner(JFXMain.stage);
-				d.setTitle("Item "+item.getId()+" Actions");
+				
+				
+
+				
+				d.setTitle(Messages.getString("LaborItemGUIController.Item")+item.getId()
+				+" "+Messages.getString("LaborItemGUIController.Acciones"));
 
 				//		d.getDialogPane().getButtonTypes().add(ButtonType.OK);
 				//		d.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
-				Button delete = new Button("Delete");
+				Button delete = new Button(Messages.getString("LaborItemGUIController.Borrar"));
 				delete.setOnAction(a->{
 					System.out.println("borrar item "+item.getId());
 					doDeleteAction(item, wwd);
@@ -103,7 +108,7 @@ public class LaborItemGUIController {
 				});
 
 				VBox.setMargin(delete, new Insets(5,10, 5, 5));
-				Button edit =new Button("Edit");
+				Button edit =new Button(Messages.getString("LaborItemGUIController.Editar"));
 				edit.setOnAction(a->{
 					System.out.println("editar item "+item.getId());	
 					doEditAction(item,wwd);
