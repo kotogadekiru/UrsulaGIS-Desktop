@@ -76,8 +76,14 @@ public class ToolTipController implements SelectListener, Disposable
     }
 
     protected String getRolloverText(SelectEvent event) {
-        return event.getTopObject() != null && event.getTopObject() instanceof AVList ?
-            ((AVList) event.getTopObject()).getStringValue(this.rolloverKey) : null;
+    	Object obj = event.getTopObject();
+    	String ret=null;
+    	if(obj instanceof AVList) {
+    		ret = ((AVList) obj).getStringValue(this.rolloverKey);
+    	}
+    	return ret;
+//        return event.getTopObject() != null && event.getTopObject() instanceof AVList ?
+//            ((AVList) event.getTopObject()).getStringValue(this.rolloverKey) : null;
     }
 
     public void selected(SelectEvent event) {

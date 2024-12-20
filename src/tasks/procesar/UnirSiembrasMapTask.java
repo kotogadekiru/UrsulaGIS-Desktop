@@ -60,9 +60,9 @@ public class UnirSiembrasMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 		
 		labor.getConfiguracion().valorMetrosPorUnidadDistanciaProperty().set(1.0);
 		//labor.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
-		String nombreProgressBar = "clonar cosecha";
+		String nombreProgressBar = "clonar siembras";
 		if(_siembras.size()>1){
-			nombreProgressBar = "unir cosechas";
+			nombreProgressBar = "unir siembras";
 		}
 		labor.setNombre(nombreProgressBar);//este es el nombre que se muestra en el progressbar
 	}
@@ -104,13 +104,10 @@ public class UnirSiembrasMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 				//TODO multiplicar ci.rinde por el coeficiente de conversion
 			
 				ci.setDosisML(ci.getDosisML()*10);//XXX verificar que ande para otras unidades
-				SimpleFeature nf=ci.getFeature(labor.getFeatureBuilder());
-				
-				boolean ret = labor.outCollection.add(nf);
-				featuresInsertadas++;
-				if(!ret){
-					System.out.println("no se pudo agregar la feature "+f);
-				}
+				//SimpleFeature nf=ci.getFeature(labor.getFeatureBuilder());
+				labor.insertFeature(ci);
+				//boolean ret = labor.outCollection.add(nf);
+				featuresInsertadas++;			
 			}
 			
 			reader.close();
@@ -138,7 +135,7 @@ public class UnirSiembrasMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 
 
 		
-			siembras.forEach((c)->c.getLayer().setEnabled(false));
+		siembras.forEach((c)->c.getLayer().setEnabled(false));
 
 
 		runLater(this.getItemsList());

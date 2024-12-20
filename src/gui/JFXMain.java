@@ -32,6 +32,7 @@ import dao.Poligono;
 import dao.config.Configuracion;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
+import dao.margen.Margen;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.recorrida.Recorrida;
 import dao.siembra.SiembraLabor;
@@ -423,6 +424,7 @@ public class JFXMain extends Application {
 		cosechaGUIController.addCosechasRootNodeActions();
 		poligonoGUIController.addPoligonosRootNodeActions();
 		ndviGUIController.addNdviRootNodeActions();
+		margenGUIController.addMargenRootNodeActions();
 
 		Map<Class<?>,List<LayerAction>> predicates = new HashMap<Class<?>,List<LayerAction>>();
 
@@ -752,6 +754,11 @@ public class JFXMain extends Application {
 	@SuppressWarnings("unchecked")
 	public List<CosechaLabor> getCosechasSeleccionadas() {
 		return (List<CosechaLabor>) getObjectFromEnabledLayersOfClass(CosechaLabor.class);	
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Margen> getMargenesSeleccionados() {
+		return (List<Margen>) getObjectFromEnabledLayersOfClass(Margen.class);	
 	}
 
 	@SuppressWarnings("unchecked")
