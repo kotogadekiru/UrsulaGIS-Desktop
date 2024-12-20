@@ -1,7 +1,6 @@
 package tasks.procesar;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -9,34 +8,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
 import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.geometry.BoundingBox;
-import org.opengis.geometry.DirectPosition;
 
-import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 
 import dao.config.Cultivo;
-import dao.cosecha.CosechaConfig;
-import dao.cosecha.CosechaItem;
-import dao.cosecha.CosechaLabor;
 import dao.margen.Margen;
 import dao.margen.MargenItem;
-import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
 import gui.nww.LaborLayer;
 import tasks.ProcessMapTask;
-import tasks.crear.CrearCosechaMapTask;
 import utils.GeometryHelper;
-import utils.ProyectionConstants;
 
 public class SumarMargenesMapTask extends ProcessMapTask<MargenItem,Margen> {
 	/**
@@ -152,7 +140,7 @@ public class SumarMargenesMapTask extends ProcessMapTask<MargenItem,Margen> {
 
 							if(item!=null){
 								map.put(poly,item);
-								//	items.add(item);
+								
 								SimpleFeatureBuilder fBuilder = new SimpleFeatureBuilder(
 										labor.getType());
 								SimpleFeature f = item.getFeature(fBuilder);
