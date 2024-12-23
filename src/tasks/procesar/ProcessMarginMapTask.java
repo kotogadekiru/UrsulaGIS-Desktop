@@ -76,22 +76,25 @@ public class ProcessMarginMapTask extends ProcessMapTask<MargenItem,Margen> {
 		labores.addAll(pulverizaciones);
 		labores.addAll(siembras);
 		labores.addAll(cosechas);	
-	
-	
+		updateProgress(1, 100);	
+	System.out.println("Construyendo grilla labores");
 		ReferencedEnvelope unionEnvelope = getBounds(labores);
 		List<Polygon> grilla = construirGrilla(unionEnvelope);
-
+		updateProgress(2, 100);	
+		System.out.println("extrayendo geometrias activas");
 		List<Geometry> geometriasActivas = labores.parallelStream().collect(
 				()->new ArrayList<Geometry>(),
 				(activas, labor) ->{		
-					@SuppressWarnings("unchecked")
-					List<LaborItem> features = (List<LaborItem>) labor.outStoreQuery(unionEnvelope);
-					activas.addAll(
-							features.parallelStream().collect(
-							()->new ArrayList<Geometry>(),
-							(list, f) -> list.add((Geometry) f.getGeometry()),
-							(env1, env2) -> env1.addAll(env2))
-							);
+					Geometry contorno = GeometryHelper.extractContornoGeometry(labor);
+					activas.add(contorno);
+//					@SuppressWarnings("unchecked")
+//					List<LaborItem> features = (List<LaborItem>) labor.outStoreQuery(unionEnvelope);
+//					activas.addAll(
+//							features.parallelStream().collect(
+//							()->new ArrayList<Geometry>(),
+//							(list, f) -> list.add((Geometry) f.getGeometry()),
+//							(env1, env2) -> env1.addAll(env2))
+//							);
 				},	(env1, env2) -> env1.addAll(env2));
 		
 		GeometryCollection activasCollection = GeometryHelper.toGeometryCollection(geometriasActivas);
