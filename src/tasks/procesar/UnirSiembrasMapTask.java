@@ -77,7 +77,7 @@ public class UnirSiembrasMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 		//	ReferencedEnvelope unionEnvelope = null;
 		//double ancho = labor.getConfiguracion().getAnchoFiltroOutlayers();
 		String nombre =null;
-		String prefijo = "grilla";
+		String prefijo = "Grilla";
 		if(siembras.size()>1){
 			prefijo = "Union";
 		}

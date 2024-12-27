@@ -55,7 +55,7 @@ public class FertilizacionGUIController extends AbstractGUIController {
 		},Messages.getString("JFXMain.importar")));
 
 		rootNodeP.add(new LayerAction(Messages.getString("JFXMain.unirFertilizaciones"),(layer)->{
-			doUnirFertilizaciones();
+			doUnirFertilizaciones(null);
 			return "unidas";	
 		},2));
 		getLayerPanel().addAccionesClase(rootNodeP,FertilizacionLabor.class);
@@ -64,6 +64,14 @@ public class FertilizacionGUIController extends AbstractGUIController {
 	public void addAccionesFertilizacion(Map<Class<?>, List<LayerAction>> predicates) {
 		List<LayerAction> fertilizacionesP = new ArrayList<LayerAction>();
 		predicates.put(FertilizacionLabor.class, fertilizacionesP);
+		/**
+		 * Accion que permite clonar la fertilizacion
+		 */
+		fertilizacionesP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.clonar"),(layer)->{
+			doUnirFertilizaciones((FertilizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+			return "fertilizacion clonada" + layer.getName(); 
+		}));
+		
 		/**
 		 *Accion que permite editar una fertilizacion
 		 */
@@ -391,8 +399,15 @@ public class FertilizacionGUIController extends AbstractGUIController {
 		}//if stores != null
 	}
 
-	private void doUnirFertilizaciones() {
-		List<FertilizacionLabor> fertilizacionesAUnir = main.getFertilizacionesSeleccionadas();//si no hago esto me da un concurrent modification exception al modificar layers en paralelo
+	private void doUnirFertilizaciones(FertilizacionLabor fertilizacionLabor) {
+		List<FertilizacionLabor> fertilizacionesAUnir = new ArrayList<FertilizacionLabor>();
+		if(fertilizacionLabor == null){
+			List<FertilizacionLabor> fertilizacionesEnabled = main.getFertilizacionesSeleccionadas();
+			fertilizacionesAUnir.addAll(fertilizacionesEnabled);
+		} else {
+			fertilizacionesAUnir.add(fertilizacionLabor);
+		}
+		
 		UnirFertilizacionesMapTask umTask = new UnirFertilizacionesMapTask(fertilizacionesAUnir);
 		umTask.installProgressBar(progressBox);
 		umTask.setOnSucceeded(handler -> {

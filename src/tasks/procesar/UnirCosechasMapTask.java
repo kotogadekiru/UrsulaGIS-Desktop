@@ -71,9 +71,9 @@ public class UnirCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 		//	ReferencedEnvelope unionEnvelope = null;
 		//double ancho = labor.getConfiguracion().getAnchoFiltroOutlayers();
 		String nombre =null;
-		String prefijo = "clon";
+		String prefijo = "Clon";
 		if(cosechas.size()>1){
-			prefijo = "union";
+			prefijo = "Union";
 		}
 		int featuresInsertadas=0;
 		//TODO agregar una etapa de calibracion de cosechas
