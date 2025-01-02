@@ -112,6 +112,9 @@ public abstract class Labor<E extends LaborItem>  {
 	@Lob
 	private byte[] content=null;//el contenido zip shpfile
 	
+	/**
+	 * ProductoLabor contiene el tipo de labor que es. ya sea labor de cosecha, siembra o fertilizacion
+	 */
 	@ManyToOne(cascade=CascadeType.PERSIST)
 	public ProductoLabor productoLabor= null;
 
