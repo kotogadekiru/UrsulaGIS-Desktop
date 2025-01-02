@@ -1,28 +1,18 @@
 package tasks.procesar;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.OptionalDouble;
 
 import org.geotools.data.FeatureReader;
-import org.geotools.data.simple.SimpleFeatureIterator;
-import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
-import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 
-import dao.cosecha.CosechaItem;
-import dao.cosecha.CosechaLabor;
 import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
-import gui.Messages;
 import gui.nww.LaborLayer;
 import tasks.ProcessMapTask;
 import tasks.crear.ConvertirASiembraTask;
@@ -77,7 +67,7 @@ public class UnirSiembrasMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 		//	ReferencedEnvelope unionEnvelope = null;
 		//double ancho = labor.getConfiguracion().getAnchoFiltroOutlayers();
 		String nombre =null;
-		String prefijo = "grilla";
+		String prefijo = "Grilla";
 		if(siembras.size()>1){
 			prefijo = "Union";
 		}
