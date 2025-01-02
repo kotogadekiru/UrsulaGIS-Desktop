@@ -1,24 +1,17 @@
 package tasks.procesar;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalDouble;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.geotools.data.FeatureReader;
-import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
-import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
-import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -34,8 +27,8 @@ import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.margen.Margen;
 import dao.margen.MargenItem;
-import dao.pulverizacion.PulverizacionLabor;
 import dao.pulverizacion.PulverizacionItem;
+import dao.pulverizacion.PulverizacionLabor;
 import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
 import dao.suelo.Suelo;
@@ -79,7 +72,7 @@ public class CortarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem
 		labor.setNombre(_laborACortar.getNombre()+"-"+String.join("-", nombres));//este es el nombre que se muestra en el progressbar
 	}
 
-	public Map<Class, Function<Labor, Labor>> laborConstructor() {
+	public static Map<Class, Function<Labor, Labor>> laborConstructor() {
 		Map<Class,Function<Labor,Labor>> constructor = new HashMap<Class,Function<Labor,Labor>>();
 		constructor.put(CosechaLabor.class, l->{
 			return new CosechaLabor();
@@ -119,7 +112,7 @@ public class CortarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem
 		return constructor;
 	}
 
-	public Map<Class,Function<LaborItem,String>> constructTooltipCreator() {
+	public static Map<Class,Function<LaborItem,String>> constructTooltipCreator() {
 		Map<Class,Function<LaborItem,String>> tooltipCreator = new HashMap<Class,Function<LaborItem,String>>();
 		tooltipCreator.put(CosechaLabor.class, li->{
 			Geometry poly = li.getGeometry();
