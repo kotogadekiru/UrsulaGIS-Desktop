@@ -57,10 +57,10 @@ public class PulverizacionGUIController {
 		/**
 		 * Accion que permite clonar la pulverizacion
 		 */
-		pulverizacionesP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.clonar"),(layer)->{
-			doUnirPulverizaciones((PulverizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-			return "pulverizacion clonada" + layer.getName(); 
-		}));
+//		pulverizacionesP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.clonar"),(layer)->{
+//			doUnirPulverizaciones((PulverizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+//			return "pulverizacion clonada" + layer.getName(); 
+//		}));
 		
 		/**
 		 *Accion que permite editar una pulverizacion

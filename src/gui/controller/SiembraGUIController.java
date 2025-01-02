@@ -76,10 +76,10 @@ public class SiembraGUIController {
 		/**
 		 * Accion que permite clonar la cosecha
 		 */
-		siembrasP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.clonar"),(layer)->{
-			doUnirSiembras((SiembraLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-			return "siembra clonada" + layer.getName(); 
-		}));
+//		siembrasP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.clonar"),(layer)->{
+//			doUnirSiembras((SiembraLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+//			return "siembra clonada" + layer.getName(); 
+//		}));
 		
 		/**
 		 *Accion que permite editar una siembra

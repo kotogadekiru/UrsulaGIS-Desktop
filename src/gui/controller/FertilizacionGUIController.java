@@ -62,10 +62,10 @@ public class FertilizacionGUIController extends AbstractGUIController {
 		/**
 		 * Accion que permite clonar la fertilizacion
 		 */
-		fertilizacionesP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.clonar"),(layer)->{
-			doUnirFertilizaciones((FertilizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-			return "fertilizacion clonada" + layer.getName(); 
-		}));
+//		fertilizacionesP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.clonar"),(layer)->{
+//			doUnirFertilizaciones((FertilizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+//			return "fertilizacion clonada" + layer.getName(); 
+//		}));
 		
 		/**
 		 *Accion que permite editar una fertilizacion
