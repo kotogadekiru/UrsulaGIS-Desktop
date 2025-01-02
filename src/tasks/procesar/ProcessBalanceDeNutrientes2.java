@@ -510,7 +510,7 @@ public class ProcessBalanceDeNutrientes2 extends ProcessMapTask<SueloItem,Suelo>
 //	}
 
 	public void getKgNutrientesFertilizacion(Geometry geometry, NutrienteSuelo item, FertilizacionLabor fert) {
-		Fertilizante fertilizante = fert.fertilizanteProperty.getValue();
+		Fertilizante fertilizante = fert.fertilizante;
 		List<FertilizacionItem> items = fert.cachedOutStoreQuery(geometry.getEnvelopeInternal());
 		NutrienteSuelo nutrientesFertilizacion = items.stream().collect( 
 				() -> new NutrienteSuelo(), 

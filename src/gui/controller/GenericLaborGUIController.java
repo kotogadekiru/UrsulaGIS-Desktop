@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.geotools.data.FileDataStore;
 
@@ -12,10 +11,10 @@ import dao.Labor;
 import dao.Ndvi;
 import dao.Poligono;
 import dao.margen.Margen;
+import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.util.measure.MeasureTool;
 import gui.CosechaHistoChart;
 import gui.JFXMain;
-import gui.MargenConfigDialogController;
 import gui.Messages;
 import gui.PoligonLayerFactory;
 import gui.nww.LayerAction;
@@ -27,6 +26,7 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import tasks.ExportLaborMapTask;
 import tasks.importar.OpenMargenMapTask;
+import tasks.procesar.ClonarLaborMapTask;
 import tasks.procesar.JuntarShapefilesTask;
 import utils.DAH;
 import utils.FileHelper;
@@ -36,31 +36,6 @@ public class GenericLaborGUIController extends AbstractGUIController {
 
 	public GenericLaborGUIController(JFXMain _main) {
 		super(_main);
-	}
-
-	public void addMargenRootNodeActions() {
-		List<LayerAction> rootNodeP = new ArrayList<LayerAction>();
-//		rootNodeP.add(new LayerAction(
-//				(layer)->{	this.doOpenCosecha(null);
-//				return "opened";	
-//				},Messages.getString("JFXMain.importar")));
-//
-//		rootNodeP.add(new LayerAction(
-//				Messages.getString("JFXMain.unirCosechas"),
-//				(layer)->{
-//					this.doUnirCosechas(null);
-//					return "joined";	
-//				},
-//				2));
-//		rootNodeP.add(new LayerAction(
-//				Messages.getString("JFXMain.sumarCosechas"),
-//				(layer)->{
-//					this.doSumarCosechas();
-//					return "joined";	
-//				},
-//				2));
-
-		getLayerPanel().addAccionesClase(rootNodeP,Labor.class);
 	}
 	
 	public void addAccionesLabor(Map<Class<?>, List<LayerAction>> predicates) {
@@ -84,6 +59,39 @@ public class GenericLaborGUIController extends AbstractGUIController {
 			return "guarde labor " + layer.getName();
 		}));
 
+		laboresP.add(LayerAction.constructPredicate(Messages.getString("GenericLaborGUIController.ClonarLabor"),(layer)->{
+		
+			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			if (layerObject==null){
+			}else if(Labor.class.isAssignableFrom(layerObject.getClass())){
+				doClonarLabor((Labor<?>) layerObject);
+			}
+			return "clone labor " + layer.getName();
+		}));
+		
+		laboresP.add(LayerAction.constructPredicate(Messages.getString("GenericLaborGUIController.ResumirLabor"),(layer)->{
+			
+			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			if (layerObject==null){
+			}else if(Labor.class.isAssignableFrom(layerObject.getClass())){
+				doResumirLabor((Labor<?>) layerObject);
+			}
+			return "clone labor " + layer.getName();
+		}));
+		
+		laboresP.add(LayerAction.constructPredicate(Messages.getString("GenericLaborGUIController.OutliersLabor"),(layer)->{
+			
+			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+			if (layerObject==null){
+			}else if(Labor.class.isAssignableFrom(layerObject.getClass())){
+				doOutliersLabor((Labor<?>) layerObject);
+			}
+			return "filtre outliers labor " + layer.getName();
+		}));
+
+
+		
+		
 		/**
 		 * Accion que muesta el histograma
 		 */
@@ -195,50 +203,80 @@ public class GenericLaborGUIController extends AbstractGUIController {
 		//editar opacidad
 		//JFXMain.layerTransparencia=Transparencia
 		todosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.layerTransparencia"),(layer)->{
-			//TODO show stage with slider
-	//		Object layerObject =  layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-			double op = layer.getOpacity();
-			//double newOp = op*0.5;
-			
-			 Slider slider = new Slider(0, 1, op);
-			 slider.setShowTickMarks(true);
-			 slider.setShowTickLabels(true);
-			 slider.setMajorTickUnit(0.25f);
-			 slider.setBlockIncrement(0.1f);
-			 Scene sc = new Scene(slider,600,50);
-			 //TODO fixme no se ve un layer a travez del otro
-			 slider.valueProperty().addListener((obs,n,o)->{
-				 
-					layer.setOpacity(n.doubleValue());//newOp>0.1?newOp:1);
-					this.getWwd().redraw();
-					System.out.println("layer transparente" + layer.getName()+" "+layer.getOpacity());
-			 });
-			 Stage stage = new Stage();
-			 stage.setScene(sc);
-			 stage.initOwner(JFXMain.stage);
-			 stage.getIcons().addAll(JFXMain.stage.getIcons());
-			 stage.setTitle(Messages.getString("JFXMain.layerTransparencia")+" "+layer.getName());
-			 stage.show();
-			 
-					 
-			 
-
+			showTransparenciaSlider(layer);
 			return "layer transparente" + layer.getName()+" "+layer.getOpacity(); 
 		}));
+	}
+
+	public void showTransparenciaSlider(Layer layer) {
+		double op = layer.getOpacity();
+		//double newOp = op*0.5;
+		
+		 Slider slider = new Slider(0, 1, op);
+		 slider.setShowTickMarks(true);
+		 slider.setShowTickLabels(true);
+		 slider.setMajorTickUnit(0.25f);
+		 slider.setBlockIncrement(0.1f);
+		 Scene sc = new Scene(slider,600,50);
+		 //TODO fixme no se ve un layer a travez del otro
+		 slider.valueProperty().addListener((obs,n,o)->{
+			 
+				layer.setOpacity(n.doubleValue());//newOp>0.1?newOp:1);
+				this.getWwd().redraw();
+				System.out.println("layer transparente" + layer.getName()+" "+layer.getOpacity());
+		 });
+		 Stage stage = new Stage();
+		 stage.setScene(sc);
+		 stage.initOwner(JFXMain.stage);
+		 stage.getIcons().addAll(JFXMain.stage.getIcons());
+		 stage.setTitle(Messages.getString("JFXMain.layerTransparencia")+" "+layer.getName());
+		 stage.show();
 	}	
 	
+	private void doClonarLabor(Labor<?> labor) {
+		ClonarLaborMapTask umTask = new ClonarLaborMapTask(labor);
+		umTask.installProgressBar(progressBox);
+
+		//	testLayer();
+		umTask.setOnSucceeded(handler -> {
+			Labor ret = (Labor)handler.getSource().getValue();
+			insertBeforeCompass(getWwd(), ret.getLayer());
+			this.getLayerPanel().update(this.getWwd());
+			umTask.uninstallProgressBar();
+			viewGoTo(ret);
+			
+			playSound();
+		});//fin del OnSucceeded
+		JFXMain.executorPool.execute(umTask);
+	}
+	
+	private void doOutliersLabor(Labor<?> labor) {
+		//TODO filtrar outliers
+	}
+	
+	private void doResumirLabor(Labor<?> labor) {
+		//TODO resumir Labores
+	}
+		
 	private void doGuardarLabor(Labor<?> labor) {
 		File zipFile = FileHelper.zipLaborToTmpDir(labor);//ok funciona
 		byte[] byteArray = FileHelper.fileToByteArray(zipFile);		
 		labor.setContent(byteArray);
-		DAH.save(labor);
-
+		DAH.save(labor);//No se guardan las labores porque no extienden de entidad
 	}
 
 	public void doJuntarShapefiles() {
 		List<FileDataStore> stores = FileHelper.chooseShapeFileAndGetMultipleStores(null);
 		File shapeFile = FileHelper.getNewShapeFile("union");
-		executorPool.execute(()->JuntarShapefilesTask.process(stores,shapeFile));
+		//TODO agregar progress bar
+		JuntarShapefilesTask task = new JuntarShapefilesTask(stores,shapeFile);
+		task.installProgressBar(progressBox);
+
+		task.setOnSucceeded(handler -> {
+			playSound();
+			task.uninstallProgressBar();
+		});
+		executorPool.execute(task);
 	}
 	
 	private void showHistoLabor(Labor<?> cosechaLabor) {	

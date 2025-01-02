@@ -127,10 +127,11 @@ public class CosechaGUIController extends AbstractGUIController {
 		/**
 		 * Accion que permite clonar la cosecha
 		 */
-		cosechasP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.clonarCosechaAction"),(layer)->{
-			doUnirCosechas((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-			return "cosecha clonada" + layer.getName(); 
-		}));
+//		cosechasP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.clonarCosechaAction"),(layer)->{
+//			doUnirCosechas((CosechaLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+//			//XXX clonar cosecha fue reemplazado por clonar labor
+//			return "cosecha clonada" + layer.getName(); 
+//		}));
 
 		/**
 		 * Accion que permite cortar la cosecha por poligono

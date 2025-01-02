@@ -38,7 +38,7 @@ public class RecomendFertPFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 		featureCount=cosecha.outCollection.size();
 	//	List<FertilizacionItem> itemsToShow = new ArrayList<FertilizacionItem>();
 		Cultivo cultivo = cosecha.getCultivo();
-		Fertilizante fert = this.labor.fertilizanteProperty.getValue();
+		Fertilizante fert = this.labor.fertilizante;
 
 
 		List<CosechaItem> cItems = new ArrayList<CosechaItem>();

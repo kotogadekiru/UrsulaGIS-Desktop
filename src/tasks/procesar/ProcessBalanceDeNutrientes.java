@@ -716,7 +716,7 @@ private SueloItem createSueloForPoly(Geometry geomQuery) {
 	}
 
 	public void getKgNutrientesFertilizacion(Geometry geometry, Map<SueloParametro, Double> mapG, FertilizacionLabor fert) {
-		Fertilizante fertilizante = fert.fertilizanteProperty.getValue();
+		Fertilizante fertilizante = fert.fertilizante;
 		List<FertilizacionItem> items = fert.cachedOutStoreQuery(geometry.getEnvelopeInternal());
 		Map<SueloParametro,Double> nutrientesFertilizacion = items.stream().collect( 
 				() -> new ConcurrentHashMap<SueloParametro,Double>(), 
