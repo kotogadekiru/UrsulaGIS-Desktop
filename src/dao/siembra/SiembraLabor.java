@@ -90,7 +90,19 @@ public class SiembraLabor extends Labor<SiembraItem> {
 		//this.setInStore(store);// esto configura el nombre	
 		initConfig();
 	}
+	
+	public SiembraLabor(SiembraLabor s) {
+		super(s);
+		
+		setSemilla(s.getSemilla());
 
+		setFertLinea(s.getFertLinea());
+		setFertCostado(s.getFertCostado());
+		setEntreSurco(s.getEntreSurco());
+		setPlantasPorMetro(s.getPlantasPorMetro());
+		
+	//	initConfig();
+	}
 
 	private void initConfig() {
 		this.productoLabor=DAH.getProductoLabor(ProductoLabor.LABOR_DE_SIEMBRA);

@@ -58,13 +58,20 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
+import tasks.ProgresibleTask;
 import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
-public class JuntarShapefilesTask {
+public class JuntarShapefilesTask extends ProgresibleTask<File>{
+	List<FileDataStore> stores =null;
+	File shapeFile=null;
+	public JuntarShapefilesTask(List<FileDataStore> _stores,File _shapeFile){
+		super();
+		stores = _stores;
+		shapeFile =_shapeFile;
+	}
 	
-
-	public static void process(List<FileDataStore> stores,File shapeFile){
+	public void process(List<FileDataStore> stores,File shapeFile){
 
 		// seleccionar un directorio
 		// buscar todos los shapefiles dentro de el directorio
@@ -529,5 +536,11 @@ public class JuntarShapefilesTask {
 
 		}
 		return d;
+	}
+
+	@Override
+	protected File call() throws Exception {
+		process(stores,shapeFile);
+		return shapeFile;
 	}
 }

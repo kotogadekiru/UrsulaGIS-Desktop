@@ -81,10 +81,10 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 			}else {
 				nombre+=" - "+fert.getNombre();
 			}
-			if(labor.fertilizanteProperty.getValue()==null){//inicializo las propiedades con los valores de la primera fert unida
+			if(labor.fertilizante==null){//inicializo las propiedades con los valores de la primera fert unida
 				//esto no se corre porque en el constructor se inicializa con los valores default
 				System.out.println("inicializando las variables de la nueva fertilizacion con los de la primera fert a unir");
-				labor.fertilizanteProperty.setValue(fert.fertilizanteProperty.getValue());
+				labor.fertilizante=fert.fertilizante;
 				labor.setPrecioInsumo(fert.getPrecioInsumo());
 				labor.setFecha(fert.getFecha());
 				labor.setPrecioLabor(fert.getPrecioLabor());

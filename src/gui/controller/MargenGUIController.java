@@ -7,7 +7,6 @@ import java.util.Optional;
 
 import dao.Labor;
 import dao.margen.Margen;
-import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.layers.Layer;
 import gui.JFXMain;
 import gui.MargenConfigDialogController;

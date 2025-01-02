@@ -145,7 +145,7 @@ public class GenerarOrdenCompraTask  extends Task<OrdenCompra>{
 		
 		this.fertilizaciones.forEach(l->{
 			description.append(l.getNombre());
-			Producto producto =l.getFertilizanteProperty().getValue();
+			Producto producto =l.getFertilizante();
 			
 			double insumoTotal=0;
 			double laborTotal=0;
