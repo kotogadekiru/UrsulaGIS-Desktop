@@ -2,6 +2,7 @@ package tasks.procesar;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -32,6 +33,8 @@ import dao.fertilizacion.FertilizacionItem;
 import dao.siembra.SiembraItem;
 import dao.siembra.SiembraLabor;
 import gui.Messages;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
 import tasks.ProgresibleTask;
 import utils.FileHelper;
 import utils.GeometryHelper;
@@ -49,6 +52,7 @@ import utils.ProyectionConstants;
  */
 
 public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
+	private static final int MAX_ITEMS = 100;
 	private SiembraLabor laborToExport=null;
 	private File shapeFile=null;
 	private String unidad=null;
@@ -89,7 +93,7 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 				+unidad+":"+dosisClass;//$NON-NLS-1$ semilla siempre tiene que ser la 3ra columna
 
 		System.out.println("creando type con: "+typeDescriptor); //$NON-NLS-1$ the_geom:Polygon:srid=4326,Fert L:java.lang.Long,Fert C:java.lang.Long,seeding:java.lang.Long
-		System.out.println("Long.SIZE="+Long.SIZE);//64bits=16bytes. ok!! //$NON-NLS-1$
+		//System.out.println("Long.SIZE="+Long.SIZE);//64bits=16bytes. ok!! //$NON-NLS-1$
 		try {
 			//type = DataUtilities.createType(Messages.getString("JFXMain.349"), typeDescriptor); //$NON-NLS-1$
 			type = DataUtilities.createType("PrescType", typeDescriptor); //$NON-NLS-1$
@@ -120,11 +124,11 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 		//TODO si una geometria tiene mas de 50 sub zonas descartar las chicas
 		//TODO simplificar las geometrias con presicion de 0.0001grados
 		for(LaborItem item:items) {
-			System.out.println("procesando geometry con "+item.getGeometry().getNumGeometries()+" geometrias");
+		
 			if(item.getGeometry().getNumGeometries()>50){
-				
+				System.out.println("procesando geometry con "+item.getGeometry().getNumGeometries()+" geometrias");
 				Geometry g50 = item.getGeometry();
-				System.out.println("reduciendo item "+item+ "porque tiene mas de 50 partes "+g50.toString());
+				System.err.println("reduciendo item "+item+ "porque tiene mas de 50 partes "+g50.toString());
 				//TODO reducir geometry
 				List<Geometry> simples = new ArrayList<Geometry>();
 				for(int i=0;i<g50.getNumGeometries();i++) {
@@ -143,18 +147,22 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 		
 		DefaultFeatureCollection exportFeatureCollection =  new DefaultFeatureCollection("PrescType",type); //$NON-NLS-1$
 		SimpleFeatureBuilder fb = new SimpleFeatureBuilder(type);//ok
-
+		Integer id = 0;
 		for(LaborItem i:items) {//(it.hasNext()){
 			SiembraItem fi=(SiembraItem) i;
 			Geometry itemGeometry=fi.getGeometry();
 			List<Polygon> flatPolygons = PolygonValidator.geometryToFlatPolygons(itemGeometry);
+			if(flatPolygons.size()>1) {
+				System.out.println("el item "+i.getId()+" tiene "+flatPolygons.size()+" poligonos "+itemGeometry.toText());
+			}
+			
 			for(Polygon p : flatPolygons){
 				int partes = p.getNumGeometries();
-				System.out.println("exportando item con "+partes+" partes");
+				System.out.println("exportando item con "+partes+" partes "+p.toText());
 				if(partes>50) {
 					System.err.println("error tiene mas de 50 partes!!");
 				}
-				fb.add(p);
+//				fb.add(p);
 //				availableColums.add(SiembraLabor.COLUMNA_SEM_10METROS);//("Sem10ml");
 //				availableColums.add(SiembraLabor.COLUMNA_DOSIS_SEMILLA);//("kgSemHa");
 //				availableColums.add(SiembraLabor.COLUMNA_MILES_SEM_HA);//("MilSemHa");
@@ -171,11 +179,14 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 				Double costado = fi.getDosisFertCostado();
 
 				//System.out.println("presc Dosis ="+semilla); //$NON-NLS-1$
-				fb.add(linea);
-				fb.add(costado);
-				fb.add(semilla);
-
-				SimpleFeature exportFeature = fb.buildFeature(fi.getId().toString());
+				
+				
+//				fb.add(linea);
+//				fb.add(costado);
+//				fb.add(semilla);
+				id++;
+				//SimpleFeature exportFeature = fb.buildFeature(id.toString());//aca pierdo una geometria porque dublico el id
+				SimpleFeature exportFeature = fb.buildFeature(null, new Object[]{p,linea,costado,semilla});
 				exportFeatureCollection.add(exportFeature);
 			}
 		}
@@ -221,7 +232,22 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 				e1.printStackTrace();
 			}
 		}		
-
+		try {
+			long bytes = Files.size(shapeFile.toPath());
+			long kilobytes = bytes/1024;
+			if(kilobytes > 500) {
+				
+				Platform.runLater(()->//esto hace que quede abajo del dialogo de importar				
+				{
+					Alert a = new Alert(Alert.AlertType.ERROR);
+					a.setContentText(String.format("El archivo generado pesa %,dKB,  en algunos monitores 512KB es lo maximo", kilobytes));
+					a.showAndWait();
+					});
+				
+			}
+	        System.out.println(String.format("%,d kilobytes", bytes / 1024));//61 kilobytes
+		}catch(Exception e) {e.printStackTrace();}
+		
 		if(guardarConfig) {
 			//TODO guardar un archivo txt con la configuracion de la labor para que quede como registro de las operaciones
 			 Configuracion config = Configuracion.getInstance();
@@ -248,13 +274,13 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 		// tomar las 100 zonas mas grandes y reabsorver las otras en estas
 
 		items.sort((i1,i2)->-1*Double.compare(i1.getGeometry().getArea(), i2.getGeometry().getArea()));					
-		List<LaborItem> itemsAgrandar =items.subList(0,100-1);
+		List<LaborItem> itemsAgrandar =items.subList(0,MAX_ITEMS-1);
 		Quadtree tree=new Quadtree();
 		for(LaborItem ar : itemsAgrandar) {
 			Geometry gAr =ar.getGeometry();
 			tree.insert(gAr.getEnvelopeInternal(), ar);
 		}
-		List<LaborItem> itemsAReducir =items.subList(99, items.size()-1);//99 es el indice de la zona numero 100
+		List<LaborItem> itemsAReducir =items.subList(MAX_ITEMS-1, items.size()-1);//99 es el indice de la zona numero 100
 		int n=0;
 		while(itemsAReducir.size()>0 || n>10) {
 			List<LaborItem> done = new ArrayList<LaborItem>();		

@@ -171,6 +171,16 @@ public class PoligonoGUIController extends AbstractGUIController{
 
 			return "converti a fertilizacion";	
 		},1));
+		
+		//convertir a pulverizacion		
+		rootNodeP.add(new LayerAction(Messages.getString("JFXMain.poligonToPulvAction"),(layer)->{
+			doConvertirPoligonosAPulverizacion();
+
+			return "converti a pulverizacion";	
+		},1));
+		
+		
+		
 		//convertir a cosecha
 		rootNodeP.add(new LayerAction(Messages.getString("JFXMain.poligonToHarvestAction"),(layer)->{
 			doConvertirPoligonosACosecha();
@@ -195,21 +205,25 @@ public class PoligonoGUIController extends AbstractGUIController{
 
 		//guardar poligono
 		rootNodeP.add(new LayerAction((layer)->{
-			executorPool.submit(()->{
-				try {
-					LayerList layers = this.getWwd().getModel().getLayers();
-					for (Layer l : layers) {
-						Object o = l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-						if (l.isEnabled() && o instanceof Poligono){
-							Poligono p = (Poligono)o;
-							doGuardarPoligono(p);
-						}
-					}
-
-				}catch(Exception e) {
-					System.err.println("Error al guardar los poligonos"); //$NON-NLS-1$
-					e.printStackTrace();
-				}
+			List<Poligono> poligonos = main.getPoligonosSeleccionados();
+			executorPool.submit(()->{			
+				poligonos.stream().forEach(p->p.setActivo(true));
+				DAH.saveAll(poligonos);
+//				try {
+//					LayerList layers = this.getWwd().getModel().getLayers();
+//					for (Layer l : layers) {
+//						Object o = l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+//						if (l.isEnabled() && o instanceof Poligono){
+//							Poligono p = (Poligono)o;
+//							p.setActivo(true);
+//							DAH.save(p);							
+//						}
+//					}
+//
+//				}catch(Exception e) {
+//					System.err.println("Error al guardar los poligonos"); //$NON-NLS-1$
+//					e.printStackTrace();
+//				}
 			});
 
 			return "Guarde los poligonos"; //$NON-NLS-1$
@@ -221,16 +235,17 @@ public class PoligonoGUIController extends AbstractGUIController{
 			//executorPool.submit(()->{
 			try {
 				List<Poligono> poligonos= new ArrayList<Poligono>();
-				LayerList layers = this.getWwd().getModel().getLayers();
-				for (Layer l : layers) {
-					Object o = l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-					if (l.isEnabled() && o instanceof Poligono){
-						Poligono p = (Poligono)o;
-						//doGuardarPoligono(p);
-						poligonos.add(p);
-
-					}
-				}
+				poligonos = main.getPoligonosSeleccionados();
+//				LayerList layers = this.getWwd().getModel().getLayers();
+//				for (Layer l : layers) {
+//					Object o = l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+//					if (l.isEnabled() && o instanceof Poligono){
+//						Poligono p = (Poligono)o;
+//						//doGuardarPoligono(p);
+//						poligonos.add(p);
+//
+//					}
+//				}
 				doGetNdviTiffFiles(poligonos);
 			}catch(Exception e) {
 				System.err.println("Error al guardar los poligonos"); //$NON-NLS-1$
@@ -303,7 +318,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 		poligonosP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.poligonToPulvAction"),(layer)->{
 			Object layerObject = layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
 			if(layerObject!=null && Poligono.class.isAssignableFrom(layerObject.getClass())){
-				doCrearPulverizacion((Poligono) layerObject);
+				doCrearPulverizacion(Collections.singletonList((Poligono) layerObject));
 			}
 			return "converti a Pulverizacion"; //$NON-NLS-1$
 		}));
@@ -557,10 +572,10 @@ public class PoligonoGUIController extends AbstractGUIController{
 		JFXMain.executorPool.execute(umTask);		
 	}
 
-	private void doCrearPulverizacion(Poligono poli) {
+	private void doCrearPulverizacion(List<Poligono> polis) {
 		PulverizacionLabor labor = new PulverizacionLabor();
 		//labor.setNombre(poli.getNombre());
-		labor.setNombre(poli.getNombre()+" "+Messages.getString("JFXMain.pulverizacion")); //$NON-NLS-1$ //$NON-NLS-2$
+		labor.setNombre(polis.get(0).getNombre()+" "+Messages.getString("JFXMain.pulverizacion")); //$NON-NLS-1$ //$NON-NLS-2$
 		LaborLayer layer = new LaborLayer();
 		labor.setLayer(layer);
 
@@ -581,7 +596,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 			return;
 		}
 
-		CrearPulverizacionMapTask umTask = new CrearPulverizacionMapTask(labor,poli,dosis);
+		CrearPulverizacionMapTask umTask = new CrearPulverizacionMapTask(labor,polis,dosis);
 		umTask.installProgressBar(progressBox);
 
 		umTask.setOnSucceeded(handler -> {
@@ -589,7 +604,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 			//pulverizaciones.add(ret);
 			insertBeforeCompass(getWwd(), ret.getLayer());
 			this.getLayerPanel().update(this.getWwd());
-			poli.getLayer().setEnabled(false);
+			polis.stream().forEach(p->p.getLayer().setEnabled(false));
 			viewGoTo(ret);
 			umTask.uninstallProgressBar();
 			System.out.println(Messages.getString("JFXMain.253")); //$NON-NLS-1$
@@ -669,9 +684,9 @@ public class PoligonoGUIController extends AbstractGUIController{
 		JFXMain.executorPool.execute(umTask);		
 	}
 
-	private void doGuardarPoligono(Poligono layerObject){
-		layerObject.setActivo(true);
-		DAH.save(layerObject);
+	private void doGuardarPoligono(Poligono p){
+		p.setActivo(true);
+		DAH.save(p);
 	}
 
 	/**
@@ -685,56 +700,57 @@ public class PoligonoGUIController extends AbstractGUIController{
 		if(placementObject !=null && Labor.class.isAssignableFrom(placementObject.getClass())){
 			fin= DateConverter.asLocalDate((Date)((Labor<?>)placementObject).getFecha());
 		} 
-		//fin = dateChooser(fin);
 		NDVIDatePickerDialog ndviDpDLG = new NDVIDatePickerDialog(JFXMain.stage);
-		LocalDate ret = ndviDpDLG.ndviDateChooser(fin);
-		if(ret ==null)return;//seleccionar fecha termino en cancel.
-		//System.out.println(Messages.getString("JFXMain.212")+ndviDpDLG.initialDate+Messages.getString("JFXMain.213")+ndviDpDLG.finalDate); //$NON-NLS-1$ //$NON-NLS-2$
-		//Begin: 2018-02-28 End: 2018-03-28
-		//fin = ndviDpDLG.finalDate;
+		
+		boolean validDates = false;
+		while (!validDates) {
+			LocalDate ret = ndviDpDLG.ndviDateChooser(fin);
+	        if (ret == null) {
+	            return;
+	        }
 
-
-		if(ndviDpDLG.finalDate != null){
-			//	File downloadLocation=null;
-			//			try {
-			//				downloadLocation = File.createTempFile(Messages.getString("JFXMain.214"), Messages.getString("JFXMain.215")).getParentFile(); //$NON-NLS-1$ //$NON-NLS-2$
-			//			} catch (IOException e) {
-			//
-			//				e.printStackTrace();
-			//			}//directoryChooser();
-			//	if(downloadLocation == null) return;
-			ObservableList<Ndvi> observableList = FXCollections.observableArrayList(new ArrayList<Ndvi>());
-			observableList.addListener((ListChangeListener<Ndvi>) c -> {				
-				if(c.next()){
-					c.getAddedSubList().forEach((ndvi)->{
-						main.ndviGUIController.doShowNDVI(ndvi);
-					});//fin del foreach
-				}			
-			});
-			if(placementObject !=null && Labor.class.isAssignableFrom(placementObject.getClass())){
-				Labor<?> l =(Labor<?>)placementObject;
-
-				ReferencedEnvelope bounds = l.getOutCollection().getBounds();
-				Polygon pol = GeometryHelper.constructPolygon(bounds);
-				placementObject =GeometryHelper.constructPoligono(pol);
-
-			} 
-			GetNdviForLaborTask4 task = new GetNdviForLaborTask4((Poligono)placementObject, observableList);
-			task.setBeginDate(ndviDpDLG.initialDate);
-			task.setFinDate(ndviDpDLG.finalDate);
-			task.setIgnoreNDVI((List<Ndvi>) main.getObjectFromLayersOfClass(Ndvi.class));
-
-			System.out.println("procesando los datos entre "+ndviDpDLG.initialDate+" y "+ ndviDpDLG.finalDate);//hasta aca ok!
-			task.installProgressBar(progressBox);
-			task.setOnSucceeded(handler -> {
-				if(plo instanceof Poligono){
-					((Poligono)plo).getLayer().setEnabled(false);
-				}
-				task.uninstallProgressBar();
-				System.out.println("termine de descargar todos los ndvi de "+plo);
-			});
-			JFXMain.executorPool.submit(task);
-		}
+	        if (ndviDpDLG.finalDate != null && ndviDpDLG.finalDate.isAfter(ndviDpDLG.initialDate)) {
+	        	validDates = true;
+	        } else {
+	            Alert dateError = new Alert(Alert.AlertType.WARNING);
+	            dateError.initOwner(JFXMain.stage);
+	            dateError.setTitle("UrsulaGIS");
+	            dateError.setHeaderText(Messages.getString("PoligonGUIController.errorFecha"));
+	            dateError.showAndWait();
+	        }
+        }
+		
+		ObservableList<Ndvi> observableList = FXCollections.observableArrayList(new ArrayList<Ndvi>());
+		observableList.addListener((ListChangeListener<Ndvi>) c -> {				
+			if(c.next()){
+				c.getAddedSubList().forEach((ndvi)->{
+					main.ndviGUIController.doShowNDVI(ndvi);
+				});//fin del foreach
+			}			
+		});
+		if(placementObject !=null && Labor.class.isAssignableFrom(placementObject.getClass())){
+			Labor<?> l =(Labor<?>)placementObject;
+			
+			ReferencedEnvelope bounds = l.getOutCollection().getBounds();
+			Polygon pol = GeometryHelper.constructPolygon(bounds);
+			placementObject =GeometryHelper.constructPoligono(pol);
+			
+		} 
+		GetNdviForLaborTask4 task = new GetNdviForLaborTask4((Poligono)placementObject, observableList);
+		task.setBeginDate(ndviDpDLG.initialDate);
+		task.setFinDate(ndviDpDLG.finalDate);
+		task.setIgnoreNDVI((List<Ndvi>) main.getObjectFromLayersOfClass(Ndvi.class));
+		
+		System.out.println("procesando los datos entre "+ndviDpDLG.initialDate+" y "+ ndviDpDLG.finalDate);//hasta aca ok!
+		task.installProgressBar(progressBox);
+		task.setOnSucceeded(handler -> {
+			if(plo instanceof Poligono){
+				((Poligono)plo).getLayer().setEnabled(false);
+			}
+			task.uninstallProgressBar();
+			System.out.println("termine de descargar todos los ndvi de "+plo);
+		});
+		JFXMain.executorPool.submit(task);
 	}
 
 	/**
@@ -791,7 +807,7 @@ public class PoligonoGUIController extends AbstractGUIController{
 			List<Poligono> poligonos = (List<Poligono>)handler.getSource().getValue();
 			showPoligonos(poligonos);			
 			umTask.uninstallProgressBar();
-			this.wwjPanel.repaint();
+			this.main.wwjPanel.repaint();
 			System.out.println(Messages.getString("JFXMain.280")); 
 			playSound();
 		});//fin del OnSucceeded						
@@ -1052,6 +1068,20 @@ public class PoligonoGUIController extends AbstractGUIController{
 
 		doCrearCosecha(geometriasActivas);
 	}
+	
+	private void doConvertirPoligonosAPulverizacion() {
+//		List<Poligono> geometriasActivas = new ArrayList<Poligono>();
+//		LayerList layers = this.getWwd().getModel().getLayers();
+//		for (Layer l : layers) {
+//			Object o = l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+//			if (l.isEnabled() && o instanceof Poligono){
+//				Poligono p = (Poligono)o;
+//				geometriasActivas.add(p);
+//			}
+//		}
+		List<Poligono> polis = main.getPoligonosSeleccionados();
+		doCrearPulverizacion(polis);
+	}
 
 	private void doConvertirPoligonosASiembra() {
 		List<Poligono> geometriasActivas = new ArrayList<Poligono>();
@@ -1180,50 +1210,59 @@ public class PoligonoGUIController extends AbstractGUIController{
 	private void doGetNdviTiffFiles(List<Poligono> poligonos) {//ndvi2
 		LocalDate fin =null;
 
-		//fin = dateChooser(fin);
 		NDVIDatePickerDialog ndviDpDLG = new NDVIDatePickerDialog(JFXMain.stage);
-		LocalDate ret = ndviDpDLG.ndviDateChooser(fin);
-		if(ret ==null)return;//seleccionar fecha termino en cancel.
-		//System.out.println(Messages.getString("JFXMain.212")+ndviDpDLG.initialDate+Messages.getString("JFXMain.213")+ndviDpDLG.finalDate); //$NON-NLS-1$ //$NON-NLS-2$
-		//Begin: 2018-02-28 End: 2018-03-28
-		//fin = ndviDpDLG.finalDate;
+		
+		boolean validDates = false;
+		while (!validDates) {
+			LocalDate ret = ndviDpDLG.ndviDateChooser(fin);
+	        if (ret == null) {
+	            return;
+	        }
+
+	        if (ndviDpDLG.finalDate != null && ndviDpDLG.finalDate.isAfter(ndviDpDLG.initialDate)) {
+	        	validDates = true;
+	        } else {
+	            Alert dateError = new Alert(Alert.AlertType.WARNING);
+	            dateError.initOwner(JFXMain.stage);
+	            dateError.setTitle("UrsulaGIS");
+	            dateError.setHeaderText(Messages.getString("PoligonGUIController.errorFecha"));
+	            dateError.showAndWait();
+	        }
+        }
+
+		File downloadLocation=null;
+		try {
+			downloadLocation = File.createTempFile(Messages.getString("JFXMain.214"), Messages.getString("JFXMain.215")).getParentFile(); //$NON-NLS-1$ //$NON-NLS-2$
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		if(downloadLocation == null) return;
+		for(Poligono p : poligonos) {
+			ObservableList<Ndvi> observableList = FXCollections.observableArrayList(new ArrayList<Ndvi>());
+			observableList.addListener((ListChangeListener<Ndvi>) c -> {					
+				if(c.next()){
+					c.getAddedSubList().forEach((ndvi)->{
+						main.ndviGUIController.doShowNDVI(ndvi);
+					});//fin del foreach
+				}			
+			});
+
+			GetNdviForLaborTask4 task = new GetNdviForLaborTask4(p,observableList);
+			task.setBeginDate(ndviDpDLG.initialDate);
+			task.setFinDate(ndviDpDLG.finalDate);
+			task.setIgnoreNDVI((List<Ndvi>) main.getObjectFromLayersOfClass(Ndvi.class));
 
 
-		if(ndviDpDLG.finalDate != null){
-			File downloadLocation=null;
-			try {
-				downloadLocation = File.createTempFile(Messages.getString("JFXMain.214"), Messages.getString("JFXMain.215")).getParentFile(); //$NON-NLS-1$ //$NON-NLS-2$
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			if(downloadLocation == null) return;
-			for(Poligono p : poligonos) {
-				ObservableList<Ndvi> observableList = FXCollections.observableArrayList(new ArrayList<Ndvi>());
-				observableList.addListener((ListChangeListener<Ndvi>) c -> {					
-					if(c.next()){
-						c.getAddedSubList().forEach((ndvi)->{
-							main.ndviGUIController.doShowNDVI(ndvi);
-						});//fin del foreach
-					}			
-				});
+			System.out.println("procesando los datos entre "+ndviDpDLG.initialDate+" y "+ ndviDpDLG.finalDate);//hasta aca ok!
+			task.installProgressBar(progressBox);
+			task.setOnSucceeded(handler -> {
+				if(p instanceof Poligono){
+					((Poligono)p).getLayer().setEnabled(false);
+				}
+				task.uninstallProgressBar();
+			});
 
-				GetNdviForLaborTask4 task = new GetNdviForLaborTask4(p,observableList);
-				task.setBeginDate(ndviDpDLG.initialDate);
-				task.setFinDate(ndviDpDLG.finalDate);
-				task.setIgnoreNDVI((List<Ndvi>) main.getObjectFromLayersOfClass(Ndvi.class));
-
-
-				System.out.println("procesando los datos entre "+ndviDpDLG.initialDate+" y "+ ndviDpDLG.finalDate);//hasta aca ok!
-				task.installProgressBar(progressBox);
-				task.setOnSucceeded(handler -> {
-					if(p instanceof Poligono){
-						((Poligono)p).getLayer().setEnabled(false);
-					}
-					task.uninstallProgressBar();
-				});
-
-				executorPool.submit(task);
-			}
+			executorPool.submit(task);
 		}
 	}
 

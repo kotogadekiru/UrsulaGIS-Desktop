@@ -36,6 +36,18 @@ public class CaldoItem {
 	private Double dosisHa = 0.0;
 	private String observaciones =  null;
 	
+	public CaldoItem() {
+		super();
+	}
+	
+	public CaldoItem(CaldoItem i) {
+		super();
+		setDosisHa(i.getDosisHa());				
+		setProducto(i.getProducto());
+
+		setObservaciones(i.getObservaciones());
+	}
+
 	public void setProducto(Agroquimico producto) {
 		this.producto=producto;
 		this.unidadDosis=producto.getUnidadDosis();

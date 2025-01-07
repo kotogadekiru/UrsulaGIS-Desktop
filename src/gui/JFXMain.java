@@ -28,9 +28,11 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import dao.Labor;
 import dao.Ndvi;
+import dao.Poligono;
 import dao.config.Configuracion;
 import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
+import dao.margen.Margen;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.recorrida.Recorrida;
 import dao.siembra.SiembraLabor;
@@ -119,7 +121,7 @@ public class JFXMain extends Application {
 
 	public static final String VERSION = "0.2.30"; 
 	public static final String TITLE_VERSION = "Ursula GIS-"+VERSION; 
-	public static final String buildDate = "28/06/2024";
+	public static final String buildDate = "18/12/2024";
 	public static  final String ICON ="gui/ursula_logo_2020.png";//"gui/32x32-icon-earth.png";// "gui/1-512.png";//UrsulaGIS-Desktop/src/gui/32x32-icon-earth.png 
 	private static final String SOUND_FILENAME = "gui/exito4.mp3";//"gui/Alarm08.wav";//"Alarm08.wav" funciona desde eclipse pero no desde el jar  
 
@@ -290,7 +292,7 @@ public class JFXMain extends Application {
 		// SwingUtilities.invokeLater(()-> {			                	 
 		try {
 			// Create the WorldWindow.
-			wwjPanel =	new WWPanel(canvasSize, true);
+			wwjPanel =	new WWPanel(canvasSize, true,this);
 			wwSwingNode.setContent(wwjPanel);
 		}catch(Exception e) {
 			Platform.runLater(()->{
@@ -422,6 +424,7 @@ public class JFXMain extends Application {
 		cosechaGUIController.addCosechasRootNodeActions();
 		poligonoGUIController.addPoligonosRootNodeActions();
 		ndviGUIController.addNdviRootNodeActions();
+		margenGUIController.addMargenRootNodeActions();
 
 		Map<Class<?>,List<LayerAction>> predicates = new HashMap<Class<?>,List<LayerAction>>();
 
@@ -752,6 +755,11 @@ public class JFXMain extends Application {
 	public List<CosechaLabor> getCosechasSeleccionadas() {
 		return (List<CosechaLabor>) getObjectFromEnabledLayersOfClass(CosechaLabor.class);	
 	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Margen> getMargenesSeleccionados() {
+		return (List<Margen>) getObjectFromEnabledLayersOfClass(Margen.class);	
+	}
 
 	@SuppressWarnings("unchecked")
 	public List<FertilizacionLabor> getFertilizacionesSeleccionadas() {
@@ -766,6 +774,11 @@ public class JFXMain extends Application {
 	@SuppressWarnings("unchecked")
 	public List<Ndvi> getNdviSeleccionados() {
 		return (List<Ndvi>) getObjectFromEnabledLayersOfClass(Ndvi.class);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Poligono> getPoligonosSeleccionados() {
+		return (List<Poligono>) getObjectFromEnabledLayersOfClass(Poligono.class);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -1148,4 +1161,8 @@ public class JFXMain extends Application {
 			}
 		}
 	}
+
+
+
+	
 }

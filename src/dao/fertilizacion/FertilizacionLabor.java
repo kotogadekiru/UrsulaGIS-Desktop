@@ -42,7 +42,7 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 
 	public StringProperty colKgHaProperty;
 
-	public Property<Fertilizante> fertilizanteProperty=null;
+	public Fertilizante fertilizante=null;
 
 	public FertilizacionLabor() {
 		initConfig();
@@ -59,27 +59,27 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 		super(fAPartir);
 		initConfig();
 		colKgHaProperty.set(fAPartir.colKgHaProperty.get());
-		fertilizanteProperty.setValue(fAPartir.getFertilizanteProperty().getValue());
+		fertilizante=fAPartir.getFertilizante();
 		
 	}
 
 	private void initConfig() {
 		this.productoLabor=DAH.getProductoLabor(ProductoLabor.LABOR_DE_FERTILIZACION);
+		
 		List<String> availableColums = this.getAvailableColumns();		
 		Configuracion properties = getConfigLabor().getConfigProperties();
 
 		colKgHaProperty = PropertyHelper.initStringProperty(FertilizacionLabor.COLUMNA_KG_HA,properties,availableColums);
 		colAmount= new SimpleStringProperty(FertilizacionLabor.COLUMNA_KG_HA);//Siempre tiene que ser el valor al que se mapea segun el item para el outcollection
 
-			
-
 		String fertKEY = properties.getPropertyOrDefault(FertilizacionLabor.FERTILIZANTE_DEFAULT,
 				Fertilizante.FOSFATO_DIAMONICO_DAP);
-		fertilizanteProperty = new SimpleObjectProperty<Fertilizante>(DAH.getFertilizante(fertKEY));//values().iterator().next());
-		fertilizanteProperty.addListener((obs, bool1, bool2) -> {
-			properties.setProperty(FertilizacionLabor.FERTILIZANTE_DEFAULT,
-					bool2.getNombre());
-		});
+		fertilizante = DAH.getFertilizante(fertKEY);//values().iterator().next());
+		
+//		fertilizante.addListener((obs, bool1, bool2) -> {
+//			properties.setProperty(FertilizacionLabor.FERTILIZANTE_DEFAULT,
+//					bool2.getNombre());
+//		});
 	}
 
 

@@ -58,13 +58,20 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
+import tasks.ProgresibleTask;
 import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
-public class JuntarShapefilesTask {
+public class JuntarShapefilesTask extends ProgresibleTask<File>{
+	List<FileDataStore> stores =null;
+	File shapeFile=null;
+	public JuntarShapefilesTask(List<FileDataStore> _stores,File _shapeFile){
+		super();
+		stores = _stores;
+		shapeFile =_shapeFile;
+	}
 	
-
-	public static void process(List<FileDataStore> stores,File shapeFile){
+	public void process(List<FileDataStore> stores,File shapeFile){
 
 		// seleccionar un directorio
 		// buscar todos los shapefiles dentro de el directorio
@@ -192,7 +199,12 @@ public class JuntarShapefilesTask {
 							},
 							(map1, map2) -> map1.putAll(map2));
 
-			byPolygon.values().forEach(o->outCollection.add(o));
+			byPolygon.values().forEach(o->{
+				boolean ret = outCollection.add(o);
+				if(!ret) {
+					System.err.println("no se pudo ingresar el feature "+o.getID());
+				}
+			});
 
 			//todo grabar el nuevo shapefile del nuevo tipo en el directorio ingresado
 			
@@ -524,5 +536,11 @@ public class JuntarShapefilesTask {
 
 		}
 		return d;
+	}
+
+	@Override
+	protected File call() throws Exception {
+		process(stores,shapeFile);
+		return shapeFile;
 	}
 }

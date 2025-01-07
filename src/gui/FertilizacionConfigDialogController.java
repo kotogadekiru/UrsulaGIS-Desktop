@@ -167,9 +167,9 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 
 		//col fertilizante
 		this.comboFertilizante.setItems(FXCollections.observableArrayList(DAH.getAllFertilizantes()));
-		this.comboFertilizante.getSelectionModel().select(labor.getFertilizanteProperty().getValue());//viene inicializada con el default desde init()
+		this.comboFertilizante.getSelectionModel().select(labor.getFertilizante());//viene inicializada con el default desde init()
 		this.comboFertilizante.valueProperty().addListener((obj,old,n)->{
-			labor.fertilizanteProperty.setValue(n);
+			labor.fertilizante=n;
 			//	if(n!=null)config.getConfigProperties().setProperty(FertilizacionLabor.f.CosechaLaborConstants.PRODUCTO_DEFAULT,n.getNombre());
 		});		
 		//this.comboFertilizante.setItems(FXCollections.observableArrayList(DAH.getAllFertilizantes()));

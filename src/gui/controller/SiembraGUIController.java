@@ -72,6 +72,15 @@ public class SiembraGUIController {
 	public void addAccionesSiembras(Map<Class<?>, List<LayerAction>> predicates) {
 		List<LayerAction> siembrasP = new ArrayList<LayerAction>();
 		predicates.put(SiembraLabor.class, siembrasP);
+		
+		/**
+		 * Accion que permite clonar la cosecha
+		 */
+//		siembrasP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.clonar"),(layer)->{
+//			doUnirSiembras((SiembraLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+//			return "siembra clonada" + layer.getName(); 
+//		}));
+		
 		/**
 		 *Accion que permite editar una siembra
 		 */
@@ -191,6 +200,7 @@ public class SiembraGUIController {
 		boolean esFertLinea=true;
 		Alert selectTipoFert = new Alert(Alert.AlertType.CONFIRMATION);
 		selectTipoFert.initOwner(JFXMain.stage);
+		//TODO traducir
 		selectTipoFert.setTitle("Seleccione tipo fertilizacion");
 		selectTipoFert.setContentText("Seleccione OK si es fertilizacion en la linea");
 		Optional<ButtonType> esFertLineaOP = selectTipoFert.showAndWait();

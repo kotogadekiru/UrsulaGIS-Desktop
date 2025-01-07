@@ -62,7 +62,9 @@ public class FertilizacionItem extends LaborItem {
 	public Double getAmount() {		
 		return getDosistHa();
 	}
-
+	public void setAmount(Double amount) {
+		this.dosisHa = amount;
+	}
 	
 	@Override
 	public Object[] getSpecialElementsArray() {

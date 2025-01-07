@@ -90,7 +90,19 @@ public class SiembraLabor extends Labor<SiembraItem> {
 		//this.setInStore(store);// esto configura el nombre	
 		initConfig();
 	}
+	
+	public SiembraLabor(SiembraLabor s) {
+		super(s);
+		
+		setSemilla(s.getSemilla());
 
+		setFertLinea(s.getFertLinea());
+		setFertCostado(s.getFertCostado());
+		setEntreSurco(s.getEntreSurco());
+		setPlantasPorMetro(s.getPlantasPorMetro());
+		
+	//	initConfig();
+	}
 
 	private void initConfig() {
 		this.productoLabor=DAH.getProductoLabor(ProductoLabor.LABOR_DE_SIEMBRA);
@@ -211,8 +223,9 @@ public class SiembraLabor extends Labor<SiembraItem> {
 	
 	public Double getCantLabor(ToDoubleFunction<SiembraItem> get) {
 		Double ret = new Double(0);
-		Geometry contorno = GeometryHelper.extractContornoGeometry(this);
-		List<SiembraItem> items = this.cachedOutStoreQuery(contorno.getEnvelopeInternal());
+		//Geometry contorno = GeometryHelper.extractContornoGeometry(this);
+		
+		List<SiembraItem> items = this.cachedOutStoreQuery(this.outCollection.getBounds());
 		try {
 		ret = items.parallelStream().collect(
 				()->new Double(0),

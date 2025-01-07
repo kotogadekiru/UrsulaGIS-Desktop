@@ -119,25 +119,29 @@ public class NdviGUIController extends AbstractGUIController{
 		rootNodeNDVI.add(LayerAction.constructPredicate(Messages.getString("JFXMain.saveAction"),
 				(layer)->{	executorPool.submit(()->{
 					try {
-						LayerList layers = this.getWwd().getModel().getLayers();
-						for (Layer l : layers) {
-							Object o =  l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
-							if(o instanceof Ndvi){									
-								Ndvi ndvi = (Ndvi)o;	
-								try {
-									DAH.save(ndvi);
-								}catch(Exception e) {
-									System.err.println("Error al guardar el ndvi "+ndvi.getNombre()); 
-									e.printStackTrace();
-								}
-							}
-						}
+						
+						List<Ndvi> ndviToSave = main.getNdviSeleccionados();
+						DAH.saveAll(ndviToSave);
+						
+//						LayerList layers = this.getWwd().getModel().getLayers();
+//						for (Layer l : layers) {
+//							Object o =  l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
+//							if(o instanceof Ndvi){									
+//								Ndvi ndvi = (Ndvi)o;	
+//								try {
+//									DAH.save(ndvi);
+//								}catch(Exception e) {
+//									System.err.println("Error al guardar el ndvi "+ndvi.getNombre()); 
+//									e.printStackTrace();
+//								}
+//							}
+//						}
 					}catch(Exception e) {
 						System.err.println("Error al guardar los poligonos"); 
 						e.printStackTrace();
 					}
 				});
-				return "Guarde los poligonos"; 
+				return "Guarde los ndvi"; 
 				}));
 		getLayerPanel().addAccionesClase(rootNodeNDVI,Ndvi.class);
 	}

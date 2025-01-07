@@ -4,16 +4,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
-import dao.config.Cultivo;
-import dao.config.Fertilizante;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper=true)
 @Entity
 @NamedQueries({
 	@NamedQuery(name=ProductoLabor.FIND_ALL, query="SELECT o FROM ProductoLabor o ORDER BY lower(o.nombre)") ,

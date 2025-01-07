@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.persistence.Transient;
-
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.factory.CommonFactoryFinder;
@@ -174,7 +172,7 @@ public class LaborDataStore<E> {
 		while(locked.contains(labor)) {
 			//System.out.println("locked contains "+labor.nombre);
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(10);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -262,7 +260,10 @@ public class LaborDataStore<E> {
 	}
 	
 	public static void insertFeature(LaborItem laborItem, Labor<? extends LaborItem> labor) {
-		checkLock(labor);
+		if(laborItem == null) {
+			return;
+		}	
+		checkLock(labor);//wait until lock released
 		Geometry cosechaGeom = laborItem.getGeometry();
 		Envelope geomEnvelope=cosechaGeom.getEnvelopeInternal();
 
@@ -290,9 +291,24 @@ public class LaborDataStore<E> {
 	}
 	
 	public static void changeFeature(SimpleFeature old, LaborItem ci, Labor<? extends LaborItem> labor) {
-		checkLock(labor);
-		labor.outCollection.remove(old);
-		labor.outCollection.add(ci.getFeature(labor.getFeatureBuilder()));
-		locked.remove(labor);
+		checkLock(labor);//wait until feature released
+		try {
+		if(old!=null) {
+			boolean removed = labor.outCollection.remove(old);
+			Geometry g= (Geometry) old.getDefaultGeometry();
+			if(labor.treeCache!=null) {
+				labor.treeCache.remove(g.getEnvelopeInternal(), labor);
+			}
+			if(removed) {
+				System.out.println("removi el feature "+old);
+			}
+		}
+		}finally {
+			locked.remove(labor);
+		}
+		
+		insertFeature(ci, labor);//insertFeature tiene su propio lock
+
+		
 	}
 }

@@ -34,8 +34,8 @@ public class SiembraItem extends LaborItem {
 		return dosisHa;
 	}
 
-	public void setDosisHa(Double rindeTnHa) {
-		this.dosisHa = rindeTnHa;
+	public void setDosisHa(Double kgHa) {
+		this.dosisHa = kgHa;
 	}
 
 	public Double getPrecioInsumo() {
@@ -90,6 +90,9 @@ public class SiembraItem extends LaborItem {
 		return getDosisHa();
 	}
 
+	public void setAmount(Double amount) {		
+		setDosisHa(amount);		
+}
 	@Override
 	public Object[] getSpecialElementsArray() {
 		Object[] elements = new Object[]{

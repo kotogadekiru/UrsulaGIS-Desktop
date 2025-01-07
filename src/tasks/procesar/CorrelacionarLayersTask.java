@@ -3,7 +3,9 @@ package tasks.procesar;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalDouble;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
@@ -48,8 +50,9 @@ public class CorrelacionarLayersTask extends ProgresibleTask<XYChart.Series<Numb
 	protected Series<Number, Number> call()  {
 		try {
 			this.updateProgress(0, 100);
+			 super.updateTitle(taskName+" construyendo grilla");
 			List<Geometry> grilla = construirGrilla(laborX,laborY);
-			
+			 super.updateTitle(taskName+" procesando");
 			Integer totalWork = grilla.size();
 			this.updateProgress(1, totalWork);
 			AtomicInteger workDone = new AtomicInteger(1);
@@ -57,7 +60,7 @@ public class CorrelacionarLayersTask extends ProgresibleTask<XYChart.Series<Numb
 					()->new ArrayList<XYChart.Data<Number, Number>>(),
 					(xy, g) ->{		
 						double x=0,y=0;
-						List<SimpleFeature> xFeatures = outStoreQuery(g,laborX);
+						List<SimpleFeature> xFeatures = cachedOutStoreQuery(g,laborX);
 						OptionalDouble xOpt = xFeatures.stream().mapToDouble(f->{
 						Object objValue= f.getAttribute(columnX);
 						return LaborItem.getDoubleFromObj(objValue);
@@ -66,7 +69,7 @@ public class CorrelacionarLayersTask extends ProgresibleTask<XYChart.Series<Numb
 						//TODO ver si valela pena hacer un promedio ponderado por la superficie superpuesta
 						if(xOpt.isPresent())x=xOpt.getAsDouble();
 						
-						List<SimpleFeature> yFeatures = outStoreQuery(g,laborY);					
+						List<SimpleFeature> yFeatures = cachedOutStoreQuery(g,laborY);					
 						OptionalDouble yOpt = yFeatures.stream().mapToDouble(f->{
 						Object objValue= f.getAttribute(columnY);
 						return LaborItem.getDoubleFromObj(objValue);
@@ -127,14 +130,56 @@ public class CorrelacionarLayersTask extends ProgresibleTask<XYChart.Series<Numb
 		return grillaCover;
 */
 	}
+	
+	/**
+	 * metodo para probar cual de las 2 implementaciones es mas rapida. 
+	 * pero cualquiera de las 2 es mas rapida que esto
+	 * @param g
+	 * @param labor
+	 * @return
+	 */
+	public  List<SimpleFeature> query(Geometry g,Labor<? extends LaborItem> labor){
+		List<SimpleFeature> ret =null;
+		  CompletableFuture<List<SimpleFeature>> service1 = CompletableFuture.supplyAsync(() -> {
+	          return cachedOutStoreQuery(g,labor);
+	        });
+		  CompletableFuture<List<SimpleFeature>> service2 = CompletableFuture.supplyAsync(() -> {
+	          return outStoreQuery(g,labor);
+	        });
+		  
+		  CompletableFuture<Object> firstResponse = CompletableFuture.anyOf(service1, service2);
+		  try {
+			
+	       ret = (List<SimpleFeature>)firstResponse.get();
+	       service1.cancel(true);
+	       service2.cancel(true);
+	       
+		  }catch(Exception e) {
+			  e.printStackTrace();
+		  }
+		  return ret;
+	}
 
+	
+	public  List<SimpleFeature> cachedOutStoreQuery(Geometry g,Labor<? extends LaborItem> labor){
+		List<? extends LaborItem> res = labor.outStoreQuery(g.getEnvelopeInternal());
+		
+		List<SimpleFeature> objects = res.parallelStream()
+				.map(item->
+				item.getFeature(
+						labor.getFeatureBuilder()
+						)
+				).collect(Collectors.toList());
+		return objects;
+		
+	}
 	/**
 	 * 
 	 * @param g
 	 * @param labor
 	 * @return List<SimpleFeature> de la labor que coincida con la geometria g
 	 */
-	public synchronized List<SimpleFeature> outStoreQuery(Geometry g,Labor<? extends LaborItem> labor){
+	public  List<SimpleFeature> outStoreQuery(Geometry g,Labor<? extends LaborItem> labor){
 		//XXX usar labor.cachedOutStoreQuery(g.getEnvelopeInternal()); ??
 		List<SimpleFeature> objects = new ArrayList<>();
 		//TODO tratar de cachear todo lo posible para evitar repetir trabajo en querys consecutivas.

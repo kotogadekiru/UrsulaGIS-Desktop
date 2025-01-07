@@ -22,7 +22,13 @@ public class PolygonValidator {
 				if(gi instanceof Polygon){
 					Polygon pi =(Polygon)gi;
 					ret.add(polygonToFlatPolygon(pi));
-				}//si no es polygono ignorarla
+				}else if(gi instanceof MultiPolygon){
+					System.err.println("gi es MultyPolygon en geometryToFlatPolygons");
+					ret.addAll(geometryToFlatPolygons(gi));
+				}else {
+					System.err.println("estoy perdiendo la geometria "+gi.toText());
+				}
+				//si no es polygono ignorarla?
 			}
 
 		} else if(itemGeometry instanceof Polygon) {
@@ -34,6 +40,11 @@ public class PolygonValidator {
 		return ret;
 	}
 
+	/**
+	 * metodo que toma un poligono y delvuelve un poligono igual nuevo pero sin la coordenada z.
+	 * @param pi
+	 * @return
+	 */
 	public static Polygon polygonToFlatPolygon(Polygon pi){
 		GeometryFactory fact = pi.getFactory();		
 		LinearRing shell = fact.createLinearRing(coordsToFlat( pi.getExteriorRing().getCoordinates()));
@@ -45,6 +56,11 @@ public class PolygonValidator {
 		return p;
 	}
 
+	/**
+	 * metodo que elimina la coordenada z de las coordenadas
+	 * @param boundaryCoords
+	 * @return
+	 */
 	public static Coordinate[] coordsToFlat(Coordinate[] boundaryCoords) {		
 		Coordinate[] coordinates = new Coordinate[boundaryCoords.length];
 		for(int i =0;i<boundaryCoords.length;i++){						

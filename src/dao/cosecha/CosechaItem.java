@@ -37,6 +37,10 @@ public class CosechaItem extends LaborItem {
 	public void setRindeTnHa(Double rindeTnHa) {
 		this.rindeTnHa = rindeTnHa;
 	}
+	
+	public void setAmount(Double amount) {
+		this.rindeTnHa = amount;
+	}
 
 	public Double getPrecioTnGrano() {
 		return precioTnGrano;

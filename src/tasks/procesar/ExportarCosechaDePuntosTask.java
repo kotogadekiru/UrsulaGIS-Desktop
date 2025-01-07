@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.geotools.data.DataUtilities;
 import org.geotools.data.DefaultTransaction;
 import org.geotools.data.Transaction;
 import org.geotools.data.shapefile.ShapefileDataStore;
@@ -17,17 +18,19 @@ import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.data.simple.SimpleFeatureStore;
 import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
 import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Point;
 
 import dao.Labor;
 import dao.LaborItem;
 import dao.config.Configuracion;
+import dao.cosecha.CosechaItem;
 import dao.cosecha.CosechaLabor;
-import gui.Messages;
 import tasks.ProgresibleTask;
 import utils.FileHelper;
 
@@ -45,14 +48,14 @@ public class ExportarCosechaDePuntosTask  extends ProgresibleTask<File>{
 	Labor<?> laborToExport=null;
 	File shapeFile=null;
 	public boolean guardarConfig=true;
-	
+
 	public ExportarCosechaDePuntosTask(Labor<?> _laborToExport,File _shapeFile){		
-		 laborToExport=_laborToExport;
-		 shapeFile=_shapeFile;
-		 super.updateTitle(taskName);
-		 this.taskName= laborToExport.getNombre();
+		laborToExport=_laborToExport;
+		shapeFile=_shapeFile;
+		super.updateTitle(taskName);
+		this.taskName= laborToExport.getNombre();
 	}
-	
+
 	public File call()  {//copiado de exportar labor
 		System.out.println("llamando a call en ExportHarvestMap");
 		Map<String, Serializable> params = new HashMap<String, Serializable>();
@@ -63,85 +66,86 @@ public class ExportarCosechaDePuntosTask  extends ProgresibleTask<File>{
 		}
 		params.put("create spatial index", Boolean.TRUE);
 
-
 		ShapefileDataStore newDataStore=null;
+		DefaultFeatureCollection pointFeatureCollection =null;
 		try {
+			String typeDescriptor = "*the_geom:"+Point.class.getCanonicalName()+":srid=4326,"
+					+ CosechaLabor.CosechaLaborConstants.COLUMNA_RENDIMIENTO +":java.lang.Double,"
+					+ CosechaLabor.COLUMNA_ANCHO+":java.lang.Double,"
+					+ CosechaLabor.COLUMNA_DISTANCIA+":java.lang.Double,"
+					+ CosechaLabor.COLUMNA_CURSO+":java.lang.Double,"
+					+ CosechaLabor.COLUMNA_ELEVACION+":java.lang.Double,";
+
+			System.out.println("creando type con: "+typeDescriptor); 
+
+
+			SimpleFeatureType pointType = DataUtilities.createType("PrescType", typeDescriptor); //$NON-NLS-1$
+
+			//SimpleFeatureType pointType =laborToExport.getPointType();
+			System.out.println("cosecha point type es "+pointType);
+
 			ShapefileDataStoreFactory dataStoreFactory = new ShapefileDataStoreFactory();
 			newDataStore = (ShapefileDataStore) dataStoreFactory.createNewDataStore(params);
-			newDataStore.createSchema(laborToExport.getPointType());
-
-			//		System.out.println("antes de forzar wgs 84");
-
-			/*
-			 * You can comment out this line if you are using the createFeatureType
-			 * method (at end of class file) rather than DataUtilities.createType
-			 */
+			newDataStore.createSchema(pointType);
 			newDataStore.forceSchemaCRS(DefaultGeographicCRS.WGS84);
-			//		System.out.println("forzando dataStore WGS84");
-		} catch (IOException e) {
-			e.printStackTrace();
-			//FIXME a veces me da access us denied
-			//java.io.FileNotFoundException: D:\Dropbox\hackatonAgro\EmengareGis\MapasCrudos\shp\sup\out\grid\amb\Girszol_lote_19_s0limano_-_Harvesting.shp (Access is denied)
-		}
 
-		String typeName = newDataStore.getTypeNames()[0];
-		//	System.out.println("typeName 0 del newDataStore es "+typeName);
-		SimpleFeatureSource featureSource = null;
-		try {
-			featureSource = newDataStore.getFeatureSource(typeName);
-			//	System.out.println("cree new featureSource "+featureSource.getInfo());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+			pointFeatureCollection =  new DefaultFeatureCollection("internal",pointType); //$NON-NLS-1$
+			SimpleFeatureBuilder fb = new SimpleFeatureBuilder(pointType);
+			//ComplexFeatureBuilder pfb = new ComplexFeatureBuilder(pointType);
+			ReferencedEnvelope bounds = laborToExport.outCollection.getBounds();
+			List<CosechaItem> items = 
+					(List<CosechaItem>) laborToExport.cachedOutStoreQuery(bounds);
+			for(CosechaItem i: items){
+				Object[] attributes = new Object[] {
+						i.getGeometry().getCentroid(),
+						i.getRindeTnHa(),
+						i.getAncho(),
+						i.getDistancia(),
+						i.getRumbo(),
+						i.getElevacion()
+				};
+				boolean res = pointFeatureCollection.add(fb.buildFeature(null,attributes));
+				if(!res) {
+					System.out.println("no se pudo insertar point para "+i);
+				}
+			}			
 
-		if (featureSource instanceof SimpleFeatureStore) {
-			SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
-			
-			Transaction transaction = new DefaultTransaction("create");
-			featureStore.setTransaction(transaction);
+			String typeName = newDataStore.getTypeNames()[0];
+			SimpleFeatureSource featureSource = newDataStore.getFeatureSource(typeName);
 
-			/*
-			 * SimpleFeatureStore has a method to add features from a
-			 * SimpleFeatureCollection object, so we use the
-			 * ListFeatureCollection class to wrap our list of features.
-			 */
-			//	SimpleFeatureCollection collection = new ListFeatureCollection(CosechaItem.getType(), features);
-			//	System.out.println("agregando features al store " +collection.size());
-			//	DefaultFeatureCollection colectionToSave = ;
-	
-			try {
-				
-				featureStore.setFeatures(laborToExport.outCollection.reader());
+			if (featureSource instanceof SimpleFeatureStore) {
+				SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
+
+				Transaction transaction = new DefaultTransaction("create");
+				featureStore.setTransaction(transaction);
+
 				try {
-					transaction.commit();
+					//FeatureReader<SimpleFeatureType, SimpleFeature> reader = pointFeatureCollection.reader();			
+					featureStore.addFeatures(pointFeatureCollection);			
+
+					transaction.commit();					
+					transaction.close();
+
 				} catch (Exception e1) {
 					e1.printStackTrace();
-				}finally {
-					try {
-						transaction.close();
-						//System.out.println("closing transaction");
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
 				}
-			} catch (Exception e1) {
-				e1.printStackTrace();
-			}
-		}		
+			}		
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		if(guardarConfig) {
-		//TODO guardar un archivo txt con la configuracion de la labor para que quede como registro de las operaciones
-		 Configuracion config = Configuracion.getInstance();
-		 	config.loadProperties();
+			//TODO guardar un archivo txt con la configuracion de la labor para que quede como registro de las operaciones
+			Configuracion config = Configuracion.getInstance();
+			config.loadProperties();
 			config.setProperty(Configuracion.LAST_FILE, shapeFile.getAbsolutePath());
 			config.save();
 		}
 		return shapeFile;
 	}
 
+	@Deprecated
+	//se llama el call del Task
 	public static void run(CosechaLabor laborToExport,File shapeFile) {
-		
-		
-
 		SimpleFeatureType type = laborToExport.getPointType();
 
 		ShapefileDataStore newDataStore = FileHelper.createShapefileDataStore(shapeFile,type);
@@ -163,9 +167,12 @@ public class ExportarCosechaDePuntosTask  extends ProgresibleTask<File>{
 			System.out.println(attributes);
 			fb.addAll(attributes);//Can handle 12 attributes only, index is 12
 
-
-			SimpleFeature pointFeature = fb.buildFeature(LaborItem.getID(sf));
-			pointFeatureCollection.add(pointFeature);
+			//FIXME no se esta exportando bien la cosecha a puntos
+			SimpleFeature pointFeature = fb.buildFeature(null);
+			boolean ret = pointFeatureCollection.add(pointFeature);
+			if(!ret) {
+				System.err.println("no se pudo agregar la feature id "+LaborItem.getID(sf)+" en ExportarCosechaDePuntos" );
+			}
 
 		}
 		it.close();
@@ -215,4 +222,4 @@ public class ExportarCosechaDePuntosTask  extends ProgresibleTask<File>{
 		config.save();
 	}
 
-	}
+}

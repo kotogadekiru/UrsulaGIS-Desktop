@@ -10,6 +10,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 
 //La información acerca del cultivo modelado debe contener:
@@ -19,6 +20,7 @@ import lombok.Data;
 //o Profundidad radicular en cada etapa fenológica
 //o Consumo hídrico en cada etapa fenológica
 @Data
+@EqualsAndHashCode(callSuper=false)
 @Entity //@Access(AccessType.PROPERTY)
 @NamedQueries({
 	@NamedQuery(name=Cultivo.FIND_ALL, query="SELECT c FROM Cultivo c ORDER BY lower(c.nombre)") ,

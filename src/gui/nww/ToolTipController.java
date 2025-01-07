@@ -11,6 +11,9 @@ import gov.nasa.worldwind.*;
 import gov.nasa.worldwind.avlist.*;
 import gov.nasa.worldwind.event.*;
 import gov.nasa.worldwindx.examples.ApplicationTemplate;
+import gui.JFXMain;
+import gui.LaborItemGUIController;
+import javafx.scene.control.Dialog;
 import tasks.ProcessMapTask;
 import gov.nasa.worldwind.layers.*;
 import gov.nasa.worldwind.util.*;
@@ -33,6 +36,7 @@ public class ToolTipController implements SelectListener, Disposable
     protected AnnotationLayer layer;
     protected ToolTipAnnotation annotation;
 	private Object lastRightClickObject;
+	protected JFXMain main;
 
     /**
      * Create a controller for a specified {@link WorldWindow} that displays tool tips on hover and/or rollover.
@@ -42,12 +46,13 @@ public class ToolTipController implements SelectListener, Disposable
      *                    occurs. May be null, in which case a tool tip is not displayed for rollover events.
      * @param hoverKey    the key to use when looking up tool tip text from the shape's AVList when a hover event
      *                    occurs. May be null, in which case a tool tip is not displayed for hover events.
+     * @param main 
      */
-    public ToolTipController(WorldWindow wwd, String rolloverKey, String hoverKey){
+    public ToolTipController(WorldWindow wwd, String rolloverKey, String hoverKey, JFXMain _main){
         this.wwd = wwd;
         this.hoverKey = hoverKey;
         this.rolloverKey = rolloverKey;
-
+        this.main=_main;
         this.wwd.addSelectListener(this);
     }
 
@@ -73,8 +78,14 @@ public class ToolTipController implements SelectListener, Disposable
     }
 
     protected String getRolloverText(SelectEvent event) {
-        return event.getTopObject() != null && event.getTopObject() instanceof AVList ?
-            ((AVList) event.getTopObject()).getStringValue(this.rolloverKey) : null;
+    	Object obj = event.getTopObject();
+    	String ret=null;
+    	if(obj instanceof AVList) {
+    		ret = ((AVList) obj).getStringValue(this.rolloverKey);
+    	}
+    	return ret;
+//        return event.getTopObject() != null && event.getTopObject() instanceof AVList ?
+//            ((AVList) event.getTopObject()).getStringValue(this.rolloverKey) : null;
     }
 
     public void selected(SelectEvent event) {
@@ -83,7 +94,7 @@ public class ToolTipController implements SelectListener, Disposable
             if (event.isRollover() && this.rolloverKey != null) {
             	
             } else if (event.isHover() ) {//&& this.hoverKey != null) {
-            	 System.out.println("event.isHover");
+            	// System.out.println("event.isHover");
             	this.handleRollover(event);
             }
                 
@@ -109,20 +120,25 @@ public class ToolTipController implements SelectListener, Disposable
 	}
 
 	protected void handleRigthClick(SelectEvent event)  {
-        if (this.lastRightClickObject != null) {
-            if (this.lastRightClickObject == event.getTopObject() && !WWUtil.isEmpty(getRolloverText(event)))
-                return;
-
-            this.hideToolTip();
-            this.lastRightClickObject = null;
-            this.wwd.redraw();
-        }
+//        if (this.lastRightClickObject != null) {
+//            if (this.lastRightClickObject == event.getTopObject() && !WWUtil.isEmpty(getRolloverText(event)))
+//                return;
+//
+//            this.hideToolTip();
+//            this.lastRightClickObject = null;
+//            this.wwd.redraw();
+//        }
 
         if (event.getTopObject() != null && event.getTopObject() instanceof AVList) {
             this.lastRightClickObject = event.getTopObject();
+            
             LaborItem item = ((LaborItem)  ((AVList) this.lastRightClickObject).getValue(ProcessMapTask.LABOR_ITEM_AVKey) );	
-            this.showToolTip(event, "Borrar item "+item.getId()+"?"); 
-            this.wwd.redraw();
+          
+
+            
+            LaborItemGUIController controller = new LaborItemGUIController(main);
+            controller.showDialog(item);
+
         }
     }
     

@@ -1,10 +1,8 @@
 package gui.controller;
 
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
 import dao.Labor;
-import dao.siembra.SiembraLabor;
 import gov.nasa.worldwind.WorldWindow;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.layers.Layer;
@@ -19,15 +17,13 @@ public abstract class AbstractGUIController {
 	public JFXMain main=null;
 	public Pane progressBox;
 	public ExecutorService executorPool;
-	public WWPanel wwjPanel;
+	//public WWPanel wwjPanel;
 	public LayerPanel layerPanel;
 
 	public AbstractGUIController(JFXMain _main) {
 		this.main=_main;		
 		this.progressBox=main.progressBox;
-		this.executorPool=JFXMain.executorPool;
-		this.wwjPanel=main.wwjPanel;
-		
+		this.executorPool=JFXMain.executorPool;		
 	}
 	public void insertBeforeCompass(WorldWindow wwd, RenderableLayer applicationLayer) {
 		JFXMain.insertBeforeCompass(wwd, applicationLayer);		

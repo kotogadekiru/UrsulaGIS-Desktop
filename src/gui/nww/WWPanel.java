@@ -20,6 +20,7 @@ import gov.nasa.worldwind.util.WWXML;
 import gov.nasa.worldwind.wms.WMSTiledImageLayer;
 import gov.nasa.worldwindx.examples.ClickAndGoSelectListener;
 import gov.nasa.worldwindx.examples.util.HighlightController;
+import gui.JFXMain;
 import gui.nww.replacementLayers.GIBS_PlaceLabels;
 import gui.nww.replacementLayers.GoogleLayer;
 import gui.nww.replacementLayers.GoogleTiledImageLayer;
@@ -40,10 +41,11 @@ public class WWPanel extends JPanel {
 	protected StatusBar statusBar;
 	protected ToolTipController toolTipController;
 	protected HighlightController highlightController;
+	protected JFXMain main;
 
-	public WWPanel(Dimension canvasSize, boolean includeStatusBar) {
+	public WWPanel(Dimension canvasSize, boolean includeStatusBar, JFXMain jfxMain) {
 		super(new BorderLayout());
-
+		this.main=jfxMain;
 		this.wwd =new WorldWindowGLJPanel();// this.createWorldWindow();
 
 		//	((Component) this.wwd).setSize((int)canvasSize.getWidth()/4,(int) canvasSize.getHeight()/4);
@@ -147,7 +149,7 @@ public class WWPanel extends JPanel {
 
 		// Add controllers to manage highlighting and tool tips.
 		this.toolTipController = new ToolTipController(this.getWwd(),
-				AVKey.DISPLAY_NAME, null);
+				AVKey.DISPLAY_NAME, null,this.main);
 		this.highlightController = new HighlightController(this.getWwd(),
 				SelectEvent.ROLLOVER);
 	}

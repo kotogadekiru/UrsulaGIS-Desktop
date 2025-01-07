@@ -62,8 +62,8 @@ public class CrearSiembraMapTask extends ProcessMapTask<SiembraItem,SiembraLabor
 			//dosis valorizacion va en unidad de compra; kg o bolsas de 80000 semillas o 50kg
 			
 			labor.setPropiedadesLabor(si);
-
-			si.setGeometry(pol.toGeometry());
+			Geometry g = GeometryHelper.simplificarContorno(pol.toGeometry());
+			si.setGeometry(g);
 			si.setId(labor.getNextID());
 			si.setElevacion(10.0);
 			labor.insertFeature(si);

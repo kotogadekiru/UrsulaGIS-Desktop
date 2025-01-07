@@ -1,5 +1,6 @@
 package dao.pulverizacion;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Entity;
@@ -44,28 +45,41 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 	public static final String AGROQUIMICO_DEFAULT = "AGROQUIMICO_DEFAULT_KEY";
 	public static final String PRECIO_INSUMO_KEY = "PRECIO_INSUMO";
 
-@Transient
+	@Transient
 	public StringProperty colDosisProperty;
 	//public StringProperty colCantPasadasProperty;
-//	@Transient
-//	public Property<Agroquimico> agroquimico=null;
-	
-	public List<CaldoItem> items=null;
-	
+	//	@Transient
+	//	public Property<Agroquimico> agroquimico=null;
+
+	public List<CaldoItem> items= new ArrayList<CaldoItem>();;
+
 	public PulverizacionLabor() {
+		super();
 		initConfig();
 	}
 
 	public PulverizacionLabor(FileDataStore store) {
+		super();
 		this.setInStore(store);// esto configura el nombre	
 		initConfig();
+	}
+
+	public PulverizacionLabor(PulverizacionLabor l) {
+		super(l);
+		initConfig();
+		for(CaldoItem i :l.getItems()) {
+			CaldoItem ci = new CaldoItem(i);				
+
+			ci.setLabor(this);
+			getItems().add(ci);
+		}
 	}
 
 	//XXX ver como los listeners de las propiedades me afectan el archivo de properties y 
 	//el controller de la configuracion. creo que setea las variables pero nunca las graba a menos 
 	//que las grabe el controller
 	private void initConfig() {
-		
+
 		this.productoLabor=DAH.getProductoLabor(ProductoLabor.LABOR_DE_PULVERIZACION);
 		List<String> availableColums = this.getAvailableColumns();		
 
@@ -97,7 +111,7 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 			SimpleFeature next, boolean newIDS) {
 		PulverizacionItem pItem = new PulverizacionItem(next);
 		super.constructFeatureContainerStandar(pItem,next,newIDS);
-		
+
 		pItem.setDosis( LaborItem.getDoubleFromObj(next
 				.getAttribute(PulverizacionLabor.COLUMNA_DOSIS)));		
 		setPropiedadesLabor(pItem);
@@ -130,7 +144,7 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 	public PulverizacionConfig getConfiguracion() {
 		return (PulverizacionConfig) config;
 	}
-	
+
 	@Override
 	protected Double initPrecioLaborHa() {
 		return PropertyHelper.initDouble(PulverizacionLabor.COSTO_LABOR_PULVERIZACION,"0",config.getConfigProperties());
@@ -140,9 +154,9 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 	protected Double initPrecioInsumo() {
 		return PropertyHelper.initDouble(PulverizacionLabor.PRECIO_INSUMO_KEY, "0", config.getConfigProperties()); 
 		//return initDoubleProperty(Margen.COSTO_TN_KEY,  "0", );
-	//	return initDoubleProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,"0",config.getConfigProperties());
+		//	return initDoubleProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,"0",config.getConfigProperties());
 	}
-	
+
 	@Override
 	public LaborConfig getConfigLabor() {
 		if(config==null){

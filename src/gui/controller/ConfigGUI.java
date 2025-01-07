@@ -16,13 +16,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.geotools.data.FileDataStore;
 
-import com.google.gson.Gson;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
@@ -51,12 +49,8 @@ import dao.margen.Margen;
 import dao.ordenCompra.OrdenCompra;
 import dao.ordenCompra.OrdenCompraItem;
 import dao.pulverizacion.PulverizacionLabor;
-import dao.recorrida.Muestra;
-import dao.recorrida.Recorrida;
 import dao.siembra.SiembraLabor;
-import dao.suelo.SueloItem;
 import gov.nasa.worldwind.geom.Position;
-import gui.BulkNdviDownloadGUI;
 import gui.CorrelacionarCapas;
 import gui.JFXMain;
 import gui.MargenConfigDialogController;

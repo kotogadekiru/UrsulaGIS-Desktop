@@ -95,7 +95,11 @@ public class SueloItem extends LaborItem { //suelo item no es labor item. le sob
 
 	@Override
 	public Double getAmount() {
-		return getPpmP();
+		return getPpmP();//FIXME depende de que se este dibujando
+	}
+	
+	public void setAmount(Double amount) {		
+		setPpmP(amount);		
 	}
 	
 	@Override

@@ -122,7 +122,7 @@ public class Margen extends Labor<MargenItem> {
 */
 		//rentabilidad
 		ci.setMargenPorHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(Margen.COLUMNA_MARGEN)));//XXX este dato no importa porque se recalcula
-		//ci.setCostoFijoPorHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(Margen.COLUMNA_IMPORTE_FIJO)));
+		ci.setCostoFijoPorHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(Margen.COLUMNA_IMPORTE_FIJO)));
 		ci.setImporteFertHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(Margen.COLUMNA_IMPORTE_FERT)));
 		ci.setImporteCosechaHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(Margen.COLUMNA_IMPORTE_COSECHA)));
 		ci.setImportePulvHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(Margen.COLUMNA_IMPORTE_PULV)));
@@ -153,7 +153,7 @@ public class Margen extends Labor<MargenItem> {
 		//rentabilidad
 		ci.setMargenPorHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colMargen.get())));//no importa porque se recalcula
 		//setear el costoFijo por HA de la labor de acuerdo a lo que dice el feature??
-		//ci.setCostoFijoPorHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colCostoFijo.get())));
+		ci.setCostoFijoPorHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colCostoFijo.get())));
 		//this.getCostoFijoHaProperty().set(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colCostoFijo.get())));
 		ci.setImporteFertHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colCostoFertilizacion.get())));
 		ci.setImporteCosechaHa(LaborItem.getDoubleFromObj(harvestFeature.getAttribute(colIngreso.get())));
@@ -166,9 +166,10 @@ public class Margen extends Labor<MargenItem> {
 
 	
 	public void setPropiedadesLabor(MargenItem mi){
-		mi.setCostoFijoPorHa(this.getCostoFijoHaProperty().get());
-//		mi.setPrecioInsumo(this.precioInsumoProperty.get());
-//		mi.setCostoLaborHa(this.precioLaborProperty.get());	
+		if(mi.getCostoFijoPorHa()==0.0) {
+			mi.setCostoFijoPorHa(this.getCostoFijoHaProperty().get());
+		}
+	
 	}
 	
 	@Override

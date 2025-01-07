@@ -83,7 +83,7 @@ import utils.GeometryHelper;
 	@NamedQuery(name=Labor.FIND_ACTIVOS, query="SELECT o FROM Labor o where o.activo = true") ,
 }) 
 public abstract class Labor<E extends LaborItem>  {
-	private static final String THE_GEOM_OLUMN = "the_geom";
+	//private static final String THE_GEOM_OLUMN = "the_geom";
 	@Transient public static final String FIND_ALL="Labor.findAll";
 	@Transient public static final String FIND_NAME = "Labor.findName";
 	@Transient public static final String FIND_ACTIVOS = "Labor.findActivos";
@@ -112,6 +112,9 @@ public abstract class Labor<E extends LaborItem>  {
 	@Lob
 	private byte[] content=null;//el contenido zip shpfile
 	
+	/**
+	 * ProductoLabor contiene el tipo de labor que es. ya sea labor de cosecha, siembra o fertilizacion
+	 */
 	@ManyToOne(cascade=CascadeType.PERSIST)
 	public ProductoLabor productoLabor= null;
 
@@ -210,6 +213,7 @@ public abstract class Labor<E extends LaborItem>  {
 	}
 
 	private void initConfigLabor() {
+		
 		List<String> availableColums = this.getAvailableColumns();		
 		LaborConfig laborConfig = getConfigLabor();
 		Configuracion properties = laborConfig.getConfigProperties();
@@ -253,12 +257,7 @@ public abstract class Labor<E extends LaborItem>  {
 		clasificador.clasesClasificadorProperty.addListener((obs,bool1,bool2)->{
 			properties.setProperty(Clasificador.NUMERO_CLASES_CLASIFICACION, bool2.toString());
 		});
-
-
 	}
-
-
-
 
 	/**
 	 * @return the precioLaborProperty
@@ -624,6 +623,10 @@ public abstract class Labor<E extends LaborItem>  {
 
 
 	public void insertFeature(E laborItem) {
+		if(-1.0 == laborItem.getId()) {
+			laborItem.setId(this.getNextID());
+			System.out.println("actualizando el item con id "+laborItem.getId());			
+		}
 		LaborDataStore.insertFeature(laborItem,this);
 		//		Geometry cosechaGeom = laborItem.getGeometry();
 		//		Envelope geomEnvelope=cosechaGeom.getEnvelopeInternal();
@@ -636,7 +639,12 @@ public abstract class Labor<E extends LaborItem>  {
 		//			this.insertFeature(fe);
 		//		}
 	}
-
+	/**
+	 * 
+	 * @param f feature para ser insertado
+	 * Metodo que inserta el feature en outCollection.
+	 * usar labor.add(feature) que lo agrega antes al cache
+	 */
 	public void insertFeature(SimpleFeature f){
 		if(!outCollection.add(f)) {
 			System.err.println("No se pudo insertar la feature "+f);
@@ -761,7 +769,7 @@ public abstract class Labor<E extends LaborItem>  {
 				+ COLUMNA_ELEVACION + ":Double,"
 				+ COLUMNA_CATEGORIA + ":Integer,";
 		typeDescriptor+= getTypeDescriptors();
-
+		//typeDescriptor.split(",");
 		try {
 			type = DataUtilities.createType("LABOR", typeDescriptor);
 		} catch (SchemaException e) {
@@ -782,6 +790,7 @@ public abstract class Labor<E extends LaborItem>  {
 	 * @param newIDS
 	 */
 	public void constructFeatureContainerStandar(LaborItem ci, SimpleFeature harvestFeature, Boolean newIDS) {
+		ci.labor=this;
 		ci.id = LaborItem.getDoubleFromObj(LaborItem.getID(harvestFeature));
 		if(ci.id ==null || newIDS){// flag que me permita ignorar el id del feature y asignar uno nuevo
 			ci.id= this.getNextID();
@@ -871,6 +880,29 @@ public abstract class Labor<E extends LaborItem>  {
 		}		
 	}
 	
+	/**
+	 * 
+	 * @param item
+	 * @return devuelve true si el item esta en outCollection
+	 */
+	public boolean owns(LaborItem item) {
+		//FIXME si tengo un clon y una original se confunde
+		Boolean ret =false;
+		Class<? extends LaborItem> itemClass = item.getClass();
+		List<E> queryRes = this.cachedOutStoreQuery(item.geometry.getEnvelopeInternal());
+		if(queryRes.size()>0) {
+			for(E i:queryRes) {
+				if(i.getClass().isAssignableFrom(itemClass)) {
+					if(i.equals(item)) {
+						return true;
+					}
+				}else {
+					return false;//no es de la misma clase
+				}
+			}
+		}
+		return ret;
+	}
 
 //	public Poligono getContorno() {
 //		if(contorno==null) {

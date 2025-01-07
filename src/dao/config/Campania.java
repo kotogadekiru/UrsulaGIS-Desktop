@@ -2,7 +2,6 @@ package dao.config;
 
 import java.util.Calendar;
 
-import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -11,10 +10,11 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import dao.utils.JPAStringProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper=false)
 @Entity
 @NamedQueries({
 	@NamedQuery(name=Campania.FIND_ALL, query="SELECT o FROM Campania o") ,

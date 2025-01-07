@@ -50,7 +50,7 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 			featureCount = cosecha.outCollection.size();
 			//List<FertilizacionItem> itemsToShow = new ArrayList<FertilizacionItem>();
 			Cultivo cultivo = cosecha.getCultivo();
-			Fertilizante fert = this.labor.fertilizanteProperty.getValue();
+			Fertilizante fert = this.labor.fertilizante;
 
 			//TODO calcular el balance de nitrogeno en el suelo luego de la fertilizacion 
 			//y completar lo que haga falta para la cosecha estimada;
@@ -134,7 +134,7 @@ public class RecomendFertNFromHarvestMapTask extends ProcessMapTask<Fertilizacio
 		Double kgNFert = new Double(0);
 		kgNFert=	fertilizaciones.parallelStream().flatMapToDouble(fertilizacion->{
 			List<FertilizacionItem> items = fertilizacion.cachedOutStoreQuery(geometry.getEnvelopeInternal());
-			Fertilizante fertilizante = fertilizacion.fertilizanteProperty.getValue();
+			Fertilizante fertilizante = fertilizacion.fertilizante;
 			return items.parallelStream().flatMapToDouble(item->{
 				Double kgNHa = (Double) item.getDosistHa() * fertilizante.getPorcN()/100;
 				Geometry fertGeom = item.getGeometry();				

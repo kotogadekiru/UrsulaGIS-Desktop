@@ -1228,7 +1228,7 @@ public class SmartTableView<T> extends TableView<T> {
 				},(p,d)->{ try {
 					Method setMethod = clazz.getMethod(setMethodName, fieldType);
 					setMethod.invoke(p,d);
-					if (clazz.getAnnotation(Entity.class) != null) {						
+					if (clazz.getAnnotation(Entity.class) != null) {								
 						DAH.save(p);
 					}					
 					refresh();

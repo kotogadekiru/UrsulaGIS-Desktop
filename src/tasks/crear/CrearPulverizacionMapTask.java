@@ -18,45 +18,42 @@ import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
 import tasks.ProcessMapTask;
+import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
 public class CrearPulverizacionMapTask extends ProcessMapTask<PulverizacionItem,PulverizacionLabor> {
 	Double amount = new Double(0);
-	Poligono poli=null;
+	List<Poligono> polis=null;
+	//Poligono poli=null;
 
-	public CrearPulverizacionMapTask(PulverizacionLabor labor,Poligono _poli,Double _amount){//RenderableLayer layer, FileDataStore store, double d, Double correccionRinde) {
+	public CrearPulverizacionMapTask(PulverizacionLabor labor,List<Poligono> _poli,Double _amount){//RenderableLayer layer, FileDataStore store, double d, Double correccionRinde) {
 		super(labor);
 		amount=_amount;
-		poli=_poli;
+		//poli=_poli;
+		polis=_poli;
 	}
 
 	public void doProcess() throws IOException {
 		//labor.setContorno(poli);
-		PulverizacionItem ci = new PulverizacionItem();
-		ci.setDosis(amount);
-		labor.setPropiedadesLabor(ci);
-		GeometryFactory fact = new GeometryFactory();
-		List<? extends Position> positions = poli.getPositions();
-		Coordinate[] coordinates = new Coordinate[positions.size()];
-		for(int i=0;i<positions.size();i++){
-			Position p = positions.get(i);	
-			Coordinate c = new Coordinate(p.getLongitude().getDegrees(),p.getLatitude().getDegrees(),p.getElevation());
-			
-			coordinates[i]=c;
-		}
-		coordinates[coordinates.length-1]=coordinates[0];//en caso de que la geometria no este cerrada
-		Polygon poly = fact.createPolygon(coordinates);	
+		for(Poligono pol : this.polis) {
+			PulverizacionItem pi = new PulverizacionItem();
+			pi.setDosis(amount);
+			labor.setPropiedadesLabor(pi);
 
-		ci.setGeometry(poly);
-		ci.setElevacion(10.0);
-		labor.insertFeature(ci);
-				
+
+			Geometry g = GeometryHelper.simplificarContorno(pol.toGeometry());
+			pi.setGeometry(g);
+
+			//ci.setGeometry(poly);
+			pi.setId(labor.getNextID());
+			pi.setElevacion(10.0);
+			labor.insertFeature(pi);
+		}
 		labor.constructClasificador();
 
-		
-		runLater(this.getItemsList());;
-		updateProgress(0, featureCount);
 
+		runLater(this.getItemsList());
+		updateProgress(0, featureCount);
 	}
 
 
@@ -69,16 +66,16 @@ public class CrearPulverizacionMapTask extends ProcessMapTask<PulverizacionItem,
 
 	public static String buildTooltipText(PulverizacionItem pulv, double area) {
 		NumberFormat nf = Messages.getNumberFormat();
-		
+
 		//DecimalFormat df = new DecimalFormat("0.00");//$NON-NLS-2$
 		String tooltipText = new String(Messages.getString("ProcessPulvMapTask.1") //$NON-NLS-1$
 				+Messages.getString("PulvConfigDialog.dosisLabel")+": "+nf.format(pulv.getDosis())+"\n"
 				+ nf.format(pulv.getPrecioInsumo()*pulv.getDosis()) + Messages.getString("ProcessPulvMapTask.2") //$NON-NLS-1$
 				+ Messages.getString("ProcessPulvMapTask.3") + nf.format(pulv.getImporteHa()) //$NON-NLS-1$
 				+ Messages.getString("ProcessPulvMapTask.4")  //$NON-NLS-1$
-		// +"feature: " + featureNumber
-		);
-		
+				// +"feature: " + featureNumber
+				);
+
 		if(area<1){
 			tooltipText=tooltipText.concat( Messages.getString("ProcessPulvMapTask.5")+nf.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("ProcessPulvMapTask.6")); //$NON-NLS-1$ //$NON-NLS-2$
 		} else {

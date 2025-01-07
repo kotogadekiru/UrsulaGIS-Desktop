@@ -2,6 +2,7 @@ package utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -20,7 +21,9 @@ import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.util.LineStringExtracter;
 import com.vividsolutions.jts.operation.buffer.BufferParameters;
+import com.vividsolutions.jts.operation.polygonize.Polygonizer;
 import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
 import com.vividsolutions.jts.util.GeometricShapeFactory;
@@ -28,13 +31,21 @@ import com.vividsolutions.jts.util.GeometricShapeFactory;
 import dao.Labor;
 import dao.LaborItem;
 import dao.Poligono;
+import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Position.PositionList;
+import gov.nasa.worldwind.geom.Sector;
 import gov.nasa.worldwind.util.measure.MeasureTool;
 import gui.PoligonLayerFactory;
 import tasks.procesar.ExtraerPoligonosDeLaborTask;
 
 public class GeometryHelper {
+	
+	/**
+	 * metodo que une los poligonos mostrados como medicion de area
+	 * @param pActivos
+	 * @return
+	 */
 	public static Poligono unirPoligonos(List<Poligono> pActivos) {
 
 		StringJoiner joiner = new StringJoiner("-");
@@ -682,32 +693,50 @@ public class GeometryHelper {
 		}
 		return intersection;
 	}
+	
+	/**
+	 * Metodo que toma un grupo de geometrias y las parte en sus partes basicas
+	 * @param aIntersectar
+	 * @return un grupo de geometrias que no se intersectan y cubren la superficie de la union de las geometrias de entrada
+	 */
+	public static Set<Geometry> obtenerIntersecciones(List<Geometry> aIntersectar){
+		Polygonizer polygonizer = new Polygonizer();
+
+		List<Geometry> boundaries = aIntersectar.stream().map(g->g.getBoundary()).collect(Collectors.toList());
+		Geometry unitedBoundary = toGeometryCollection(boundaries).union();
+		List<?> lines = LineStringExtracter.getLines(unitedBoundary);
+		System.out.println("agregando lines "+lines.size()+" para poligonizer");
+		polygonizer.add(lines);
+
+		Collection polys = polygonizer.getPolygons();
+		System.out.println("cree "+polys.size()+" poligonos");
+		Set<Geometry> geometriasOutput = new HashSet<Geometry>();
+		geometriasOutput.addAll(polys);
+		return geometriasOutput;
+	}
 	/**
 	 * metodo que recorre todas las geometrias haciendo las intersecciones de todos con todos.
 	 * @param aIntersectar: Lista de geometrias a intersectar 
 	 * @return el Set de las partes de las geometrias intersectadas
 	 */
-	public static Set<Geometry> obtenerIntersecciones(List<Geometry> aIntersectar){
-		//	import org.locationtech.jts.densify.Densifier;
+	@Deprecated //perdia superficie entre los poligonos
+	public static Set<Geometry> obtenerIntersecciones2(List<Geometry> aIntersectar){		
+		//obtengo una collection con los boundarys
+		List<Geometry> boundaryList =  aIntersectar.stream().map(g->g.getBoundary()).collect(Collectors.toList());		
+		GeometryCollection boundarysCol = toGeometryCollection(boundaryList);
+		//Obtengo un buffer de las boundarys
+		Double buffer25=ProyectionConstants.metersToLongLat(0.25);//0.25 es lo mas chico que me permite mi precision model
+		Geometry boundary_buffer = boundarysCol.buffer(buffer25,1,BufferParameters.CAP_SQUARE);
 
-		// unir todas las geometrias.
-		//crear un poligono con los exterior rings de todas las geometrias
-		//obtener la diferencia entre la union y los vertices
+		//obtengo un buffer que una a todas las geometrias a intersectar
+		GeometryCollection colectionCat = toGeometryCollection(aIntersectar);
 
-		Geometry[] boundaryArr =  aIntersectar.stream().map(g->g.getBoundary()).toArray(s->new Geometry[s]);
-
-		GeometryFactory fact = ProyectionConstants.getGeometryFactory();
-		GeometryCollection boundarysCol = fact.createGeometryCollection(boundaryArr);
-		Double buffer25=ProyectionConstants.metersToLongLat(0.25);
-		Geometry boundary_buffer = boundarysCol.buffer(buffer25,1,BufferParameters.CAP_FLAT);
-
-		GeometryCollection colectionCat = fact.createGeometryCollection(
-				aIntersectar.toArray(new Geometry[aIntersectar.size()]));
 		//(buffer0,1,BufferParameters.CAP_SQUARE);
 		Double buffer0=ProyectionConstants.metersToLongLat(0);
-		Geometry convexHull = colectionCat.buffer(buffer0,1,BufferParameters.CAP_FLAT);
+		Geometry unionBuffer = colectionCat.buffer(buffer0,1,BufferParameters.CAP_FLAT);
 
-		Geometry diff = convexHull.difference(boundary_buffer);
+		//obtengo la diferencia entre el todo y los bordes de las geometrias
+		Geometry diff = unionBuffer.difference(boundary_buffer);
 		Set<Geometry> geometriasOutput = new HashSet<Geometry>();
 		//double tolerance = ProyectionConstants.metersToLongLat(1);
 		double bufferWidth = 2*buffer25;
@@ -804,31 +833,43 @@ public class GeometryHelper {
 		return area;
 	}
 	public static GeometryCollection toGeometryCollection(List<Geometry> list) {
-		list = list.stream().filter(g->g!=null).collect(Collectors.toList());
+		Geometry[] array = list.stream().filter(g->g!=null).toArray(size->new Geometry[size]);
 		GeometryFactory fact = ProyectionConstants.getGeometryFactory();
-		Geometry[] array =list.toArray(new Geometry[list.size()]);
+		//Geometry[] array =list.toArray(new Geometry[list.size()]);
 		GeometryCollection collection = fact.createGeometryCollection(array );
 		return collection;
 	}
 
+	/**
+	 * metodo que se usa en extraer contorno de labor.
+	 * @param aUnir la labor que contiene las geometrias a unir
+	 * @param bounds el sector de la labor a inspeccionar
+	 * @return
+	 */
 	public static Geometry unirCascading(Labor<?> aUnir,Envelope bounds) {
 		try {
+//			Sector s = boundsToSector(bounds);
+//			Sector[] parts = s.subdivide(2);//divide el sector en 4
+			
 			List<Geometry> boundsGeoms = new ArrayList<Geometry>();
-			List<LaborItem> boundsFeatures = (List<LaborItem>)aUnir.cachedOutStoreQuery(bounds);
+			List<? extends LaborItem> boundsFeatures = (List<? extends LaborItem>)aUnir.cachedOutStoreQuery(bounds);
+			if(boundsFeatures.size()==1)return boundsFeatures.get(0).getGeometry();
 			if(ProyectionConstants.A_HAS(bounds.getArea()) > 1				
 					&& boundsFeatures.size()>1000) {//divido hasta que cubre 1has
 				//			System.out.println("bounds area = "+ProyectionConstants.A_HAS(bounds.getArea()));
 				//si es mayor a 100m2 divido en 4
 				List<Envelope> envelopes = splitEnvelope(bounds);
-
-				for(Envelope e:envelopes) {
-
+				List<Geometry> geomsEnvelopes = envelopes.parallelStream().map(e->{
 					Geometry eGeom = unirCascading(aUnir,e);
-					if(eGeom !=null) {
-						boundsGeoms.add(eGeom);
-					} 
-
-				}
+					return eGeom;
+				}).collect(Collectors.toList());
+				boundsGeoms.addAll(geomsEnvelopes);
+//				for(Envelope e:envelopes) {
+//					Geometry eGeom = unirCascading(aUnir,e);
+//					if(eGeom !=null) {
+//						boundsGeoms.add(eGeom);
+//					}
+//				}
 
 			} else {
 				//List<LaborItem> boundsFeatures = (List<LaborItem>)aUnir.cachedOutStoreQuery(bounds);
@@ -843,13 +884,13 @@ public class GeometryHelper {
 
 			//System.out.println("juntando "+boundsGeoms.size()+" geoms");
 			Geometry union = null; 
-			//toGeometryCollection(boundsGeoms).buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection
+			//union = toGeometryCollection(boundsGeoms).buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection
 			try {
-				union = unirGeometrias(boundsGeoms);
-
-			}catch(Exception e ) {
+				//union = unirGeometrias(boundsGeoms);
 				Double buffer = ProyectionConstants.metersToLongLat(0.25);
 				union = toGeometryCollection(boundsGeoms).buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection
+				
+			}catch(Exception e ) {
 				e.printStackTrace();
 			}
 			return union;
@@ -859,12 +900,32 @@ public class GeometryHelper {
 		}	
 	}
 
+	public static Sector boundsToSector(Envelope bounds) {
+		Sector s = Sector.fromDegrees(bounds.getMinY(),
+							  bounds.getMaxY(),
+							  bounds.getMinX(),
+							  bounds.getMaxX());
+		return s;
+	}
+
 
 
 	public static List<Envelope> splitEnvelope(Envelope e){
 		List<Envelope> result = new ArrayList<Envelope>();
 		double ancho = e.getWidth()/2;
-		double alto = e.getHeight()/2;
+		double alto = e.getHeight()/2;		
+	
+//		for (int row = 0; row < 2; row++) {
+//			for (int col = 0; col < 2; col++) {
+//				result.add(new Envelope(
+//						e.getMinX() + ancho * col,
+//						e.getMinX() + ancho * col + ancho,
+//						e.getMinY() + alto * row,
+//						e.getMinY() + alto * row + alto
+//						));
+//			}
+//		}
+	        
 		for(double x = e.getMinX(); x <= e.getMaxX()-ancho; x+=ancho) {
 			for(double y = e.getMinY(); y <= e.getMaxY()-alto; y+=alto) {			
 				result.add(new Envelope(x,x+ancho,y,y+ancho));
@@ -882,13 +943,22 @@ public class GeometryHelper {
 	}
 
 	public static Geometry unirGeometrias(List<Geometry> aUnir) {
+		if(aUnir!=null && aUnir.size()==1) {
+			return aUnir.get(0);
+		}
 		try {
-			List<Geometry> aUnird = aUnir.parallelStream().filter(g->g!=null&&!g.isEmpty()).map(g->{
+			double dTolerance = ProyectionConstants.metersToLongLat(10);
+			
+			List<Geometry> aUnird = aUnir.stream().filter( g-> 
+							g!=null && !g.isEmpty()
+					).map(g->{
 				try {
 					if(!g.isEmpty()) {
-						Densifier densifier = new Densifier(g);
-						densifier.setDistanceTolerance(ProyectionConstants.metersToLongLat(10));
-						g=densifier.getResultGeometry();//java.lang.ArrayIndexOutOfBoundsException: -1
+//						Densifier densifier = new Densifier(g);
+//						//densifier.setValidate(false);
+//						densifier.setDistanceTolerance();
+						g=Densifier.densify(g, dTolerance); 
+						//densifier.getResultGeometry();//si la geometria es grande esto devuelve POLYGON EMPTY?
 					}
 				}catch(Exception e) {
 					System.err.println("fallo densifier con "+g);
@@ -896,6 +966,7 @@ public class GeometryHelper {
 				}
 				return  g;			
 			}).collect(Collectors.toList());
+			//XXX cuando llega aca de una siembra que tiene solo un poligono devuelve POLYGON EMPTY
 
 			//		GeometryFactory fact = ProyectionConstants.getGeometryFactory();		
 			//		Geometry[] geomArray = aUnir.toArray(new Geometry[aUnir.size()]);//put into an array
@@ -955,6 +1026,12 @@ public class GeometryHelper {
 					try {
 						union=union.union(g);
 					}catch(Exception e2) {
+//						try{
+//							buffered = EnhancedPrecisionOp.buffer(colectionCat, buffer);//java.lang.IllegalArgumentException: Comparison method violates its general contract!
+//						}catch(Exception e2){
+//							e2.printStackTrace();
+//						}
+						
 						e2.printStackTrace();
 					}
 				}
@@ -969,20 +1046,59 @@ public class GeometryHelper {
 	 * @return
 	 */
 	public static synchronized Geometry extractContornoGeometry(Labor<?> labor) {
+		System.out.println("extrayendo contorno de labor "+labor);
 		try{					
 			ReferencedEnvelope bounds = labor.outCollection.getBounds();
-			Geometry cascadedUnion = unirCascading(labor,bounds);
+			//hace la union de todas las geometrias
+			List<? extends LaborItem> items = labor.cachedOutStoreQuery(bounds);//demora
+			Geometry cascadedUnion =null;
+		//	long init =System.currentTimeMillis();
+		//	 cascadedUnion = convexHull(items);//demora
+		//	 System.out.println("termine convex hull");
+		//	long endConvexHull =System.currentTimeMillis();
+			cascadedUnion = unirCascading(labor,bounds);
+			//List<Geometry> boundaries = items.stream().map(i->i.getGeometry()).collect(Collectors.toList());//rapido
+			//cascadedUnion = toGeometryCollection(boundaries).buffer(ProyectionConstants.metersToLongLat(1), 1, BufferParameters.CAP_FLAT);
+			//no termina nunca
+			
+		//	long endUnirCascading =System.currentTimeMillis();
+		//	System.out.println("tarde "+(endConvexHull-init)+" s en hacer convexHull");
+		//	System.out.println("tarde "+(endUnirCascading-endConvexHull)+" s en hacer unirCascading");
+			if(cascadedUnion.getNumGeometries()==1) {
+				return cascadedUnion;
+			} else {
+				System.out.println("despues de hacer unir cascading sigue teniendo mas de una geometria "+cascadedUnion.getNumGeometries());
+			}
+			//hago un buffer de las que quedan
+			// un buffer de 20mts es bastante
 			cascadedUnion = cascadedUnion.buffer(ProyectionConstants.metersToLongLat(20));
+			//extrae el boundary del buffer
 			Geometry boundary = cascadedUnion.getBoundary();
+			//hace un buffer del bundary
 			boundary = boundary.buffer(ProyectionConstants.metersToLongLat(20));
+			//le saco el bundary al buffer de la union
 			cascadedUnion = cascadedUnion.difference(boundary);
+			//lo simplifico
 			cascadedUnion= simplificarContorno(cascadedUnion);
-			return cascadedUnion;
+			return PolygonValidator.validate(cascadedUnion);
+			//return cascadedUnion;
 		}catch(Exception e){
 			ReferencedEnvelope bounds = labor.outCollection.getBounds();			
 			e.printStackTrace();
 			return constructPolygon(bounds);
 		}
+	}
+
+	/**
+	 * metodo que devuelve el poligono convexo mas chico que engloba los items.
+	 * @param items
+	 * @return devuelve el poligono convexo mas chico que contiene los items.
+	 */
+	public static Geometry convexHull(List<? extends LaborItem> items) {
+		List<Geometry> geoms = items.stream().map(i->i.getGeometry()).collect(Collectors.toList());
+		GeometryCollection colectionCat = GeometryHelper.toGeometryCollection(geoms);
+		Geometry cascadedUnion = colectionCat.convexHull();
+		return cascadedUnion;
 	}
 	/**
 	 * metodo llamado en labor.getContorno

@@ -38,7 +38,7 @@ public class OrdenSiembraItem {
 	
 	private Double dosisHa = 0.0;
 	private String observaciones=null;
-	@Column( columnDefinition="DECIMAL(32,15)")
+	@Column(name="cantidad32", precision = 32, scale = 2)// columnDefinition="DECIMAL(32,15)")
 	private Double cantidad=null;
 	
 	public OrdenSiembraItem() {

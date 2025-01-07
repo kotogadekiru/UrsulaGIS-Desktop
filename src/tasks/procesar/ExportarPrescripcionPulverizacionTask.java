@@ -104,20 +104,22 @@ public class ExportarPrescripcionPulverizacionTask extends ProgresibleTask<File>
 		SimpleFeatureBuilder fb = new SimpleFeatureBuilder(type);//ok
 		super.updateTitle("exportando");
 		updateProgress(0, items.size());
+		Integer id =0;
 		for(LaborItem i:items) {//(it.hasNext()){
 			PulverizacionItem fi=(PulverizacionItem) i;
 			Geometry itemGeometry=fi.getGeometry();
 			List<Polygon> flatPolygons = PolygonValidator.geometryToFlatPolygons(itemGeometry);
 			
 			for(Polygon p : flatPolygons){
-				fb.add(p);
-				Double dosisHa = fi.getDosis();
+				//fb.add(p);
+				Double dosisHa = fi.getDosis();			
+				//fb.add(dosisHa.longValue());
 
-			
-				fb.add(dosisHa.longValue());
-
-				SimpleFeature exportFeature = fb.buildFeature(fi.getId().toString());
-				exportFeatureCollection.add(exportFeature);
+				SimpleFeature exportFeature = fb.buildFeature(null,new Object[] {p,dosisHa.longValue()});
+				boolean ret = exportFeatureCollection.add(exportFeature);
+				if(!ret) {
+					System.err.println("no se pudo agregar id "+id.toString()+" en ExportarPrescripcionPulverizacionTask");
+				}
 			}
 			updateProgress(exportFeatureCollection.size(), items.size());
 		}

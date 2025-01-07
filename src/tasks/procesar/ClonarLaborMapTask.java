@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.geotools.data.FeatureReader;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
@@ -13,10 +12,6 @@ import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryCollection;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
-import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 
 import dao.Labor;
 import dao.LaborItem;
@@ -27,6 +22,7 @@ import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.margen.Margen;
 import dao.margen.MargenItem;
+import dao.pulverizacion.CaldoItem;
 import dao.pulverizacion.PulverizacionItem;
 import dao.pulverizacion.PulverizacionLabor;
 import dao.siembra.SiembraItem;
@@ -43,43 +39,59 @@ import tasks.crear.CrearFertilizacionMapTask;
 import tasks.crear.CrearPulverizacionMapTask;
 import tasks.crear.CrearSueloMapTask;
 import tasks.importar.OpenMargenMapTask;
-import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
-public class CortarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem>> {
+public class ClonarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem>> {
 	/**
 	 * la lista de las cosechas a unir
 	 */
 	private Labor<?> laborACortar=null;
-	private List<Poligono> poligonos=null;
+	
 	private Map<Class, Function<LaborItem, String>> tooltipCreator;
 
 
 	
-	public CortarLaborMapTask(Labor<?> _laborACortar,List<Poligono> _poligonos){//RenderableLayer layer, FileDataStore store, double d, Double correccionRinde) {
-		this.laborACortar=_laborACortar;
-		this.poligonos=_poligonos;
-		
+	public ClonarLaborMapTask(Labor<?> _laborACortar){//RenderableLayer layer, FileDataStore store, double d, Double correccionRinde) {
+		this.laborACortar=_laborACortar;		
 	
 		Map<Class, Function<Labor, Labor>> constructor = laborConstructor();
 		
 		this.tooltipCreator = constructTooltipCreator();
 	
-		this.labor=constructor.get(this.laborACortar.getClass()).apply(laborACortar);
+		this.labor=constructor.get(this.laborACortar.getClass()).apply(laborACortar);	
 
-		List<String> nombres =this.poligonos.stream().map(p->p.getNombre()).collect(Collectors.toList());
-
-		labor.setNombre(_laborACortar.getNombre()+"-"+String.join("-", nombres));//este es el nombre que se muestra en el progressbar
+		labor.setNombre(Messages.getString("GenericLaborGUIController.ClonarLabor")+" "+_laborACortar.getNombre());//este es el nombre que se muestra en el progressbar
 	}
 
 	public static Map<Class, Function<Labor, Labor>> laborConstructor() {
 		Map<Class,Function<Labor,Labor>> constructor = new HashMap<Class,Function<Labor,Labor>>();
 		constructor.put(CosechaLabor.class, l->{
-			return new CosechaLabor();
+			CosechaLabor c = (CosechaLabor)l;
+			CosechaLabor labor = new CosechaLabor();
+			//TODO asignar las columnas a  los valores estanar
+//			labor.colAmount.set(CosechaLabor.CosechaLaborConstants.COLUMNA_RENDIMIENTO);
+//			labor.colRendimiento.set(CosechaLabor.CosechaLaborConstants.COLUMNA_RENDIMIENTO);
+//			labor.colAncho.set(CosechaLabor.COLUMNA_ANCHO);
+//			labor.colCurso.set(CosechaLabor.COLUMNA_CURSO);
+//			labor.colDistancia.set(CosechaLabor.COLUMNA_DISTANCIA);
+//			labor.colElevacion.set(CosechaLabor.COLUMNA_ELEVACION);
+			labor.setCultivo(c.getCultivo());
+			labor.setFecha(c.getFecha());
+			labor.setPrecioInsumo(c.getPrecioInsumo());
+			labor.setPrecioLabor(c.getPrecioLabor());
+			labor.setCostoCosechaTn(c.getCostoCosechaTn());
+
+			labor.getConfiguracion().valorMetrosPorUnidadDistanciaProperty().set(1.0);
+			labor.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
+			String nombreProgressBar = "clonar ";		
+			labor.setNombre(nombreProgressBar);//este es el nombre que se muestra en el progressbar
+			
+			return labor;
 		});
+		
 		constructor.put(SiembraLabor.class, l->{
 			SiembraLabor os = (SiembraLabor)l;
-			SiembraLabor ns =  new SiembraLabor();
+			SiembraLabor ns =  new SiembraLabor(os);
 			ns.setEntreSurco(os.getEntreSurco());
 			ns.setSemilla(os.getSemilla());
 			ns.setPrecioInsumo(os.getPrecioInsumo());
@@ -89,15 +101,34 @@ public class CortarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem
 			ns.setFertCostado(os.getFertCostado());
 			return ns;
 		});
+		
 		constructor.put(FertilizacionLabor.class, l->{
-			return new FertilizacionLabor();
+			FertilizacionLabor os = (FertilizacionLabor)l;
+			FertilizacionLabor ns =  new FertilizacionLabor(os);			
+			
+			ns.setFertilizante(os.getFertilizante());
+			ns.setPrecioInsumo(os.getPrecioInsumo());
+			ns.setPrecioLabor(os.getPrecioLabor());
+			ns.setFecha(os.getFecha());
+		
+			return ns;
 		});
+		
 		constructor.put(PulverizacionLabor.class, l->{
-			return new PulverizacionLabor();
+			PulverizacionLabor os =(PulverizacionLabor)l;
+			PulverizacionLabor ns = new PulverizacionLabor(os);			
+			return ns;
 		});
+		
 		constructor.put(Suelo.class, l->{
-			return new Suelo();
+			Suelo os =(Suelo)l;
+			Suelo ns = new Suelo();
+			ns.setFecha(os.getFecha());
+			
+			
+			return ns;
 		});
+		
 		constructor.put(Margen.class, l->{
 			Margen ol =(Margen)l;
 			Margen newl = new Margen();
@@ -162,44 +193,10 @@ public class CortarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem
 
 			/*
 			 * calcula las intesecciones entre la geometria del cosechaitem y los poligonos seleccionados
-			 */
-			 List<Geometry> intersecciones = poligonos.stream().map(pol->{
-				 Geometry ret = GeometryHelper.getIntersection(pol.toGeometry(), g);
-				//System.out.println("intersection is "+ret);
-				return ret;// ? pol.toGeometry().intersection(g):null;
-				}).filter(inter->inter!=null).collect(Collectors.toList());
-
-			if(intersecciones.size()>0) {
-				GeometryFactory fact = intersecciones.get(0).getFactory();
-				Geometry[] geomArray = new Geometry[intersecciones.size()];
-				GeometryCollection colectionCat = fact.createGeometryCollection(intersecciones.toArray(geomArray));
-
-				Geometry buffered = null;
-				double bufer= ProyectionConstants.metersToLongLat(0.25);
-				try{
-				//	buffered = colectionCat.union();
-					buffered =colectionCat.buffer(bufer);
-				}catch(Exception e){
-					System.out.println(Messages.getString("ProcessHarvestMapTask.10")); //$NON-NLS-1$
-					//java.lang.IllegalArgumentException: Comparison method violates its general contract!
-					try{
-					buffered= EnhancedPrecisionOp.buffer(colectionCat, bufer);//java.lang.IllegalArgumentException: Comparison method violates its general contract!
-					}catch(Exception e2){
-						e2.printStackTrace();
-					}
-				}
-				try{	
-					buffered = TopologyPreservingSimplifier.simplify(buffered, ProyectionConstants.metersToLongLat(0.25));
-					//g =g.buffer(0);		
-					
-				}catch(Exception e){
-					e.printStackTrace();
-				}				
-//				ci.setGeometry(buffered);
-//				SimpleFeature nf=ci.getFeature(labor.featureBuilder);
+			 */		
 				
 				SimpleFeature nf=SimpleFeatureBuilder.copy(f);
-				nf.setDefaultGeometry(buffered);
+				nf.setDefaultGeometry(g);
 
 				boolean ret = labor.outCollection.add(nf);
 				//featuresInsertadas++;
@@ -207,7 +204,7 @@ public class CortarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem
 					System.out.println("no se pudo agregar la feature "+f);
 				}
 				updateProgress(this.featureNumber++, featureCount);
-			}
+			
 		}
 
 		reader.close();

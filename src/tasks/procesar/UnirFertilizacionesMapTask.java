@@ -1,7 +1,6 @@
 package tasks.procesar;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -82,10 +81,10 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 			}else {
 				nombre+=" - "+fert.getNombre();
 			}
-			if(labor.fertilizanteProperty.getValue()==null){//inicializo las propiedades con los valores de la primera fert unida
+			if(labor.fertilizante==null){//inicializo las propiedades con los valores de la primera fert unida
 				//esto no se corre porque en el constructor se inicializa con los valores default
 				System.out.println("inicializando las variables de la nueva fertilizacion con los de la primera fert a unir");
-				labor.fertilizanteProperty.setValue(fert.fertilizanteProperty.getValue());
+				labor.fertilizante=fert.fertilizante;
 				labor.setPrecioInsumo(fert.getPrecioInsumo());
 				labor.setFecha(fert.getFecha());
 				labor.setPrecioLabor(fert.getPrecioLabor());
@@ -128,15 +127,15 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 						(map, poly) -> {
 							
 						try{
-							List<FertilizacionItem>  cosechasPoly = fertilizaciones.parallelStream().collect(
+							List<FertilizacionItem>  fertsPoly = fertilizaciones.parallelStream().collect(
 									()->new  ArrayList<FertilizacionItem>(),
-									(list, cosecha) ->{			
-										list.addAll(cosecha.cachedOutStoreQuery(poly.getEnvelopeInternal()));	
+									(list, ferts) ->{			
+										list.addAll(ferts.cachedOutStoreQuery(poly.getEnvelopeInternal()));	
 									},
 									(list1, list2) -> list1.addAll(list2)
 									);
 
-							FertilizacionItem item = construirFeature(cosechasPoly,poly);                    			
+							FertilizacionItem item = construirFeature(fertsPoly,poly);                    			
 
 							if(item!=null){
 								map.put(poly,item);

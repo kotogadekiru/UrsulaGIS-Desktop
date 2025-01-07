@@ -12,24 +12,30 @@ import org.geotools.data.FileDataStore;
 import api.OrdenPulverizacion;
 import dao.Labor;
 import dao.pulverizacion.PulverizacionLabor;
+import gov.nasa.worldwind.WorldWindow;
 import gui.JFXMain;
 import gui.Messages;
 import gui.PulverizacionConfigDialogController;
 import gui.nww.LaborLayer;
 import gui.nww.LayerAction;
+import gui.nww.LayerPanel;
 import javafx.scene.control.Alert;
+import javafx.scene.layout.Pane;
 import tasks.CompartirPulverizacionLaborTask;
 import tasks.importar.ProcessPulvMapTask;
 import tasks.procesar.ExportarPrescripcionPulverizacionTask;
+import tasks.procesar.UnirPulverizacionesMapTask;
 import utils.DAH;
 import utils.FileHelper;
 
 public class PulverizacionGUIController {
 	//private static final String DD_MM_YYYY = "dd/MM/yyyy";
 	JFXMain main=null;
+	private Pane progressBox;
 
 	public PulverizacionGUIController(JFXMain _main) {
 		this.main=_main;		
+		this.progressBox=main.progressBox;
 	}
 	
 	public void addPulverizacionesRootNodeActions() {
@@ -47,6 +53,14 @@ public class PulverizacionGUIController {
 	public List<LayerAction> addAccionesPulverizaciones(Map<Class<?>, List<LayerAction>> predicates) {
 		List<LayerAction> pulverizacionesP = new ArrayList<LayerAction>();
 		predicates.put(PulverizacionLabor.class, pulverizacionesP);
+		
+		/**
+		 * Accion que permite clonar la pulverizacion
+		 */
+//		pulverizacionesP.add(LayerAction.constructPredicate(Messages.getString("JFXMain.clonar"),(layer)->{
+//			doUnirPulverizaciones((PulverizacionLabor) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+//			return "pulverizacion clonada" + layer.getName(); 
+//		}));
 		
 		/**
 		 *Accion que permite editar una pulverizacion
@@ -177,5 +191,51 @@ public class PulverizacionGUIController {
 				}//fin del for stores
 
 			}//if stores != null
+		}
+		
+		private void doUnirPulverizaciones(PulverizacionLabor pulverizacionLabor) {
+			List<PulverizacionLabor> pulverizacionesAUnir = new ArrayList<PulverizacionLabor>();
+			if(pulverizacionLabor == null){
+				List<PulverizacionLabor> pulverizacionesEnabled = main.getPulverizacionesSeleccionadas();
+				pulverizacionesAUnir.addAll(pulverizacionesEnabled);
+			} else {
+				pulverizacionesAUnir.add(pulverizacionLabor);
+			}
+			
+			UnirPulverizacionesMapTask umTask = new UnirPulverizacionesMapTask(pulverizacionesAUnir);
+			umTask.installProgressBar(progressBox);
+			umTask.setOnSucceeded(handler -> {
+				PulverizacionLabor ret = (PulverizacionLabor)handler.getSource().getValue();
+				if(ret.getLayer()!=null){
+					insertBeforeCompass(getWwd(), ret.getLayer());
+					this.getLayerPanel().update(this.getWwd());
+				}
+				umTask.uninstallProgressBar();
+				viewGoTo(ret);
+				System.out.println(Messages.getString("JFXMain.287")); 
+				playSound();
+			});//fin del OnSucceeded						
+			JFXMain.executorPool.execute(umTask);
+		}
+		
+		private void insertBeforeCompass(WorldWindow wwd, LaborLayer layer) {
+			JFXMain.insertBeforeCompass(wwd, layer);		
+		}
+
+		private LayerPanel getLayerPanel() {		
+			return main.getLayerPanel();
+		}
+
+		private WorldWindow getWwd() {		
+			return main.getWwd();
+		}
+
+		private void viewGoTo(PulverizacionLabor ret) {
+			main.viewGoTo(ret);		
+		}
+
+		private void playSound() {
+			main.playSound();
+			
 		}
 }
