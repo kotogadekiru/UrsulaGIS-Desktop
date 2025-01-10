@@ -73,6 +73,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.VBox;
@@ -702,23 +703,31 @@ public class PoligonoGUIController extends AbstractGUIController{
 		} 
 		NDVIDatePickerDialog ndviDpDLG = new NDVIDatePickerDialog(JFXMain.stage);
 		
-		boolean validDates = false;
-		while (!validDates) {
-			LocalDate ret = ndviDpDLG.ndviDateChooser(fin);
-	        if (ret == null) {
-	            return;
-	        }
-
+		boolean datesAreValid = false;
+		
+		LocalDate ret = ndviDpDLG.ndviDateChooser(fin);
+		
+		while (!datesAreValid) {
 	        if (ndviDpDLG.finalDate != null && ndviDpDLG.finalDate.isAfter(ndviDpDLG.initialDate)) {
-	        	validDates = true;
+	        	datesAreValid = true;
 	        } else {
 	            Alert dateError = new Alert(Alert.AlertType.WARNING);
 	            dateError.initOwner(JFXMain.stage);
 	            dateError.setTitle("UrsulaGIS");
 	            dateError.setHeaderText(Messages.getString("PoligonGUIController.errorFecha"));
 	            dateError.showAndWait();
+	            
+	            LocalDate newRet = ndviDpDLG.ndviDateChooser(ndviDpDLG.initialDate, ndviDpDLG.finalDate);
+	            
+	            if(newRet == null) {
+	    			return;
+	    		}
 	        }
         }
+		
+		if(ret == null) {
+			return;
+		}
 		
 		ObservableList<Ndvi> observableList = FXCollections.observableArrayList(new ArrayList<Ndvi>());
 		observableList.addListener((ListChangeListener<Ndvi>) c -> {				
@@ -1212,23 +1221,31 @@ public class PoligonoGUIController extends AbstractGUIController{
 
 		NDVIDatePickerDialog ndviDpDLG = new NDVIDatePickerDialog(JFXMain.stage);
 		
-		boolean validDates = false;
-		while (!validDates) {
-			LocalDate ret = ndviDpDLG.ndviDateChooser(fin);
-	        if (ret == null) {
-	            return;
-	        }
-
+		boolean datesAreValid = false;
+		
+		LocalDate ret = ndviDpDLG.ndviDateChooser(fin);
+		
+		while (!datesAreValid) {
 	        if (ndviDpDLG.finalDate != null && ndviDpDLG.finalDate.isAfter(ndviDpDLG.initialDate)) {
-	        	validDates = true;
+	        	datesAreValid = true;
 	        } else {
 	            Alert dateError = new Alert(Alert.AlertType.WARNING);
 	            dateError.initOwner(JFXMain.stage);
 	            dateError.setTitle("UrsulaGIS");
 	            dateError.setHeaderText(Messages.getString("PoligonGUIController.errorFecha"));
 	            dateError.showAndWait();
+	            
+	            LocalDate newRet = ndviDpDLG.ndviDateChooser(ndviDpDLG.initialDate, ndviDpDLG.finalDate);
+	            
+	            if(newRet == null) {
+	    			return;
+	    		}
 	        }
         }
+		
+		if(ret == null) {
+			return;
+		}
 
 		File downloadLocation=null;
 		try {
