@@ -77,6 +77,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
+import javafx.stage.Window;
 import tasks.GetNdviForLaborTask4;
 import tasks.crear.CrearCosechaMapTask;
 import tasks.crear.CrearFertilizacionMapTask;
@@ -978,7 +979,20 @@ public class PoligonoGUIController extends AbstractGUIController{
 		supDialog.initOwner(JFXMain.stage);
 		supDialog.setTitle(Messages.getString("JFXMain.medirDistancia")); //$NON-NLS-1$
 		supDialog.setHeaderText(Messages.getString("JFXMain.medirDistanciaHeaderText")); //$NON-NLS-1$
+		// La posicion del Alert la pongo relativa a la ventana y lo corro del medio para que se vea mejor el lote
+		supDialog.setOnShowing(event -> {
+			        Window owner = supDialog.getOwner();
+			        if (owner != null) {
+			            double ownerX = owner.getX();
+			            double ownerY = owner.getY();
+			            double ownerHeight = owner.getHeight();
 
+			            double dialogX = ownerX + 270.0; // Offset en X
+			            double dialogY = ownerY + ownerHeight - 200.0; // Offset en Y
+			            supDialog.setX(dialogX);
+			            supDialog.setY(dialogY);
+			        }
+			    });
 		//Text t = new Text();
 		TextField nombreTF = new TextField();
 		nombreTF.setPromptText(Messages.getString("JFXMain.medirDistanciaHeaderText")); //$NON-NLS-1$
