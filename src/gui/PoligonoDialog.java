@@ -15,6 +15,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
+import javafx.stage.Window;
 import utils.DAH;
 
 public class PoligonoDialog extends Dialog<Poligono>{
@@ -32,6 +33,20 @@ public class PoligonoDialog extends Dialog<Poligono>{
 
 		this.getDialogPane().getButtonTypes().add(ButtonType.OK);
 		this.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+		// La posicion del Dialog la pongo relativa a la ventana y lo corro del medio para que se vea mejor el lote
+		this.setOnShowing(event -> {
+	        Window owner = this.getOwner();
+	        if (owner != null) {
+	            double ownerX = owner.getX();
+	            double ownerY = owner.getY();
+	            double ownerHeight = owner.getHeight();
+
+	            double dialogX = ownerX + 270.0; // Offset en X
+	            double dialogY = ownerY + ownerHeight - 200.0; // Offset en Y
+	            this.setX(dialogX);
+	            this.setY(dialogY);
+	        }
+	    });
 		this.setResizable(false);
 		
 		 nombreTF = new TextField(this.poligono.getNombre());
