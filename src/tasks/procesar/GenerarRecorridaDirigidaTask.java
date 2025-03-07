@@ -1,10 +1,15 @@
 package tasks.procesar;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -36,6 +41,7 @@ import gov.nasa.worldwind.render.PointPlacemark;
 import gov.nasa.worldwind.render.PointPlacemarkAttributes;
 import gov.nasa.worldwind.render.ShapeAttributes;
 import gui.Messages;
+import gui.utils.DateConverter;
 import javafx.concurrent.Task;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -94,6 +100,10 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 
 		this.recorrida = new Recorrida();
 		this.recorrida.setNombre(Messages.getString("GenerarMuestreoDirigidoTask.0"));//este es el nombre que se muestra en el progressbar //$NON-NLS-1$
+		 // Seteando la fecha al dia que se crea
+		DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+		String fecha = dateFormat.format(new Date());
+		this.recorrida.setFecha(fecha);
 	}
 
 	/**
