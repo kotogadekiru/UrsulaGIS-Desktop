@@ -503,7 +503,8 @@ public class PoligonoGUIController extends AbstractGUIController{
 			labor.dispose();//libero los recursos reservados
 			return;
 		}							
-
+		//TODO mejorar la explicacion de como se calculan los kg desde la densidad objetivo
+		//TODO permitir agregar unidad de ingreso
 		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.siembraNumTitle"), 
 				Messages.getString("JFXMain.siembraNumHeader"), 
 				Messages.getString("JFXMain.siembraNumLabel"), 
