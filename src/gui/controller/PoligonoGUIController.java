@@ -73,10 +73,12 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
+import javafx.stage.Window;
 import tasks.GetNdviForLaborTask4;
 import tasks.crear.CrearCosechaMapTask;
 import tasks.crear.CrearFertilizacionMapTask;
@@ -703,23 +705,31 @@ public class PoligonoGUIController extends AbstractGUIController{
 		} 
 		NDVIDatePickerDialog ndviDpDLG = new NDVIDatePickerDialog(JFXMain.stage);
 		
-		boolean validDates = false;
-		while (!validDates) {
-			LocalDate ret = ndviDpDLG.ndviDateChooser(fin);
-	        if (ret == null) {
-	            return;
-	        }
-
+		boolean datesAreValid = false;
+		
+		LocalDate ret = ndviDpDLG.ndviDateChooser(fin);
+		
+		while (!datesAreValid) {
 	        if (ndviDpDLG.finalDate != null && ndviDpDLG.finalDate.isAfter(ndviDpDLG.initialDate)) {
-	        	validDates = true;
+	        	datesAreValid = true;
 	        } else {
 	            Alert dateError = new Alert(Alert.AlertType.WARNING);
 	            dateError.initOwner(JFXMain.stage);
 	            dateError.setTitle("UrsulaGIS");
 	            dateError.setHeaderText(Messages.getString("PoligonGUIController.errorFecha"));
 	            dateError.showAndWait();
+	            
+	            LocalDate newRet = ndviDpDLG.ndviDateChooser(ndviDpDLG.initialDate, ndviDpDLG.finalDate);
+	            
+	            if(newRet == null) {
+	    			return;
+	    		}
 	        }
         }
+		
+		if(ret == null) {
+			return;
+		}
 		
 		ObservableList<Ndvi> observableList = FXCollections.observableArrayList(new ArrayList<Ndvi>());
 		observableList.addListener((ListChangeListener<Ndvi>) c -> {				
@@ -979,7 +989,20 @@ public class PoligonoGUIController extends AbstractGUIController{
 		supDialog.initOwner(JFXMain.stage);
 		supDialog.setTitle(Messages.getString("JFXMain.medirDistancia")); //$NON-NLS-1$
 		supDialog.setHeaderText(Messages.getString("JFXMain.medirDistanciaHeaderText")); //$NON-NLS-1$
+		// La posicion del Alert la pongo relativa a la ventana y lo corro del medio para que se vea mejor el lote
+		supDialog.setOnShowing(event -> {
+			        Window owner = supDialog.getOwner();
+			        if (owner != null) {
+			            double ownerX = owner.getX();
+			            double ownerY = owner.getY();
+			            double ownerHeight = owner.getHeight();
 
+			            double dialogX = ownerX + 270.0; // Offset en X
+			            double dialogY = ownerY + ownerHeight - 200.0; // Offset en Y
+			            supDialog.setX(dialogX);
+			            supDialog.setY(dialogY);
+			        }
+			    });
 		//Text t = new Text();
 		TextField nombreTF = new TextField();
 		nombreTF.setPromptText(Messages.getString("JFXMain.medirDistanciaHeaderText")); //$NON-NLS-1$
@@ -1213,23 +1236,31 @@ public class PoligonoGUIController extends AbstractGUIController{
 
 		NDVIDatePickerDialog ndviDpDLG = new NDVIDatePickerDialog(JFXMain.stage);
 		
-		boolean validDates = false;
-		while (!validDates) {
-			LocalDate ret = ndviDpDLG.ndviDateChooser(fin);
-	        if (ret == null) {
-	            return;
-	        }
-
+		boolean datesAreValid = false;
+		
+		LocalDate ret = ndviDpDLG.ndviDateChooser(fin);
+		
+		while (!datesAreValid) {
 	        if (ndviDpDLG.finalDate != null && ndviDpDLG.finalDate.isAfter(ndviDpDLG.initialDate)) {
-	        	validDates = true;
+	        	datesAreValid = true;
 	        } else {
 	            Alert dateError = new Alert(Alert.AlertType.WARNING);
 	            dateError.initOwner(JFXMain.stage);
 	            dateError.setTitle("UrsulaGIS");
 	            dateError.setHeaderText(Messages.getString("PoligonGUIController.errorFecha"));
 	            dateError.showAndWait();
+	            
+	            LocalDate newRet = ndviDpDLG.ndviDateChooser(ndviDpDLG.initialDate, ndviDpDLG.finalDate);
+	            
+	            if(newRet == null) {
+	    			return;
+	    		}
 	        }
         }
+		
+		if(ret == null) {
+			return;
+		}
 
 		File downloadLocation=null;
 		try {

@@ -26,8 +26,13 @@ public class NDVIDatePickerDialog {
 	public NDVIDatePickerDialog(Stage _owner){
 		owner=_owner;
 	}
+	
+	
+	public LocalDate ndviDateChooser(LocalDate fin) {
+	    return ndviDateChooser(null, fin);
+	}
 
-	public LocalDate ndviDateChooser(LocalDate fin){
+	public LocalDate ndviDateChooser(LocalDate ini, LocalDate fin){
 		SimpleObjectProperty<LocalDate> iniLdp = new SimpleObjectProperty<LocalDate>();
 		SimpleObjectProperty<LocalDate> finLdp = new SimpleObjectProperty<LocalDate>();
 		 initialDate = LocalDate.now();
@@ -37,6 +42,7 @@ public class NDVIDatePickerDialog {
 		Configuracion config = JFXMain.config;
 		String configDate = config.getPropertyOrDefault("LAST_DATE", dc.toString(finalDate)); //$NON-NLS-1$
 		finalDate = dc.fromString(configDate);
+		
 		if(fin!=null){
 			finalDate= fin;
 		}
@@ -45,7 +51,11 @@ public class NDVIDatePickerDialog {
 //		GregorianCalendar cal = new GregorianCalendar();
 //		cal.setTime(java.sql.Date.valueOf(finalDate));
 //		cal.add(Calendar.MONTH, -1);
-		initialDate=finalDate.minusMonths(1);
+		if (ini != null) {
+	        initialDate = ini;
+	    } else {
+	        initialDate = finalDate.minusMonths(1);
+	    }
 		
 		iniLdp.set(initialDate);
 		
@@ -67,8 +77,8 @@ public class NDVIDatePickerDialog {
 		});
 		
 		VBox vb = new VBox();
-		vb.getChildren().add(new HBox(new Label(Messages.getString("NdviDatePickerDialog.fechaHasta")),datePickerFechaHasta)); //$NON-NLS-1$
 		vb.getChildren().add(new HBox(new Label(Messages.getString("NdviDatePickerDialog.fechaDesde")),datePickerFechaDesde)); //$NON-NLS-1$
+		vb.getChildren().add(new HBox(new Label(Messages.getString("NdviDatePickerDialog.fechaHasta")),datePickerFechaHasta)); //$NON-NLS-1$
 		
 		
 
