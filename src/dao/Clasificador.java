@@ -223,15 +223,15 @@ public class Clasificador {
 		return clasifier;
 	}
 	
-	public static StringConverter clasificadorStringConverter() {
-		return	new StringConverter() {
+	public static StringConverter<String> clasificadorStringConverter() {
+		return	new StringConverter<String>() {
 			@Override
-			public Object fromString(String arg0) {				
+			public String fromString(String arg0) {				
 				return null;
 			}
 
 			@Override
-			public String toString(Object arg0) {
+			public String toString(String arg0) {
 				String s =(String)arg0;
 				String key="Clasificador";
 				switch (s) {

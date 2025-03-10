@@ -64,6 +64,7 @@ import gui.PoligonLayerFactory;
 import gui.PoligonoDialog;
 import gui.PulverizacionConfigDialogController;
 import gui.SiembraConfigDialogController;
+import gui.SiembraDosisObjetivoDialog;
 import gui.nww.LaborLayer;
 import gui.nww.LayerAction;
 import gui.utils.DateConverter;
@@ -504,14 +505,22 @@ public class PoligonoGUIController extends AbstractGUIController{
 			System.out.println(Messages.getString("JFXMain.256")); //$NON-NLS-1$
 			labor.dispose();//libero los recursos reservados
 			return;
-		}							
-		//TODO mejorar la explicacion de como se calculan los kg desde la densidad objetivo
-		//TODO permitir agregar unidad de ingreso
-		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.siembraNumTitle"), 
-				Messages.getString("JFXMain.siembraNumHeader"), 
-				Messages.getString("JFXMain.siembraNumLabel"), 
-				Messages.getString("JFXMain.siembraNumPrompt"), 
-				Messages.getString("JFXMain.SeparatorWarningTooltip"));
+		}				
+		
+		Optional<Double> plM2Obj= SiembraDosisObjetivoDialog.config(siembraConfigured.get());
+		if(!plM2Obj.isPresent()){//
+			System.out.println(Messages.getString("JFXMain.256")); //$NON-NLS-1$
+			labor.dispose();//libero los recursos reservados
+			return;
+		}
+		Double dosis = plM2Obj.get();
+				
+		//TODO Cambiar NumberInputDialog por un componente nuevo que permita increaser la dosis en diferentes unidades y muestre los datos de la semilla seleccionada. pg y peso de mil y actualize el valor a devolver para que el usuario lo pueda corregir en tiempo real
+//		Double dosis = NumberInputDialog.showAndWait(Messages.getString("JFXMain.siembraNumTitle"), 
+//				Messages.getString("JFXMain.siembraNumHeader"), 
+//				Messages.getString("JFXMain.siembraNumLabel"), 
+//				Messages.getString("JFXMain.siembraNumPrompt"), 
+//				Messages.getString("JFXMain.SeparatorWarningTooltip"));
 		if (dosis.isNaN()) {
 			return;
 		}
