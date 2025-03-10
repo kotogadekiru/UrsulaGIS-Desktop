@@ -1,0 +1,52 @@
+name: Build Java App and Package as MSI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-package:
+    runs-on: windows-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up Java (adjust version as needed)
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # Build the Java project using Maven
+      - name: Build with Maven
+        run: mvn clean package
+
+      # Install WiX Toolset using Chocolatey
+      - name: Install WiX Toolset
+        run: choco install wixtoolset -y
+
+      # Compile the WiX source file (.wxs) using candle
+      - name: Compile WiX source
+        run: |
+          $WIX_BIN = "C:\Program Files (x86)\WiX Toolset v3.11\bin"
+          & "$WIX_BIN\candle.exe" -out "target\installer.wixobj" "src\main\wix\installer.wxs"
+
+      # Link the compiled WiX object file (.wixobj) into an MSI using light
+      - name: Create MSI installer
+        run: |
+          $WIX_BIN = "C:\Program Files (x86)\WiX Toolset v3.11\bin"
+          & "$WIX_BIN\light.exe" -out "target\installer.msi" "target\installer.wixobj"
+
+      # Optionally, upload the MSI as an artifact
+      - name: Upload MSI artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: installer
+          path: target/installer.msi
