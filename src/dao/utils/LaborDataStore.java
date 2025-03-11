@@ -31,7 +31,11 @@ import utils.GeometryHelper;
 
 public class LaborDataStore<E> {
 	private static List<Labor<?>> locked = Collections.synchronizedList(new ArrayList<Labor<?>>());
-	
+	/**
+	 * 
+	 * @param labor
+	 * @return devuelve una lista con los nombres de las columnas de tipo numerico
+	 */
 	public static List<String> getAvailableColumns(Labor<? extends LaborItem> labor) {
 		List<String> availableColumns = new ArrayList<String>();
 		SimpleFeatureType sch=null;

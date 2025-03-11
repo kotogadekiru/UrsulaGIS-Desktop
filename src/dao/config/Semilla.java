@@ -55,13 +55,23 @@ public class Semilla  extends Producto implements Comparable<Semilla>{
 		return semillas;
 	}
 	public Semilla(){
+		super();
 	}
 
 	public Semilla(String _nombre, Cultivo producto) {
+		super();
 		nombre=_nombre;
 		cultivo=producto;
 		//productoProperty.setValue(producto);
 	}	
+	
+	public void setPG(Double pg) {
+		if(pg!=null && pg>0 && pg<=1) {
+			this.PG=pg;
+		}else {
+			this.PG=1.0;
+		}
+	}
 
 	@Override
 	public String toString() {

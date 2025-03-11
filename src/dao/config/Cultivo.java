@@ -1,8 +1,5 @@
 package dao.config;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -116,6 +113,17 @@ public class Cultivo implements Comparable<Cultivo>{
 	public boolean isEstival() {
 		return this.estival;
 	}
+	
+//	public Double getSemPorBolsa() {
+//		if(this.semPorBolsa==null|| this.semPorBolsa==0.0) {
+//			//supongo que es una bolsa de 40kg
+//			double gramosBolsa = 40000;
+//			double PMS = 40;
+//			double milesSemBolsa = gramosBolsa/PMS;
+//			this.semPorBolsa=milesSemBolsa*1000;
+//		}
+//		return this.semPorBolsa;
+//	}
 
 
 }

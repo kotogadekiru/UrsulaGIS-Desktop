@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry excluding="tasks/old/" kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk-1.8">
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk8u351">
 		<attributes>
 			<attribute name="module" value="true"/>
 		</attributes>
@@ -82,11 +82,14 @@
 	<classpathentry exported="true" kind="lib" path="libs/jogl-all.jar"/>
 	<classpathentry kind="lib" path="libs/pdfbox-app-2.0.27.jar"/>
 	<classpathentry kind="lib" path="libs/controlsfx-8.40.13.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/worldwind"/>
+
 	<classpathentry kind="lib" path="libs/google-http-client/google-auth-library-credentials-1.24.1.jar"/>
 	<classpathentry kind="lib" path="libs/google-http-client/google-cloud-translate-2.17.0.jar"/>
 	<classpathentry kind="lib" path="libs/google-http-client/google-cloud-translate-2.17.0-javadoc.jar"/>
 	<classpathentry kind="lib" path="libs/google-http-client/google-cloud-translate-2.47.0.jar"/>
 	<classpathentry kind="lib" path="libs/google-http-client/google-cloud-translate-2.47.0-javadoc.jar"/>
+
+	<classpathentry combineaccessrules="false" kind="src" path="/WorldWindJava"/>
+
 	<classpathentry kind="output" path="bin"/>
 </classpath>

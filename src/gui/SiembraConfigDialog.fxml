@@ -16,20 +16,20 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="content" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.SiembraConfigDialogController">
+<VBox fx:id="content" prefHeight="502.0" prefWidth="703.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.SiembraConfigDialogController">
    <children>
-      <TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="361.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE">
+      <TabPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="458.0" prefWidth="694.0" tabClosingPolicy="UNAVAILABLE">
         <tabs>
           <Tab text="%SiembraConfigDialog.columnasLabel">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <GridPane layoutX="15.0" prefHeight="362.0" prefWidth="570.0" AnchorPane.bottomAnchor="9.0" AnchorPane.leftAnchor="15.0" AnchorPane.rightAnchor="15.0" AnchorPane.topAnchor="0.0">
+                        <GridPane hgap="5.0" layoutX="15.0" prefHeight="600.0" prefWidth="800.0" AnchorPane.bottomAnchor="9.0" AnchorPane.leftAnchor="15.0" AnchorPane.rightAnchor="15.0" AnchorPane.topAnchor="0.0">
                           <columnConstraints>
-                            <ColumnConstraints hgrow="SOMETIMES" maxWidth="216.0" minWidth="10.0" prefWidth="96.0" />
-                            <ColumnConstraints hgrow="SOMETIMES" maxWidth="333.0" minWidth="10.0" prefWidth="173.0" />
-                              <ColumnConstraints hgrow="SOMETIMES" maxWidth="227.0" minWidth="10.0" prefWidth="171.0" />
-                              <ColumnConstraints hgrow="SOMETIMES" maxWidth="206.0" minWidth="10.0" prefWidth="142.0" />
+                            <ColumnConstraints hgrow="SOMETIMES" maxWidth="216.0" minWidth="10.0" prefWidth="62.5999755859375" />
+                            <ColumnConstraints hgrow="SOMETIMES" maxWidth="345.8000122070313" minWidth="10.0" prefWidth="251.80001220703127" />
+                              <ColumnConstraints hgrow="SOMETIMES" maxWidth="227.0" minWidth="9.79998779296875" prefWidth="127.199951171875" />
+                              <ColumnConstraints hgrow="SOMETIMES" maxWidth="225.60001220703123" minWidth="10.0" prefWidth="198.40004882812502" />
                           </columnConstraints>
                           <rowConstraints>
                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -59,11 +59,39 @@
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
-                              <TextField id="textPrecioGrano" fx:id="textPrecioFert" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                              <VBox alignment="CENTER" GridPane.columnIndex="3" GridPane.rowIndex="1">
+                                 <GridPane.margin>
+                                    <Insets />
+                                 </GridPane.margin>
+                                 <children>
+                                    <HBox alignment="CENTER_LEFT">
+                                       <children>
+                                          <TextField id="textPrecioGrano" fx:id="textPrecioInsumo" prefHeight="26.0" prefWidth="87.0" promptText="usd/kg">
+                                             <HBox.margin>
+                                                <Insets right="5.0" />
+                                             </HBox.margin>
+                                          </TextField>
+                                          <ComboBox fx:id="precioInsumoUnit" minWidth="20.0" prefHeight="26.0" prefWidth="99.0" promptText="unidad">
+                                             <HBox.margin>
+                                                <Insets left="10.0" />
+                                             </HBox.margin>
+                                          </ComboBox>
+                                       </children>
+                                    </HBox>
+                                 </children>
+                              </VBox>
                               <Label text="%SiembraConfigDialog.costoLabHaLabel" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-                              <TextField id="textCostoCosechaHa" fx:id="textCostoLaborHa" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+                              <VBox alignment="CENTER" GridPane.columnIndex="3" GridPane.rowIndex="2">
+                                 <children>
+                                    <HBox>
+                                       <children>
+                                          <TextField id="textCostoCosechaHa" fx:id="textCostoLaborHa" prefHeight="26.0" prefWidth="163.0" />
+                                       </children>
+                                    </HBox>
+                                 </children>
+                              </VBox>
                               <Label text="%SiembraConfigDialog.semillaLabel" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-                              <ComboBox id="comboCultivo" fx:id="comboInsumo" prefWidth="150.0" promptText="%SiembraConfigDialog.semillaMenuLabel" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+                              <ComboBox id="comboCultivo" fx:id="comboInsumo" prefHeight="26.0" prefWidth="200.0" promptText="%SiembraConfigDialog.semillaMenuLabel" GridPane.columnIndex="3" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" />
                               <Label text="%SiembraConfigDialog.nombreLabel">
                                  <opaqueInsets>
                                     <Insets left="5.0" right="5.0" />
@@ -73,14 +101,32 @@
                               <DatePicker fx:id="datePickerFecha" GridPane.columnIndex="3" />
                               <Label text="%SiembraConfigDialog.fechaLabel" GridPane.columnIndex="2" />
                               <Label fx:id="entreSurcoLabel" text="%SiembraConfigDialog.entreSurcoLabel" GridPane.columnIndex="2" GridPane.rowIndex="4" />
-                              <TextField id="textEntreSurco" fx:id="textEntresurco" promptText=" ej: 0.19" GridPane.columnIndex="3" GridPane.rowIndex="4" />
-                              <HBox prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                              <TextField id="textEntreSurco" fx:id="textEntresurco" promptText=" ej: 0.19" GridPane.columnIndex="3" GridPane.rowIndex="4">
+                                 <GridPane.margin>
+                                    <Insets right="10.0" />
+                                 </GridPane.margin></TextField>
+                              <VBox alignment="CENTER" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.valignment="CENTER">
                                  <children>
-                                    <ComboBox id="comboRend" fx:id="comboDosis" prefWidth="150.0" />
-                                    <ComboBox id="comboRendUnit" fx:id="comboDosisUnit" prefWidth="150.0" promptText="unidad" />
+                                    <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
+                                       <children>
+                                          <ComboBox id="comboRend" fx:id="comboDosis" minWidth="150.0" prefWidth="150.0">
+                                             <HBox.margin>
+                                                <Insets right="5.0" />
+                                             </HBox.margin>
+                                          </ComboBox>
+                                          <ComboBox id="comboRendUnit" fx:id="comboDosisUnit" minWidth="20.0" prefWidth="150.0" promptText="unidad">
+                                             <HBox.margin>
+                                                <Insets right="3.0" />
+                                             </HBox.margin>
+                                          </ComboBox>
+                                       </children>
+                                    </HBox>
                                  </children>
-                              </HBox>
+                              </VBox>
                            </children>
+                           <padding>
+                              <Insets right="10.0" />
+                           </padding>
                         </GridPane>
                      </children>
                   </AnchorPane>
@@ -124,7 +170,7 @@
       </TabPane>
       <FlowPane alignment="CENTER_LEFT" prefHeight="35.0" prefWidth="600.0" rowValignment="TOP">
          <children>
-            <CheckBox id="chkMakeDefault" fx:id="chkMakeDefault" alignment="CENTER" mnemonicParsing="false" prefHeight="22.0" prefWidth="161.0" text="%SiembraConfigDialog.guardarComoLabel">
+            <CheckBox id="chkMakeDefault" fx:id="chkMakeDefault" mnemonicParsing="false" prefHeight="22.0" prefWidth="500.0" text="%SiembraConfigDialog.guardarComoLabel">
                <opaqueInsets>
                   <Insets />
                </opaqueInsets>

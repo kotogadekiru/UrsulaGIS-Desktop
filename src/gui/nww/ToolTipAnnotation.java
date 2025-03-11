@@ -87,8 +87,8 @@ public class ToolTipAnnotation extends ScreenAnnotation {
 
 	protected Point adjustDrawPointToViewport(Point point, Rectangle bounds, Rectangle viewport) {
 		int x = point.x;
-		//int y = (int) viewport.getHeight() - point.y - 1;//fix inverse position in screen
-		int y = point.y;
+		int y = (int) viewport.getHeight() - point.y - 1;//fix inverse position in screen
+		//int y = point.y;
 
 		if (x + this.getOffsetX() + bounds.getWidth() > viewport.getWidth())
 			x = (int) (viewport.getWidth() - bounds.getWidth()) - 1 - this.getOffsetX();

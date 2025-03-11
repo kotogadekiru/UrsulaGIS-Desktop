@@ -6,3 +6,6 @@
 #ignora los logs
 *.log
 /target/
+.settings/*
+target/
+
