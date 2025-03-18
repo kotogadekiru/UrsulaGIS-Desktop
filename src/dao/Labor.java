@@ -931,6 +931,7 @@ public abstract class Labor<E extends LaborItem>  {
 
 	/**
 	 * metodo que construye una feature leyendo las columnas seleccionadas por el usuario de las disponibles en el shp
+	 * solo usar al leer un shp por primera vez
 	 * @param next
 	 * @return
 	 */
