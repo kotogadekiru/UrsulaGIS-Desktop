@@ -71,7 +71,8 @@ public class Recorrida extends AbstractBaseEntity{
 	//public String posicion=new String();//json {long,lat}
 	public Double latitude= new Double(0.0);
 	public Double longitude=new Double(0.0);
-
+	private String fechaString="default";
+	
 	@OneToMany(cascade=CascadeType.ALL, mappedBy="recorrida",orphanRemoval=true)
 	@OrderBy("id ASC")
 	public List<Muestra> muestras =new ArrayList<Muestra>();
