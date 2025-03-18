@@ -103,7 +103,7 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 		 // Seteando la fecha al dia que se crea
 		DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
 		String fecha = dateFormat.format(new Date());
-		this.recorrida.setFecha(fecha);
+		this.recorrida.setFechaString(fecha);
 	}
 
 	/**
