@@ -135,7 +135,8 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 				SimpleFeature feature = reader.next();
 				Geometry geometry = (Geometry) feature.getDefaultGeometry();
 				GeometryFactory fact = geometry.getFactory();
-				LaborItem container =c.constructFeatureContainer(feature);
+				LaborItem item=c.constructFeatureContainer(feature);
+				LaborItem container =c.constructFeatureContainerStandar(feature, false);//(feature);
 
 				Integer categoria =c.getClasificador().getCategoryFor(container.getAmount());
 				Color color  = c.getClasificador().getColorForCategoria(categoria);
@@ -207,6 +208,7 @@ public class GenerarRecorridaDirigidaTask extends Task<RenderableLayer> {
 								&& intersectionCount == 0) {//esto asegura distancia a los otros puntos
 							Muestra muestra = new Muestra();
 							muestra.setNombre(nombre);//una letra de A a I
+							System.out.println("generando muestra con nombre "+nombre);
 							muestra.setSubNombre(Integer.toString(countMuestraGenerada));
 							countMuestraGenerada++;
 							muestra.initObservacionSuelo();
