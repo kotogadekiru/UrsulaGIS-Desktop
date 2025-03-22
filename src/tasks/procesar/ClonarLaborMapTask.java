@@ -92,6 +92,7 @@ public class ClonarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem
 		constructor.put(SiembraLabor.class, l->{
 			SiembraLabor os = (SiembraLabor)l;
 			SiembraLabor ns =  new SiembraLabor(os);
+			//TODO ver si tengo que tomar la unidad precio de semilla
 			ns.setEntreSurco(os.getEntreSurco());
 			ns.setSemilla(os.getSemilla());
 			ns.setPrecioInsumo(os.getPrecioInsumo());
@@ -104,12 +105,15 @@ public class ClonarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem
 		
 		constructor.put(FertilizacionLabor.class, l->{
 			FertilizacionLabor os = (FertilizacionLabor)l;
-			FertilizacionLabor ns =  new FertilizacionLabor(os);			
+			FertilizacionLabor ns =  new FertilizacionLabor(os);	
+			ns.setLayer(new LaborLayer());
 			
 			ns.setFertilizante(os.getFertilizante());
 			ns.setPrecioInsumo(os.getPrecioInsumo());
 			ns.setPrecioLabor(os.getPrecioLabor());
 			ns.setFecha(os.getFecha());
+			
+			ns.setClasificador(os.getClasificador().clone());
 		
 			return ns;
 		});

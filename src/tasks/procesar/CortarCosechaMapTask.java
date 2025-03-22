@@ -24,7 +24,7 @@ import tasks.ProcessMapTask;
 import tasks.crear.CrearCosechaMapTask;
 import utils.GeometryHelper;
 import utils.ProyectionConstants;
-
+@Deprecated
 public class CortarCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabor> {
 	/**
 	 * la lista de las cosechas a unir

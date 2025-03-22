@@ -399,11 +399,11 @@ public class GeometryHelper {
 		GeometricShapeFactory shapeFactory = new GeometricShapeFactory();
 		shapeFactory.setNumPoints(64); // adjustable
 		shapeFactory.setCentre(c.getCoordinate());
-		// Length in meters of 1° of latitude = always 111.32 km
+		// Length in meters of 1ï¿½ of latitude = always 111.32 km
 		shapeFactory.setHeight(2*latRadius);//diameterInMeters/111320d);
 
 		double longRadius = latRadius/fact;
-		// Length in meters of 1° of longitude = 40075 km * cos( latitude ) / 360
+		// Length in meters of 1ï¿½ of longitude = 40075 km * cos( latitude ) / 360
 		shapeFactory.setWidth(2*longRadius);//diameterInMeters / (40075000 * Math.cos(Math.toRadians(latitude)) / 360));
 
 		Polygon circle = shapeFactory.createEllipse();
@@ -634,6 +634,7 @@ public class GeometryHelper {
 	 * @param g1
 	 * @param g2
 	 * @return computes validated intersection. returns null if geometrys dont intersect
+	 * aumenta el tamanio de la geometria inicial
 	 */
 	//FIXME check thread safety
 	public static Geometry getIntersection(Geometry g1, Geometry g2){

@@ -165,6 +165,7 @@ public class CortarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem
 			 */
 			 List<Geometry> intersecciones = poligonos.stream().map(pol->{
 				 Geometry ret = GeometryHelper.getIntersection(pol.toGeometry(), g);
+				
 				//System.out.println("intersection is "+ret);
 				return ret;// ? pol.toGeometry().intersection(g):null;
 				}).filter(inter->inter!=null).collect(Collectors.toList());
@@ -175,15 +176,15 @@ public class CortarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem
 				GeometryCollection colectionCat = fact.createGeometryCollection(intersecciones.toArray(geomArray));
 
 				Geometry buffered = null;
-				double bufer= ProyectionConstants.metersToLongLat(0.25);
+				//double bufer= ProyectionConstants.metersToLongLat(0.25);//esto agranda la superficie. porque?
 				try{
 				//	buffered = colectionCat.union();
-					buffered =colectionCat.buffer(bufer);
+					buffered =colectionCat.buffer(0);
 				}catch(Exception e){
 					System.out.println(Messages.getString("ProcessHarvestMapTask.10")); //$NON-NLS-1$
 					//java.lang.IllegalArgumentException: Comparison method violates its general contract!
 					try{
-					buffered= EnhancedPrecisionOp.buffer(colectionCat, bufer);//java.lang.IllegalArgumentException: Comparison method violates its general contract!
+					buffered= EnhancedPrecisionOp.buffer(colectionCat, 0);//java.lang.IllegalArgumentException: Comparison method violates its general contract!
 					}catch(Exception e2){
 						e2.printStackTrace();
 					}

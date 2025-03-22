@@ -8,6 +8,7 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -389,7 +390,11 @@ public class NdviGUIController extends AbstractGUIController{
 		Ndvi ndvi = ndvis.get(0);
 		Ndvi lNdvi = ndvis.get(ndvis.size()-1);
 		CosechaLabor labor = new CosechaLabor();
-		labor.setNombre(ndvi.getNombre()+" -> "+lNdvi.getFecha());
+		//String YYYY_MM_DD = "yyyy-MM-dd";
+		DateTimeFormatter format1 = DateTimeFormatter.ofPattern("dd-MM-yyy");
+		//LocalDate fecha = LocalDate.parse(v[0], format1);
+		//ndvi.setFecha(fecha);
+		labor.setNombre(ndvi.getNombre()+" -> "+format1.format(lNdvi.getFecha()));
 
 		Date date = java.util.Date.from(ndvi.getFecha().atStartOfDay()
 				.atZone(ZoneId.systemDefault())

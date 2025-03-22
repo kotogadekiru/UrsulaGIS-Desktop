@@ -2,7 +2,7 @@
 /build
 #ignora los archivos compilados de java
 *.class
-
+.settings/org.eclipse.jdt.core.prefs
 #ignora los logs
 *.log
 /target/

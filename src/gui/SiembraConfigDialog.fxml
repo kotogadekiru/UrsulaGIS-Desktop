@@ -18,13 +18,17 @@
 
 <VBox fx:id="content" prefHeight="502.0" prefWidth="703.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.SiembraConfigDialogController">
    <children>
+
       <TabPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="458.0" prefWidth="694.0" tabClosingPolicy="UNAVAILABLE">
+
         <tabs>
           <Tab text="%SiembraConfigDialog.columnasLabel">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
+
                         <GridPane hgap="5.0" layoutX="15.0" prefHeight="600.0" prefWidth="800.0" AnchorPane.bottomAnchor="9.0" AnchorPane.leftAnchor="15.0" AnchorPane.rightAnchor="15.0" AnchorPane.topAnchor="0.0">
+
                           <columnConstraints>
                             <ColumnConstraints hgrow="SOMETIMES" maxWidth="216.0" minWidth="10.0" prefWidth="62.5999755859375" />
                             <ColumnConstraints hgrow="SOMETIMES" maxWidth="345.8000122070313" minWidth="10.0" prefWidth="251.80001220703127" />
@@ -59,6 +63,7 @@
                                     <Insets left="5.0" right="5.0" />
                                  </opaqueInsets>
                               </Label>
+
                               <VBox alignment="CENTER" GridPane.columnIndex="3" GridPane.rowIndex="1">
                                  <GridPane.margin>
                                     <Insets />
@@ -105,6 +110,7 @@
                                  <GridPane.margin>
                                     <Insets right="10.0" />
                                  </GridPane.margin></TextField>
+
                               <VBox alignment="CENTER" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.valignment="CENTER">
                                  <children>
                                     <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
@@ -121,6 +127,7 @@
                                           </ComboBox>
                                        </children>
                                     </HBox>
+
                                  </children>
                               </VBox>
                            </children>

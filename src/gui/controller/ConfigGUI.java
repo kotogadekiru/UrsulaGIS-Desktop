@@ -294,22 +294,7 @@ public class ConfigGUI extends AbstractGUIController{
 		executorPool.execute(gOCTask);
 	}
 
-	public void doResumirMargin(Margen aResumir) {
-		ResumirMargenMapTask uMmTask = new ResumirMargenMapTask(aResumir);
 
-		uMmTask.installProgressBar(progressBox);
-		uMmTask.setOnSucceeded(handler -> {
-			aResumir.getLayer().setEnabled(false);
-			Margen ret = (Margen)handler.getSource().getValue();
-			uMmTask.uninstallProgressBar();			
-			insertBeforeCompass(getWwd(), ret.getLayer());
-			this.getLayerPanel().update(this.getWwd());
-			playSound();
-			viewGoTo(ret);
-			System.out.println(Messages.getString("JFXMain.323")); 
-		});
-		executorPool.execute(uMmTask);
-	}
 
 
 	public void doProcessMargin() {		

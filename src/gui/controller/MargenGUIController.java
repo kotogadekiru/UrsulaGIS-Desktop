@@ -13,6 +13,7 @@ import gui.MargenConfigDialogController;
 import gui.Messages;
 import gui.nww.LayerAction;
 import tasks.importar.OpenMargenMapTask;
+import tasks.procesar.ResumirMargenMapTask;
 import tasks.procesar.SumarMargenesMapTask;
 
 public class MargenGUIController extends AbstractGUIController {
@@ -67,7 +68,7 @@ public class MargenGUIController extends AbstractGUIController {
 		 *Accion que permite resumir por categoria un mapa de rentabilidad
 		 */
 		margenesP.add(LayerAction.constructPredicate(Messages.getString("ResumirMargenMapTask.resumirAction"),(layer)->{	
-			main.configGUIController.doResumirMargin((Margen) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+			doResumirMargin((Margen) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
 			return "margen resumido" + layer.getName(); 
 		}));
 	}
@@ -90,6 +91,24 @@ public class MargenGUIController extends AbstractGUIController {
 		});
 		executorPool.execute(uMmTask);
 	}
+	
+	public void doResumirMargin(Margen aResumir) {
+		ResumirMargenMapTask uMmTask = new ResumirMargenMapTask(aResumir);
+
+		uMmTask.installProgressBar(progressBox);
+		uMmTask.setOnSucceeded(handler -> {
+			aResumir.getLayer().setEnabled(false);
+			Margen ret = (Margen)handler.getSource().getValue();
+			uMmTask.uninstallProgressBar();			
+			insertBeforeCompass(getWwd(), ret.getLayer());
+			this.getLayerPanel().update(this.getWwd());
+			playSound();
+			viewGoTo(ret);
+			System.out.println(Messages.getString("JFXMain.323")); 
+		});
+		executorPool.execute(uMmTask);
+	}
+	
 
 	private String doSumarMargenes(Layer l) {
 		List<Margen> margenes = main.getMargenesSeleccionados();

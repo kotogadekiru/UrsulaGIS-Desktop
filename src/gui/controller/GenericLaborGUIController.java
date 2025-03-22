@@ -10,6 +10,7 @@ import org.geotools.data.FileDataStore;
 import dao.Labor;
 import dao.Ndvi;
 import dao.Poligono;
+import dao.fertilizacion.FertilizacionLabor;
 import dao.margen.Margen;
 import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.util.measure.MeasureTool;
@@ -28,6 +29,8 @@ import tasks.ExportLaborMapTask;
 import tasks.importar.OpenMargenMapTask;
 import tasks.procesar.ClonarLaborMapTask;
 import tasks.procesar.JuntarShapefilesTask;
+import tasks.procesar.ResumirFertilizacionMapTask;
+import tasks.procesar.ResumirMargenMapTask;
 import utils.DAH;
 import utils.FileHelper;
 
@@ -255,7 +258,23 @@ public class GenericLaborGUIController extends AbstractGUIController {
 	}
 	
 	private void doResumirLabor(Labor<?> labor) {
-		//TODO resumir Labores
+		if(labor instanceof FertilizacionLabor) {
+			ResumirFertilizacionMapTask uMmTask = new ResumirFertilizacionMapTask((FertilizacionLabor)labor);
+
+			uMmTask.installProgressBar(progressBox);
+			uMmTask.setOnSucceeded(handler -> {
+				labor.getLayer().setEnabled(false);
+				FertilizacionLabor ret = (FertilizacionLabor)handler.getSource().getValue();
+				uMmTask.uninstallProgressBar();			
+				insertBeforeCompass(getWwd(), ret.getLayer());
+				this.getLayerPanel().update(this.getWwd());
+				playSound();
+				viewGoTo(ret);
+				System.out.println(Messages.getString("JFXMain.323")); 
+			});
+			executorPool.execute(uMmTask);
+			
+		}
 	}
 		
 	private void doGuardarLabor(Labor<?> labor) {
