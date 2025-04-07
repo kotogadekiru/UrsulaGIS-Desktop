@@ -145,7 +145,7 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 			try {
 				featureStore.setFeatures(exportFeatureCollection.reader());
 				try {
-					transaction.commit();
+					transaction.commit();//Current fid index is null, next must be called before write()
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}finally {

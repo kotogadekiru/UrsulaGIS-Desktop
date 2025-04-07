@@ -10,8 +10,12 @@ import org.geotools.data.FileDataStore;
 import dao.Labor;
 import dao.Ndvi;
 import dao.Poligono;
+import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.margen.Margen;
+import dao.pulverizacion.PulverizacionLabor;
+import dao.siembra.SiembraLabor;
+import dao.suelo.Suelo;
 import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.util.measure.MeasureTool;
 import gui.CosechaHistoChart;
@@ -79,7 +83,7 @@ public class GenericLaborGUIController extends AbstractGUIController {
 			}else if(Labor.class.isAssignableFrom(layerObject.getClass())){
 				doResumirLabor((Labor<?>) layerObject);
 			}
-			return "clone labor " + layer.getName();
+			return "resumi labor " + layer.getName();
 		}));
 		
 		laboresP.add(LayerAction.constructPredicate(Messages.getString("GenericLaborGUIController.OutliersLabor"),(layer)->{
@@ -242,7 +246,7 @@ public class GenericLaborGUIController extends AbstractGUIController {
 
 		//	testLayer();
 		umTask.setOnSucceeded(handler -> {
-			Labor ret = (Labor)handler.getSource().getValue();
+			Labor<?> ret = (Labor<?>)handler.getSource().getValue();
 			insertBeforeCompass(getWwd(), ret.getLayer());
 			this.getLayerPanel().update(this.getWwd());
 			umTask.uninstallProgressBar();
@@ -258,6 +262,7 @@ public class GenericLaborGUIController extends AbstractGUIController {
 	}
 	
 	private void doResumirLabor(Labor<?> labor) {
+		//TODO copiar ClonarLaborMapTask umTask = new ClonarLaborMapTask(labor); resumiendo
 		if(labor instanceof FertilizacionLabor) {
 			ResumirFertilizacionMapTask uMmTask = new ResumirFertilizacionMapTask((FertilizacionLabor)labor);
 
@@ -274,7 +279,15 @@ public class GenericLaborGUIController extends AbstractGUIController {
 			});
 			executorPool.execute(uMmTask);
 			
+		}else if(labor instanceof CosechaLabor) {
+		}else if(labor instanceof SiembraLabor) {
+		}else if(labor instanceof PulverizacionLabor) {
+		}else if(labor instanceof Margen) {
+		}else if(labor instanceof Suelo) {
+
 		}
+		
+		//TODO agregar resumir para otros tipos de labores
 	}
 		
 	private void doGuardarLabor(Labor<?> labor) {

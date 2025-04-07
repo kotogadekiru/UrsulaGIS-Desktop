@@ -43,6 +43,7 @@ import gui.nww.LaborLayer;
 import gui.nww.LayerAction;
 import gui.nww.LayerPanel;
 import gui.utils.DateConverter;
+import gui.utils.DateRangeSlider;
 import gui.utils.NumberInputDialog;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -104,6 +105,12 @@ public class NdviGUIController extends AbstractGUIController{
 			doConvertirNdviAcumuladoACosecha();
 
 			return "converti a cosecha acumulando";
+		}));
+		
+		//TODO agregar traduccion		
+		rootNodeNDVI.add(LayerAction.constructPredicate("Filtrar Fecha",(layer)->{ 
+			return doFiltrarFecha(null);
+			//return "filtre por fecha";
 		}));
 
 		//Exporta todos los ndvi cargados a un archivo excel donde las filas son las coordenadas y las columnas son los valores en esa fecha
@@ -462,6 +469,53 @@ public class NdviGUIController extends AbstractGUIController{
 
 	}
 
+	//TODO obtener un rango de fechas a activar y desactivar los layers fuera de esas fechas
+	private String doFiltrarFecha(Layer layer) {
+		
+		LocalDate min=null,//.MIN,
+				max=null,//LocalDate.MAX,
+				low = LocalDate.now().minusMonths(1),
+				high=LocalDate.now().minusMonths(1);
+		List<Ndvi> ndviCargados = (List<Ndvi>) main.getObjectFromLayersOfClass(Ndvi.class);
+		System.out.println("ndvi cargados "+ndviCargados.size());
+		for(Ndvi n:ndviCargados) {
+			
+			LocalDate fecha =n.getFecha();
+			System.out.println("revisando ndvi con fecha "+fecha);
+			if(max==null || max.isBefore(fecha)) {
+				max=fecha;
+			}
+			if(min==null || min.isAfter(fecha)) {
+				min=fecha;
+			} 
+		}
+		System.out.println("creando filtro min "+min+" max "+max);
+		low=min;
+		high=max;
+		DateRangeSlider slider = new DateRangeSlider(min,max, low,high);
+		
+		
+		slider.setOnUpdate((Void)->{
+			LocalDate nlow=slider.getLow();
+			LocalDate nhigh=slider.getHigh();
+			System.out.println("filtre por fecha low "+nlow+" high "+nhigh);
+			for(Ndvi n:ndviCargados) {
+				LocalDate fecha =n.getFecha();
+				n.getLayer().setEnabled(true);
+				if(nlow!=null && nlow.isAfter(fecha)) {
+					n.getLayer().setEnabled(false);
+				}
+				if(nhigh!=null && nhigh.isBefore(fecha)) {
+					n.getLayer().setEnabled(false);
+				} 
+			}
+			this.getLayerPanel().update(this.getWwd());
+		});
+		
+		slider.showDateSlider();
+		return "filtre por fecha low "+low+" high "+high;
+		
+	}
 
 	private void doConvertirNdviAFertilizacion(Ndvi ndvi) {
 		FertilizacionLabor labor = new FertilizacionLabor();
@@ -647,11 +701,14 @@ public class NdviGUIController extends AbstractGUIController{
 	public void showNdviActivos() {
 		List<Ndvi> ndviActivos = DAH.getNdviActivos();
 		for(int i=0;i<ndviActivos.size();i++) {
+			
 			Ndvi ndvi = ndviActivos.get(i);
 			boolean isLast = i==(ndviActivos.size()-1);
 
 			if(ndvi!=null)System.out.println("showing ndvi "+ndvi.getNombre());
+			Platform.runLater(()->{
 			showNdvi(null,ndvi,isLast);
+			});
 		}
 	}
 

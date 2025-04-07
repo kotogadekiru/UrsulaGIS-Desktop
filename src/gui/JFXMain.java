@@ -751,53 +751,53 @@ public class JFXMain extends Application {
 	//	}
 
 
-	@SuppressWarnings("unchecked")
+
 	public List<CosechaLabor> getCosechasSeleccionadas() {
 		return (List<CosechaLabor>) getObjectFromEnabledLayersOfClass(CosechaLabor.class);	
 	}
 	
-	@SuppressWarnings("unchecked")
+
 	public List<Margen> getMargenesSeleccionados() {
 		return (List<Margen>) getObjectFromEnabledLayersOfClass(Margen.class);	
 	}
 
-	@SuppressWarnings("unchecked")
+
 	public List<FertilizacionLabor> getFertilizacionesSeleccionadas() {
 		return (List<FertilizacionLabor>) getObjectFromEnabledLayersOfClass(FertilizacionLabor.class);
 	}
 
-	@SuppressWarnings("unchecked")
+
 	public List<PulverizacionLabor> getPulverizacionesSeleccionadas() {
 		return (List<PulverizacionLabor>) getObjectFromEnabledLayersOfClass(PulverizacionLabor.class);
 	}
 	
-	@SuppressWarnings("unchecked")
+
 	public List<Ndvi> getNdviSeleccionados() {
 		return (List<Ndvi>) getObjectFromEnabledLayersOfClass(Ndvi.class);
 	}
 	
-	@SuppressWarnings("unchecked")
+
 	public List<Poligono> getPoligonosSeleccionados() {
 		return (List<Poligono>) getObjectFromEnabledLayersOfClass(Poligono.class);
 	}
 
-	@SuppressWarnings("unchecked")
+
 	public List<SiembraLabor> getSiembrasSeleccionadas() {
 		return (List<SiembraLabor>) getObjectFromEnabledLayersOfClass(SiembraLabor.class);
 	}
 
-	@SuppressWarnings("unchecked")
+
 	public List<Suelo> getSuelosSeleccionados() {
 		return (List<Suelo>) getObjectFromEnabledLayersOfClass(Suelo.class);
 	}
 
-	@SuppressWarnings("unchecked")
+
 	public List<Recorrida> getRecorridasActivas() {
 		return (List<Recorrida>) getObjectFromEnabledLayersOfClass(Recorrida.class);
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public List<?> getObjectFromEnabledLayersOfClass(Class clazz){
+
+	public List<?> getObjectFromEnabledLayersOfClass(Class<?> clazz){
 		LayerList layers = this.getWwd().getModel().getLayers();
 		Stream<Layer> layersOfClazz = layers.stream().filter(l->{
 			Object o = l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
@@ -806,8 +806,12 @@ public class JFXMain extends Application {
 		return layersOfClazz.map(l->l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR)).collect(Collectors.toList());
 	}	
 
-	@SuppressWarnings({ "rawtypes", "unchecked" }) 
-	public List<?> getObjectFromLayersOfClass(Class clazz){
+/**
+ * 
+ * @param clazz
+ * @return devuelve los objetos de clase clazz almacenado en los layers cargados
+ */
+	public List<?> getObjectFromLayersOfClass(Class<?> clazz){
 		LayerList layers = this.getWwd().getModel().getLayers();
 		Stream<Layer> layersOfClazz = layers.stream().filter(l->{
 			Object o = l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR);
@@ -816,8 +820,12 @@ public class JFXMain extends Application {
 		return layersOfClazz.map(l->l.getValue(Labor.LABOR_LAYER_IDENTIFICATOR)).collect(Collectors.toList());
 	}
 	
-	@SuppressWarnings({ "rawtypes", "unchecked" }) 
-	public List<?> getLayersOfClass(Class clazz){
+/**
+ * 
+ * @param clazz
+ * @return devuelve los layers cuyo object es de clase clazz
+ */
+	public List<?> getLayersOfClass(Class<?> clazz){
 		LayerList layers = this.getWwd().getModel().getLayers();
 		Stream<Layer> layersOfClazz = layers.stream().filter(l->{
 			

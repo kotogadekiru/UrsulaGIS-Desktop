@@ -26,7 +26,7 @@ public class ColumnSelectDialog extends Dialog<Map<String, String>> {
 
 	private List<String> requiredColumns;
 	private List<String> availableColums;
-	private List<ChoiceBox<String>> choices = new ArrayList<ChoiceBox<String>>();
+	//private List<ChoiceBox<String>> choices = new ArrayList<ChoiceBox<String>>();
 
 	private Map<String, String> result = new HashMap<String, String>();
 
