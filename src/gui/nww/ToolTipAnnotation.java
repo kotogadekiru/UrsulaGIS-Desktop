@@ -50,7 +50,8 @@ public class ToolTipAnnotation extends ScreenAnnotation {
 			this.attributes.setAdjustWidthToText(AVKey.SIZE_FIXED);
 		} else{
 			this.attributes.setAdjustWidthToText(AVKey.SIZE_FIT_TEXT);
-			this.attributes.setFont(Font.decode("Arial-PLAIN-12"));
+			//this.attributes.setFont(Font.decode("Arial-PLAIN-12"));
+			this.attributes.setFont(Font.decode("Arial-PLAIN-18"));
 		}
 	}
 
@@ -87,15 +88,20 @@ public class ToolTipAnnotation extends ScreenAnnotation {
 
 	protected Point adjustDrawPointToViewport(Point point, Rectangle bounds, Rectangle viewport) {
 		int x = point.x;
-		int y = (int) viewport.getHeight() - point.y - 1;//fix inverse position in screen
-		//int y = point.y;
+		double viewportHeight = viewport.getHeight();//815
+		//System.out.println("viewportHeight= "+viewportHeight+" point.y="+point.y);
+		//si y es chico arriba y grande abajo 
+		//int y = (int) viewportHeight - point.y - 1;//fix inverse position in screen
+
+		//si y es grande arriba chico abajo
+		int y = point.y;
 
 		if (x + this.getOffsetX() + bounds.getWidth() > viewport.getWidth())
 			x = (int) (viewport.getWidth() - bounds.getWidth()) - 1 - this.getOffsetX();
 		else if (x < 0)
 			x = 0;
 
-		if (y + this.getOffsetY() + bounds.getHeight() > viewport.getHeight())
+		if (y + this.getOffsetY() + bounds.getHeight() > viewportHeight)
 			y = (int) (viewport.getHeight() - bounds.getHeight()) - 1 - this.getOffsetY();
 		else if (y < 0)
 			y = bounds.height;

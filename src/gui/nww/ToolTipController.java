@@ -149,15 +149,16 @@ public class ToolTipController implements SelectListener, Disposable
 
             this.hideToolTip();
             this.lastRolloverObject = null;
-            this.wwd.redraw();
+            //this.wwd.redraw();
         }
 
         if (getRolloverText(event) != null)
         {
             this.lastRolloverObject = event.getTopObject();
             this.showToolTip(event, getRolloverText(event).replace("\\n", "\n"));
-            this.wwd.redraw();
+            //this.wwd.redraw();
         }
+        this.wwd.redraw();
     }
 
     protected void handleHover(SelectEvent event) {
@@ -167,47 +168,54 @@ public class ToolTipController implements SelectListener, Disposable
 
             this.hideToolTip();
             this.lastHoverObject = null;
-            this.wwd.redraw();
+            //this.wwd.redraw();
         }
 
         if (getHoverText(event) != null) {
             this.lastHoverObject = event.getTopObject();
             this.showToolTip(event, getHoverText(event).replace("\\n", "\n"));
-            this.wwd.redraw();
+            //this.wwd.redraw();
         }
+        this.wwd.redraw();
     }
 
     protected void showToolTip(SelectEvent event, String text) {
+       
+        if (layer == null) {
+            layer = new AnnotationLayer();
+            layer.setPickEnabled(false);
+            this.addLayer(layer);
+        }else {
+        	layer.setEnabled(true);
+        }
+
+        //layer.removeAllAnnotations();
+        
         if (annotation != null) {
             annotation.setText(text);           
         }  else  {
             annotation = new ToolTipAnnotation(text);
+            System.out.println("creando nuevo tooltip");
+            layer.addAnnotation(annotation);
         }
         annotation.setScreenPoint(event.getPickPoint());
-        if (layer == null) {
-            layer = new AnnotationLayer();
-            layer.setPickEnabled(false);
-        }
-
-        layer.removeAllAnnotations();
-        layer.addAnnotation(annotation);
-        this.addLayer(layer);
     }
 
     protected void hideToolTip() {
         if (this.layer != null)
         {
-            this.layer.removeAllAnnotations();
-            this.removeLayer(this.layer);
-            this.layer.dispose();
-            this.layer = null;
+        	layer.setEnabled(false);
+//            this.layer.removeAllAnnotations();
+//            this.removeLayer(this.layer);
+//            this.layer.dispose();
+//            this.layer = null;
         }
 
-        if (this.annotation != null)
-        {
-            this.annotation.dispose();
-            this.annotation = null;
-        }
+//        if (this.annotation != null)
+//        {
+//            this.annotation.dispose();
+//            this.annotation = null;
+//        }
     }
 
     protected void addLayer(Layer layer)
