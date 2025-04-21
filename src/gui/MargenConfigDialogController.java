@@ -129,7 +129,7 @@ public class MargenConfigDialogController  extends Dialog<Margen>{
 		textNombre.textProperty().addListener((obj,old,nu)->labor.setNombre(nu));
 		
 			
-		StringConverter<Number> converter = new NumberStringConverter(Messages.getLocale());
+		StringConverter<Number> converter = PropertyHelper.buildStringConverter();// NumberStringConverter(Messages.getLocale());
 
 		//textPrecioGrano
 		Bindings.bindBidirectional(this.textCostoHa.textProperty(), labor.costoFijoHaProperty, converter);

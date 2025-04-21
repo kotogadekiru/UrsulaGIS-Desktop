@@ -17,6 +17,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.util.StringConverter;
 
 public class PropertyHelper {
 	
@@ -36,7 +37,34 @@ public class PropertyHelper {
 		}catch(Exception e){e.printStackTrace();}
 		return ret;
 	}
+	/**
+	 * 
+	 * @return StringConverter de Number que arregla los decimales si estan con . en vez de , y vice versa
+	 */
+	public static StringConverter<Number> buildStringConverter() {
+		StringConverter<Number> converter = new StringConverter<Number>() {
+		public String toString(Number n) {
+			return PropertyHelper.formatDouble(n.doubleValue());				
+		}
+		
+		public Number fromString(String s) {
+			Number d = new Double(0);
+			try {
+				d= PropertyHelper.parseDouble(s);
+				return d.doubleValue();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return 0;			
+		}
+	};
+		return converter;
+	}
 	
+	/**
+	 * devuelve un converter que no arregla los decimales
+	 * @return
+	 */
 	public static DecimalFormat getDoubleConverter() {
 		if(converter == null) {
 			

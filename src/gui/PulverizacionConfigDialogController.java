@@ -36,6 +36,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 
 
 /**
@@ -191,7 +192,8 @@ public class PulverizacionConfigDialogController  extends Dialog<PulverizacionLa
 				config,
 				PulverizacionLabor.PRECIO_INSUMO_KEY);
 		
-		DecimalFormat converter = PropertyHelper.getDoubleConverter();
+		//DecimalFormat converter = PropertyHelper.getDoubleConverter();
+		StringConverter<Number> converter = PropertyHelper.buildStringConverter();//
 		Bindings.bindBidirectional(this.textClasesClasificador.textProperty(), labor.clasificador.clasesClasificadorProperty, converter);
 
 		this.comboClasificador.setItems(FXCollections.observableArrayList(Clasificador.clasficicadores));

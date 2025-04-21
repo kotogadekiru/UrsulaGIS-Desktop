@@ -254,7 +254,7 @@ public class SueloConfigDialogController  extends Dialog<Suelo>{
 		});
 
 		
-		StringConverter<Number> converter = new NumberStringConverter(Messages.getLocale());
+		StringConverter<Number> converter = PropertyHelper.buildStringConverter();
 
 		Bindings.bindBidirectional(this.textClasesClasificador.textProperty(), labor.clasificador.clasesClasificadorProperty, converter);
 

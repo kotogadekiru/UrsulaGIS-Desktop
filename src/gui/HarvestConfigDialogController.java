@@ -318,7 +318,8 @@ public class HarvestConfigDialogController  extends Dialog<CosechaLabor>{
 		
 		//this.comboCultivo.getSelectionModel().select(labor.getCultivo());
 		
-		DecimalFormat converter = PropertyHelper.getDoubleConverter();
+		//DecimalFormat converter = PropertyHelper.getDoubleConverter();
+		StringConverter<Number> converter = PropertyHelper.buildStringConverter();
 
 		//textPrecioGrano
 		PropertyHelper.bindDoubleToTextProperty(labor::getPrecioInsumo,

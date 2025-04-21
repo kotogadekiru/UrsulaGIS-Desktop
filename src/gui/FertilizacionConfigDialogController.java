@@ -175,17 +175,18 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 		//this.comboFertilizante.setItems(FXCollections.observableArrayList(DAH.getAllFertilizantes()));
 		//this.comboFertilizante.valueProperty().bindBidirectional(labor.fertilizanteProperty);
 
-		StringConverter<Number> converter = new NumberStringConverter(Messages.getLocale());
+		//StringConverter<Number> converter = new NumberStringConverter(Messages.getLocale());
+		
 
 		Configuracion properties = labor.getConfigLabor().getConfigProperties();
 		//textPrecioGrano
 		//Bindings.bindBidirectional(this.textPrecioFert.textProperty(), labor.precioInsumoProperty, converter);
 		this.textPrecioFert.textProperty().set(
 				properties.getPropertyOrDefault(FertilizacionLabor.COLUMNA_PRECIO_FERT, 
-						converter.toString(labor.getPrecioInsumo()))
+						PropertyHelper.formatDouble(labor.getPrecioInsumo()))
 				);
 		this.textPrecioFert.textProperty().addListener((obj,old,n)->{
-			labor.setPrecioInsumo(converter.fromString(n).doubleValue());
+			labor.setPrecioInsumo(PropertyHelper.parseDouble(n).doubleValue());
 			properties.setProperty(FertilizacionLabor.COLUMNA_PRECIO_FERT, n);
 		});
 
@@ -203,21 +204,17 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 		
 		this.textCostoLaborHa.textProperty().set(
 				properties.getPropertyOrDefault(FertilizacionLabor.COSTO_LABOR_FERTILIZACION,
-						converter.toString(labor.getPrecioLabor()))
+						PropertyHelper.formatDouble(labor.getPrecioLabor()))
 				);
-		labor.setPrecioLabor(converter.fromString(this.textCostoLaborHa.textProperty().get()).doubleValue());
+		labor.setPrecioLabor(PropertyHelper.parseDouble(this.textCostoLaborHa.textProperty().get()).doubleValue());
 		this.textCostoLaborHa.textProperty().addListener((obj,old,n)->{	
-			Number nuevoPrecio = converter.fromString(n);
+			
+			Number nuevoPrecio =PropertyHelper.parseDouble(n);// converter.fromString(n);
 			labor.setPrecioLabor(nuevoPrecio.doubleValue());
-			properties.setProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION, converter.toString(nuevoPrecio));
+			properties.setProperty(FertilizacionLabor.COSTO_LABOR_FERTILIZACION, PropertyHelper.formatDouble(nuevoPrecio));
 		});
 
-		//		if(labor.outCollection!=null) {//estoy editando
-		//			this.textPrecioFert.textProperty().set(converter.toString(labor.getPrecioInsumo()));
-		//			this.textCostoLaborHa.textProperty().set(converter.toString(labor.getPrecioLabor()));
-		//		}
-
-		
+		StringConverter<Number> converter = PropertyHelper.buildStringConverter();
 		Bindings.bindBidirectional(this.textClasesClasificador.textProperty(), labor.clasificador.clasesClasificadorProperty, converter);
 
 		this.comboClasificador.setItems(FXCollections.observableArrayList(Clasificador.clasficicadores));
@@ -233,6 +230,10 @@ public class FertilizacionConfigDialogController  extends Dialog<FertilizacionLa
 				labor.getConfigLabor().getConfigProperties(),
 				Labor.FECHA_KEY);	
 	}
+
+
+
+
 
 	public void init() {
 		this.getDialogPane().setContent(content);
