@@ -95,6 +95,17 @@ public class CosechaLabor extends Labor<CosechaItem> {
 		super();
 		initConfig();
 	}
+	
+	public CosechaLabor(CosechaLabor c) {
+		super();
+		initConfig();
+		setCultivo(c.getCultivo());
+		setFecha(c.getFecha());
+		setPrecioInsumo(c.getPrecioInsumo());
+		setPrecioLabor(c.getPrecioLabor());
+		setCostoCosechaTn(c.getCostoCosechaTn());
+		setClasificador(c.getClasificador().clone());
+	}
 
 	public CosechaLabor(FileDataStore store) {
 		super(store);

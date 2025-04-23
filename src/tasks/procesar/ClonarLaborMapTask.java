@@ -68,18 +68,7 @@ public class ClonarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem
 		constructor.put(CosechaLabor.class, l->{
 			CosechaLabor c = (CosechaLabor)l;
 			CosechaLabor labor = new CosechaLabor();
-			//TODO asignar las columnas a  los valores estanar
-//			labor.colAmount.set(CosechaLabor.CosechaLaborConstants.COLUMNA_RENDIMIENTO);
-//			labor.colRendimiento.set(CosechaLabor.CosechaLaborConstants.COLUMNA_RENDIMIENTO);
-//			labor.colAncho.set(CosechaLabor.COLUMNA_ANCHO);
-//			labor.colCurso.set(CosechaLabor.COLUMNA_CURSO);
-//			labor.colDistancia.set(CosechaLabor.COLUMNA_DISTANCIA);
-//			labor.colElevacion.set(CosechaLabor.COLUMNA_ELEVACION);
-			labor.setCultivo(c.getCultivo());
-			labor.setFecha(c.getFecha());
-			labor.setPrecioInsumo(c.getPrecioInsumo());
-			labor.setPrecioLabor(c.getPrecioLabor());
-			labor.setCostoCosechaTn(c.getCostoCosechaTn());
+			labor.setLayer(new LaborLayer());			
 
 			labor.getConfiguracion().valorMetrosPorUnidadDistanciaProperty().set(1.0);
 			labor.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
@@ -92,41 +81,29 @@ public class ClonarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem
 		constructor.put(SiembraLabor.class, l->{
 			SiembraLabor os = (SiembraLabor)l;
 			SiembraLabor ns =  new SiembraLabor(os);
-			//TODO ver si tengo que tomar la unidad precio de semilla
-			ns.setEntreSurco(os.getEntreSurco());
-			ns.setSemilla(os.getSemilla());
-			ns.setPrecioInsumo(os.getPrecioInsumo());
-			ns.setPrecioLabor(os.getPrecioLabor());
-			ns.setFecha(os.getFecha());
-			ns.setFertLinea(os.getFertLinea());
-			ns.setFertCostado(os.getFertCostado());
+			ns.setLayer(new LaborLayer());
 			return ns;
 		});
 		
 		constructor.put(FertilizacionLabor.class, l->{
 			FertilizacionLabor os = (FertilizacionLabor)l;
 			FertilizacionLabor ns =  new FertilizacionLabor(os);	
-			ns.setLayer(new LaborLayer());
-			
-			ns.setFertilizante(os.getFertilizante());
-			ns.setPrecioInsumo(os.getPrecioInsumo());
-			ns.setPrecioLabor(os.getPrecioLabor());
-			ns.setFecha(os.getFecha());
-			
-			ns.setClasificador(os.getClasificador().clone());
+			ns.setLayer(new LaborLayer());			
 		
 			return ns;
 		});
 		
 		constructor.put(PulverizacionLabor.class, l->{
 			PulverizacionLabor os =(PulverizacionLabor)l;
-			PulverizacionLabor ns = new PulverizacionLabor(os);			
+			PulverizacionLabor ns = new PulverizacionLabor(os);		
+			ns.setLayer(new LaborLayer());
 			return ns;
 		});
 		
 		constructor.put(Suelo.class, l->{
 			Suelo os =(Suelo)l;
 			Suelo ns = new Suelo();
+			ns.setLayer(new LaborLayer());
 			ns.setFecha(os.getFecha());
 			
 			
@@ -136,6 +113,8 @@ public class ClonarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem
 		constructor.put(Margen.class, l->{
 			Margen ol =(Margen)l;
 			Margen newl = new Margen();
+			
+			newl.setLayer(new LaborLayer());
 			newl.setFecha(ol.getFecha());
 			newl.getCostoFleteProperty().setValue(ol.getCostoFleteProperty().getValue());
 			newl.getCostoFijoHaProperty().setValue(ol.getCostoFijoHaProperty().getValue());

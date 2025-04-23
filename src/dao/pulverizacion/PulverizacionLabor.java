@@ -73,6 +73,10 @@ public class PulverizacionLabor extends Labor<PulverizacionItem> {
 			ci.setLabor(this);
 			getItems().add(ci);
 		}
+		setPrecioInsumo(l.getPrecioInsumo());
+		setPrecioLabor(l.getPrecioLabor());
+		setFecha(l.getFecha());
+		setClasificador(l.getClasificador().clone());
 	}
 
 	//XXX ver como los listeners de las propiedades me afectan el archivo de properties y 

@@ -92,16 +92,20 @@ public class SiembraLabor extends Labor<SiembraItem> {
 	}
 	
 	public SiembraLabor(SiembraLabor s) {
-		super(s);
-		
-		setSemilla(s.getSemilla());
-
-		setFertLinea(s.getFertLinea());
-		setFertCostado(s.getFertCostado());
-		setEntreSurco(s.getEntreSurco());
+		super(s);	
+		initConfig();
 		setPlantasPorMetro(s.getPlantasPorMetro());
 		
-	//	initConfig();
+		setEntreSurco(s.getEntreSurco());
+		setSemilla(s.getSemilla());
+		setPrecioInsumo(s.getPrecioInsumo());
+		setPrecioLabor(s.getPrecioLabor());
+		setFecha(s.getFecha());
+		setFertLinea(s.getFertLinea());
+		setFertCostado(s.getFertCostado());
+		setClasificador(s.getClasificador().clone());
+		
+
 	}
 
 	private void initConfig() {

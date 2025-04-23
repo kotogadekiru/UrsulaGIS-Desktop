@@ -8,6 +8,7 @@ import java.util.Map;
 import org.geotools.data.FileDataStore;
 
 import dao.Labor;
+import dao.LaborItem;
 import dao.Ndvi;
 import dao.Poligono;
 import dao.cosecha.CosechaLabor;
@@ -33,7 +34,7 @@ import tasks.ExportLaborMapTask;
 import tasks.importar.OpenMargenMapTask;
 import tasks.procesar.ClonarLaborMapTask;
 import tasks.procesar.JuntarShapefilesTask;
-import tasks.procesar.ResumirFertilizacionMapTask;
+import tasks.procesar.ResumirLaborMapTask;
 import tasks.procesar.ResumirMargenMapTask;
 import utils.DAH;
 import utils.FileHelper;
@@ -261,15 +262,13 @@ public class GenericLaborGUIController extends AbstractGUIController {
 		//TODO filtrar outliers
 	}
 	
-	private void doResumirLabor(Labor<?> labor) {
-		//TODO copiar ClonarLaborMapTask umTask = new ClonarLaborMapTask(labor); resumiendo
-		if(labor instanceof FertilizacionLabor) {
-			ResumirFertilizacionMapTask uMmTask = new ResumirFertilizacionMapTask((FertilizacionLabor)labor);
+	private void doResumirLabor(Labor<?> labor) {		
+			ResumirLaborMapTask uMmTask = new ResumirLaborMapTask(labor);
 
 			uMmTask.installProgressBar(progressBox);
 			uMmTask.setOnSucceeded(handler -> {
 				labor.getLayer().setEnabled(false);
-				FertilizacionLabor ret = (FertilizacionLabor)handler.getSource().getValue();
+				Labor<?> ret = (Labor<?>)handler.getSource().getValue();
 				uMmTask.uninstallProgressBar();			
 				insertBeforeCompass(getWwd(), ret.getLayer());
 				this.getLayerPanel().update(this.getWwd());
@@ -278,14 +277,13 @@ public class GenericLaborGUIController extends AbstractGUIController {
 				System.out.println(Messages.getString("JFXMain.323")); 
 			});
 			executorPool.execute(uMmTask);
-			
-		}else if(labor instanceof CosechaLabor) {
-		}else if(labor instanceof SiembraLabor) {
-		}else if(labor instanceof PulverizacionLabor) {
-		}else if(labor instanceof Margen) {
-		}else if(labor instanceof Suelo) {
-
-		}
+//		if(labor instanceof FertilizacionLabor) {
+//		}else if(labor instanceof CosechaLabor) {
+//		}else if(labor instanceof SiembraLabor) {
+//		}else if(labor instanceof PulverizacionLabor) {
+//		}else if(labor instanceof Margen) {
+//		}else if(labor instanceof Suelo) {
+//		}
 		
 		//TODO agregar resumir para otros tipos de labores
 	}

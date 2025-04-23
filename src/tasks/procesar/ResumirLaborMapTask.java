@@ -1,7 +1,6 @@
 package tasks.procesar;
 
 import java.io.IOException;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -12,14 +11,12 @@ import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.geom.Geometry;
 
+import dao.Labor;
 import dao.LaborItem;
 import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
-import dao.margen.Margen;
-import dao.margen.MargenItem;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
-import gui.nww.LaborLayer;
 import tasks.ProcessMapTask;
 import utils.GeometryHelper;
 import utils.ProyectionConstants;
@@ -31,20 +28,16 @@ import utils.ProyectionConstants;
  * task que toma un store y devuelve una capa de suelo a partir del store
  */
 
-public class ResumirFertilizacionMapTask extends ProcessMapTask<FertilizacionItem,FertilizacionLabor> {
-	private FertilizacionLabor aResumir=null;
+public class ResumirLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem>> {
+	private Labor<?> aResumir=null;
 	private Map<Class,Function<LaborItem,String>> tooltipCreator = ClonarLaborMapTask.constructTooltipCreator();
-	public ResumirFertilizacionMapTask(FertilizacionLabor _aResumir) {
-//		FertilizacionLabor margen = new FertilizacionLabor();
-//		margen.setLayer(new LaborLayer());
-//		this.labor=margen;		
+	public ResumirLaborMapTask(Labor<?> _aResumir) {	
 		aResumir=_aResumir;
-		this.labor=(FertilizacionLabor)ClonarLaborMapTask.laborConstructor()
+		this.labor=ClonarLaborMapTask.laborConstructor()
 				.get(aResumir.getClass())
-				.apply(aResumir);
+				.apply(aResumir);		
 		
-		
-		labor.setNombre(aResumir.getNombre()+Messages.getString("ResumirMargenMapTask.resumido"));
+		labor.setNombre(aResumir.getNombre()+" "+Messages.getString("ResumirMargenMapTask.resumido"));
 	//	labor.setContorno(aResumir.getContorno());
 //		labor.getCostoFijoHaProperty().setValue(aResumir.getCostoFijoHaProperty().getValue());
 //		labor.getCostoFleteProperty().setValue(aResumir.getCostoFleteProperty().getValue());
@@ -54,7 +47,7 @@ public class ResumirFertilizacionMapTask extends ProcessMapTask<FertilizacionIte
 	}
 	
 	public void doProcess() throws IOException {
-		List<FertilizacionItem> resumidas = resumirPorCategoria(this.labor);
+		List<LaborItem> resumidas = resumirPorCategoria(this.labor);
 		if(labor.outCollection!=null)labor.outCollection.clear();
 		labor.treeCache=null;
 		labor.treeCacheEnvelope=null;
@@ -63,7 +56,7 @@ public class ResumirFertilizacionMapTask extends ProcessMapTask<FertilizacionIte
 		);
 		
 		labor.constructClasificador();
-		runLater(resumidas);
+		runLater(resumidas);//FIXME al resumir una siembra layer es null y da null pointer 
 		updateProgress(0, featureCount);
 
 	}
@@ -97,7 +90,7 @@ public class ResumirFertilizacionMapTask extends ProcessMapTask<FertilizacionIte
 	 * @param labor
 	 * @return
 	 */
-	private List<FertilizacionItem> resumirPorCategoria(FertilizacionLabor labor) {
+	private List<LaborItem> resumirPorCategoria(Labor<?> labor) {
 		//TODO antes de proceder a dibujar las features
 		//agruparlas por clase y hacer un buffer cero
 		//luego crear un feature promedio para cada poligono individual
@@ -105,9 +98,9 @@ public class ResumirFertilizacionMapTask extends ProcessMapTask<FertilizacionIte
 		updateProgress(0, 100);
 
 		//XXX inicializo la lista de las features por categoria
-		List<List<FertilizacionItem>> itemsByCat = new ArrayList<List<FertilizacionItem>>();
+		List<List<LaborItem>> itemsByCat = new ArrayList<List<LaborItem>>();
 		for(int i=0;i<labor.clasificador.getNumClasses();i++){
-			itemsByCat.add(i, new ArrayList<FertilizacionItem>());
+			itemsByCat.add(i, new ArrayList<LaborItem>());
 		}
 		
 		//XXX recorro las features y segun la categoria las voy asignando las features a cada lista de cada categoria
@@ -115,7 +108,7 @@ public class ResumirFertilizacionMapTask extends ProcessMapTask<FertilizacionIte
 
 		while(it.hasNext()){
 			SimpleFeature f = it.next();
-			FertilizacionItem ci = aResumir.constructFeatureContainerStandar(f, false);
+			LaborItem ci = aResumir.constructFeatureContainerStandar(f, false);
 		
 			int cat = labor.getClasificador().getCategoryFor(ci.getAmount());//LaborItem.getDoubleFromObj(f.getAttribute(labor.colRendimiento.get())));
 			System.out.println("cat for "+ci.getAmount()+" es "+cat);
@@ -126,10 +119,10 @@ public class ResumirFertilizacionMapTask extends ProcessMapTask<FertilizacionIte
 		
 		
 		// ahora que tenemos las colecciones con las categorias solo hace falta juntar las geometrias y sacar los promedios	
-		List<FertilizacionItem> itemsCategoria = new ArrayList<FertilizacionItem>();//es la lista de los items que representan a cada categoria y que devuelvo
+		List<LaborItem> itemsCategoria = new ArrayList<LaborItem>();//es la lista de los items que representan a cada categoria y que devuelvo
 		//XXX por cada categoria 
 		
-			for(List<FertilizacionItem> catItems : itemsByCat) {
+			for(List<LaborItem> catItems : itemsByCat) {
 				System.out.println("resumiendo "+catItems.size());
 				if(catItems.size()>0) {
 					itemsCategoria.add(resumirItems(catItems));
@@ -140,7 +133,7 @@ public class ResumirFertilizacionMapTask extends ProcessMapTask<FertilizacionIte
 		return itemsCategoria;
 	}
 
-	public static FertilizacionItem resumirItems(List<FertilizacionItem> catItems) {
+	public static LaborItem resumirItems(List<LaborItem> catItems) {
 		FertilizacionItem ret = new FertilizacionItem();
 		Double _id=null;
 		Double amountTotal = new Double(0.0);
@@ -151,16 +144,14 @@ public class ResumirFertilizacionMapTask extends ProcessMapTask<FertilizacionIte
 		Double hasTotal=new Double(0.0);
 		List<Geometry> geoms = new ArrayList<Geometry>(); 
 		
-		for(FertilizacionItem item : catItems) {
+		//FIXME cambiar este metodo para que tome en cuenta el tipo de labor item
+		for(LaborItem item : catItems) {
 			Geometry g = item.getGeometry();
 			Double hasItem = ProyectionConstants.A_HAS(g.getArea());
 			if(_id==null) {
 				_id=item.getId();
 			}
-//			importeCosecha+=item.getImporteCosechaHa()*hasItem;
-//			importeFert+=item.getImporteFertHa()*hasItem;
-//			importePulv+=item.getImportePulvHa()*hasItem;
-//			importeSiembra+=item.getImporteSiembraHa()*hasItem;
+
 			amountTotal+=item.getAmount()*hasItem;
 			hasTotal+=hasItem;
 			geoms.add(item.getGeometry());
@@ -168,27 +159,20 @@ public class ResumirFertilizacionMapTask extends ProcessMapTask<FertilizacionIte
 			//TODO sumar todos los importes y dividirlos por la nueva superficie
 		}
 		amountTotal = amountTotal / hasTotal;
-//		importeFert = importeFert / hasTotal;
-//		importePulv = importePulv / hasTotal;
-//		importeSiembra = importeSiembra / hasTotal;
+
 		
 		ret.setId(_id);
-		ret.setDosistHa(amountTotal);
-//		ret.setImporteCosechaHa(importeCosecha);		
-//		ret.setImporteFertHa(importeFert);
-//		ret.setImportePulvHa(importePulv);
-//		ret.setImporteSiembraHa(importeSiembra);
-		
+		ret.setDosistHa(amountTotal);		
 		ret.setGeometry(GeometryHelper.unirGeometrias(geoms));
 		
 		return ret;
 	}
 	
 	
-	protected ExtrudedPolygon getPathTooltip( Geometry poly,FertilizacionItem renta,ExtrudedPolygon  renderablePolygon) {
+	protected ExtrudedPolygon getPathTooltip( Geometry poly,LaborItem renta,ExtrudedPolygon  renderablePolygon) {
 		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 
-		String tooltipText2 = tooltipCreator.get(FertilizacionLabor.class).apply(renta);
+		String tooltipText2 = tooltipCreator.get(this.labor.getClass()).apply(renta);
 		//String tooltipText= buildTooltipText(renta,area);
 		return super.getExtrudedPolygonFromGeom(poly, renta,tooltipText2,renderablePolygon);
 	//	super.getRenderPolygonFromGeom(poly, renta,tooltipText);

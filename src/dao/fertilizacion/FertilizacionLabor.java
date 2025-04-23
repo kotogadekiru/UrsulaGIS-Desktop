@@ -58,8 +58,13 @@ public class FertilizacionLabor extends Labor<FertilizacionItem> {
 	public FertilizacionLabor(FertilizacionLabor fAPartir) {
 		super(fAPartir);
 		initConfig();
-		colKgHaProperty.set(fAPartir.colKgHaProperty.get());
-		fertilizante=fAPartir.getFertilizante();
+		//colKgHaProperty.set(fAPartir.colKgHaProperty.get());
+		
+		setFertilizante(fAPartir.getFertilizante());
+		setPrecioInsumo(fAPartir.getPrecioInsumo());
+		setPrecioLabor(fAPartir.getPrecioLabor());
+		setFecha(fAPartir.getFecha());
+		setClasificador(fAPartir.getClasificador().clone());
 		
 	}
 
