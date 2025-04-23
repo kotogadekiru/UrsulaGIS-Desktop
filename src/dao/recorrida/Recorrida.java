@@ -63,7 +63,7 @@ public class Recorrida extends AbstractBaseEntity{
 
 	@Id @GeneratedValue//(strategy = GenerationType.IDENTITY)
 	private Long id;
-
+	private Long numero = null;
 	public String nombre=new String();
 	public String observacion=new String();
 	public String url=new String();

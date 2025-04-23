@@ -1,6 +1,8 @@
 package gui.controller;
 
 import java.io.File;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,6 +19,7 @@ import com.google.gson.Gson;
 import dao.Labor;
 import dao.Ndvi;
 import dao.Poligono;
+import dao.config.Configuracion;
 import dao.fertilizacion.FertilizacionLabor;
 import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
@@ -225,6 +228,15 @@ public class RecorridaGUIController extends AbstractGUIController {
 			//XXX editar la recorrida remota con la informacion actualizada de la local?
 			//XXX recupero la recorrida remota?
 			return;
+		}
+		Configuracion config = Configuracion.getInstance();
+		NumberFormat nf = Messages.getNumberFormat();
+		nf.setMaximumFractionDigits(0);
+		try {
+			Number nroRec = nf.parse(config.getPropertyOrDefault("Recorrida.NumeroKey", "0"));
+			recorrida.setNumero(nroRec.longValue()+1);
+		} catch (ParseException e) {			
+			e.printStackTrace();
 		}
 		CompartirRecorridaTask task = new CompartirRecorridaTask(recorrida);
 		//System.out.println("procesando los datos entre "+ndviDpDLG.initialDate+" y "+ ndviDpDLG.finalDate);//hasta aca ok!
