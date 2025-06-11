@@ -427,12 +427,14 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 				itemsResumidos.addAll(catItems);					
 			}
 		}
-
-		if(itemsResumidos.size()>100) {
-			itemsResumidos.sort((i1,i2)
-					->	(-1*Double.compare(i1.getGeometry().getArea(), i2.getGeometry().getArea())));			
-			itemsResumidos =itemsResumidos.subList(0,MAX_ITEMS-1);
-		}
+//no descartar los poligonos extra aca. primero tratar de reabsorver zonas chicas
+//		if(false && itemsResumidos.size()>100) {
+//			itemsResumidos.sort((i1,i2)
+//					->	(-1*Double.compare(i1.getGeometry().getArea(), i2.getGeometry().getArea())));			
+//			itemsResumidos =itemsResumidos.subList(0,MAX_ITEMS-1);
+//		}{
+//			System.out.println("descartando "+(itemsResumidos.size()-100)+" poligonos que superan los 100");
+//		}
 		return itemsResumidos;
 	}
 
@@ -482,7 +484,7 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 					List<?> vecinos = tree.query(envelope);
 
 					int vecinosCounter = 0;
-					while(vecinos.size() == 0 && vecinosCounter < MAX_ITEMS) {//solo duplico el envelope 100 veces
+					while(vecinos.size() == 0 && vecinosCounter < 100) {//solo duplico el envelope 100 veces
 						System.out.println("no hay vecino para adjuntarlo"+ ar.getId());
 						//buscar en un envelope mas grande					
 						envelope.expandBy(envelope.getWidth()*COEF_EXPANCION);//raiz de 2 para duplicar el area de busqueda
@@ -541,8 +543,12 @@ public class ExportarPrescripcionFertilizacionTask extends ProgresibleTask<File>
 
 					if(v != null) {
 						Geometry g = v.getGeometry();
-						try {						
-							GeometryCollection colectionCat = g.getFactory().createGeometryCollection(new Geometry[]{g,gAr});
+						try {					
+							Geometry gArb=gAr;
+							if(!g.intersects(gAr)) {
+								gArb=gAr.buffer(g.distance(gAr));
+							}
+							GeometryCollection colectionCat = g.getFactory().createGeometryCollection(new Geometry[]{g,gArb});
 							Geometry union = EnhancedPrecisionOp.buffer(colectionCat, 0);
 							if(union != null) {						
 								boolean removedOK = tree.remove(g.getEnvelopeInternal(), v);
