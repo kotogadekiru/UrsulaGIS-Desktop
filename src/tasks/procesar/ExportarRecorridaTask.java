@@ -67,6 +67,7 @@ public class ExportarRecorridaTask extends ProgresibleTask<File>{
 		//sb.append("*the_geom:"+LineString.class.getCanonicalName()+":srid=4326");
 		//recorrida.nombre
 		sb.append(",name" + ":"+String.class.getCanonicalName());
+		sb.append(",subName" + ":"+String.class.getCanonicalName());		
 		sb.append(",obs" + ":"+String.class.getCanonicalName());
 
 		
@@ -188,6 +189,7 @@ public class ExportarRecorridaTask extends ProgresibleTask<File>{
 		fb.add(itemGeometry);
 
 		fb.add(i+": "+m.getNombre());
+		fb.add(m.getSubNombre());
 		fb.add(m.getObservacion());
 		// String obs = m0.getObservacion();
 

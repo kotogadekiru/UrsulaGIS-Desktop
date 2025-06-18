@@ -59,6 +59,13 @@ public class ImportarRecorridaTask extends ProgresibleTask<Recorrida>{
 				String nombre = (String)nameAtt;
 				String[] parts = nombre.split(": ");
 				m.setNombre(parts[1]);
+				m.setSubNombre(parts[0]);
+			}
+			
+			Object subNameAtt = next.getAttribute("subName");
+			if(subNameAtt instanceof String) {
+				String subNnombre = (String)subNameAtt;				
+				m.setSubNombre(subNnombre);
 			}
 			
 			Object obsAtt = next.getAttribute("obs");
