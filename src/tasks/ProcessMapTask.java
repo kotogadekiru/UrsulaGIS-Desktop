@@ -14,7 +14,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.geotools.data.FeatureReader;
-import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -26,17 +25,14 @@ import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
 import com.vividsolutions.jts.precision.EnhancedPrecisionOp;
 
 import dao.Clasificador;
 import dao.Labor;
 import dao.LaborItem;
-import dao.Poligono;
 import dao.cosecha.CosechaItem;
 import dao.fertilizacion.FertilizacionItem;
 import dao.margen.MargenItem;
@@ -1106,6 +1102,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 		
 		itemsToShow.parallelStream().forEach(fc->{
+			try {
 			Geometry g = fc.getGeometry();
 
 			Double rinde = fc.getAmount();//labor.colAmount.get()
@@ -1154,6 +1151,10 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 					labor.maxY=Position.fromDegrees(envelope.getMaxY(), envelope.centre().x);
 				}
 
+			}
+			}catch(Exception e ) {
+				e.printStackTrace();
+				System.err.println("Excepcion en updateStatsLabor");
 			}
 		});//
 
