@@ -325,10 +325,14 @@ public class NdviGUIController extends AbstractGUIController{
 		CosechaLabor labor = new CosechaLabor();
 		labor.setNombre(ndvi.getNombre());
 
-		Date date = java.util.Date.from(ndvi.getFecha().atStartOfDay()
+		Date date = new Date();
+		try{
+			date = java.util.Date.from(ndvi.getFecha().atStartOfDay()		
 				.atZone(ZoneId.systemDefault())
 				.toInstant());
-
+		}catch(Exception e ){
+			e.printStackTrace();
+		}
 		labor.setFecha(date);
 		labor.getConfiguracion().correccionFlowToRindeProperty().setValue(false);
 		LaborLayer layer = new LaborLayer();
