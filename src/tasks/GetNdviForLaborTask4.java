@@ -343,7 +343,11 @@ public class GetNdviForLaborTask4 extends Task<List<Ndvi>>{
 
 					if(ndviToIgnore!=null) {
 						Stream<Ndvi> filtered = ndviToIgnore.stream().filter(n->{
-							return n.getFecha().equals(assetDate)&&n.getContorno().equals(contornoP);
+							try {
+								return n.getFecha().equals(assetDate) && n.getContorno().equals(contornoP);
+							}catch(Exception e) {
+								return false;
+							}
 						});
 						long count = filtered.count();
 						if(count>0) {
