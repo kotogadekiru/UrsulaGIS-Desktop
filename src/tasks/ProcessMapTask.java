@@ -651,7 +651,8 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 				labor.minAmount,labor.maxAmount,
 				HUE_MIN, HUE_MAX,
 				AnalyticSurfaceLegend.createDefaultColorGradientLabels(labor.minAmount, labor.maxAmount, legendLabelFormat),
-				AnalyticSurfaceLegend.createDefaultTitle(labor.getNombre()));
+				AnalyticSurfaceLegend.createDefaultTitle(labor.getNombre())
+				);
 		legend.setOpacity(1);
 		legend.setScreenLocation(new java.awt.Point(100, 400));
 
@@ -809,10 +810,12 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		double HUE_MAX = colorMax.getHue()/360d;//240d / 360d;
 
 		final AnalyticSurfaceLegend legend = AnalyticSurfaceLegend.fromColorGradient(
-				labor.minAmount,labor.maxAmount,
+				labor.maxAmount,
+				labor.minAmount,//FIXME valores invertidos funciona en una version de world wind y no en otra
 				HUE_MIN, HUE_MAX,
 				AnalyticSurfaceLegend.createDefaultColorGradientLabels(labor.minAmount, labor.maxAmount, legendLabelFormat),
-				AnalyticSurfaceLegend.createDefaultTitle(labor.getNombre()));
+				AnalyticSurfaceLegend.createDefaultTitle(labor.getNombre())
+				);
 		legend.setOpacity(1);
 		legend.setScreenLocation(new java.awt.Point(100, 400));
 
@@ -1056,6 +1059,11 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 
 	
 	protected ExtrudedPolygon getPathTooltip(Geometry p, FC fc, ExtrudedPolygon renderablePolygon) {
+		String tooltipText = null;// createTooltipForLaborItem(p, fc);//creo el tooltip al crear el anotation. no antes
+		return getExtrudedPolygonFromGeom(p, fc,tooltipText,renderablePolygon);
+	}
+
+	public static String createTooltipForLaborItem(Geometry p, LaborItem fc) {
 		double area = p.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
 		String tooltipText = "";
 		if(fc instanceof CosechaItem) {
@@ -1071,7 +1079,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 		}else 	if(fc instanceof MargenItem) {
 			tooltipText = OpenMargenMapTask.buildTooltipText((MargenItem)fc, area);
 		}
-		return getExtrudedPolygonFromGeom(p, fc,tooltipText,renderablePolygon);
+		return tooltipText;
 	} 
 	
 	protected List<FC> getItemsList(){

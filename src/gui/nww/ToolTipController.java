@@ -110,14 +110,14 @@ public class ToolTipController implements SelectListener, Disposable
 
     }
 
-    private void handleRigthClickOld(SelectEvent event) {
-    	this.lastRightClickObject = event.getTopObject();
-    	if(this.lastRightClickObject != null && this.lastRightClickObject instanceof AVList) {
-    		LaborItem item = ((LaborItem)  ((AVList) this.lastRightClickObject).getValue(ProcessMapTask.LABOR_ITEM_AVKey) );	
-    		this.showToolTip(event, "Borrar item "+item.getId()+"?"); 
-    		this.wwd.redraw();    		
-    	}
-	}
+//    private void handleRigthClickOld(SelectEvent event) {
+//    	this.lastRightClickObject = event.getTopObject();
+//    	if(this.lastRightClickObject != null && this.lastRightClickObject instanceof AVList) {
+//    		LaborItem item = ((LaborItem)  ((AVList) this.lastRightClickObject).getValue(ProcessMapTask.LABOR_ITEM_AVKey) );	
+//    		this.showToolTip(event, "Borrar item "+item.getId()+"?"); 
+//    		this.wwd.redraw();    		
+//    	}
+//	}
 
 	protected void handleRigthClick(SelectEvent event)  {
 //        if (this.lastRightClickObject != null) {
@@ -142,7 +142,12 @@ public class ToolTipController implements SelectListener, Disposable
         }
     }
     
+	/**
+	 * metodo que se usa para mostrar los tooltips de los layers
+	 * @param event
+	 */
 	protected void handleRollover(SelectEvent event)  {
+		System.out.println("rollover");
         if (this.lastRolloverObject != null) {
             if (this.lastRolloverObject == event.getTopObject() && !WWUtil.isEmpty(getRolloverText(event)))
                 return;
@@ -151,17 +156,28 @@ public class ToolTipController implements SelectListener, Disposable
             this.lastRolloverObject = null;
             //this.wwd.redraw();
         }
-
-        if (getRolloverText(event) != null)
+        Object rolloverObject =event.getTopObject();
+        String rolloverText = getRolloverText(event);
+        if(rolloverObject instanceof gui.nww.ReusableExtrudedPolygon) {
+        	
+        	ReusableExtrudedPolygon renderablePolygon = (ReusableExtrudedPolygon)rolloverObject;
+        	LaborItem dao = (LaborItem) renderablePolygon.getValue(ProcessMapTask.LABOR_ITEM_AVKey);
+        	rolloverText = ProcessMapTask.createTooltipForLaborItem(dao.getGeometry(),dao);
+        	System.out.println(dao);//gui.nww.ReusableExtrudedPolygon@5ef5bb86
+        }    
+     
+       
+        if (rolloverText != null)
         {
-            this.lastRolloverObject = event.getTopObject();
-            this.showToolTip(event, getRolloverText(event).replace("\\n", "\n"));
+            this.lastRolloverObject = rolloverObject;
+            this.showToolTip(event, rolloverText.replace("\\n", "\n"));
             //this.wwd.redraw();
         }
         this.wwd.redraw();
     }
 
     protected void handleHover(SelectEvent event) {
+    	//System.out.println("hover");
         if (this.lastHoverObject != null){
             if (this.lastHoverObject == event.getTopObject())
                 return;

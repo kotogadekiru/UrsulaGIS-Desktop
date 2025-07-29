@@ -32,7 +32,9 @@ public class ToolTipAnnotation extends ScreenAnnotation {
 	}
 
 	protected void initializeAttributes() {
-		this.attributes.setAdjustWidthToText(AVKey.SIZE_FIXED);
+		//this.attributes.setAdjustWidthToText(AVKey.SIZE_FIXED);
+		//this.attributes.setAdjustWidthToText(AVKey.SIZE_FIT_TEXT);
+		
 		
 		this.attributes.setFrameShape(AVKey.SHAPE_RECTANGLE);
 		this.attributes.setTextColor(Color.BLACK);
@@ -47,7 +49,8 @@ public class ToolTipAnnotation extends ScreenAnnotation {
 		if(HiDPIHelper.isHiDPI()){
 			this.attributes.setFont(Font.decode("Arial-PLAIN-48"));
 			this.attributes.setSize(new Dimension(576,432));
-			this.attributes.setAdjustWidthToText(AVKey.SIZE_FIXED);
+			//this.attributes.setAdjustWidthToText(AVKey.SIZE_FIXED);
+			this.attributes.setAdjustWidthToText(AVKey.SIZE_FIT_TEXT);
 		} else{
 			this.attributes.setAdjustWidthToText(AVKey.SIZE_FIT_TEXT);
 			//this.attributes.setFont(Font.decode("Arial-PLAIN-12"));
