@@ -21,6 +21,14 @@ public abstract class ProgresibleTask<E> extends Task<E>{
 	private HBox progressContainer;
 	
 	protected String taskName="";
+	/**
+	 * cantidad de features a procesar
+	 */
+	protected int featureCount=0;
+	/**
+	 * cantidad de features procesadas
+	 */
+	protected int featureNumber=0;
 	
 
 	public void uninstallProgressBar() {		

@@ -82,7 +82,7 @@ public class JuntarShapefilesTask extends ProgresibleTask<File>{
 		Map<FileDataStore,Map<String,String>> attributeMaping=Collections.synchronizedMap(new HashMap<FileDataStore,Map<String,String>>());
 
 		ReferencedEnvelope unionEnvelope = null;
-
+		updateProgress(0, 100);
 		if (stores == null)return;
 		for(int i=0; i < stores.size(); i++){//FileDataStore store : stores){
 			FileDataStore store =stores.get(i);
@@ -136,7 +136,7 @@ public class JuntarShapefilesTask extends ProgresibleTask<File>{
 			}
 		}//fin del for stores
 		//System.out.println("attibuteMappings : "+newDescriptors);
-
+		
 
 
 		// crear un nuevo shapeFile type que contenga todas las features de los shapes ingresados
@@ -144,19 +144,32 @@ public class JuntarShapefilesTask extends ProgresibleTask<File>{
 		for(String descriptor : newDescriptors){
 			typeDescriptor+=","+descriptor;
 		}
-
+		updateProgress(10, 100);
 		try {
 			SimpleFeatureType type = DataUtilities.createType("JuntarShapes", typeDescriptor);
 
 			DefaultFeatureCollection outCollection=new DefaultFeatureCollection("internal",type);	
-			Double ancho=Double.parseDouble(Configuracion.getInstance().getPropertyOrDefault(CosechaConfig.ANCHO_GRILLA_KEY, "10"));
+			
+			Number ancho=10;
+			try{
+				ancho= Messages.getNumberFormat().parse(Configuracion.getInstance().getPropertyOrDefault(CosechaConfig.ANCHO_GRILLA_KEY, "10"));
+			}catch(Exception e )
+			{
+				e.printStackTrace();
+				ancho=10;
+			}
 			// constriur una grilla que cubra todos los shapes
-			List<Polygon>  grilla = construirGrilla(unionEnvelope, ancho);
-
+			List<Polygon>  grilla = construirGrilla(unionEnvelope, ancho.doubleValue());
+			updateProgress(11, 100);
+			this.featureCount = grilla.size();
+			
 			// por cada poligono de la grilla crear un nuevo SimpleFeature del nuevo tipo que contenga los valores de todos los shapes de entrada
 			ConcurrentMap<Polygon,SimpleFeature > byPolygon =
 					grilla.parallelStream().collect(() -> new  ConcurrentHashMap< Polygon,SimpleFeature>(),
 							(map, poly) -> {
+								try {
+									this.featureNumber++;
+									updateProgress( this.featureNumber, featureCount);
 								SimpleFeatureBuilder fBuilder = new SimpleFeatureBuilder(type);
 								//boolean polygonHasFeatures=false;
 								Map<Boolean,List<FileDataStore>> storeHasFeaturesMap = new HashMap<Boolean,List<FileDataStore>>();
@@ -196,6 +209,9 @@ public class JuntarShapefilesTask extends ProgresibleTask<File>{
 									//System.out.println("agregando el feature: "+joinedFeature);
 									map.put(poly,joinedFeature);
 								}
+								}catch(Exception e) {
+									e.printStackTrace();
+								}
 							},
 							(map1, map2) -> map1.putAll(map2));
 
@@ -205,11 +221,11 @@ public class JuntarShapefilesTask extends ProgresibleTask<File>{
 					System.err.println("no se pudo ingresar el feature "+o.getID());
 				}
 			});
-
+			
 			//todo grabar el nuevo shapefile del nuevo tipo en el directorio ingresado
 			
 			//File shapeFile =  getNewShapeFile(null);
-
+			updateProgress( 90, 100);
 			Map<String, Serializable> params = new HashMap<String, Serializable>();
 			try {
 				params.put("url", shapeFile.toURI().toURL());
@@ -259,7 +275,8 @@ public class JuntarShapefilesTask extends ProgresibleTask<File>{
 					e1.printStackTrace();
 				}
 			}		
-		} catch (SchemaException e) {//si falla obtener el la creacion del type desde el schema
+			updateProgress( 100, 100);
+		} catch (Exception e) {//si falla obtener el la creacion del type desde el schema
 			e.printStackTrace();
 		}
 	}
