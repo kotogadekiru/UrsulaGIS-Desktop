@@ -881,9 +881,10 @@ public class ConfigGUI extends AbstractGUIController{
 
 			Button cotizarOblineB = new Button(Messages.getString("ShowConfigGUI.cotizarOnline"));//"Cotizar OnLine");//TODO traducir
 			cotizarOblineB.setOnAction(actionEvent->{
-				//TODO preguntar mail para enviar presupuestos
-				TextInputDialog tDialog = new TextInputDialog();//"tomas@ursulagis.com"
-				tDialog.setContentText("tomas@ursulagis.com");
+				//preguntar mail para enviar presupuestos
+				TextInputDialog tDialog = new TextInputDialog("tomas@ursulagis.com");//"tomas@ursulagis.com"
+				tDialog.setContentText("e-mail");				
+				tDialog.getEditor().setPromptText("tomas@ursulagis.com");
 				tDialog.initOwner(JFXMain.stage);
 				tDialog.setTitle(Messages.getString("ShowConfigGUI.cotizarOnlineMailTitle"));
 				tDialog.showAndWait();
@@ -895,7 +896,7 @@ public class ConfigGUI extends AbstractGUIController{
 				cotTask.setOnSucceeded((wse)->{
 					String url=oc.getUrl();
 					if(url==null) {
-						url= "https://www.ursulagis.com/api/orden_compra/uuid/"+oc.getUuid()+"/";
+						url= "https://www.ursulagis.com/api/orden_compra/show/"+oc.getUuid()+"/";
 					}
 					showQR(url);	
 				});
