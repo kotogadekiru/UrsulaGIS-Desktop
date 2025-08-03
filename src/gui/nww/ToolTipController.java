@@ -147,7 +147,6 @@ public class ToolTipController implements SelectListener, Disposable
 	 * @param event
 	 */
 	protected void handleRollover(SelectEvent event)  {
-		System.out.println("rollover");
         if (this.lastRolloverObject != null) {
             if (this.lastRolloverObject == event.getTopObject() && !WWUtil.isEmpty(getRolloverText(event)))
                 return;
@@ -162,8 +161,7 @@ public class ToolTipController implements SelectListener, Disposable
         	
         	ReusableExtrudedPolygon renderablePolygon = (ReusableExtrudedPolygon)rolloverObject;
         	LaborItem dao = (LaborItem) renderablePolygon.getValue(ProcessMapTask.LABOR_ITEM_AVKey);
-        	rolloverText = ProcessMapTask.createTooltipForLaborItem(dao.getGeometry(),dao);
-        	System.out.println(dao);//gui.nww.ReusableExtrudedPolygon@5ef5bb86
+        	rolloverText = ProcessMapTask.createTooltipForLaborItem(dao.getGeometry(),dao);        	
         }    
      
        
