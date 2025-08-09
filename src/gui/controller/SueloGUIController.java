@@ -27,7 +27,6 @@ import javafx.scene.control.TextInputDialog;
 import tasks.crear.ConvertirSueloACosechaTask;
 import tasks.importar.OpenSoilMapTask;
 import tasks.procesar.ProcessBalanceDeNutrientes2;
-import tasks.procesar.ResumirSoilMapTask;
 import utils.FileHelper;
 
 public class SueloGUIController extends AbstractGUIController{
