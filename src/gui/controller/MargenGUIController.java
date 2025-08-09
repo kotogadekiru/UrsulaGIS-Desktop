@@ -67,10 +67,11 @@ public class MargenGUIController extends AbstractGUIController {
 		/**
 		 *Accion que permite resumir por categoria un mapa de rentabilidad
 		 */
-		margenesP.add(LayerAction.constructPredicate(Messages.getString("ResumirMargenMapTask.resumirAction"),(layer)->{	
-			doResumirMargin((Margen) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-			return "margen resumido" + layer.getName(); 
-		}));
+		//se reemplaza por la accion generica de resumirLabor
+//		margenesP.add(LayerAction.constructPredicate(Messages.getString("ResumirMargenMapTask.resumirAction"),(layer)->{	
+//			doResumirMargin((Margen) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+//			return "margen resumido" + layer.getName(); 
+//		}));
 	}
 	
 	private void doEditMargin(Margen margen) {		
@@ -92,24 +93,6 @@ public class MargenGUIController extends AbstractGUIController {
 		executorPool.execute(uMmTask);
 	}
 	
-	public void doResumirMargin(Margen aResumir) {
-		ResumirMargenMapTask uMmTask = new ResumirMargenMapTask(aResumir);
-
-		uMmTask.installProgressBar(progressBox);
-		uMmTask.setOnSucceeded(handler -> {
-			aResumir.getLayer().setEnabled(false);
-			Margen ret = (Margen)handler.getSource().getValue();
-			uMmTask.uninstallProgressBar();			
-			insertBeforeCompass(getWwd(), ret.getLayer());
-			this.getLayerPanel().update(this.getWwd());
-			playSound();
-			viewGoTo(ret);
-			System.out.println(Messages.getString("JFXMain.323")); 
-		});
-		executorPool.execute(uMmTask);
-	}
-	
-
 	private String doSumarMargenes(Layer l) {
 		List<Margen> margenes = main.getMargenesSeleccionados();
 		System.out.println(Messages.getString("JFXMain.324")); 

@@ -61,37 +61,16 @@ public class SueloGUIController extends AbstractGUIController{
 		}));
 		
 		/**
-		 *Accion que permite resumir por categoria un mapa de rentabilidad
+		 *Accion que permite resumir por categoria un mapa de suelo
 		 */
-		suelosP.add(LayerAction.constructPredicate(Messages.getString("ResumirMargenMapTask.resumirAction"),(layer)->{	
-			doResumirSuelo((Suelo) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
-			return "margen resumido" + layer.getName(); 
-		}));
+		//Comentado porque resumir ahora es una accion generica de labor
+//		suelosP.add(LayerAction.constructPredicate(Messages.getString("ResumirMargenMapTask.resumirAction"),(layer)->{	
+//			doResumirSuelo((Suelo) layer.getValue(Labor.LABOR_LAYER_IDENTIFICATOR));
+//			return "suelo resumido" + layer.getName(); 
+//		}));
 		
 	}
 	
-	public void doResumirSuelo(Suelo aResumir) {
-		ResumirSoilMapTask uMmTask = new ResumirSoilMapTask(aResumir);
-
-		uMmTask.installProgressBar(progressBox);
-		uMmTask.setOnSucceeded(handler -> {
-			
-			aResumir.getLayer().setEnabled(false);
-			
-			
-			Suelo ret = (Suelo)handler.getSource().getValue();
-			uMmTask.uninstallProgressBar();			
-			
-			JFXMain.insertBeforeCompass(getWwd(), ret.getLayer());
-			getLayerPanel().update(getWwd());
-
-			playSound();
-			viewGoTo(ret);
-			
-			System.out.println(Messages.getString("JFXMain.323")); 
-		});
-		JFXMain.executorPool.execute(uMmTask);
-	}
 	
 	public void doProcesarBalanceNutrientes() {		
 		//System.out.println(Messages.getString("JFXMain.327")); 

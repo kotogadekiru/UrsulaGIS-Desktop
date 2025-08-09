@@ -277,15 +277,6 @@ public class GenericLaborGUIController extends AbstractGUIController {
 				System.out.println(Messages.getString("JFXMain.323")); 
 			});
 			executorPool.execute(uMmTask);
-//		if(labor instanceof FertilizacionLabor) {
-//		}else if(labor instanceof CosechaLabor) {
-//		}else if(labor instanceof SiembraLabor) {
-//		}else if(labor instanceof PulverizacionLabor) {
-//		}else if(labor instanceof Margen) {
-//		}else if(labor instanceof Suelo) {
-//		}
-		
-		//TODO agregar resumir para otros tipos de labores
 	}
 		
 	private void doGuardarLabor(Labor<?> labor) {
@@ -298,7 +289,7 @@ public class GenericLaborGUIController extends AbstractGUIController {
 	public void doJuntarShapefiles() {
 		List<FileDataStore> stores = FileHelper.chooseShapeFileAndGetMultipleStores(null);
 		File shapeFile = FileHelper.getNewShapeFile("union");
-		//TODO agregar progress bar
+		
 		JuntarShapefilesTask task = new JuntarShapefilesTask(stores,shapeFile);
 		task.installProgressBar(progressBox);
 

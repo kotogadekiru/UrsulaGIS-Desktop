@@ -2,22 +2,41 @@ package tasks.procesar;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryCollection;
 
 import dao.Labor;
 import dao.LaborItem;
+import dao.cosecha.CosechaItem;
+import dao.cosecha.CosechaLabor;
 import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
+import dao.margen.Margen;
+import dao.margen.MargenItem;
+import dao.pulverizacion.PulverizacionItem;
+import dao.pulverizacion.PulverizacionLabor;
+import dao.siembra.SiembraItem;
+import dao.siembra.SiembraLabor;
+import dao.suelo.Suelo;
+import dao.suelo.SueloItem;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
 import tasks.ProcessMapTask;
+import tasks.crear.ConvertirASiembraTask;
+import tasks.crear.CrearCosechaMapTask;
+import tasks.crear.CrearFertilizacionMapTask;
+import tasks.crear.CrearPulverizacionMapTask;
+import tasks.crear.CrearSueloMapTask;
+import tasks.importar.OpenMargenMapTask;
 import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
@@ -30,7 +49,7 @@ import utils.ProyectionConstants;
 
 public class ResumirLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem>> {
 	private Labor<?> aResumir=null;
-	private Map<Class,Function<LaborItem,String>> tooltipCreator = ClonarLaborMapTask.constructTooltipCreator();
+	//private Map<Class,Function<LaborItem,String>> tooltipCreator = ClonarLaborMapTask.constructTooltipCreator();
 	public ResumirLaborMapTask(Labor<?> _aResumir) {	
 		aResumir=_aResumir;
 		this.labor=ClonarLaborMapTask.laborConstructor()
@@ -61,29 +80,6 @@ public class ResumirLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborIte
 
 	}
 
-//	public static String buildTooltipText(FertilizacionItem renta,double area) {
-//		
-//		
-//		NumberFormat df = Messages.getNumberFormat();
-//
-//		String tooltipText = new String(
-//						  Messages.getString("OpenMargenMapTask.1") + df.format(renta.getRentabilidadHa()) + Messages.getString("OpenMargenMapTask.2")  //$NON-NLS-1$ //$NON-NLS-2$
-//						+ Messages.getString("OpenMargenMapTask.3") + df.format(renta.getMargenPorHa()) + Messages.getString("OpenMargenMapTask.4")  //$NON-NLS-1$ //$NON-NLS-2$
-//						+ Messages.getString("OpenMargenMapTask.5")	+ df.format(renta.getCostoPorHa()) + Messages.getString("OpenMargenMapTask.6") //$NON-NLS-1$ //$NON-NLS-2$
-//						+ Messages.getString("OpenMargenMapTask.7")	+ df.format(renta.getImporteFertHa()) + Messages.getString("OpenMargenMapTask.8")  //$NON-NLS-1$ //$NON-NLS-2$
-//						+ Messages.getString("OpenMargenMapTask.9")	+ df.format(renta.getImportePulvHa()) + Messages.getString("OpenMargenMapTask.10") //$NON-NLS-1$ //$NON-NLS-2$
-//						+ Messages.getString("OpenMargenMapTask.11")+ df.format(renta.getImporteSiembraHa()) + Messages.getString("OpenMargenMapTask.12") //$NON-NLS-1$ //$NON-NLS-2$
-//						+ Messages.getString("OpenMargenMapTask.13")+ df.format(renta.getCostoFijoPorHa()) + Messages.getString("OpenMargenMapTask.14") //$NON-NLS-1$ //$NON-NLS-2$
-//						+ Messages.getString("OpenMargenMapTask.15")+ df.format(renta.getImporteCosechaHa()) + Messages.getString("OpenMargenMapTask.16")  //$NON-NLS-1$ //$NON-NLS-2$
-//				);
-//
-//		if(area<1){
-//			tooltipText=tooltipText.concat( Messages.getString("OpenMargenMapTask.17")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("OpenMargenMapTask.18")); //$NON-NLS-1$ //$NON-NLS-2$
-//		} else {
-//			tooltipText=tooltipText.concat(Messages.getString("OpenMargenMapTask.19")+df.format(area ) + Messages.getString("OpenMargenMapTask.20")); //$NON-NLS-1$ //$NON-NLS-2$
-//		}
-//		return tooltipText;
-//	}
 	
 	/**
 	 * metodo que toma la labor y devuelve una lista de los items agrupados por categoria
@@ -133,18 +129,145 @@ public class ResumirLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborIte
 		return itemsCategoria;
 	}
 
-	public static LaborItem resumirItems(List<LaborItem> catItems) {
-		FertilizacionItem ret = new FertilizacionItem();
+	public LaborItem resumirItems(List<LaborItem> catItems) {
+		LaborItem resumido = null;
+		if(aResumir instanceof CosechaLabor) {
+			List<CosechaItem> items =catItems.stream().map(item->(CosechaItem)item).collect(Collectors.toList());
+			resumido = resumirCosItems(items);			
+			((CosechaLabor)aResumir).setPropiedadesLabor((CosechaItem)resumido);
+		} else 	if(aResumir instanceof SiembraLabor) {			
+			List<SiembraItem> items =catItems.stream().map(item->(SiembraItem)item).collect(Collectors.toList());
+			resumido = resumirSiembraItems(items);	
+			((SiembraLabor)aResumir).setPropiedadesLabor((SiembraItem)resumido);
+		} else 	if(aResumir instanceof FertilizacionLabor) {
+			resumido = resumirFertItems(catItems);		
+			((FertilizacionLabor)aResumir).setPropiedadesLabor((FertilizacionItem)resumido);
+		} else 	if(aResumir instanceof PulverizacionLabor) {
+			List<PulverizacionItem> items =catItems.stream().map(item->(PulverizacionItem)item).collect(Collectors.toList());
+			resumido = resumirPulvItems(items);
+			((PulverizacionLabor)aResumir).setPropiedadesLabor((PulverizacionItem)resumido);			
+		} else 	if(aResumir instanceof Suelo) {
+			List<SueloItem> items =catItems.stream().map(item->(SueloItem)item).collect(Collectors.toList());
+			resumido = resumirSueloItems(items);//
+			((Suelo)aResumir).setPropiedadesLabor((SueloItem)resumido);
+		} else if(aResumir instanceof Margen) {
+			List<MargenItem> items =catItems.stream().map(item->(MargenItem)item).collect(Collectors.toList());
+			resumido = resumirMargenItems(items);//
+			
+			((Margen)aResumir).setPropiedadesLabor((MargenItem)resumido);
+		}
+		
+		return resumido;
+	} 
+	
+	
+	public static LaborItem resumirCosItems(List<CosechaItem> cosechasPoly) {
+		if(cosechasPoly.size()<1){
+			return null;
+		}
+		
+		List<Geometry> geoms = new ArrayList<Geometry>();
+		Double hasTotal=new Double(0.0);
+		Double _id=null;
+		double rinde=0,desv=0,ancho=0,distancia=0,elev=0,rumbo=0;// , pesos=0;
+		for(CosechaItem item : cosechasPoly) {
+			Geometry g = item.getGeometry();
+			Double hasItem = ProyectionConstants.A_HAS(g.getArea());
+			if(_id==null) {
+				_id=item.getId();
+			}
+
+			rinde+=item.getRindeTnHa()*hasItem;
+			desv+=item.getDesvioRinde()*hasItem;
+			ancho+=item.getAncho()*hasItem;
+			distancia+=item.getDistancia()*hasItem;
+			elev+=item.getElevacion()*hasItem;
+			rumbo+=item.getRumbo()*hasItem;
+			
+			hasTotal+=hasItem;
+			geoms.add(item.getGeometry());
+		}
+		if(hasTotal>0) {
+			rinde = rinde / hasTotal;
+			desv = desv / hasTotal;
+			ancho = ancho / hasTotal;
+			distancia = distancia / hasTotal;
+			elev = elev / hasTotal;
+			rumbo = rumbo / hasTotal;
+		}	
+
+		CosechaItem c = null;
+			c = new CosechaItem();
+			c.setId(_id);
+			c.setGeometry(GeometryHelper.unirGeometrias(geoms));
+			c.setRindeTnHa(rinde);
+			c.setDesvioRinde(desv);
+			c.setAncho(ancho);
+			c.setDistancia(distancia);
+			c.setElevacion(elev);
+			c.setRumbo(rumbo);		
+		return c;
+	}
+	
+	public static LaborItem resumirSiembraItems(List<SiembraItem> items) {
+		if(items.size()<1){
+			return null;
+		}
+		
+		List<Geometry> geoms = new ArrayList<Geometry>();
+		Double hasTotal=new Double(0.0);
+		Double _id=null;
+		double dosisS=0,fertL=0,fertC=0,ancho=0,distancia=0,elev=0,rumbo=0;// , pesos=0;
+		for(SiembraItem item : items) {
+			Geometry g = item.getGeometry();
+			Double hasItem = ProyectionConstants.A_HAS(g.getArea());
+			if(_id==null) {
+				_id=item.getId();
+			}
+
+			dosisS+=item.getDosisHa()*hasItem;
+			fertL+=item.getDosisFertLinea()*hasItem;
+			fertC+=item.getDosisFertCostado()*hasItem;
+			ancho+=item.getAncho()*hasItem;
+			distancia+=item.getDistancia()*hasItem;
+			elev+=item.getElevacion()*hasItem;
+			rumbo+=item.getRumbo()*hasItem;
+			
+			hasTotal+=hasItem;
+			geoms.add(item.getGeometry());
+		}
+		if(hasTotal>0) {
+			dosisS = dosisS / hasTotal;
+			fertL = fertL / hasTotal;
+			fertC = fertC / hasTotal;
+			ancho = ancho / hasTotal;
+			distancia = distancia / hasTotal;
+			elev = elev / hasTotal;
+			rumbo = rumbo / hasTotal;
+		}	
+
+		SiembraItem c = null;
+			c = new SiembraItem();
+			c.setId(_id);
+			c.setGeometry(GeometryHelper.unirGeometrias(geoms));
+			c.setDosisHa(dosisS);
+			c.setDosisFertLinea(fertL);
+			c.setDosisFertCostado(fertC);
+			c.setAncho(ancho);
+			c.setDistancia(distancia);
+			c.setElevacion(elev);
+			c.setRumbo(rumbo);		
+		return c;
+	}
+	
+	
+	public static LaborItem resumirFertItems(List<LaborItem> catItems) {
+		
 		Double _id=null;
 		Double amountTotal = new Double(0.0);
-//		Double importeCosecha=new Double(0.0);
-//		Double importeFert=new Double(0.0);
-//		Double importePulv=new Double(0.0);
-//		Double importeSiembra=new Double(0.0);
 		Double hasTotal=new Double(0.0);
-		List<Geometry> geoms = new ArrayList<Geometry>(); 
-		
-		//FIXME cambiar este metodo para que tome en cuenta el tipo de labor item
+		List<Geometry> geoms = new ArrayList<Geometry>();
+	
 		for(LaborItem item : catItems) {
 			Geometry g = item.getGeometry();
 			Double hasItem = ProyectionConstants.A_HAS(g.getArea());
@@ -155,12 +278,13 @@ public class ResumirLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborIte
 			amountTotal+=item.getAmount()*hasItem;
 			hasTotal+=hasItem;
 			geoms.add(item.getGeometry());
-			
-			//TODO sumar todos los importes y dividirlos por la nueva superficie
 		}
-		amountTotal = amountTotal / hasTotal;
+		if(hasTotal>0) {
+			amountTotal = amountTotal / hasTotal;
+		}
 
 		
+		FertilizacionItem ret = new FertilizacionItem();
 		ret.setId(_id);
 		ret.setDosistHa(amountTotal);		
 		ret.setGeometry(GeometryHelper.unirGeometrias(geoms));
@@ -168,13 +292,154 @@ public class ResumirLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborIte
 		return ret;
 	}
 	
+public static LaborItem resumirPulvItems(List<PulverizacionItem> catItems) {
+		
+		Double _id=null;
+		Double amountTotal = new Double(0.0);
+		Double hasTotal=new Double(0.0);
+		List<Geometry> geoms = new ArrayList<Geometry>();
 	
-	protected ExtrudedPolygon getPathTooltip( Geometry poly,LaborItem renta,ExtrudedPolygon  renderablePolygon) {
-		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+		for(PulverizacionItem item : catItems) {
+			Geometry g = item.getGeometry();
+			Double hasItem = ProyectionConstants.A_HAS(g.getArea());
+			if(_id==null) {
+				_id=item.getId();
+			}
 
-		String tooltipText2 = tooltipCreator.get(this.labor.getClass()).apply(renta);
+			amountTotal+=item.getAmount()*hasItem;
+			hasTotal+=hasItem;
+			geoms.add(item.getGeometry());
+		}
+		if(hasTotal>0) {
+			amountTotal = amountTotal / hasTotal;
+		}
+
+		
+		PulverizacionItem ret = new PulverizacionItem();
+		ret.setId(_id);
+		ret.setAmount(amountTotal);		
+		ret.setGeometry(GeometryHelper.unirGeometrias(geoms));
+		
+		return ret;
+	}
+
+public static LaborItem resumirSueloItems(List<SueloItem> aResumir) {
+	//return ResumirSoilMapTask.resumirItems(catItems);
+	SueloItem ret = new SueloItem();
+	Double _id=null;
+
+	Double hasTotal=new Double(0.0);
+	Double elevacion=new Double(0.0);
+	
+	Double masaDeSuelo=new Double(0.0);
+	Double kgP=new Double(0.0);
+	Double kgN=new Double(0.0);
+	Double kgK=new Double(0.0);
+	Double kgS=new Double(0.0);
+	Double kgMO=new Double(0.0);
+	Double profNapa=new Double(0.0);
+	Double mmAgua=new Double(0.0);
+	
+	Double porosidad = new Double(0);
+	Double porcCC = new Double(0);//Capacidad de campo
+	
+	List<Geometry> geoms = new ArrayList<Geometry>(); 
+	
+	for(SueloItem item : aResumir) {
+		Geometry g = item.getGeometry();
+		Double hasItem = ProyectionConstants.A_HAS(g.getArea());
+		if(_id==null) {
+			_id=item.getId();
+		}
+		double dap = item.getDensAp();
+		masaDeSuelo+=dap*hasItem;
+		
+		kgN += item.getPpmNO3()*dap*hasItem;
+		kgP += item.getPpmP()*dap*hasItem;
+		kgK += item.getPpmK()*dap*hasItem;
+		kgS += item.getPpmS()*dap*hasItem;
+		kgMO += item.getPorcMO()*dap*hasItem;
+		profNapa+= item.getProfNapa()*hasItem;
+		mmAgua += item.getAguaPerfil()*hasItem;			
+		porosidad +=item.getPorosidad()*hasItem;
+		porcCC +=item.getPorcCC()*hasItem;
+
+		//TODO resumir otros elementos del suelo
+		elevacion+=item.getElevacion()*hasItem;
+		hasTotal+=hasItem;
+		geoms.add(item.getGeometry());		
+	}
+
+	ret.setId(_id);
+	
+	//System.out.println("devolviendo un suelo item con id="+_id);
+	ret.setDensAp(masaDeSuelo/hasTotal);
+	ret.setPpmNO3(kgN/masaDeSuelo);
+	ret.setPpmP(kgP/masaDeSuelo);
+	ret.setPpmK(kgK/masaDeSuelo);
+	ret.setPpmS(kgS/masaDeSuelo);
+	ret.setPorcMO(kgMO/(hasTotal*ret.getDensAp()));
+	ret.setProfNapa(mmAgua/hasTotal);
+	ret.setAguaPerfil(mmAgua/hasTotal);
+	ret.setPorosidad(porosidad/hasTotal);
+	ret.setPorcCC(porcCC/hasTotal);
+	
+	ret.setElevacion(elevacion/hasTotal);
+	ret.setGeometry(GeometryHelper.unirGeometrias(geoms));
+	
+	return ret;
+}
+
+public static LaborItem resumirMargenItems(List<MargenItem> aResumir) {
+	//return  ResumirMargenMapTask.resumirItems(items);
+	MargenItem ret = new MargenItem();
+	Double _id=null;
+	Double importeCosecha=new Double(0.0);
+	Double importeFert=new Double(0.0);
+	Double importePulv=new Double(0.0);
+	Double importeSiembra=new Double(0.0);
+	Double hasTotal=new Double(0.0);
+	List<Geometry> geoms = new ArrayList<Geometry>(); 
+	
+	for(MargenItem item : aResumir) {
+		Geometry g = item.getGeometry();
+		Double hasItem = ProyectionConstants.A_HAS(g.getArea());
+		if(_id==null) {
+			_id=item.getId();
+		}
+		importeCosecha+=item.getImporteCosechaHa()*hasItem;
+		importeFert+=item.getImporteFertHa()*hasItem;
+		importePulv+=item.getImportePulvHa()*hasItem;
+		importeSiembra+=item.getImporteSiembraHa()*hasItem;
+		hasTotal+=hasItem;
+		geoms.add(item.getGeometry());
+		
+		//TODO sumar todos los importes y dividirlos por la nueva superficie
+	}
+	importeCosecha = importeCosecha / hasTotal;
+	importeFert = importeFert / hasTotal;
+	importePulv = importePulv / hasTotal;
+	importeSiembra = importeSiembra / hasTotal;
+	
+	ret.setId(_id);
+	ret.setImporteCosechaHa(importeCosecha);		
+	ret.setImporteFertHa(importeFert);
+	ret.setImportePulvHa(importePulv);
+	ret.setImporteSiembraHa(importeSiembra);
+	
+	ret.setGeometry(GeometryHelper.unirGeometrias(geoms));
+	
+	return ret;
+}
+
+	
+	protected ExtrudedPolygon getPathTooltip( Geometry poly,LaborItem item,ExtrudedPolygon  renderablePolygon) {
+		//double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+
+		//String tooltipText2 = null;//tooltipCreator.get(this.labor.getClass()).apply(renta);
+		String tooltipText2 = super.createTooltipForLaborItem(poly,item);
 		//String tooltipText= buildTooltipText(renta,area);
-		return super.getExtrudedPolygonFromGeom(poly, renta,tooltipText2,renderablePolygon);
+		return super.getExtrudedPolygonFromGeom(poly, item,tooltipText2,renderablePolygon);
 	//	super.getRenderPolygonFromGeom(poly, renta,tooltipText);
 	}
 
