@@ -13,7 +13,6 @@ import gui.MargenConfigDialogController;
 import gui.Messages;
 import gui.nww.LayerAction;
 import tasks.importar.OpenMargenMapTask;
-import tasks.procesar.ResumirMargenMapTask;
 import tasks.procesar.SumarMargenesMapTask;
 
 public class MargenGUIController extends AbstractGUIController {

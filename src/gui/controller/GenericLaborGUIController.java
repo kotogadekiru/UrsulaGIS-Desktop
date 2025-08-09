@@ -35,7 +35,6 @@ import tasks.importar.OpenMargenMapTask;
 import tasks.procesar.ClonarLaborMapTask;
 import tasks.procesar.JuntarShapefilesTask;
 import tasks.procesar.ResumirLaborMapTask;
-import tasks.procesar.ResumirMargenMapTask;
 import utils.DAH;
 import utils.FileHelper;
 
