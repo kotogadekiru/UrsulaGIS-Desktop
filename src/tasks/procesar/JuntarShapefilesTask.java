@@ -52,6 +52,7 @@ import com.vividsolutions.jts.geom.Polygon;
 
 import dao.config.Configuracion;
 import dao.cosecha.CosechaConfig;
+import dao.utils.PropertyHelper;
 import gui.Messages;
 //import gov.nasa.worldwind.layers.RenderableLayer;
 import javafx.stage.FileChooser;
@@ -152,7 +153,9 @@ public class JuntarShapefilesTask extends ProgresibleTask<File>{
 			
 			Number ancho=10;
 			try{
-				ancho= Messages.getNumberFormat().parse(Configuracion.getInstance().getPropertyOrDefault(CosechaConfig.ANCHO_GRILLA_KEY, "10"));
+				Configuracion config = Configuracion.getInstance();
+				ancho = PropertyHelper.parseDouble(config.getPropertyOrDefault(CosechaConfig.ANCHO_GRILLA_KEY, "10"));
+				//ancho= Messages.getNumberFormat().parse(Configuracion.getInstance().getPropertyOrDefault(CosechaConfig.ANCHO_GRILLA_KEY, "10"));
 			}catch(Exception e )
 			{
 				e.printStackTrace();
