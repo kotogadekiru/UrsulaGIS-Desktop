@@ -85,28 +85,28 @@ import utils.GeometryHelper;
 import utils.PolygonValidator;
 import utils.ProyectionConstants;
 //import org.opengis.filter.FilterFactory2;
-
-public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> extends Task<E>{
+//TODO change extend to ProgresibleTask<E>
+public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> extends ProgresibleTask<E>{
 	public static final String LABOR_ITEM_AVKey = "LABOR_ITEM";
 	private static final int TARGET_LOW_RES_TIME = 2000;
 	private static final String TASK_CLOSE_ICON = "/gui/event-close.png";
 	public static final String ZOOM_TO_KEY = "ZOOM_TO";
-	/**
-	 * cantidad de features a procesar
-	 */
-	protected int featureCount=0;
-	/**
-	 * cantidad de features procesadas
-	 */
-	protected int featureNumber=0;
+//	/**
+//	 * cantidad de features a procesar
+//	 */
+//	protected int featureCount=0;
+//	/**
+//	 * cantidad de features procesadas
+//	 */
+//	protected int featureNumber=0;
 	protected E labor;
 
-	protected ArrayList<ArrayList<Object>> pathTooltips = new ArrayList<ArrayList<Object>>();
+	//protected ArrayList<ArrayList<Object>> pathTooltips = new ArrayList<ArrayList<Object>>();
 
-	private ProgressBar progressBarTask;
-	private Pane progressPane;
-	private Label progressBarLabel;
-	private HBox progressContainer;
+//	private ProgressBar progressBarTask;
+//	private Pane progressPane;
+//	private Label progressBarLabel;
+//	private HBox progressContainer;
 
 	public ProcessMapTask() {
 	}
@@ -1679,40 +1679,40 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	}
 
 
-	public void uninstallProgressBar() {		
-		progressPane.getChildren().remove(progressContainer);
-	}
-
-	//	public void start() {
-	//		Platform.runLater(this);
-	//	}
-
-	public void installProgressBar(Pane progressBox) {
-		this.progressPane= progressBox;
-		progressBarTask = new ProgressBar();			
-		progressBarTask.setProgress(0);
-
-		progressBarTask.progressProperty().bind(this.progressProperty());
-		progressBarLabel = new Label(labor.getNombre());
-		progressBarLabel.setTextFill(Color.BLACK);
-
-
-		Button cancel = new Button();
-		cancel.setOnAction(ae->{
-			System.out.println("cancelando el ProcessMapTask");
-			this.cancel();
-			this.uninstallProgressBar();
-		});
-		Image imageDecline = new Image(getClass().getResourceAsStream(TASK_CLOSE_ICON));
-		cancel.setGraphic(new ImageView(imageDecline));
-
-		//progressBarLabel.setStyle("-fx-color: black");
-		progressContainer = new HBox();
-		progressContainer.getChildren().addAll(cancel,progressBarLabel,progressBarTask);
-		progressBox.getChildren().add(progressContainer);
-
-
-	}
+//	public void uninstallProgressBar() {		
+//		progressPane.getChildren().remove(progressContainer);
+//	}
+//
+//	//	public void start() {
+//	//		Platform.runLater(this);
+//	//	}
+//
+//	public void installProgressBar(Pane progressBox) {
+//		this.progressPane= progressBox;
+//		progressBarTask = new ProgressBar();			
+//		progressBarTask.setProgress(0);
+//
+//		progressBarTask.progressProperty().bind(this.progressProperty());
+//		progressBarLabel = new Label(labor.getNombre());
+//		progressBarLabel.setTextFill(Color.BLACK);
+//
+//
+//		Button cancel = new Button();
+//		cancel.setOnAction(ae->{
+//			System.out.println("cancelando el ProcessMapTask");
+//			this.cancel();
+//			this.uninstallProgressBar();
+//		});
+//		Image imageDecline = new Image(getClass().getResourceAsStream(TASK_CLOSE_ICON));
+//		cancel.setGraphic(new ImageView(imageDecline));
+//
+//		//progressBarLabel.setStyle("-fx-color: black");
+//		progressContainer = new HBox();
+//		progressContainer.getChildren().addAll(cancel,progressBarLabel,progressBarTask);
+//		progressBox.getChildren().add(progressContainer);
+//
+//
+//	}
 
 
 }

@@ -35,6 +35,16 @@ public abstract class ProgresibleTask<E> extends Task<E>{
 		progressPane.getChildren().remove(progressContainer);
 	}
 
+	/**
+	 * Metodo que checkea si se cancelo el task y tira una excepcion para cerrar el thread
+	 * Llamar a este metodo periodicamente dentro de los loops largos para permitir cortar el proceso
+	 * @throws InterruptedException
+	 */
+	protected void checkCancelled() throws InterruptedException {
+		if(this.isCancelled()) {
+			throw new InterruptedException("User Cancelled Exception");
+		}
+	}
 
 	public void installProgressBar(Pane progressBox) {
 		this.progressPane= progressBox;
