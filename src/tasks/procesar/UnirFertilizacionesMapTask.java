@@ -39,7 +39,7 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 		for(FertilizacionLabor l:fertilizaciones){
 			if(l.getLayer().isEnabled()){
 				this.fertilizaciones.add(l);
-				
+
 			}
 		};
 
@@ -74,7 +74,7 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 		if(fertilizaciones.size()>1){
 			prefijo = "union";
 		}
-//		int featuresInsertadas=0;
+		//		int featuresInsertadas=0;
 		for(FertilizacionLabor fert:fertilizaciones){
 			if(nombre == null){
 				nombre=prefijo+" "+fert.getNombre();	
@@ -89,19 +89,19 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 				labor.setFecha(fert.getFecha());
 				labor.setPrecioLabor(fert.getPrecioLabor());
 			}
-//			FeatureReader<SimpleFeatureType, SimpleFeature> reader = fert.outCollection.reader();
-//			while(reader.hasNext()){
-//				SimpleFeature f = reader.next();
-//				FertilizacionItem ci = labor.constructFeatureContainerStandar(f,true);
-//				SimpleFeature nf=ci.getFeature(labor.featureBuilder);
-//				boolean ret = labor.outCollection.add(nf);
-//				featuresInsertadas++;
-//				if(!ret){
-//					System.out.println("no se pudo agregar la feature "+f);
-//				}
-//			}
-//			reader.close();
-			
+			//			FeatureReader<SimpleFeatureType, SimpleFeature> reader = fert.outCollection.reader();
+			//			while(reader.hasNext()){
+			//				SimpleFeature f = reader.next();
+			//				FertilizacionItem ci = labor.constructFeatureContainerStandar(f,true);
+			//				SimpleFeature nf=ci.getFeature(labor.featureBuilder);
+			//				boolean ret = labor.outCollection.add(nf);
+			//				featuresInsertadas++;
+			//				if(!ret){
+			//					System.out.println("no se pudo agregar la feature "+f);
+			//				}
+			//			}
+			//			reader.close();
+
 			ReferencedEnvelope b = fert.outCollection.getBounds();
 			if(unionEnvelope==null){
 				unionEnvelope=b;
@@ -111,63 +111,63 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 		}
 		labor.setNombre(nombre);
 		labor.setLayer(new LaborLayer());
-		
+
 		/*grillar la fertilizacion resultante sumando las dosis*/
-		
+
 		List<Polygon>  grilla = GrillarCosechasMapTask.construirGrilla(unionEnvelope, ancho);
 		//List<Polygon>  grilla = construirGrillaTriangular(unionEnvelope, ancho);
 		//double elementos = grilla.size();
 		System.out.println("creando una grilla con "+grilla.size()+" elementos");
 		// 3 recorrer cada pixel de la grilla promediando los valores y generando los nuevos items de la cosecha
 		List<SimpleFeature> features = Collections.synchronizedList(new ArrayList<SimpleFeature>());
-		
+
 		ConcurrentMap<Polygon,FertilizacionItem > byPolygon =
 				grilla.parallelStream().collect(
 						() -> new  ConcurrentHashMap< Polygon,FertilizacionItem>(),
 						(map, poly) -> {
-							
-						try{
-							List<FertilizacionItem>  fertsPoly = fertilizaciones.parallelStream().collect(
-									()->new  ArrayList<FertilizacionItem>(),
-									(list, ferts) ->{			
-										list.addAll(ferts.cachedOutStoreQuery(poly.getEnvelopeInternal()));	
-									},
-									(list1, list2) -> list1.addAll(list2)
-									);
 
-							FertilizacionItem item = construirFeature(fertsPoly,poly);                    			
+							try{
+								List<FertilizacionItem>  fertsPoly = fertilizaciones.parallelStream().collect(
+										()->new  ArrayList<FertilizacionItem>(),
+										(list, ferts) ->{			
+											list.addAll(ferts.cachedOutStoreQuery(poly.getEnvelopeInternal()));	
+										},
+										(list1, list2) -> list1.addAll(list2)
+										);
 
-							if(item!=null){
-								map.put(poly,item);
-								//	items.add(item);
-								SimpleFeatureBuilder fBuilder = new SimpleFeatureBuilder(
-										labor.getType());
-								SimpleFeature f = item.getFeature(fBuilder);
-								if(f!=null){
-									boolean res = features.add(f);
-									if(!res){
-										System.out.println("no se pudo agregar la feature "+f);
+								FertilizacionItem item = construirFeature(fertsPoly,poly);                    			
+
+								if(item!=null){
+									map.put(poly,item);
+									//	items.add(item);
+									SimpleFeatureBuilder fBuilder = new SimpleFeatureBuilder(
+											labor.getType());
+									SimpleFeature f = item.getFeature(fBuilder);
+									if(f!=null){
+										boolean res = features.add(f);
+										if(!res){
+											System.out.println("no se pudo agregar la feature "+f);
+										}
 									}
 								}
-							}
-							this.featureNumber++;
-							updateProgress( this.featureNumber, featureCount);
+								this.featureNumber++;
+								updateProgress( this.featureNumber, featureCount);
 
-						}catch(Exception e){
-							System.err.println("error al construir un elemento de la grilla");
-							e.printStackTrace();
-						}
+							}catch(Exception e){
+								System.err.println("error al construir un elemento de la grilla");
+								e.printStackTrace();
+							}
 						},
 						(map1, map2) -> map1.putAll(map2)
 						);
-		
+
 		for(FertilizacionLabor l:fertilizaciones){
 			l.clearCache();
 		}
-		
+
 		System.out.println("cree una union de "+byPolygon.size()+" elementos");
 
-//FIXME esto hace que la grilla no tenga memoria
+		//FIXME esto hace que la grilla no tenga memoria
 		if(labor.inCollection == null){
 			labor.inCollection = new DefaultFeatureCollection("internal",labor.getType());
 		}
@@ -179,7 +179,7 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 
 		// 4 mostrar la fertilizacion sintetica creada
 		labor.constructClasificador();
-		
+
 		/*fin de grillar fertilizacion*/
 
 		runLater(byPolygon.values());
@@ -197,16 +197,17 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 
 	/**
 	 * 
-	 * @param fertilizacionesPoly
+	 * @param fertilizacionesPoly: la lista de FertilizacionItems a unir
 	 * @param poly
-	 * @return SimpleFeature de tipo CosechaItemStandar que represente a cosechasPoly 
+	 * @return la union de las fertilizacion items promediada por superficie intersectada con poly 
 	 */
-	private FertilizacionItem construirFeature(List<FertilizacionItem> fertilizacionesPoly,
+	private FertilizacionItem construirFeature(
+			List<FertilizacionItem> fertilizacionesPoly,
 			Polygon poly) {
 		if(fertilizacionesPoly.size()<1){
 			return null;
 		}
-		
+
 		List<Geometry> intersections = new ArrayList<Geometry>();
 		// sumar todas las supferficies, y calcular el promedio ponderado de cada una de las variables por la superficie superpuesta
 		Geometry union = null;
@@ -224,7 +225,7 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 					union = g;
 				}
 				intersections.add(g);
-			
+
 			}catch(Exception e){
 				System.err.println("no se pudo hacer la interseccion entre\n"+poly+"\n y\n"+g);
 			}		
@@ -233,30 +234,37 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 		FertilizacionItem f = null;
 
 		if(sumAreaInterseccion>getAreaMinimaLongLat()){
-			double insumoProm=0,desvioPromedio=0,ancho=0,distancia=0,elev=0,rumbo=0;// , pesos=0;
+			double insumoProm=0,ancho=0,distancia=0,elev=0,rumbo=0;// , pesos=0;
 			ancho=labor.getConfigLabor().getAnchoGrilla();
 			distancia=ancho;
-		
+
 			GeometryFactory fact = intersections.get(0).getFactory();
 			Geometry[] geomArray = new Geometry[intersections.size()];
 			GeometryCollection colectionCat = fact.createGeometryCollection(intersections.toArray(geomArray));
-			
+
 			try{
 				union = colectionCat.convexHull();//esto hace que no se cubra el area entre polygonos a menos que la grilla sea mas grande que el area
-				}catch(Exception e){			}
-			
-			
-			double areaPoly = union.getArea();
-		for(FertilizacionItem fPoly : areasIntersecciones.keySet()){
+			}catch(Exception e){	
+				System.err.println("fallo convexHull de collectionCat");
+				e.printStackTrace();
+				return null;
+			}
+
+
+			double areaPoly = union.getArea();//areaPoly es el area de la union de las intersecciones
+			double sumAreaInteseccion =0.0;
+			for(FertilizacionItem fPoly : areasIntersecciones.keySet()){
 				Double areaInterseccion = areasIntersecciones.get(fPoly);//cPoly.getGeometry();
+				sumAreaInteseccion+=areaInterseccion;
 				if(areaInterseccion==null){
 					//System.out.println("g es null asi que no lo incluyo en la suma "+cPoly);
 					continue;}
 				double peso = areaInterseccion/areaPoly;//al dividir por el area del poligono en vez del area de la interseccion saco la suma en vez del promedio
 				insumoProm+=fPoly.getDosistHa()*peso;
-				elev+=fPoly.getElevacion()*peso;
+				elev+=fPoly.getElevacion()*areaInterseccion;//la elevacion debe ser el promedio no la suma
 			}
-			
+			elev=elev/sumAreaInteseccion;
+
 			//	System.out.println("pesos = "+pesos);
 			synchronized(labor){
 				f = new FertilizacionItem();
@@ -265,7 +273,7 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 			}
 
 
-			
+
 			f.setGeometry(union);
 			f.setDosistHa(insumoProm);
 			f.setAncho(ancho);
@@ -276,7 +284,7 @@ public class UnirFertilizacionesMapTask extends ProcessMapTask<FertilizacionItem
 		}
 		return f;
 	}
-	
+
 	private double getAreaMinimaLongLat() {
 		return labor.getConfigLabor().supMinimaProperty().doubleValue()*ProyectionConstants.metersToLong()*ProyectionConstants.metersToLat();
 	}
