@@ -10,6 +10,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import dao.Poligono;
 import dao.fertilizacion.FertilizacionItem;
 import dao.fertilizacion.FertilizacionLabor;
+import dao.utils.PropertyHelper;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
 import tasks.ProcessMapTask;
@@ -44,10 +45,7 @@ public class CrearFertilizacionMapTask extends ProcessMapTask<FertilizacionItem,
 			ci.setElevacion(10.0);
 			//labor.setNombre(poli.getNombre());
 			labor.insertFeature(ci);
-		}		
-		
-		
-
+		}
 				
 		labor.constructClasificador();
 
@@ -65,24 +63,18 @@ public class CrearFertilizacionMapTask extends ProcessMapTask<FertilizacionItem,
 	}
 
 	public static String buildTooltipText(FertilizacionItem fertFeature, double area) {
-		NumberFormat df = Messages.getNumberFormat();//new DecimalFormat("0.00");//$NON-NLS-2$
-
-		String tooltipText = new String(// TODO ver si se puede instalar un
-				// boton
-				// que permita editar el dato
-				Messages.getString("ProcessFertMapTask.2") + df.format(fertFeature.getDosistHa()) //$NON-NLS-1$
-				+ Messages.getString("ProcessFertMapTask.3") + Messages.getString("ProcessFertMapTask.4") //$NON-NLS-1$ //$NON-NLS-2$
-				+ df.format(fertFeature.getImporteHa()) + Messages.getString("ProcessFertMapTask.5") //$NON-NLS-1$
-				//+ "Sup: "
-				//+ df.format(area * ProyectionConstants.METROS2_POR_HA)
-				//+ " m2\n"
-				// +"feature: " + featureNumber
+		String tooltipText = new String(
+				Messages.getString("ProcessFertMapTask.2") + PropertyHelper.formatDouble(fertFeature.getDosistHa()) 
+				+ Messages.getString("ProcessFertMapTask.3") + Messages.getString("ProcessFertMapTask.4") 
+				+ PropertyHelper.formatDouble(fertFeature.getImporteHa()) + Messages.getString("ProcessFertMapTask.5") 
 				);
 		if(area<1){
-			tooltipText=tooltipText.concat( Messages.getString("ProcessFertMapTask.6")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("ProcessFertMapTask.7")); //$NON-NLS-1$ //$NON-NLS-2$
+			tooltipText=tooltipText.concat( Messages.getString("ProcessFertMapTask.6")
+					+PropertyHelper.formatDouble(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("ProcessFertMapTask.7")); //$NON-NLS-1$ //$NON-NLS-2$
 			//	tooltipText=tooltipText.concat( "SupOrig: "+df.format(area2 ) + "m2\n");
 		} else {
-			tooltipText=tooltipText.concat(Messages.getString("ProcessFertMapTask.8")+df.format(area ) + Messages.getString("ProcessFertMapTask.9")); //$NON-NLS-1$ //$NON-NLS-2$
+			tooltipText=tooltipText.concat(Messages.getString("ProcessFertMapTask.8")
+					+PropertyHelper.formatDouble(area ) + Messages.getString("ProcessFertMapTask.9")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		return tooltipText;
 	}
