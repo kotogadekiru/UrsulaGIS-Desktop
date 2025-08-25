@@ -188,12 +188,12 @@ public class SumarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLabo
 		System.out.println("tarde "+time+" milisegundos en unir las fertilizaciones.");
 	}
 
-	@Override
-	protected ExtrudedPolygon getPathTooltip(Geometry poly, CosechaItem fertFeature,ExtrudedPolygon  renderablePolygon) {
-		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		String tooltipText = CrearCosechaMapTask.buildTooltipText(fertFeature, area); 
-		return super.getExtrudedPolygonFromGeom(poly, fertFeature,tooltipText,renderablePolygon);
-	}
+//	@Override
+//	protected ExtrudedPolygon getPathTooltip(Geometry poly, CosechaItem fertFeature,ExtrudedPolygon  renderablePolygon) {
+//		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+//		String tooltipText = CrearCosechaMapTask.buildTooltipText(fertFeature, area); 
+//		return super.getExtrudedPolygonFromGeom(poly, fertFeature,tooltipText,renderablePolygon);
+//	}
 
 	/**
 	 * 

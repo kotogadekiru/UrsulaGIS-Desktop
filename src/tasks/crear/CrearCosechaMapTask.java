@@ -77,12 +77,12 @@ public class CrearCosechaMapTask extends ProcessMapTask<CosechaItem,CosechaLabor
 	}
 
 
-	@Override
-	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem,ExtrudedPolygon  renderablePolygon) {
-		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		String tooltipText = CrearCosechaMapTask.buildTooltipText(cosechaItem, area);
-		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText,renderablePolygon);
-	}
+//	@Override
+//	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem,ExtrudedPolygon  renderablePolygon) {
+//		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+//		String tooltipText = CrearCosechaMapTask.buildTooltipText(cosechaItem, area);
+//		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText,renderablePolygon);
+//	}
 
 	public static String buildTooltipText(CosechaItem cosechaItem, double area) {
 		NumberFormat df = Messages.getNumberFormat();

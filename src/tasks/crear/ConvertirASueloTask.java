@@ -147,13 +147,13 @@ public class ConvertirASueloTask extends ProcessMapTask<SueloItem,Suelo > {
 		return 0;
 	}
 
-	@Override
-	protected ExtrudedPolygon getPathTooltip(Geometry poly, SueloItem si, ExtrudedPolygon renderablePolygon) {
-		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		String tooltipText = CrearSueloMapTask.buildTooltipText(this.labor, si, area);//buildTooltipText(this.labor,si,area);
-
-		return super.getExtrudedPolygonFromGeom(poly, si,tooltipText,renderablePolygon);		
-	}
+//	@Override
+//	protected ExtrudedPolygon getPathTooltip(Geometry poly, SueloItem si, ExtrudedPolygon renderablePolygon) {
+//		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+//		String tooltipText = CrearSueloMapTask.buildTooltipText(this.labor, si, area);//buildTooltipText(this.labor,si,area);
+//
+//		return super.getExtrudedPolygonFromGeom(poly, si,tooltipText,renderablePolygon);		
+//	}
 
 	
 }

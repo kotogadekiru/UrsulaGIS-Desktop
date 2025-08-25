@@ -4,10 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalDouble;
 
 import org.geotools.data.DataUtilities;
 import org.geotools.data.DefaultTransaction;
@@ -106,6 +108,7 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 
 		List<LaborItem> items = new ArrayList<LaborItem>();
 
+		super.updateProgress(0, 100);
 		
 		SimpleFeatureIterator it = laborToExport.outCollection.features();
 		while(it.hasNext()){
@@ -127,7 +130,7 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 		//TODO si una geometria tiene mas de 50 sub zonas descartar las chicas
 		//TODO simplificar las geometrias con presicion de 0.0001grados
 		for(LaborItem item:items) {
-		
+		checkCancelled();
 			if(item.getGeometry().getNumGeometries()>50){
 				System.out.println("procesando geometry con "+item.getGeometry().getNumGeometries()+" geometrias");
 				Geometry g50 = item.getGeometry();
@@ -271,12 +274,36 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 			return null;
 		}
 	}
+	
 
 
-	public static void reabsorverZonasChicas( List<LaborItem> items) {
+
+	public void reabsorverZonasChicas( List<LaborItem> items) throws InterruptedException {
 		// reabsorver zonas mas chicas a las mas grandes vecinas
 		System.out.println("tiene mas de 100 zonas, reabsorviendo..."); //$NON-NLS-1$
 		// tomar las 100 zonas mas grandes y reabsorver las otras en estas
+		Double areaPromedio=null;
+		Double desvioPromedio=null;
+		OptionalDouble areaPromedioOP = items.parallelStream().mapToDouble(item->item.getGeometry().getArea()).average();
+		if(areaPromedioOP.isPresent()) {
+			areaPromedio = areaPromedioOP.getAsDouble();
+			OptionalDouble desvioPromedioOP = items.parallelStream().mapToDouble(
+					item->Math.abs(item.getGeometry().getArea()-areaPromedioOP.getAsDouble())
+					).average();	
+			if(desvioPromedioOP.isPresent()) {
+				desvioPromedio=desvioPromedioOP.getAsDouble();
+			}
+		}
+		
+		if(desvioPromedio!=null) {
+			Double porcDesvio=desvioPromedio/areaPromedio;
+			System.out.println("desvio promedio es "+porcDesvio*100+"%");
+			if(porcDesvio<0.1) {
+				System.out.println("debo resumir labor por categorias");
+			}
+			//Resumir por categoria
+		}
+		
 
 		items.sort((i1,i2)->-1*Double.compare(i1.getGeometry().getArea(), i2.getGeometry().getArea()));					
 		List<LaborItem> itemsAgrandar =items.subList(0,MAX_ITEMS-1);
@@ -285,32 +312,34 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 			Geometry gAr =ar.getGeometry();
 			tree.insert(gAr.getEnvelopeInternal(), ar);
 		}
+		
 		List<LaborItem> itemsAReducir =items.subList(MAX_ITEMS-1, items.size()-1);//99 es el indice de la zona numero 100
+		int aReducirCount = itemsAReducir.size();
 		int n=0;
-		while(itemsAReducir.size()>0 || n>10) {//corro mientras haya items a reducir o hasta 10 veces
+		while(itemsAReducir.size()>0 && n<10) {//corro mientras haya items a reducir o hasta 10 veces
+			checkCancelled();
 			List<LaborItem> done = new ArrayList<LaborItem>();		
 			for(LaborItem ar : itemsAReducir) {
 				Geometry gAr =ar.getGeometry();
 				@SuppressWarnings("unchecked")
 				List<LaborItem> vecinos =(List<LaborItem>) tree.query(gAr.getEnvelopeInternal());
+				
 
 				if(vecinos.size()>0) {
-					Optional<LaborItem> opV = vecinos.stream().reduce((v1,v2)->{
-						boolean v1i = gAr.intersects(v1.getGeometry());
-						boolean v2i = gAr.intersects(v2.getGeometry());
-						return v1i&&v2i?(v1.getGeometry().getArea()>v2.getGeometry().getArea()?v1:v2):(v1i?v1:v2);
-
-					});
+					Optional<LaborItem> opV = 
+							vecinos.stream().filter(v->{
+						return gAr.intersects(v.getGeometry());//filtro solo los que intersectan
+						}).max((v1,v2)->-1*Double.compare(v1.getGeometry().getArea(), v2.getGeometry().getArea()));	
+						
+							
 					if(opV.isPresent()) {
 						
 						LaborItem v = opV.get();
 						Geometry g = v.getGeometry();
 						try {
 						tree.remove(g.getEnvelopeInternal(), v);
-						List<Geometry> aUnir = new ArrayList<Geometry>();
-						aUnir.add(gAr);
-						aUnir.add(g);
-						Geometry union = GeometryHelper.unirGeometrias(aUnir);
+												
+						Geometry union = GeometryHelper.unirGeometrias(Arrays.asList(gAr,g));
 						//Geometry union = g.union(gAr);
 						v.setGeometry(union);
 						tree.insert(union.getEnvelopeInternal(), v);
@@ -319,11 +348,14 @@ public class ExportarPrescripcionSiembraTask extends ProgresibleTask<File>{
 							e.printStackTrace();
 							tree.insert(g.getEnvelopeInternal(), v);
 						}
+					}else {
+						System.out.println("no se encontraron vecinos para "+gAr);
 					}
 				}
 			}
 			n++;
 			itemsAReducir.removeAll(done);
+			updateProgress(aReducirCount-itemsAReducir.size(), aReducirCount);
 		}
 		items.clear();
 		items.addAll((List<LaborItem>)tree.queryAll());

@@ -47,7 +47,7 @@ public class ClonarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem
 	 */
 	private Labor<?> laborACortar=null;
 	
-	private Map<Class, Function<LaborItem, String>> tooltipCreator;
+	//private Map<Class, Function<LaborItem, String>> tooltipCreator;
 
 
 	
@@ -56,7 +56,7 @@ public class ClonarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem
 	
 		Map<Class, Function<Labor, Labor>> constructor = laborConstructor();
 		
-		this.tooltipCreator = constructTooltipCreator();
+//		this.tooltipCreator = constructTooltipCreator();
 	
 		this.labor=constructor.get(this.laborACortar.getClass()).apply(laborACortar);	
 
@@ -67,7 +67,7 @@ public class ClonarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem
 		Map<Class,Function<Labor,Labor>> constructor = new HashMap<Class,Function<Labor,Labor>>();
 		constructor.put(CosechaLabor.class, l->{
 			CosechaLabor c = (CosechaLabor)l;
-			CosechaLabor labor = new CosechaLabor();
+			CosechaLabor labor = new CosechaLabor(c);
 			labor.setLayer(new LaborLayer());			
 
 			labor.getConfiguracion().valorMetrosPorUnidadDistanciaProperty().set(1.0);
@@ -126,40 +126,40 @@ public class ClonarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem
 		return constructor;
 	}
 
-	public static Map<Class,Function<LaborItem,String>> constructTooltipCreator() {
-		Map<Class,Function<LaborItem,String>> tooltipCreator = new HashMap<Class,Function<LaborItem,String>>();
-		tooltipCreator.put(CosechaLabor.class, li->{
-			Geometry poly = li.getGeometry();
-			double area = poly.getArea() * ProyectionConstants.A_HAS();
-			return CrearCosechaMapTask.buildTooltipText((CosechaItem)li, area);			
-		});
-		tooltipCreator.put(SiembraLabor.class, li->{
-			Geometry poly = li.getGeometry();
-			double area = poly.getArea() * ProyectionConstants.A_HAS();
-			return ConvertirASiembraTask.buildTooltipText((SiembraItem)li, area);	
-		});
-		tooltipCreator.put(FertilizacionLabor.class, li->{
-			Geometry poly = li.getGeometry();
-			double area = poly.getArea() * ProyectionConstants.A_HAS();
-			return CrearFertilizacionMapTask.buildTooltipText((FertilizacionItem)li, area);	
-		});
-		tooltipCreator.put(PulverizacionLabor.class, li->{
-			Geometry poly = li.getGeometry();
-			double area = poly.getArea() * ProyectionConstants.A_HAS();
-			return CrearPulverizacionMapTask.buildTooltipText((PulverizacionItem)li, area);	
-		});
-		tooltipCreator.put(Suelo.class, li->{
-			Geometry poly = li.getGeometry();
-			double area = poly.getArea() * ProyectionConstants.A_HAS();
-			return CrearSueloMapTask.buildTooltipText((SueloItem)li, area);	
-		});
-		tooltipCreator.put(Margen.class, li->{
-			Geometry poly = li.getGeometry();
-			double area = poly.getArea() * ProyectionConstants.A_HAS();
-			return OpenMargenMapTask.buildTooltipText((MargenItem)li, area);	
-		});
-		return tooltipCreator;
-	}
+//	public static Map<Class,Function<LaborItem,String>> constructTooltipCreator() {
+//		Map<Class,Function<LaborItem,String>> tooltipCreator = new HashMap<Class,Function<LaborItem,String>>();
+//		tooltipCreator.put(CosechaLabor.class, li->{
+//			Geometry poly = li.getGeometry();
+//			double area = poly.getArea() * ProyectionConstants.A_HAS();
+//			return CrearCosechaMapTask.buildTooltipText((CosechaItem)li, area);			
+//		});
+//		tooltipCreator.put(SiembraLabor.class, li->{
+//			Geometry poly = li.getGeometry();
+//			double area = poly.getArea() * ProyectionConstants.A_HAS();
+//			return ConvertirASiembraTask.buildTooltipText((SiembraItem)li, area);	
+//		});
+//		tooltipCreator.put(FertilizacionLabor.class, li->{
+//			Geometry poly = li.getGeometry();
+//			double area = poly.getArea() * ProyectionConstants.A_HAS();
+//			return CrearFertilizacionMapTask.buildTooltipText((FertilizacionItem)li, area);	
+//		});
+//		tooltipCreator.put(PulverizacionLabor.class, li->{
+//			Geometry poly = li.getGeometry();
+//			double area = poly.getArea() * ProyectionConstants.A_HAS();
+//			return CrearPulverizacionMapTask.buildTooltipText((PulverizacionItem)li, area);	
+//		});
+//		tooltipCreator.put(Suelo.class, li->{
+//			Geometry poly = li.getGeometry();
+//			double area = poly.getArea() * ProyectionConstants.A_HAS();
+//			return CrearSueloMapTask.buildTooltipText((SueloItem)li, area);	
+//		});
+//		tooltipCreator.put(Margen.class, li->{
+//			Geometry poly = li.getGeometry();
+//			double area = poly.getArea() * ProyectionConstants.A_HAS();
+//			return OpenMargenMapTask.buildTooltipText((MargenItem)li, area);	
+//		});
+//		return tooltipCreator;
+//	}
 
 	/**
 	 * proceso que toma una cosecha y selecciona los items que estan dentro de los poligonos seleccionados
@@ -198,15 +198,16 @@ public class ClonarLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem
 		updateProgress(0, featureCount);
 	}
 
-	@Override
-	protected ExtrudedPolygon getPathTooltip(Geometry poly,	LaborItem cosechaItem,ExtrudedPolygon  renderablePolygon) {
-		
-		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		
-		String tooltipText = tooltipCreator.get(this.labor.getClass()).apply(cosechaItem);
-				//CrearCosechaMapTask.buildTooltipText(cosechaItem, area);
-		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText,renderablePolygon);
-	}
+//	@Override
+//	protected ExtrudedPolygon getPathTooltip(Geometry poly,	LaborItem cosechaItem,ExtrudedPolygon  renderablePolygon) {
+//		super.createTooltipForLaborItem(poly,cosechaItem);
+//		
+//		//double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+//		
+//		String tooltipText = super.createTooltipForLaborItem(poly,cosechaItem); //tooltipCreator.get(this.labor.getClass()).apply(cosechaItem);
+//				//CrearCosechaMapTask.buildTooltipText(cosechaItem, area);
+//		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText,renderablePolygon);
+//	}
 
 	@Override
 	protected int getAmountMin() {

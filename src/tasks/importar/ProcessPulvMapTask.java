@@ -205,12 +205,12 @@ public class ProcessPulvMapTask extends ProcessMapTask<PulverizacionItem,Pulveri
 
 	}
 
-	@Override
-	protected ExtrudedPolygon getPathTooltip(Geometry poly, PulverizacionItem pulv,ExtrudedPolygon  renderablePolygon) {
-		double area = poly.getArea() * ProyectionConstants.A_HAS();
-		String tooltipText = CrearPulverizacionMapTask.buildTooltipText(pulv, area);
-		return super.getExtrudedPolygonFromGeom(poly, pulv,tooltipText,renderablePolygon);
-	}
+//	@Override
+//	protected ExtrudedPolygon getPathTooltip(Geometry poly, PulverizacionItem pulv,ExtrudedPolygon  renderablePolygon) {
+//		double area = poly.getArea() * ProyectionConstants.A_HAS();
+//		String tooltipText = CrearPulverizacionMapTask.buildTooltipText(pulv, area);
+//		return super.getExtrudedPolygonFromGeom(poly, pulv,tooltipText,renderablePolygon);
+//	}
 
 	protected int getAmountMin() {
 		return 0;

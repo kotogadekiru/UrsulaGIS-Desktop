@@ -262,13 +262,13 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 			//XXX si es una cosecha de ambientes el area es importante
 			Geometry g = cPoly.getGeometry();
 			try{				
-				g= GeometryHelper.getIntersection(poly, g);//EnhancedPrecisionOp.intersection(poly,g);
-				Double areaInterseccion = g.getArea();
+				Geometry interseccion= GeometryHelper.getIntersection(poly, g);//EnhancedPrecisionOp.intersection(poly,g);
+				Double areaInterseccion = interseccion.getArea();
 				areaItersectadaTotal+=areaInterseccion;
 				areasIntersecciones.put(cPoly,areaInterseccion);
-				intersections.add(g);			
+				intersections.add(interseccion);			
 			}catch(Exception e){
-				System.err.println(Messages.getString("GrillarCosechasMapTask.14")+poly+Messages.getString("GrillarCosechasMapTask.15")+g); //$NON-NLS-1$ //$NON-NLS-2$
+				System.err.println("fallo la interseccion entre "+poly+" y "+g); //$NON-NLS-1$ error interno no traducir
 			}		
 		}
 
@@ -468,12 +468,12 @@ public class GrillarCosechasMapTask extends ProcessMapTask<CosechaItem,CosechaLa
 	}
 	
 	
-	@Override
-	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem,ExtrudedPolygon  renderablePolygon) {
-		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		String tooltipText = CrearCosechaMapTask.buildTooltipText(cosechaItem, area);
-		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText,renderablePolygon);
-	}
+//	@Override
+//	protected ExtrudedPolygon getPathTooltip(Geometry poly,	CosechaItem cosechaItem,ExtrudedPolygon  renderablePolygon) {
+//		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+//		String tooltipText = CrearCosechaMapTask.buildTooltipText(cosechaItem, area);
+//		return super.getExtrudedPolygonFromGeom(poly, cosechaItem,tooltipText,renderablePolygon);
+//	}
 	
 //	@Override
 //	protected void getPathTooltip(Geometry poly,

@@ -75,12 +75,12 @@ public class ConvertirAPulverizacionTask extends ProcessMapTask<PulverizacionIte
 	}
 
 
-	@Override
-	protected ExtrudedPolygon getPathTooltip(Geometry poly, PulverizacionItem fertFeature,ExtrudedPolygon  renderablePolygon) {
-		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		String tooltipText = CrearPulverizacionMapTask.buildTooltipText(fertFeature, area); 
-		return super.getExtrudedPolygonFromGeom(poly, fertFeature,tooltipText,renderablePolygon);
-	}
+//	@Override
+//	protected ExtrudedPolygon getPathTooltip(Geometry poly, PulverizacionItem fertFeature,ExtrudedPolygon  renderablePolygon) {
+//		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+//		String tooltipText = CrearPulverizacionMapTask.buildTooltipText(fertFeature, area); 
+//		return super.getExtrudedPolygonFromGeom(poly, fertFeature,tooltipText,renderablePolygon);
+//	}
 
 	protected int getAmountMin() {
 		return 3;

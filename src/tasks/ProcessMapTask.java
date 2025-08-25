@@ -1058,7 +1058,7 @@ public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> e
 	//protected abstract gov.nasa.worldwind.render.ExtrudedPolygon getPathTooltip(Geometry p, FC  fc,gov.nasa.worldwind.render.ExtrudedPolygon  renderablePolygon);
 
 	
-	protected ExtrudedPolygon getPathTooltip(Geometry p, FC fc, ExtrudedPolygon renderablePolygon) {
+	private ExtrudedPolygon getPathTooltip(Geometry p, FC fc, ExtrudedPolygon renderablePolygon) {
 		String tooltipText = null;// createTooltipForLaborItem(p, fc);//creo el tooltip al crear el anotation. no antes
 		return getExtrudedPolygonFromGeom(p, fc,tooltipText,renderablePolygon);
 	}

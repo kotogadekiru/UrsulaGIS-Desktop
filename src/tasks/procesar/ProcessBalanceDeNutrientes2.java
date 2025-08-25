@@ -619,14 +619,14 @@ public class ProcessBalanceDeNutrientes2 extends ProcessMapTask<SueloItem,Suelo>
 	}
 
 
-	@Override
-	protected ExtrudedPolygon getPathTooltip(Geometry poly, SueloItem si,ExtrudedPolygon  renderablePolygon) {
-		double area = poly.getArea() * ProyectionConstants.A_HAS();
-
-		String tooltipText = CrearSueloMapTask.buildTooltipText(this.labor,si,area);
-
-		return super.getExtrudedPolygonFromGeom(poly, si,tooltipText,renderablePolygon);
-	}
+//	@Override
+//	protected ExtrudedPolygon getPathTooltip(Geometry poly, SueloItem si,ExtrudedPolygon  renderablePolygon) {
+//		double area = poly.getArea() * ProyectionConstants.A_HAS();
+//
+//		String tooltipText = CrearSueloMapTask.buildTooltipText(this.labor,si,area);
+//
+//		return super.getExtrudedPolygonFromGeom(poly, si,tooltipText,renderablePolygon);
+//	}
 
 	protected int getAmountMin() {
 		return 100;

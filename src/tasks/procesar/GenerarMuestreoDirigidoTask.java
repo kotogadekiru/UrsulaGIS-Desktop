@@ -247,35 +247,35 @@ public class GenerarMuestreoDirigidoTask extends ProcessMapTask<SueloItem,Suelo>
 		return this.superficieMinimaAMuestrear*(ProyectionConstants.metersToLong()*ProyectionConstants.metersToLat());
 	}
 
-	@Override
-	protected ExtrudedPolygon getPathTooltip(Geometry poly,	SueloItem sueloItem,ExtrudedPolygon  renderablePolygon) {
-
-		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
-		NumberFormat df = Messages.getNumberFormat();//new DecimalFormat("0.00");//$NON-NLS-2$
-
-		String tooltipText = new String(Messages.getString("GenerarMuestreoDirigidoTask.6")+ df.format(sueloItem.getPpmP()) +Messages.getString("GenerarMuestreoDirigidoTask.7")); //$NON-NLS-1$ //$NON-NLS-2$
-		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.8")+ df.format(sueloItem.getPpmNO3()) + Messages.getString("GenerarMuestreoDirigidoTask.9")); //$NON-NLS-1$ //$NON-NLS-2$
-		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.10")+ df.format(sueloItem.getPpmS()) + Messages.getString("GenerarMuestreoDirigidoTask.11")); //$NON-NLS-1$ //$NON-NLS-2$
-		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.12")+ df.format(sueloItem.getPpmK()) + Messages.getString("GenerarMuestreoDirigidoTask.13")); //$NON-NLS-1$ //$NON-NLS-2$
-		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.14")+ df.format(sueloItem.getPorcMO()) + Messages.getString("GenerarMuestreoDirigidoTask.15")); //$NON-NLS-1$ //$NON-NLS-2$
-
-		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.16")+df.format(sueloItem.getElevacion() ) + Messages.getString("GenerarMuestreoDirigidoTask.17")); //$NON-NLS-1$ //$NON-NLS-2$
-		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.18")+df.format(sueloItem.getCategoria() ) + Messages.getString("GenerarMuestreoDirigidoTask.19")); //$NON-NLS-1$ //$NON-NLS-2$
-
-
-		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.20")+sueloItem.getId() + Messages.getString("GenerarMuestreoDirigidoTask.21")); //$NON-NLS-1$ //$NON-NLS-2$
-		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.22")+sueloItem.getGeometry().getCoordinate() + Messages.getString("GenerarMuestreoDirigidoTask.23")); //$NON-NLS-1$ //$NON-NLS-2$
-		if(area<1){
-			tooltipText=tooltipText.concat( Messages.getString("GenerarMuestreoDirigidoTask.24")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("GenerarMuestreoDirigidoTask.25")); //$NON-NLS-1$ //$NON-NLS-2$
-			//	tooltipText=tooltipText.concat( "SupOrig: "+df.format(area2 ) + "m2\n");
-		} else {
-			tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.26")+df.format(area ) + Messages.getString("GenerarMuestreoDirigidoTask.27")); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-		//super.getRenderPolygonFromGeom(poly, cosechaItem,tooltipText);
-		return super.getExtrudedPolygonFromGeom(poly, sueloItem,tooltipText,renderablePolygon);
-
-	}
+//	@Override
+//	protected ExtrudedPolygon getPathTooltip(Geometry poly,	SueloItem sueloItem,ExtrudedPolygon  renderablePolygon) {
+//
+//		double area = poly.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+//		//double area2 = cosechaFeature.getAncho()*cosechaFeature.getDistancia();
+//		NumberFormat df = Messages.getNumberFormat();//new DecimalFormat("0.00");//$NON-NLS-2$
+//
+//		String tooltipText = new String(Messages.getString("GenerarMuestreoDirigidoTask.6")+ df.format(sueloItem.getPpmP()) +Messages.getString("GenerarMuestreoDirigidoTask.7")); //$NON-NLS-1$ //$NON-NLS-2$
+//		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.8")+ df.format(sueloItem.getPpmNO3()) + Messages.getString("GenerarMuestreoDirigidoTask.9")); //$NON-NLS-1$ //$NON-NLS-2$
+//		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.10")+ df.format(sueloItem.getPpmS()) + Messages.getString("GenerarMuestreoDirigidoTask.11")); //$NON-NLS-1$ //$NON-NLS-2$
+//		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.12")+ df.format(sueloItem.getPpmK()) + Messages.getString("GenerarMuestreoDirigidoTask.13")); //$NON-NLS-1$ //$NON-NLS-2$
+//		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.14")+ df.format(sueloItem.getPorcMO()) + Messages.getString("GenerarMuestreoDirigidoTask.15")); //$NON-NLS-1$ //$NON-NLS-2$
+//
+//		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.16")+df.format(sueloItem.getElevacion() ) + Messages.getString("GenerarMuestreoDirigidoTask.17")); //$NON-NLS-1$ //$NON-NLS-2$
+//		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.18")+df.format(sueloItem.getCategoria() ) + Messages.getString("GenerarMuestreoDirigidoTask.19")); //$NON-NLS-1$ //$NON-NLS-2$
+//
+//
+//		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.20")+sueloItem.getId() + Messages.getString("GenerarMuestreoDirigidoTask.21")); //$NON-NLS-1$ //$NON-NLS-2$
+//		tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.22")+sueloItem.getGeometry().getCoordinate() + Messages.getString("GenerarMuestreoDirigidoTask.23")); //$NON-NLS-1$ //$NON-NLS-2$
+//		if(area<1){
+//			tooltipText=tooltipText.concat( Messages.getString("GenerarMuestreoDirigidoTask.24")+df.format(area * ProyectionConstants.METROS2_POR_HA) + Messages.getString("GenerarMuestreoDirigidoTask.25")); //$NON-NLS-1$ //$NON-NLS-2$
+//			//	tooltipText=tooltipText.concat( "SupOrig: "+df.format(area2 ) + "m2\n");
+//		} else {
+//			tooltipText=tooltipText.concat(Messages.getString("GenerarMuestreoDirigidoTask.26")+df.format(area ) + Messages.getString("GenerarMuestreoDirigidoTask.27")); //$NON-NLS-1$ //$NON-NLS-2$
+//		}
+//		//super.getRenderPolygonFromGeom(poly, cosechaItem,tooltipText);
+//		return super.getExtrudedPolygonFromGeom(poly, sueloItem,tooltipText,renderablePolygon);
+//
+//	}
 
 	@Override
 	protected int getAmountMin() {

@@ -617,7 +617,10 @@ public class ShowNDVITifFileTask extends Task<Layer>{
 
 
 			NumberFormat legendLabelFormat=Messages.getNumberFormat();
-			final AnalyticSurfaceLegend legend = AnalyticSurfaceLegend.fromColorGradient(MIN_VALUE,MAX_VALUE,
+			final AnalyticSurfaceLegend legend = AnalyticSurfaceLegend.fromColorGradient(
+					MAX_VALUE,
+					MIN_VALUE,//FIXME valores invertidos funciona en una version de world wind y no en otra
+					
 					HUE_MIN, HUE_MAX,
 					AnalyticSurfaceLegend.createDefaultColorGradientLabels(MIN_VALUE, MAX_VALUE, legendLabelFormat),
 					AnalyticSurfaceLegend.createDefaultTitle(fileName));

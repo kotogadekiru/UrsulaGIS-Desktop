@@ -46,25 +46,25 @@ public class RedrawMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem>>{
 		return 0;
 	}
 
-	@Override
-	protected ExtrudedPolygon getPathTooltip(Geometry p, LaborItem fc, ExtrudedPolygon renderablePolygon) {
-		double area = p.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
-		String tooltipText = "";
-		if(fc instanceof CosechaItem) {
-			tooltipText = CrearCosechaMapTask.buildTooltipText((dao.cosecha.CosechaItem)fc, area);			
-		} else 	if(fc instanceof SiembraItem) {
-			tooltipText = ConvertirASiembraTask.buildTooltipText((SiembraItem)fc, area); 
-		} else 	if(fc instanceof FertilizacionItem) {
-			tooltipText = CrearFertilizacionMapTask.buildTooltipText((FertilizacionItem)fc, area); 
-		} else 	if(fc instanceof PulverizacionItem) {
-			tooltipText = CrearPulverizacionMapTask.buildTooltipText((PulverizacionItem)fc, area);
-		} else 	if(fc instanceof SueloItem) {
-			tooltipText = CrearSueloMapTask.buildTooltipText((SueloItem)fc, area);
-		}else 	if(fc instanceof MargenItem) {
-			tooltipText = OpenMargenMapTask.buildTooltipText((MargenItem)fc, area);
-		}
-		return super.getExtrudedPolygonFromGeom(p, fc,tooltipText,renderablePolygon);
-	}
+//	@Override
+//	protected ExtrudedPolygon getPathTooltip(Geometry p, LaborItem fc, ExtrudedPolygon renderablePolygon) {
+//		double area = p.getArea() * ProyectionConstants.A_HAS();// 30224432.818;//pathBounds2.getHeight()*pathBounds2.getWidth();
+//		String tooltipText = "";
+//		if(fc instanceof CosechaItem) {
+//			tooltipText = CrearCosechaMapTask.buildTooltipText((dao.cosecha.CosechaItem)fc, area);			
+//		} else 	if(fc instanceof SiembraItem) {
+//			tooltipText = ConvertirASiembraTask.buildTooltipText((SiembraItem)fc, area); 
+//		} else 	if(fc instanceof FertilizacionItem) {
+//			tooltipText = CrearFertilizacionMapTask.buildTooltipText((FertilizacionItem)fc, area); 
+//		} else 	if(fc instanceof PulverizacionItem) {
+//			tooltipText = CrearPulverizacionMapTask.buildTooltipText((PulverizacionItem)fc, area);
+//		} else 	if(fc instanceof SueloItem) {
+//			tooltipText = CrearSueloMapTask.buildTooltipText((SueloItem)fc, area);
+//		}else 	if(fc instanceof MargenItem) {
+//			tooltipText = OpenMargenMapTask.buildTooltipText((MargenItem)fc, area);
+//		}
+//		return super.getExtrudedPolygonFromGeom(p, fc,tooltipText,renderablePolygon);
+//	}
 
 	public static void redraw(Labor<LaborItem> l) {
 		RedrawMapTask task = new RedrawMapTask( l);
