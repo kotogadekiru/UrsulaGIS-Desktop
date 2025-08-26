@@ -89,7 +89,7 @@ import utils.ProyectionConstants;
 public abstract class ProcessMapTask<FC extends LaborItem,E extends Labor<FC>> extends ProgresibleTask<E>{
 	public static final String LABOR_ITEM_AVKey = "LABOR_ITEM";
 	private static final int TARGET_LOW_RES_TIME = 2000;
-	private static final String TASK_CLOSE_ICON = "/gui/event-close.png";
+	//private static final String TASK_CLOSE_ICON = "/gui/event-close.png";
 	public static final String ZOOM_TO_KEY = "ZOOM_TO";
 //	/**
 //	 * cantidad de features a procesar
