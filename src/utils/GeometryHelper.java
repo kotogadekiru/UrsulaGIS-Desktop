@@ -289,7 +289,7 @@ public class GeometryHelper {
 	}
 
 	public static Geometry simplificarContorno(Geometry g) {
-		double toleranciaLongLat = (0.005)/ProyectionConstants.A_HAS();
+		//double toleranciaLongLat = (0.005)/ProyectionConstants.A_HAS();
 	//	g=GeometryHelper.removeSmallTriangles(g, toleranciaLongLat);
 
 		g=GeometryHelper.douglassPeuckerSimplify(g,ProyectionConstants.metersToLongLat(5));
@@ -978,7 +978,10 @@ public class GeometryHelper {
 			Geometry union =collection.buffer(buffer,1,BufferParameters.CAP_FLAT);//buffer the collection
 			Geometry boundary = union.getBoundary().buffer(buffer,1,BufferParameters.CAP_FLAT);
 			Geometry dif=union.difference(boundary);
-			dif = PolygonValidator.validate(dif);
+			if(dif.getCoordinates().length>100) {
+				dif=GeometryHelper.douglassPeuckerSimplify(dif,ProyectionConstants.metersToLongLat(0.025));//esto mejora mucho las subsiguientes operaciones
+			}
+			dif = PolygonValidator.validate(dif);			
 			if(dif.isValid()) {
 				//System.out.println("dif es valid");
 				return dif;
