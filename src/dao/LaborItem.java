@@ -21,6 +21,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
+import dao.siembra.SiembraItem;
 import gui.Messages;
 
 
@@ -51,6 +52,19 @@ public abstract class LaborItem implements Comparable<Object>{
 	
 	public LaborItem(SimpleFeature feature) {
 		setGeometry( (Geometry) feature.getDefaultGeometry());
+	}
+
+	public LaborItem(LaborItem i) {
+		setId(i.getId());
+		setGeometry( i.getGeometry());
+		setAncho(i.getAncho());
+		setDistancia(i.getDistancia());
+		setElevacion(i.getElevacion());
+		setRumbo(i.getRumbo());
+		setCategoria(i.getCategoria());
+		setObservaciones(i.getObservaciones());
+		setLabor(i.getLabor());
+		setAreaSinSup(i.getAreaSinSup());
 	}
 
 	public void setGeometry(Geometry geom) {

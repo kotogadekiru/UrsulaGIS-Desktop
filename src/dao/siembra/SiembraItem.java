@@ -9,6 +9,7 @@ import dao.LaborItem;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import utils.GeometryHelper;
 
 @Getter
 @Setter(value = AccessLevel.PUBLIC)
@@ -30,6 +31,17 @@ public class SiembraItem extends LaborItem {
 		super();
 	}
 
+	public SiembraItem(SiembraItem s) {
+		super(s);	
+		setCostoLaborHa(s.getCostoLaborHa());
+		setDosisFertCostado(s.getDosisFertCostado());	
+		setDosisFertLinea(s.getDosisFertLinea());
+		setDosisHa(s.getDosisHa());
+		setDosisML(s.getDosisML());
+		setImporteHa(s.getImporteHa());
+		setPrecioInsumo(s.getPrecioInsumo());		
+	}
+	
 	public Double getDosisHa() {
 		return dosisHa;
 	}

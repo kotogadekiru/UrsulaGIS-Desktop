@@ -31,12 +31,6 @@ import dao.suelo.SueloItem;
 import gov.nasa.worldwind.render.ExtrudedPolygon;
 import gui.Messages;
 import tasks.ProcessMapTask;
-import tasks.crear.ConvertirASiembraTask;
-import tasks.crear.CrearCosechaMapTask;
-import tasks.crear.CrearFertilizacionMapTask;
-import tasks.crear.CrearPulverizacionMapTask;
-import tasks.crear.CrearSueloMapTask;
-import tasks.importar.OpenMargenMapTask;
 import utils.GeometryHelper;
 import utils.ProyectionConstants;
 
@@ -44,7 +38,7 @@ import utils.ProyectionConstants;
 /**
  * 
  * @author quero
- * task que toma un store y devuelve una capa de suelo a partir del store
+ * task que toma una labor y devuelve una version resumida segun el clasificador
  */
 
 public class ResumirLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborItem>> {
@@ -217,7 +211,7 @@ public class ResumirLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborIte
 		List<Geometry> geoms = new ArrayList<Geometry>();
 		Double hasTotal=new Double(0.0);
 		Double _id=null;
-		double dosisS=0,fertL=0,fertC=0,ancho=0,distancia=0,elev=0,rumbo=0;// , pesos=0;
+		double dosisS=0,dosisML=0,fertL=0,fertC=0,ancho=0,distancia=0,elev=0,rumbo=0;// , pesos=0;
 		for(SiembraItem item : items) {
 			Geometry g = item.getGeometry();
 			Double hasItem = ProyectionConstants.A_HAS(g.getArea());
@@ -226,6 +220,7 @@ public class ResumirLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborIte
 			}
 
 			dosisS+=item.getDosisHa()*hasItem;
+			dosisML+=item.getDosisML()*hasItem;
 			fertL+=item.getDosisFertLinea()*hasItem;
 			fertC+=item.getDosisFertCostado()*hasItem;
 			ancho+=item.getAncho()*hasItem;
@@ -238,6 +233,7 @@ public class ResumirLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborIte
 		}
 		if(hasTotal>0) {
 			dosisS = dosisS / hasTotal;
+			dosisML = dosisML / hasTotal;
 			fertL = fertL / hasTotal;
 			fertC = fertC / hasTotal;
 			ancho = ancho / hasTotal;
@@ -251,6 +247,7 @@ public class ResumirLaborMapTask extends ProcessMapTask<LaborItem,Labor<LaborIte
 			c.setId(_id);
 			c.setGeometry(GeometryHelper.unirGeometrias(geoms));
 			c.setDosisHa(dosisS);
+			c.setDosisML(dosisML);
 			c.setDosisFertLinea(fertL);
 			c.setDosisFertCostado(fertC);
 			c.setAncho(ancho);
