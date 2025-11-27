@@ -57,6 +57,7 @@ public class SiembraLabor extends Labor<SiembraItem> {
 	public static final String COLUMNA_DOSIS_COSTADO= "Fert C";
 	public static final String COLUMNA_SEM_10METROS = "Sem10m";
 	public static final String COLUMNA_MILES_SEM_HA = "MilSemHa";
+	public static final String COLUMNA_SEM_HA = "SemHa";
 	public static final String COLUMNA_SEM_ML = "Sem1m";
 
 
