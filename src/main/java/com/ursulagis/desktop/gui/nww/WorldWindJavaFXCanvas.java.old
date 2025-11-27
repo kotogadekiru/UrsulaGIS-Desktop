@@ -1,0 +1,455 @@
+package com.ursulagis.desktop.gui.nww;
+
+import gov.nasa.worldwind.*;
+import gov.nasa.worldwind.avlist.*;
+import gov.nasa.worldwind.cache.GpuResourceCache;
+import gov.nasa.worldwind.event.*;
+import gov.nasa.worldwind.exception.WWRuntimeException;
+import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.pick.PickedObjectList;
+import gov.nasa.worldwind.util.*;
+
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.DragEvent;
+import javafx.animation.AnimationTimer;
+import javafx.application.Platform;
+
+import java.beans.*;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+//import javax.media.opengl.GLContext;
+
+/**
+ * JavaFX-compatible WorldWind canvas that extends Canvas for use in JavaFX scenes.
+ * This class provides basic WorldWind functionality adapted for JavaFX applications.
+ */
+public class WorldWindJavaFXCanvas extends Canvas implements WorldWindow{
+    /** The WorldWindow drawable for WorldWind operations */
+    protected final WorldWindowGLDrawable wwd;
+    
+    /** Animation timer for continuous rendering */
+    private final AnimationTimer animationTimer;
+    
+    /** Flag to track if the component is initialized */
+    private final AtomicBoolean initialized = new AtomicBoolean(false);
+    
+    /** Graphics context for the canvas */
+    private GraphicsContext graphicsContext;
+
+    /** Constructs a new JavaFX WorldWind canvas. */
+    public WorldWindJavaFXCanvas()
+    {
+        this(800, 600); // Default size
+    }
+    
+    /** Constructs a new JavaFX WorldWind canvas with specified dimensions. */
+    public WorldWindJavaFXCanvas(double width, double height)
+    {
+        super(width, height);
+        
+        try
+        {
+            this.wwd = ((WorldWindowGLDrawable) WorldWind.createConfigurationComponent(AVKey.WORLD_WINDOW_CLASS_NAME));
+            this.wwd.initGpuResourceCache(WorldWindowImpl.createGpuResourceCache());
+            this.createView();
+            this.createDefaultInputHandler();
+            //WorldWind.addPropertyChangeListener(WorldWind.SHUTDOWN_EVENT, this);
+            
+            // Initialize JavaFX-specific components
+            this.initializeJavaFXComponents();
+            
+            this.wwd.endInitialization();
+            this.initialized.set(true);
+        }
+        catch (Exception e)
+        {
+            String message = Logging.getMessage("Awt.WorldWindowGLSurface.UnabletoCreateWindow");
+            Logging.logger().severe(message);
+            throw new WWRuntimeException(message, e);
+        }
+        
+        // Create animation timer for continuous rendering
+        this.animationTimer = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                if (initialized.get()) {
+                    redraw();
+                }
+            }
+        };
+        
+        // Start the animation timer
+        this.animationTimer.start();
+    }
+
+    /**
+     * Constructs a new JavaFX WorldWind canvas that shares graphics resources with another WorldWindow.
+     */
+    public WorldWindJavaFXCanvas(WorldWindow shareWith)
+    {
+        this(800, 600);
+        
+        if (shareWith != null)
+        {
+            this.wwd.initGpuResourceCache(shareWith.getGpuResourceCache());
+        }
+    }
+
+    /**
+     * Initialize JavaFX-specific components and event handlers
+     */
+    private void initializeJavaFXComponents()
+    {
+        // Set up canvas resize handling
+        this.widthProperty().addListener((obs, oldVal, newVal) -> {
+            if (initialized.get()) {
+                Platform.runLater(this::redraw);
+            }
+        });
+        
+        this.heightProperty().addListener((obs, oldVal, newVal) -> {
+            if (initialized.get()) {
+                Platform.runLater(this::redraw);
+            }
+        });
+        
+        // Set up mouse event handlers
+        this.setOnMousePressed(this::handleMousePressed);
+        this.setOnMouseReleased(this::handleMouseReleased);
+        this.setOnMouseMoved(this::handleMouseMoved);
+        this.setOnMouseDragged(this::handleMouseDragged);
+        this.setOnScroll(this::handleScroll);
+        
+        // Set up keyboard event handlers
+        this.setOnKeyPressed(this::handleKeyPressed);
+        this.setOnKeyReleased(this::handleKeyReleased);
+        
+        // Set up drag and drop handlers
+        this.setOnDragOver(this::handleDragOver);
+        this.setOnDragDropped(this::handleDragDropped);
+        
+        // Request focus for keyboard events
+        this.setFocusTraversable(true);
+    }
+    
+    // Mouse event handlers
+    private void handleMousePressed(MouseEvent event) {
+        // Convert JavaFX mouse event to WorldWind input event
+        // This would need to be implemented based on WorldWind's input handling
+    }
+    
+    private void handleMouseReleased(MouseEvent event) {
+        // Convert JavaFX mouse event to WorldWind input event
+    }
+    
+    private void handleMouseMoved(MouseEvent event) {
+        // Convert JavaFX mouse event to WorldWind input event
+    }
+    
+    private void handleMouseDragged(MouseEvent event) {
+        // Convert JavaFX mouse event to WorldWind input event
+    }
+    
+    private void handleScroll(ScrollEvent event) {
+        // Convert JavaFX scroll event to WorldWind input event
+    }
+    
+    // Keyboard event handlers
+    private void handleKeyPressed(KeyEvent event) {
+        // Convert JavaFX key event to WorldWind input event
+    }
+    
+    private void handleKeyReleased(KeyEvent event) {
+        // Convert JavaFX key event to WorldWind input event
+    }
+    
+    // Drag and drop handlers
+    private void handleDragOver(DragEvent event) {
+        // Handle drag over events
+    }
+    
+    private void handleDragDropped(DragEvent event) {
+        // Handle drag dropped events
+    }
+
+    public void propertyChange(PropertyChangeEvent evt)
+    {
+        //noinspection StringEquality
+        if (evt.getPropertyName() == WorldWind.SHUTDOWN_EVENT)
+            this.shutdown();
+    }
+
+    public void shutdown(){
+       // WorldWind.removePropertyChangeListener(WorldWind.SHUTDOWN_EVENT, this);
+        if (this.animationTimer != null) {
+            this.animationTimer.stop();
+        }
+        this.wwd.shutdown();
+    }
+
+    /** Constructs and attaches the {@link View} for this <code>WorldWindow</code>. */
+    protected void createView()
+    {
+        this.wwd.setView((View) WorldWind.createConfigurationComponent(AVKey.VIEW_CLASS_NAME));
+    }
+
+    /** Constructs and attaches the {@link InputHandler} for this <code>WorldWindow</code>. */
+    protected void createDefaultInputHandler()
+    {
+        this.wwd.setInputHandler((InputHandler) WorldWind.createConfigurationComponent(AVKey.INPUT_HANDLER_CLASS_NAME));
+    }
+
+    public InputHandler getInputHandler()
+    {
+        return this.wwd.getInputHandler();
+    }
+
+    public void setInputHandler(InputHandler inputHandler)
+    {
+        if (this.wwd.getInputHandler() != null)
+            this.wwd.getInputHandler().setEventSource(null); // remove this window as a source of events
+
+        this.wwd.setInputHandler(inputHandler != null ? inputHandler : new NoOpInputHandler());
+        if (inputHandler != null)
+            inputHandler.setEventSource(this);
+    }
+
+    public SceneController getSceneController()
+    {
+        return this.wwd.getSceneController();
+    }
+
+    public void setSceneController(SceneController sceneController)
+    {
+        this.wwd.setSceneController(sceneController);
+    }
+
+    public GpuResourceCache getGpuResourceCache()
+    {
+        return this.wwd.getGpuResourceCache();
+    }
+
+    public void redraw()
+    {
+        if (this.graphicsContext == null) {
+            this.graphicsContext = this.getGraphicsContext2D();
+        }
+        
+        // Trigger a repaint of the canvas
+        Platform.runLater(() -> {
+            // Clear the canvas
+            this.graphicsContext.clearRect(0, 0, this.getWidth(), this.getHeight());
+            
+            // Here you would integrate with WorldWind's rendering pipeline
+            // This is a simplified version - in practice, you'd need to:
+            // 1. Get the OpenGL context from JavaFX
+            // 2. Render WorldWind content using that context
+            // 3. Update the canvas with the rendered content
+            
+            // For now, we'll just draw a placeholder
+            this.graphicsContext.setFill(javafx.scene.paint.Color.BLACK);
+            this.graphicsContext.fillText("WorldWind JavaFX Canvas", 10, 20);
+        });
+    }
+
+    public void redrawNow()
+    {
+        this.redraw();
+    }
+
+    public void setModel(Model model)
+    {
+        // null models are permissible
+        this.wwd.setModel(model);
+    }
+
+    public Model getModel()
+    {
+        return this.wwd.getModel();
+    }
+
+    public void setView(View view)
+    {
+        // null views are permissible
+        if (view != null)
+            this.wwd.setView(view);
+    }
+
+    public View getView()
+    {
+        return this.wwd.getView();
+    }
+
+    public void setModelAndView(Model model, View view)
+    {   // null models/views are permissible
+        this.setModel(model);
+        this.setView(view);
+    }
+
+    public void addRenderingListener(RenderingListener listener)
+    {
+        this.wwd.addRenderingListener(listener);
+    }
+
+    public void removeRenderingListener(RenderingListener listener)
+    {
+        this.wwd.removeRenderingListener(listener);
+    }
+
+    public void addSelectListener(SelectListener listener)
+    {
+        this.wwd.getInputHandler().addSelectListener(listener);
+        this.wwd.addSelectListener(listener);
+    }
+
+    public void removeSelectListener(SelectListener listener)
+    {
+        this.wwd.getInputHandler().removeSelectListener(listener);
+        this.wwd.removeSelectListener(listener);
+    }
+
+    public void addPositionListener(PositionListener listener)
+    {
+        this.wwd.addPositionListener(listener);
+    }
+
+    public void removePositionListener(PositionListener listener)
+    {
+        this.wwd.removePositionListener(listener);
+    }
+
+    public void addRenderingExceptionListener(RenderingExceptionListener listener)
+    {
+        this.wwd.addRenderingExceptionListener(listener);
+    }
+
+    public void removeRenderingExceptionListener(RenderingExceptionListener listener)
+    {
+        this.wwd.removeRenderingExceptionListener(listener);
+    }
+
+    public Position getCurrentPosition()
+    {
+        return this.wwd.getCurrentPosition();
+    }
+
+    public PickedObjectList getObjectsAtCurrentPosition()
+    {
+        return this.wwd.getSceneController() != null ? this.wwd.getSceneController().getPickedObjectList() : null;
+    }
+
+    public PickedObjectList getObjectsInSelectionBox()
+    {
+        return this.wwd.getSceneController() != null ? this.wwd.getSceneController().getObjectsInPickRectangle() : null;
+    }
+
+    public Object setValue(String key, Object value)
+    {
+        return this.wwd.setValue(key, value);
+    }
+
+    public AVList setValues(AVList avList)
+    {
+        return this.wwd.setValues(avList);
+    }
+
+    public Object getValue(String key)
+    {
+        return this.wwd.getValue(key);
+    }
+
+    public Collection<Object> getValues()
+    {
+        return this.wwd.getValues();
+    }
+
+    public Set<Map.Entry<String, Object>> getEntries()
+    {
+        return this.wwd.getEntries();
+    }
+
+    public String getStringValue(String key)
+    {
+        return this.wwd.getStringValue(key);
+    }
+
+    public boolean hasKey(String key)
+    {
+        return this.wwd.hasKey(key);
+    }
+
+    public Object removeKey(String key)
+    {
+        return this.wwd.removeKey(key);
+    }
+
+    public synchronized void addPropertyChangeListener(PropertyChangeListener listener)
+    {
+        this.wwd.addPropertyChangeListener(listener);
+    }
+
+    public synchronized void addPropertyChangeListener(String propertyName, PropertyChangeListener listener)
+    {
+        this.wwd.addPropertyChangeListener(propertyName, listener);
+    }
+
+    public synchronized void removePropertyChangeListener(PropertyChangeListener listener)
+    {
+        this.wwd.removePropertyChangeListener(listener);
+    }
+
+    public synchronized void removePropertyChangeListener(String propertyName, PropertyChangeListener listener)
+    {
+        this.wwd.removePropertyChangeListener(propertyName, listener);
+    }
+
+    public void firePropertyChange(String propertyName, Object oldValue, Object newValue)
+    {
+        this.wwd.firePropertyChange(propertyName, oldValue, newValue);
+    }
+
+    public void firePropertyChange(PropertyChangeEvent propertyChangeEvent)
+    {
+        this.wwd.firePropertyChange(propertyChangeEvent);
+    }
+
+    public AVList copy()
+    {
+        return this.wwd.copy();
+    }
+
+    public AVList clearList()
+    {
+        return this.wwd.clearList();
+    }
+
+    public void setPerFrameStatisticsKeys(Set<String> keys)
+    {
+        this.wwd.setPerFrameStatisticsKeys(keys);
+    }
+
+    public Collection<PerformanceStatistic> getPerFrameStatistics()
+    {
+        return this.wwd.getPerFrameStatistics();
+    }
+    
+    /**
+     * Get the WorldWindow interface for this canvas.
+     * This allows access to all WorldWind functionality.
+     */
+    public WorldWindow getWorldWindow()
+    {
+        return this.wwd;
+    }
+
+    @Override
+    public GLContext getContext() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getContext'");
+    }
+}

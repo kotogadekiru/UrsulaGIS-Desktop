@@ -1,0 +1,227 @@
+# This workflow will build a Java project with Maven
+# For more information see: https://help.github.com/actions/language-and-framework-package com.ursulagis.desktop.guides/building-and-testing-java-with-maven
+
+name: Build All Installers
+
+on:
+  #  push:
+  #    branches: [ main ]
+  #  pull_request:
+  #    branches: [ main ]
+  workflow_dispatch:
+  #  branches: [ main ]
+
+# Explicitly request permissions for creating releases
+permissions:
+  contents: write
+  packages: write
+
+env:
+  DEV_IDENTITY: BXPZTQZ35S # Your Apple Dev identity, something like BXPZTQZ35S
+  PRIMARY_BUNDLE_ID: com.ursulagis.desktop.JFXMain # Unique to your app, often the launcher class
+  APP_VERSION: 1.0.${{ github.run_number }}
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Download Wix
+        uses: i3h/download-release-asset@v1
+        if: matrix.os == 'windows-latest'
+        with:
+          owner: wixtoolset
+          repo: wix3
+          tag: wix3112rtm
+          file: wix311-binaries.zip
+      - name: Decompress Wix
+        uses: DuckSoft/extract-7z-action@v1.0
+        if: matrix.os == 'windows-latest'
+        with:
+          pathSource: wix311-binaries.zip
+          pathTarget: ./target/wix
+      - name: Add Wix to Path
+        run: echo "$HOME/target/wix" >> $GITHUB_PATH
+        if: matrix.os == 'windows-latest'
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'liberica'
+          java-package: jdk+fx
+          cache: 'maven'
+      - name: "Build with Maven (Windows)"
+        if: matrix.os == 'windows-latest'
+        run: mvn -B clean install --file pom.xml
+        env:
+          MAVEN_OPTS: "-Dos.detected.name=windows"
+      
+      - name: "Build with Maven (Linux)"
+        if: matrix.os == 'ubuntu-latest'
+        run: mvn -B clean install --file pom.xml
+        env:
+          MAVEN_OPTS: "-Dos.detected.name=linux"
+      
+      - name: "Build with Maven (macOS)"
+        if: matrix.os == 'macos-latest'
+        run: mvn -B clean install --file pom.xml
+        env:
+          MAVEN_OPTS: "-Dos.detected.name=osx"
+      
+      - name: "List build artifacts (Windows)"
+        if: matrix.os == 'windows-latest'
+        run: |
+          echo "Build artifacts in target directory:"
+          dir target
+          echo "MSI files:"
+          dir target\*.msi
+      
+      - name: "List build artifacts (Linux)"
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          echo "Build artifacts in target directory:"
+          ls -la target/
+          echo "DEB files:"
+          ls -la target/*.deb
+      
+      - name: "List build artifacts (macOS)"
+        if: matrix.os == 'macos-latest'
+        run: |
+          echo "Build artifacts in target directory:"
+          ls -la target/
+          echo "DMG files:"
+          ls -la target/*.dmg
+      
+      - name: "Upload Windows Installer"
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: UrsulaGIS-Desktop_Zulu-${{ env.APP_VERSION }}_Win_x64_Installer
+          path: target/*.msi
+          retention-days: 30
+      
+      - name: "Upload Linux Installer"
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: UrsulaGIS-Desktop_Zulu-${{ env.APP_VERSION }}_Linux_x64_Installer
+          path: target/*.deb
+          retention-days: 30
+      
+      - name: "Upload macOS Installer"
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: UrsulaGIS-Desktop_Zulu-${{ env.APP_VERSION }}_macOS_x64_Installer
+          path: target/*.dmg
+          retention-days: 30
+      # - name: "Build with Maven (macOS No Signing)"
+      #   env:
+      #     MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+      #     MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+      #   if: ${{ env.MACOS_CERTIFICATE == null && matrix.os == 'macos-latest' }}
+      #   run: mvn -B clean install --file pom.xml
+      # - name: "Build with Maven (macOS Signed)"
+      #   env:
+      #     MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+      #     MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+      #   if: ${{ env.MACOS_CERTIFICATE != null && matrix.os == 'macos-latest' }}
+      #   run: |
+      #     echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
+      #     security create-keychain -p temppass build.keychain
+      #     security default-keychain -s build.keychain
+      #     security unlock-keychain -p temppass build.keychain
+      #     security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
+      #     security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k temppass build.keychain
+      #     export IDENTITY=$(security find-identity -v)
+      #     echo $(security find-identity -v)
+      #     mvn -B clean install  -Pmacos-sign --file pom.xml
+      # - name: "Codesign DMG"
+      #   env:
+      #     MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+      #     MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+      #   if: ${{ env.MACOS_CERTIFICATE != null && matrix.os == 'macos-latest' }}
+      #   run: |
+      #     export DMG_PATH=$(ls ./target/*.dmg)
+      #     /usr/bin/codesign --deep --force -s ${{ env.DEV_IDENTITY}} $DMG_PATH -v
+      #     echo DMG_PATH=$DMG_PATH >> $GITHUB_ENV
+      #     echo ${{ env.DMG_PATH }}
+      # - name: "Notarize DMG"
+      #   env:
+      #     APP_EMAIL: ${{ secrets.APP_EMAIL }}
+      #     APP_PASS: ${{ secrets.APP_PASS }}
+      #   if: ${{ env.APP_EMAIL != null && matrix.os == 'macos-latest' }}
+      #   uses: devbotsxyz/xcode-notarize@v1
+      #   with:
+      #     product-path: ${{ env.DMG_PATH }}
+      #     primary-bundle-id: ${{ env.PRIMARY_BUNDLE_ID }}
+      #     appstore-connect-username: ${{ secrets.APP_EMAIL }}
+      #     appstore-connect-password: ${{ secrets.APP_PASS }}
+      # - name: "Staple DMG"
+      #   env:
+      #     APP_EMAIL: ${{ secrets.APP_EMAIL }}
+      #     APP_PASS: ${{ secrets.APP_PASS }}
+      #   if: ${{ env.APP_EMAIL != null && matrix.os == 'macos-latest' }}
+      #   uses: devbotsxyz/xcode-staple@v1
+      #   with:
+      #     product-path: ${{ env.DMG_PATH }}
+      - name: "Create Release (Windows)"
+        if: matrix.os == 'windows-latest' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: UrsulaGIS-Desktop_Zulu_Win_x64_Installer-${{ env.APP_VERSION }}
+          name: Windows Installer Build -${{ env.APP_VERSION }}
+          body: |
+            Windows MSI installer built from commit ${{ github.sha }}
+            
+            **Build Info:**
+            - Commit: ${{ github.sha }}
+            - Branch: ${{ github.ref_name }}
+            - Run: ${{ github.run_number }}
+            - Date: ${{ github.event.head_commit.timestamp }}
+          files: |
+            target/*.msi
+          prerelease: true
+          draft: false
+      
+      - name: "Create Release (Linux)"
+        if: matrix.os == 'ubuntu-latest' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: UrsulaGIS-Desktop_Zulu_Linux_x64_Installer-${{ env.APP_VERSION }}
+          name: Linux Installer Build -${{ env.APP_VERSION }}
+          body: |
+            Linux DEB installer built from commit ${{ github.sha }}
+            
+            **Build Info:**
+            - Commit: ${{ github.sha }}
+            - Branch: ${{ github.ref_name }}
+            - Run: ${{ github.run_number }}
+            - Date: ${{ github.event.head_commit.timestamp }}
+          files: |
+            target/*.deb
+          prerelease: true
+          draft: false
+      
+      - name: "Create Release (macOS)"
+        if: matrix.os == 'macos-latest' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: UrsulaGIS-Desktop_Zulu_macOS_x64_Installer-${{ env.APP_VERSION }}
+          name: macOS Installer Build -${{ env.APP_VERSION }}
+          body: |
+            macOS DMG installer built from commit ${{ github.sha }}
+            
+            **Build Info:**
+            - Commit: ${{ github.sha }}
+            - Branch: ${{ github.ref_name }}
+            - Run: ${{ github.run_number }}
+            - Date: ${{ github.event.head_commit.timestamp }}
+          files: |
+            target/*.dmg
+          prerelease: true
+          draft: false

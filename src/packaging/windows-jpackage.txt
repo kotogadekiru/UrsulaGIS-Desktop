@@ -1,0 +1,37 @@
+--type msi
+--name ${app.name}
+--win-menu
+--win-menu-group ${windows.vendor}
+--vendor ${windows.vendor}
+--icon "${project.basedir}/U_nueva_3_256x256_verde.ico"
+--dest "${project.build.directory}"
+--main-jar ${project.build.finalName}.jar
+--main-class ${main-class}
+--input "${project.build.directory}/dependency"
+--app-version ${app.version}
+--runtime-image "${project.build.directory}/jvm-image"
+--temp "${project.build.directory}/installer-work"
+--win-upgrade-uuid ${windows.upgrade.uuid}
+--description "${project.description}"
+--copyright "(C) ${windows.vendor}"
+--java-options -Xms2g
+--java-options -Xmx20g
+--java-options -XX:+UseZGC
+--java-options -XX:MaxGCPauseMillis=200
+--java-options -XX:+UseStringDeduplication
+--java-options --enable-native-access=ALL-UNNAMED
+--java-options --add-opens=javafx.controls/javafx.scene.control.skin=ALL-UNNAMED
+--java-options --add-opens=javafx.controls/javafx.scene.control=ALL-UNNAMED
+--java-options --add-opens=javafx.base/javafx.collections=ALL-UNNAMED
+--java-options --add-opens=javafx.base/javafx.beans=ALL-UNNAMED
+--java-options --add-opens=javafx.base/javafx.beans.property=ALL-UNNAMED
+--java-options -Djogamp.gluegen.UseTempJarCache=true
+--java-options -Djava.awt.headless=false
+--java-options -Dprism.order=sw
+--java-options -Dprism.forceGPU=false
+--java-options -Dhttps.protocols=TLSv1.2,TLSv1.3
+--java-options -Djdk.tls.client.protocols=TLSv1.2,TLSv1.3
+--win-shortcut
+--win-shortcut-prompt
+--win-per-user-install
+--win-update-url https://www.ursulagis.com/update/

@@ -1,0 +1,48 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "JFXMain",
+            "request": "launch",
+            "mainClass": "com.ursulagis.desktop/com.ursulagis.desktop.gui.JFXMain",
+            "projectName": "UrsulaGIS-Desktop_Zulu"
+        },
+        {
+            "type": "java",
+            "name": "OpenBrowserUrl",
+            "request": "launch",
+            "mainClass": "com.ursulagis.desktop.gui.utils.OpenBrowserUrl",
+            "projectName": "UrsulaGIS-Desktop_Zulu"
+        },
+        {
+            "type": "java",
+            "name": "Launch JFXMain",
+            "request": "launch",
+            "mainClass": "com.ursulagis.desktop.gui.JFXMain",
+            "projectName": "UrsulaGIS-Desktop_Zulu",
+            "vmArgs": [
+                "-Djava.awt.headless=false",
+                "-Dprism.verbose=false",
+                "-Djavafx.verbose=false",
+                "-Dorg.apache.commons.lang3.SystemUtils.JAVA_SPECIFICATION_VERSION=17",
+                "-Djogamp.gluegen.UseTempJarCache=true",
+                "-Djava.net.useSystemProxies=true",
+                //"-XX:+UseG1GC",
+                "-Xms2G",
+                "-Xmx20G",
+                "-XX:+UseZGC",
+                "-XX:MaxGCPauseMillis=200",         
+                "-XX:+UseStringDeduplication",
+                "-Xdebug",
+                "--add-opens=javafx.controls/javafx.scene.control.skin=ALL-UNNAMED",
+                "--add-opens=javafx.controls/javafx.scene.control=ALL-UNNAMED",
+                "--add-opens=javafx.graphics/javafx.scene=ALL-UNNAMED",
+                "--add-opens=javafx.base/javafx.beans=ALL-UNNAMED"
+            ]
+        }
+    ]
+}

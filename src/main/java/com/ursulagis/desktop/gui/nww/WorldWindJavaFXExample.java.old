@@ -1,0 +1,63 @@
+package com.ursulagis.desktop.gui.nww;
+
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.layout.BorderPane;
+import javafx.stage.Stage;
+import gov.nasa.worldwind.WorldWind;
+import gov.nasa.worldwind.avlist.AVKey;
+import gov.nasa.worldwind.Model;
+
+/**
+ * Example demonstrating how to use WorldWindJavaFXCanvas in a JavaFX scene.
+ * This shows the basic setup for integrating WorldWind with JavaFX.
+ */
+public class WorldWindJavaFXExample extends Application
+{
+    @Override
+    public void start(Stage primaryStage) throws Exception
+    {
+        // Create the main layout
+        BorderPane root = new BorderPane();
+        
+        try
+        {
+            // Create the WorldWind JavaFX canvas
+            WorldWindJavaFXCanvas worldWindCanvas = new WorldWindJavaFXCanvas(1200, 800);
+            
+            // Set up the WorldWind model
+            Model model = (Model) WorldWind.createConfigurationComponent(AVKey.MODEL_CLASS_NAME);
+            worldWindCanvas.setModel(model);
+            
+            // Add the canvas to the center of the layout
+            root.setCenter(worldWindCanvas);
+            
+            // Create the scene
+            Scene scene = new Scene(root, 1200, 800);
+            
+            // Set up the stage
+            primaryStage.setTitle("WorldWind JavaFX Integration Example");
+            primaryStage.setScene(scene);
+            primaryStage.show();
+            
+        }
+        catch (Exception e)
+        {
+            System.err.println("Error creating WorldWind canvas: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Show error message in the scene
+            root.setCenter(new javafx.scene.control.Label("Error: Could not initialize WorldWind. See console for details."));
+            
+            Scene scene = new Scene(root, 400, 300);
+            primaryStage.setTitle("WorldWind Error");
+            primaryStage.setScene(scene);
+            primaryStage.show();
+        }
+    }
+    
+    public static void main(String[] args)
+    {
+        launch(args);
+    }
+}
