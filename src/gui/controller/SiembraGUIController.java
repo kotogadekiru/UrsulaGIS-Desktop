@@ -306,7 +306,8 @@ public class SiembraGUIController {
 			ExportarPrescripcionSiembraTask ept = new ExportarPrescripcionSiembraTask(laborToExport, shapeFile,unidad); 
 			ept.installProgressBar(progressBox);
 
-			ept.setOnSucceeded(handler -> {				
+			ept.setOnSucceeded(handler -> {			
+				laborToExport.getLayer().setEnabled(false);
 				File ret = (File)handler.getSource().getValue();
 				playSound();
 				ept.uninstallProgressBar();

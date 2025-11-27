@@ -58,10 +58,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import tasks.GetNDVI2ForLaborTask;
-import tasks.GetNdviForLaborTask3;
 import tasks.GetNdviForLaborTask4;
-import tasks.procesar.ExtraerPoligonosDeLaborTask;
 import utils.DAH;
 import utils.ExcelHelper;
 

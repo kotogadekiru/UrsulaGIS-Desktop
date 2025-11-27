@@ -1,0 +1,438 @@
+c6a6b6d (HEAD -> master) fix clonar y resumir labor
+ca5841a (master/master) add numero to recorrida
+841c643 fix decimal places with wrong symbol
+138365f mejora la eficiencia de la anotacion
+eec8215 add filtrar ndvi por fecha
+f88619b update gitignore to ignore classpath
+39e4d85 (tag: v0.2.30) update build date
+8a0b2d9 fix cortar por poligono aumenta area y resumir fertilizacion
+867496f Merge pull request #56 from JuaniElias/master
+7458286 fecha in Recorrida is now fechaString to create new column in DB
+7dc25ee Merge branch 'kotogadekiru:master' into master
+c3cb65e fix generar muestreo dirigido desde cosecha con columnas no estandar
+3e698a9 Merge branch 'master' of https://github.com/kotogadekiru/UrsulaGIS-Desktop
+1043e6d update build date
+cf181be Merge branch 'kotogadekiru:master' into master
+959282e Update wixBuildAction.yml change to java 8
+c8ff045 Create wixBuildAction.yml
+0d4917e permitir ingresar la unidad de dosis al crear una siembra de poligono
+6a07254 remove french not suported
+52c7e7b undo fix wrong positioning on screen Y
+822edac Merge branch 'master' of https://github.com/kotogadekiru/UrsulaGIS
+e2b3e33 mejorar converit poligono a siembra
+d48e21f Added fecha to Recorrida.
+b0cf12d Merge pull request #52 from JuaniElias/master
+6928ed7 Merge branch 'kotogadekiru:master' into master
+e03ca0e Merge pull request #53 from JuaniElias/relative-Superficie-dialog
+116ffba Moved "Medir Superficie" dialog to the botttom left
+e9ae547 Improved datepicker allowing to put 2 dates as placeholder
+5e4e2ee Merge branch 'master' of https://github.com/kotogadekiru/UrsulaGIS
+33bd237 razer classpath
+421b244 remove duplicated clone actions
+b895258 Merge pull request #50 from JuaniElias/clone-jobs-extended
+a7d4aa7 Merge branch 'master' into clone-jobs-extended
+467d61b Merge pull request #51 from JuaniElias/ndvi-date-validation
+6f1918a Cambio Property<Fertilizante> por Fertilizante en FertilizacionLabor
+3693744 remove unused imports
+5ce871f remove import SiembraLabor
+53446fa make progressible
+e8abeb7 creo un task generico para clonar cualquier tipo de labor
+569555c hacer static el constuctor de copia para que pueda ser reutilizado
+167fd8f fix wrong positioning on screen Y
+8b095eb add constructor de copia
+40041ab add constructor de copia to CaldoItem
+e345651 add comment to producto labor
+0dfa1cf add constructor de copia y inicializa lista de CaldItems
+5dde5e1 Added warning when dates are wrong
+7d9497a Imports cleanup
+599abc6 added Clonar to Pulverizaciones
+20411af Added Clonar to Siembras
+59ccca4 Added Clonar to fertilizaciones
+a144b1e fix generar margen de cosecha sin grillar no terminaba de extraer el contorno
+5538d26 add extract poligon to LaborItemController
+e9cbf8d fix sumarMargenes no conserva costo fijo
+f1fd345 translate LaborItemGUIController
+f27631b fix null pointer wwjPanel not initialized on refresh
+ed79a14 implementacion del issue #48 sumar mapas de margenes
+c6c3b3e limpieza general
+499a8bc limpieza general
+8c6078d remove enhancedprecisionOP en unirPoligonos
+9d71a23 add setAmount para poder editar con click derecho
+9852f34 implementacion issue # permitir editar feature
+364e1ef add methods to insert feature
+88ec4f1 remove synchronize to make it faster and use labor.cachedOutStoreQuery
+17694ee muestra opciones para editar un item individual
+baef39d fix exporta mas de 100 zonas
+213a08e comment typeDescriptor.Split
+c1f488e agrego verificacion del peso final del archivo
+5815b2c solo exporto los datos minimos necesarios
+ffdfac4 LaborItem id defautl es -1. buildfeature con id null para que genere nuevos ids
+e9036fe fix extrac contorno. baje el sleep time del lock de la labor de 1000 a 10. todo anda mas rapido
+baa9b9d set poligono activo antes de saveAll
+828df28 cambiar getCantLabor para que no use extraer poligono
+a567d8b fix obtenerIntersecciones
+e8aeaa6 cambio nombres de variables para que se lea mejor
+5d3f150 en unir cascading si hay una sola geometria la devuelvo sin mas. algunos cambios esteticos y nombres de variables
+850e9aa correcciones menores para que se entienda mejor
+160cef8 fix valores cambiados al generar siembra fertilizada
+3f79280 simplifica la geometria antes de crear el SiembraItem
+b724e8d permite crear pulverizacion de muchos poligonos
+cd932d3 agregar getPoligonosSeleccionados
+6fc1387 agregar nextID al feature si no tiene en labor.add()
+6737baf corregir saveAll y agregar convertirPoligonosAPulverizacion
+c5b67ef add saveAll en trasacction
+f00dd2c check ppmObjD not null on set
+a6bae66 remove ppmObjD null if cero
+6e754b1 clean imports
+5fcf89a add checks to featureCollection para que no se vuelva a producir el error donde no se ingresa una feature porque el id esta duplicado
+eef552a solo guardar configuracion si guardarConfig == true
+6e69a80 add TODO traducir
+412d1ed fix total semilla cuando no tiene semillas por bolsa
+baa1085 add comment to if g instanceof Polygon
+a4bf6f0 grillar extension en vez de hacer interseccion de poligonos porque se pierden los bordes de las geometrias y da mal la superficie total
+1ad8508 add comments to methods
+acae27f fix perdia geometrias por id duplicado
+60e0e31 fix orden compra cuando semillas por bolsa es 0
+b45e4e8 format digits en getPathTooltip
+3e55b7e fix rollback exception en save. iniciar productoLabor si no existe en getProductoLabor
+c4545cf agregar decimales a cantidad
+7ee72e0 create initial pom not working yet
+3772090 add equals to productos
+c2533fe add equals to configurable objects
+8964059 bump jpa to 2.1
+3319c55 fix conflicts
+ca093d6 update gitignore
+0ace8e8 update classpath
+4279423 algunas correcciones menores
+5442a63 remove import sun.security.krb5.Config;
+371bf0c Update main.yml
+afb9338 Update main.yml
+1cedb8d Merge branch 'master' of https://github.com/kotogadekiru/UrsulaGIS
+b230cdc un delete .classpath
+0ee010e add settings to gitignore
+f9302b2 remove classpath
+7fa6ca9 add .classpath to gitignore
+8d7309b agrego micronutrientes a convertir poligono a suelo task
+8714cd6 termino de agregar micronutrientes a balance cosecha y muestra
+5628bd0 add sumar cosechas
+3b4b175 add convertir ndvi acumulado a cosecha task; add micronutrientes
+44bc214 fix poligonos perdidos al importar cosecha
+257fff2 simplificar poligono al extraer contorno; estimar rinde de suelo muestra limitantes
+ee24afc fix extraer contorno bloquea la interfaz al compartir
+cdcd2b5 fix generar oren siembra; fix convertig geometry to poligono; includes auto translate but not finished
+193ba7c permite importar poligonos en formato kml
+3123039 comparte cosecha; corrije fertilizacion cambiaba el precio labor e insumo al editar
+57c41b8 SplitFertilizacion
+91f62ba agregar partir fertilizacion y cambia grilla a number imput dialog
+82f2b33 fix generar ordenSiembra FertL y FertC
+54d1e6b Merge branch 'master' of https://github.com/kotogadekiru/UrsulaGIS
+7443f7c add transparency to layers. desde la rural 2024. falta corregir compartir siembra
+f25d49e remover extraer contorno de correlacionar capas
+1e55a82 fix extraer contorno y unir cascading y convertir ndvi a coseca
+529c41d commit antes de ir al salon agtech
+3e7803f faltaba Agua en el perfil y profundidad de napa al crear suelo de poligonos
+aab7553 faltaba K y S al crear suelo de poligonos
+5aab4a9 quitando contorno de labor
+8b7604b correlacionar capas gui initial commit
+d114f8b correlacionar layers task
+9a62eb0 push snake easter egg
+ec47e47 fix duplica recorrida al compartir
+1bb1b5f add recorrida uuid
+41874a9 fix subnombre repetido
+a8151d0 fix clasificador 1 y menos de 9 clases
+2283979 fix simplificar camino. cambia origen y destino y reinicia crosses cada vuelta
+49bb726 fix extraer contorno para balance de nutrientes
+3f2cad4 mejora de convertirSueloACosechaTask para que muestre el factor limitante
+de7267c mejora de convertirSueloACosechaTask para que muestre el factor limitante
+fe196a1 mejora de convertirSueloACosechaTask para que muestre el factor limitante
+77adaa8 permitir editar config.properties desde configuracion->configuracion con una tabla
+5cfd675 permitir editar config.properties desde configuracion->configuracion con una tabla
+bc9f827 permite seleccionar NDVI TYPE TOA/SR de config.properties
+106f590 fix error balance de nutrientes de fertilizacion
+c18d3ff agregar balance de nutrientes en npks, interpolacion de recorrida, sulo permite elegir col amount
+78cd587 pasar los datos del viejo margen al nuevo al cortar por poligonos
+c6b1aa6 reinstalar welcome message que estaba comentado por error
+07f7fb1 list to collections filters not null
+bab3d0c fix resumir margenes y suelos y unirGeometrias
+9355d70 fix precio grano overrides precio insumo en cosecha
+e1167bd fix resumir balance y renta y margenes recorta por contorno de labores
+685d232 fix precio labor fertilizacion no andaba
+a9d0d16 bump build date
+2380bfd Merge pull request #39 from JuaniElias/master
+13ec8d3 Added Header to NumberInputDialog with a more clear prompt
+c92afeb Merge pull request #38 from JuaniElias/master
+f408e84 costoLabHaLabel missing on Fert added
+5516913 add suelogui controller
+57d6b99 fin sprint resumir soil map
+43df09c Merge pull request #37 from kotogadekiru/crearResumirMargenTask
+7eaf772 (master/crearResumirMargenTask) fin del sprint para agregar resumir a un mapa de margenes
+2d599d2 primera version funciona resumen. falta internacionalizacion
+30002a9 Merge pull request #34 from JuaniElias/typos/traducciones
+dc083d0 Merge pull request #35 from JuaniElias/OC-importe-total
+f364b15 Merge pull request #36 from JuaniElias/NumberInputDialog-customization
+556c941 Also for Pulv and Fert
+cd961a8 Also for Siembra
+650749a Added custom dialog to harvest
+e7297fc More text customizations on NumberInputDialog
+5cae05f typo en opciones
+3942cbc Added label for "Labour cost per ha" in Ferts
+cd00221 Formatted to 2 decimal places
+ad4ae9a Also on existing order
+607c9be Merge pull request #33 from JuaniElias/excel-fix
+66f0429 Calculate total before showing it
+ca7af95 Fixed wrong UTF-8 characters and missing N° Registro to Excel
+4c01a4b More sysout commented for better performance
+2382544 Comment sysout to improve performance while saving all agrochemicals
+abef7b1 fix orden compra null pointer en calcularImporte
+06b2208 Merge pull request #30 from JuaniElias/filtro-agroquimicos
+e28ed7b Removed unused imports
+c104c33 Commented out println
+db4cd2e refresh() to update changes
+8335293 findAgroquimico typo
+f3300d0 toggleAgroquimicos moved from DAH to ConfigGUI below doConfigAgroquimicos
+5f4f400 Merge pull request #25 from JuaniElias/fix-pulverizacion
+794bf32 Renamed to toggleAgroquimicos more descriptive
+ca810dc Added to context menu with messages
+7841312 Action added in SmartTableView
+b229a21 DAH method activateAgroquimicos created
+aad9f8a Toggle active method added in Agroquimico class
+13131dd Warning message moved to a Tooltip on input mouse hover
+4eb41b5 Tooltip text created
+78e2e0b Added NumberinputDialog to the rest of the orders
+1b06dd8 Agregado en cosecha con el rinde esperado
+53279d7 Added case of closing/cancelling the InputDialog
+0d5d830 Creado NumberInputDialog para inputs de tipo Double y que sean validados y localizados
+613191c Usando Messages para el format
+2ec816f Merge branch 'kotogadekiru:master' into fix-pulverizacion
+6df4454 agregar cortar por poligono a todas las labores
+df30aa9 Usando format.parse para validar dosis/rinde. Funciona segun el locale del usuario
+c17f27d remover editar en tabla pulverizacion
+7b75b55 add getDecimalSeparator to Messages
+05a01f6 Merge branch 'master' of https://github.com/kotogadekiru/UrsulaGIS-Desktop
+03b9afc Merge pull request #22 from JuaniElias/siembra-fert-fixes
+a54d482 importar agoquimicos excel
+77aff19 Merge pull request #26 from JuaniElias/filtro-agroquimicos
+8cf5ea5 Los agroquimicos creados estan activados por default
+2ed19d2 Agregado getAgroquimicosActivos a la Data Table
+822579a Property y query para "Activo" agregados
+f346c31 Agregado a Fertilizacion
+9637481 Igual en pulverizacion
+df32b9e Solo construyo el TextInputDialog una vez
+18fdbb5 Validacion siembra agregado
+5198a02 Localization string added
+da3b9e0 Dosis mas correcto
+4a1fb03 Cleaner Dose validation
+fecdbfe Validacion para el input de dosis/rinde en doCrearPulverizacion()
+7a24c82 Fix de Cantidad para pulverizaciones importadas
+d099f0b Added messages for edge cases where there are no sowing or fertilizations selected (or created)
+dd2ae3e Merge pull request #21 from JuaniElias/typos/traducciones
+fd82097 Re-encodeado para que se vean bien los strings
+f48f7e1 Consistencia tildes portugués
+d1e4737 Merge pull request #19 from JuaniElias/orden-fertilizacion
+4910c0d Merge pull request #18 from JuaniElias/typos/traducciones
+e457431 El producto esta correctamente agregado en la orden
+aad37b9 String de config de fertilizacion agregados
+9b1e570 Agregado "Compartir" a la fertilizacion action usando el string generico 'JFXMain.compartir'
+3f767b8 Tildes fix
+967664b agregar las acciones de compartir fertilizacion. faltan strings en messages.properties
+c2cd7ae Merge pull request #17 from JuaniElias/typos/traducciones
+3f1dac8 Merge pull request #16 from JuaniElias/master
+fe21615 Fix tildes fertilizantes
+027a918 Merge branch 'master' into master
+4a400d9 fxml de OrdenFertilizacion agregada
+fb57181 Agregado el show ordenes de fert
+d1b37ff Agregadas en DAH el getter
+d794b08 Hago publico el Call() igual que en pulverizacion
+be5fa3e Create CompartirFertilizacionLaborTask.java
+83dae5a cambiar cascaded union por GeometryHelper.union en contorno
+e5dde80 proyect settings
+ac6c7ad various fixes
+e537a61 crear circulo desde mediciond de distancia
+c160b99 Obtener geometryFactory de ProyectionConstants
+346123a add douglas peucker simplificator
+cc94f6c agregar el id dentro del synchronized
+71cb149 ordenar mensajes
+8d84199 Mensajes de OrdenFertilizacionPaneController agregados
+295e49c Create OrdenFertilizacionPaneController.java
+2923f6d Orden fertilizacion agregada
+5750bb4 agrega un simplificador douglasPeuker al archivo generado para evitar que sobrepase los 512kb de limite
+65a5015 fix clasificador cuando los valores son casi iguales
+29f75a9 correccion calculo densidad aparente en balance de 2 suelos. sumaba y debe promediar
+b078b5a agregue importar recorrida correccion
+c40b2e6 agregue importar recorrida
+cab1dd7 agregar importar recorrida e interpolar recorrda
+a5237ce agrego FertiGUIController y RecorridaController
+ebf6562 agrego FertiGUIController y RecorridaController
+7494890 permite seleccionar una base de datos diferente
+1ef710d mover metodos a sueloGUIController
+65f3fdd add validacion recomendacion p reconstruccion
+53e4f1f verifico que cosecha tenga cultivo. y al grillar la sup minima es cero para que no pierda poligonos
+c088fcd corregir titulo recomendar fertP balance
+c77df8c Merge branch 'master' of https://github.com/kotogadekiru/UrsulaGIS-Desktop
+ba114e4 Agrega recomendacion de P para una concentracion de ppm objetivo
+2913bd3 Merge pull request #14 from JuaniElias/traducciones
+4a08885 Fixes de traduccion
+fdeca95 Merge pull request #12 from JuaniElias/convertir-a-recorrida
+cb3fbb7 Fix titulos de graficas
+d24be81 Agregado Convertir a Recorrida para Camino
+c28fbc6 fix memory isues on layer panel
+58cc051 correcciones para que libere la memoria al quitar las labores
+61ae131 fix corregir distancia y rumbo
+5d94af4 agregando ordenes de siembra
+8f2cbc1 test new remote
+3be203f solo mostrar welcome message si lastVersionNuber es null
+a1296ef udate items al cambiar el locale. compartir orden de siembra, y otros
+55a2c41 (tag: v0.2.28, tag: 0.2.28) v0.2.28
+9965c6a Merge branch 'master' of https://github.com/kotogadekiru/UrsulaGIS
+3f766ce upload OrdenPulv falta contorno
+6c30c60 Create main.yml
+ad50ff9 add total to orden compra dialog
+2c4e46a fix orden compra pulverizacion
+e3dd339 fix i18n harvestConfigDialog
+d2f87c1 0.2.28 tabla caldo en pulverizacion controller
+ce258fd fix hash poligono y lote
+409b82d agregar descarga tasa de crecimiento forrajero
+91ac28e refactor JFXMain para pasar los metodos de poligonos a PoligonoGUIController
+d4354e8 varios arreglos a los formatos de los numerso en las configuraciones y en guardar configuracion
+7946b8e cambiando DecimalFormat por Messages.getNumberFormat que depende del locale seleccionado
+3ab607b quitar ShowConfigGUI duplicado con ConfigGUI
+60dba59 arreglo del histograma de ndvi para que distribuya las clases entre 0.1 y 1.0 en 9 clases. antes ponia -inf +inf en 8 clases
+db4ba6b fix siembra fertilizada y convertir a siembra para que puedan ingresarse fertl y fert c
+586da4d Merge branch 'master' of https://github.com/kotogadekiru/UrsulaGIS
+944f62d fix clasificador
+942444c Merge pull request #10 from JuaniElias/correccion
+9be2c48 Correccion de algunos typos
+8192aea fix memory leak de measuretool
+81582aa add boton aceptar to crear fertilizacion table
+adf51e7 add convertir cosecha a siembra y fertilizacion
+4ef9994 fix generar siembra de fertilizacion tooltip
+fbb6b44 fix convertir ndvi a cosecha y fertilizacion que dividia mal el lat y long step
+5bd7744 exportar recorrida task con name
+7de53df version 2.27.2
+6a1725b version 2.27.2
+7707b26 Merge pull request #9 from leompa/correcionSiembraDesdeFetilizante
+a21f2ba Delete .gitignore
+9cc5527 Delete persistence.xml
+9104355 Update ConvertirNdviACosechaTask.java
+b03ffdb Correccion del calculo de ancho
+67d9e7f correccionDeSemillasXKg
+d261484 ndvi chart update
+cad4960 accum ndvi chart
+52ab6ca Merge branch 'master' of https://github.com/kotogadekiru/UrsulaGIS
+13cd68f accum ndvi chart
+e86ada1 Merge pull request #8 from leompa/Acumulado
+c93d7f2 acumulado
+f20a956 Merge pull request #7 from leompa/correciones
+9203596 correccion error
+f93a7bb gui
+de8da18 remov google key
+c3d1553 fix new sentinel2 data format and files in memory
+11db43d fix ndviChart VGrow
+fdf283d Merge branch 'master' of https://github.com/kotogadekiru/UrsulaGIS
+a332c90 Delete bin/utils directory
+7246568 Merge branch 'master' of https://github.com/kotogadekiru/UrsulaGIS
+d02d96b Delete .gitignore
+5553521 algunos cambios
+21185a6 Merge pull request #6 from leompa/CorreccionNdviToFert
+d079b03 Corrección de ndviToFert
+f5a8afd Merge pull request #5 from leompa/mouseChart
+0b7c2c0 outlayers
+0abb3cd Update ConvertirNdviAFertilizacionTask.java
+712d660 correccionErrorNullConvertirNDVItoFert
+fb46254 charMouse
+a37568e mouseChar
+6cc5696 descarga de ndvi busca los ndvi en bd y cargados antes de hacer el request
+92551be add descarga de ndvi de varios poligonos y corregir exportar a excel de ndviChart
+0ac3291 add title to ndviChart
+827ddef ndviChart final push
+8e38c03 ndviChart
+9c5eea4 arreglo clasificador jenkins para que considere el tamanio de los poligonos. arreglo del clasificador stdev para que pueda dividir en 2 clases convertir ndvi a cosecha con sigmoidea en vez de lineal
+1e78bee intersectar poligonos funciona bien con mas de 2 poligonos. unir fertilizaciones corrige por area superpuesta exportar prescripcion ambienta bien
+2dfdcd3 nuevo sonido, exportar recorrida a shp; exportar prescripcion de pulverizacion, extraer poligonos de labor con letra; tooltip alineado a la izquierda.
+5b2ad34 0.2.27 32bits compatible Compartir Recorrida Generar suelo desde cosecha generar fertilizacion desde ndvi generar siembra desde fertilizacion arreglar decimales en diferentes idiomas recomendar fertilizacion n en paralelo hacer gc cada 30 segundos para liberar memoria ordenar acciones layers alfabeticamente
+c6fc01b FixJuntarShapes; Fix Layer Panel Ndvi order
+9bffd58 various fixes
+c26bc96 cambie iconos a 40x40 y fondo transparente
+d70d07f remove  extra icons
+ac981e2 24px icons v2
+1b641a8 24px icons v2
+a08adbf (tag: V0.2.26) 0.2.26
+643bb76 acortar camino minimo. ndvi rinde cero 0,5 si ndvi promedio es mayor a 0,5 sino 0,1
+89072ab cleanup
+61ebd8f update version 0.2.24.2
+a7d379d iconos layer unstaged en el anterior
+39d6b44 orden compra iconos layerpanel acciones en el arbol de layerpanel
+ccc234b traduccion de version 0.2.24 en proceso. ya funciona el jar. falta traducir los tooltips de los tasks
+a7ae4d6 conflicts resolved
+db6ff24 Merge branch 'master' of https://github.com/kotogadekiru/UrsulaGIS.git
+3a0f398 revision del trabajo de internacionalizacion e inclusion del portuguez
+47f35a3 implementacion de internacionalizacion y traduccion al ingles.
+3a50525 JFXMain Internationalization commit
+407a22f ndvi histo chart traducido al ingles. primero commit julieta
+7651d98 comit de juili test
+5257f6b comit de prueba de julisubic
+722f8a8 internationalization in progress. seting up julisubic
+dfab38d 0.2.24 dev commit 04122018
+4e98546 0.2.24 dev commit 04122018
+f8661f1 Unir Fertilizaciones
+090a81f arregle importar poligonos y genere quietar todos los seleccionados
+b742aae mejore el metodo para crear el analyticSurfaceLayer y el generador de muestreo dirigido
+e63043f modifique el layer panel para que muestre los ndvi en orden. y el evoluvion ndvi para que prenda y apague al mismo tiempo los layers de la misma fecha
+9ac8db9 v 0.2.23 dev add jars cambio db a h2
+0748fe0 version 0.2.23 dev con base de datos h2
+460e5e2 release 0.2.21
+9dc86fd agregue Recomendacion de FertN v0.2.21 27jun2017
+bec6192 agregue exportar para todas las labores. cambio de nombre de los paquetes
+b0cd9cb cleanup
+f46fa76 s
+1e3b09b ss
+4fac8e7 agregando los cambios pendientes
+13b96b5 termine de crear margenes, balance de fosforo. Corregi la edicion de labores siembra, pulverizacion y fertilizacion que no tomaban los calculos. se pueden visualizar las tablas de todas las labores. se pueden visualizar los histogramas de todas las labores. se puede convertir poligonos a siembra, cosecha, pulverizacion y fertilizacion
+645456f Balance de P y Obtencion de ndvi seleccionando destino
+6e91afa recomendando fertilizacion 0.2.18
+fcf48b7 0.2.17.2
+5b2abde version 0.2.17 con acercaDe y corregidos el layerPanel
+71be867 correccion de Labor y cosecha config que no guardaba la configuracion porque se pisaba el properties de Labor con el de CosechaLabor.
+98cac83 mejorando la correlacion entre rinde y elevacion
+1797e5d Margen
+f7163e3 permite importar ndvi tif files como analytic surface.
+d5d13d8 se pueden importar ndvi tiff files como analyticSurface
+8febac3  consolidando limpiar cosechas version 0.2.14 y empezando a agregar siembras, pulverizaciones y margenes
+7950e99 consolidando codigo de corregir cosecha version 0.2.14 y empezando a agregar siembras, pulverizaciones y margenes
+cc56c5e corrige el problema del primer poligono al corregir distancias
+81ddd83 cachedOutStoreQuery funciona en paralellOutliersFilter
+853a88a cree cachedOutStoreQuery que acelera mucho la creacion de las grillas y un poco el filtro outlayers
+2885760 fixed griding problems with large geometries; and changed the labels of the generated layers. added cloning function
+960b716 cambie el metodo de interpolacion en el filtro outlayers por el metodo de kriging que toma la 1/distancia^2 para ponderar los pesos
+c2cf160 Merge https://github.com/kotogadekiru/WorldWindMarginMap
+58b614d initial project commit version 0.2.11
+b7cf87a Initial commit
+a95f561 correccion del metodo de corrimiento de pesada y generacion de version 0.1.23
+0926128 version 0.1.22
+c3c04d4 add
+b23d7d1 adding tasks to index
+2ef78df version 0.1.21
+cc00b21 borro snapshot
+011ee67 version 0.1.21 convierte las siembras de semillas por metro a bolzas por ha
+c6482d3 se manejan las cosechas en la unidad original y se genera el mapa de margenes a partir de una gilla generada ad-hoc
+f8c0d0f trabajo en harvestmap. manejo todo en kilos y no convierto a toneladas
+ebd6dea agregue costo fijo y corregi problemas de clasificacion y redondeo al exportar la cosecha
+9be0611 working on jre 1.8.0_60 issues and 3d map rendering
+ee633c4 mejora del proceso de generacion de histograma y modificaciones en la asignacion de colores
+665a190 version 0.0
+5f43393 primer run exitoso. calcula demaciado fertilizante
+1a7973b ProcessNewSoilMapTask
+b2d673e preocessNewSoilMapTask
+53f230e add fertilizante
+d4fb7f5 ExportarNewSueloMap
+6f094cd newSoilMapTask Pushj
+6da1a3c newSoilMapTask
+49e5294 soilMapTask
+58adfdf producto con tasa de absorcion
+0a8f67e Producto
+f2d1478 fix suelo
+ef18638 suelo uncomment
+69fd8c8 fix null from convert to double
+648e0c6 fix .gitignore
+ec2fc0d first commit
+70f47c6 Initial commit

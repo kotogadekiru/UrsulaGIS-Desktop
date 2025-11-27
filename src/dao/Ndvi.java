@@ -47,8 +47,8 @@ public class Ndvi implements Comparable<Object>{//extends AbstractBaseEntity {
 	private Double porcNubes=null;
 	//private Double rFAA=null;
 
-	@Transient
-	private File f=null;
+	//@Transient
+	//private File f=null;
 
 	@ManyToOne 
 	//@ManyToOne(cascade= {CascadeType.DETACH})

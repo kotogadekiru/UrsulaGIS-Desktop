@@ -29,8 +29,8 @@ public class UnzipUtility {
 	
 	/**
 	 * 
-	 * @param is
-	 * @return
+	 * @param is ZipInputStrean
+	 * @return Map de ZipEntry con su Byte[]
 	 */
 	public static Map<ZipEntry,byte[]> readFrom(InputStream is){
 		Map<ZipEntry,byte[]> entrys = new HashMap<ZipEntry,byte[]>();
@@ -54,7 +54,7 @@ public class UnzipUtility {
 		} catch (Exception e) {			
 			e.printStackTrace();
 		}		
-		System.out.println("returniong entrys "+entrys.size());
+		System.out.println("returning entrys "+entrys.size());
 		return entrys;
 	}
 	

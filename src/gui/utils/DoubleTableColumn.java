@@ -5,6 +5,7 @@ import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -22,9 +23,9 @@ public class DoubleTableColumn<T> extends TableColumn<T,String> {
 	public DoubleTableColumn(String title,Function<T,Double>  getMethod, BiConsumer<T,Double> setMethod){
 		super(title);	
 		setEditable(setMethod != null);
-		NumberFormat nf = Messages.getNumberFormat();
-		nf.setGroupingUsed(true);
-		nf.setMaximumFractionDigits(3);//DosisHa necesita 3 decimales
+//		NumberFormat nf = Messages.getNumberFormat();
+//		nf.setGroupingUsed(true);
+//		nf.setMaximumFractionDigits(3);//DosisHa necesita 3 decimales
 		//DecimalFormat df = new DecimalFormat("###,###.##");
 
 		//	 this.setCellValueFactory(new PropertyValueFactory<T, Date>("date"));
@@ -33,8 +34,10 @@ public class DoubleTableColumn<T> extends TableColumn<T,String> {
 			try{
 				String stringValue = "0.0";
 				if(doubleValue!=null) {
-					stringValue=nf.format(doubleValue);
+					
+					stringValue=PropertyHelper.formatDouble(doubleValue);
 				}
+				//cellData.getTableView().refresh();
 				return new SimpleStringProperty(stringValue);	
 			}catch(Exception e){
 				System.out.println("Falló el Decimal Format en DoubleTableColumn "+title +" para "+doubleValue);
@@ -79,19 +82,39 @@ public class DoubleTableColumn<T> extends TableColumn<T,String> {
 			@Override
 			public int compare(String arg0, String arg1) {
 
-				try {
-					Double d0 = nf.parse(arg0).doubleValue();
-					Double d1 = nf.parse(arg1).doubleValue();
+//				try {					
+					Double d0 = PropertyHelper.parseDouble(arg0).doubleValue();
+					Double d1 =PropertyHelper.parseDouble(arg1).doubleValue();
 
 					return d0.compareTo(d1);
-				} catch (ParseException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				return 0;
+//				} catch (ParseException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//				return 0;
 			}
 		});
 	}
 	
-
+	public static DoubleTableColumn<Map<String,Object>> createMapTableColumn(String k) {
+		DoubleTableColumn<Map<String,Object>> dColumn = new DoubleTableColumn<Map<String,Object>>(k,
+				(p)->{	try {//getMethod
+					System.out.println("obteniendo "+k);
+					Number n =(Number) p.get(k);
+					if(n!=null) {
+						return n.doubleValue();
+					} else {
+						return 0.0;
+					}
+				} catch (Exception e) {	e.printStackTrace();}
+				return null;
+				},(p,d)->{ try {//setMethod
+					System.out.println("tratando de editar "+k);
+					p.put(k,d);
+					//tabla.refresh();
+				} catch (Exception e) {	e.printStackTrace();}
+				});
+		dColumn.setEditable(true);
+		return dColumn;
+	}
 }

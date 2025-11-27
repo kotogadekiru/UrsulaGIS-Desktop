@@ -53,7 +53,7 @@ public class Nutriente {
 	
 	public static final String FIND_ALL="Nutriente.findAll";
 	public static final String FIND_NAME="Nutriente.findName";
-	
+	//peso N=14.0067 peso O=15.999 N/NO3=14.0067/(14.1167+15.999*3)=0.2259
 	public static final Double porcN_NO3=0.2259;
 	//pongo 1 porque quiero trabajar con S como elemento no como ion Sulfato
 	public static final Double porcS_SO4=1.0;// 32.06/(32.06+4*15.99);//=0.3338;

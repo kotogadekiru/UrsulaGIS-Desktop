@@ -25,6 +25,7 @@ import dao.recorrida.Muestra;
 import dao.recorrida.Recorrida;
 import dao.suelo.Suelo;
 import dao.suelo.SueloItem;
+import dao.utils.PropertyHelper;
 import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.LayerList;
 import gov.nasa.worldwind.layers.RenderableLayer;
@@ -398,7 +399,8 @@ public class RecorridaGUIController extends AbstractGUIController {
 				if(String.class.isAssignableFrom(value.getClass())) {				
 					Double dValue = new Double(0);
 					try { 
-						dValue=Messages.getNumberFormat().parse((String)value).doubleValue();
+						dValue = PropertyHelper.parseDouble((String)value).doubleValue();
+						//dValue=Messages.getNumberFormat().parse((String)value).doubleValue();
 						//dValue=new Double((String)value);
 					}catch(Exception e) {
 						System.err.println("error tratando de parsear \""+value+"\" reemplazo por 0");
@@ -445,7 +447,7 @@ public class RecorridaGUIController extends AbstractGUIController {
 			Map<String,Object> p = cellEditingEvent.getTableView().getItems().get(row);
 			try {
 				p.put("Nombre", cellEditingEvent.getNewValue());
-				tabla.refresh();
+				cellEditingEvent.getTableView().refresh();
 			} catch (Exception e) {	e.printStackTrace();}
 		});		
 
@@ -482,7 +484,7 @@ public class RecorridaGUIController extends AbstractGUIController {
 					},(p,d)->{ try {
 
 						p.put(k,d);
-						tabla.refresh();
+						//tabla.refresh();//se hace en el edit de DoubleTableColumn
 					} catch (Exception e) {	e.printStackTrace();}
 					});
 			dColumn.setEditable(true);

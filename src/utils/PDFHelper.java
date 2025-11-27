@@ -77,8 +77,9 @@ public class PDFHelper {
 			path2 = Paths.get(ClassLoader.getSystemResource("./gui/ursula_logo_2020.png").toURI());
 
 			PDPageContentStream contentStream2 = new PDPageContentStream(document2, page2);
-			PDImageXObject image 
-			= PDImageXObject.createFromFile(path2.toAbsolutePath().toString(), document2);
+			PDImageXObject image = PDImageXObject.createFromFile(
+					path2.toAbsolutePath().toString(),
+					document2);
 			contentStream2.drawImage(image, 0, 0);
 			contentStream2.close();
 

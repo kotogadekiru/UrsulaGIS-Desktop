@@ -132,6 +132,12 @@ public class ProyectionConstants {
 		return crs;
 	}
 
+	/**
+	 * 
+	 * @param startPoint
+	 * @param destPoint
+	 * @return Returns the orthodromic distance (expressed in meters)
+	 */
 	public static double getDistancia(Point startPoint, Point destPoint){
 		Point2D start =  new Point2D.Double(startPoint.getX(),startPoint.getY());
 		Point2D dest =  new Point2D.Double(destPoint.getX(),destPoint.getY());
@@ -139,9 +145,12 @@ public class ProyectionConstants {
 
 		//Constructs a new geodetic calculator associated with the WGS84 ellipsoid.
 		GeodeticCalculator gc = getCalculator();	
+		double dist=-1;
+	//	synchronized(gc) {
 		gc.setStartingGeographicPoint(start);
 		gc.setDestinationGeographicPoint(dest);
-		double dist=  gc.getOrthodromicDistance();//Returns the orthodromic distance (expressed in meters)
+		dist =  gc.getOrthodromicDistance();//Returns the orthodromic distance (expressed in meters)
+	//	}
 		calculatorPool.add(gc);
 		return dist;		
 	}
