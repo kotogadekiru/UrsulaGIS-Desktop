@@ -124,7 +124,7 @@
 		</repository>
     <repository>
         <id>localrepository</id>
-        <url>file://D:/worskpaces/workspaceHackaton2015/repo</url>
+        <url>file://${basedir}/repo</url>
     </repository>
 </repositories>
 

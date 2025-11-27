@@ -1,0 +1,4 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Sat Oct 26 20:28:37 ART 2024
+org.eclipse.persistence.jpa.modelgen_2.7.1.v20171221-bd47e8f.jar-0.2.30.jar>=
+org.eclipse.persistence.jpa.modelgen_2.7.1.v20171221-bd47e8f.jar-0.2.30.pom>=
